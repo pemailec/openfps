@@ -1,0 +1,118 @@
+remstart
+/////////////////////////////////////////////////////
+//
+//   OpenFPS
+//   MAIN SOURCE
+//
+//
+/////////////////////////////////////////////////////
+
+----- Changelog (main source file only):
+(11/19/09) - BMacZero - Created
+(11/23/09) - BMacZero - Added menu
+(11/24/09) - BMacZero - [Removed BlitzTerrain temporarily]
+
+----- To-Do
+Modules should be init between initMenu() and runMenu().
+However, movement module does not work properly - fix.
+
+remend
+
+/////////////////////////////////////////////////////////
+// INIT                                                //
+/////////////////////////////////////////////////////////
+
+sync on : sync rate 60
+autocam off
+randomize timer()
+
+
+`/ INITIATE CORE MODULES
+initResource()
+
+
+`/ START LOADING
+initMenu()
+
+
+`/ RUN MENU
+runMenu()
+
+
+`Init other modules here
+initMovement()
+
+`=================================================================
+`==== TEST CODE - SHOULD NOT BE USED LATER
+
+remstart
+bt_HeightmapImage  = grabResource(res_Image)
+bt_TexturemapImage = grabResource(res_Image)
+bt_DetailmapImage  = grabResource(res_Image)
+
+//make terrain
+load image "media/BlitzTerrain/Heightmap.bmp", bt_HeightmapImage
+load image "media/BlitzTerrain/texture.jpg",   bt_TexturemapImage
+load image "media/BlitzTerrain/detail.tga",    bt_DetailmapImage
+
+terrain=UT MakeTerrain()
+UT SetTerrainHeightmap terrain, bt_HeightmapImage
+UT SetTerrainTexture terrain,   bt_TexturemapImage
+UT SetTerrainDetail terrain,    bt_DetailmapImage
+`Set how many LOD levels there are
+UT SetTerrainLOD terrain,3
+UT SetTerrainScale terrain,20
+UT SetTerrainYScale terrain,3
+
+`Set the split (the terrain will be 8x8 so it will generate 64 sectors)
+UT SetTerrainSplit terrain,8
+UT SetTerrainDetailTile terrain,2
+UT SetTerrainLODDistances terrain,1000,3000,5500,0,0,0
+
+UT BuildTerrain terrain
+
+type bt_GroundType
+    obj as integer
+    phy as integer
+endtype
+
+DIM bt_GroundObjects(0) as bt_GroundType
+
+repeat
+    array insert at top bt_GroundObjects(0)
+    bt_GroundObjects(1).obj=grabResource(res_Object)
+    bt_GroundObjects(1).phy=grabResource(res_Object)
+    progress=UT ContinueBuild(bt_GroundObjects(1).obj,bt_GroundObjects(1).phy,0)
+    sc_setupcomplexobject bt_GroundObjects(1).phy,0,4
+until progress=-1
+
+UT InitialiseTerrain terrain
+
+remend
+
+planeObj = grabResource(res_Object)
+make object box planeObj,2000,200,2000
+sc_setupobject planeObj,0,2
+
+hide mouse
+backdrop on
+
+`==
+`====================================================================
+
+/////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////
+// MAIN LOOP                                           //
+/////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////
+
+do
+
+updateMovement()
+
+text 10,10,str$(screen fps())
+
+sync
+loop
+end
+

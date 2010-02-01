@@ -1,0 +1,384 @@
+remstart
+/////////////////////////////////////////////////////
+//
+// OpenFPS MOVEMENT Module
+//
+// Created by Monk
+// Maintained by Monk and BMacZero
+//
+/////////////////////////////////////////////////////
+
+----- Changelog:
+(07/26/09) - BMacZero - Modularized
+                      - Switched crouch and prone to individual
+                        toggles.
+(11/23/09) - BMacZero - Brought in line with R/M module.
+(11/24/09) - BMacZero - [Starting position changed to origin]
+
+
+----- To-Do:
+Apply different speeds and jump heights for different classes.
+Add more realism - camera bobs slightly when walking, more when
+  running.  Camera bobs down before jumping.  Camera dips after
+  landing from a jump - more if it was a hard landing.
+
+
+----- Purpose:
+Handles player input as it applies to moving about the world.
+This includes movement, sprinting, crouching, crawling, and
+  collision and gravity for the player.
+It may also do falling damage at a later time.
+
+
+----- Dependancies and Conflicts (IMPORTANT STUFF):
+All objects the player needs to collide with must be set up
+  for Sparky's Collision.
+
+The module requires the player's class to be stored in a global
+  integer PLR_class, as different classes have different speeds,
+  heights, and jump heights.
+
+Configurable Keys: Keystates should be stored in the following
+  global integers:
+    KEY_sprint
+    KEY_jump
+    KEY_left
+    KEY_right
+    KEY_forward
+    KEY_backward
+    KEY_crouch
+    KEY_prone
+
+
+----- Other Notes:
+Information about the player will be stored in the following
+  global floats...
+  PLR_footpos.x / y / z
+  PLR_headpos.x / y / z
+  PLR_angle.x / y / z
+  PLR_velocity.x / y / z
+  PLR_stamina
+  
+The player's stance (walk, sprint, crouch, prone) will be
+  stored in the integer PLR_stance, relating to the constants
+  stance_SPRINT, stance_WALK, stance_CROUCH, and stance_PRONE.
+  
+The module contains its own timer-based system.  Any code relating
+  to this is marked with //MOVEMENT MODULE TIMER incase the system
+  needs to be brought in line with a global one later.
+  
+All movements are scaled to:
+  60 units = 1 meter
+
+
+remend
+
+`Player stances
+#constant stance_SPRINT 0
+#constant stance_WALK   1
+#constant stance_CROUCH 2
+#constant stance_PRONE  3
+
+`Random memblock commands for Sparky's
+null = memblock exist(1)
+
+`Vector type
+type vector
+   x as float
+   y as float
+   z as float
+endtype
+
+
+/////////////////////////////////////////////////////////
+// INIT                                                //
+/////////////////////////////////////////////////////////
+
+
+function initMovement()
+
+`Initiate controls
+if KEY_sprint   = 0
+    global KEY_sprint   as integer
+    KEY_sprint   = 42
+endif
+if KEY_jump     = 0
+    global KEY_jump     as integer
+    KEY_jump     = 57
+endif
+if KEY_left     = 0
+    global KEY_left     as integer
+    KEY_left     = 30
+endif
+if KEY_right    = 0 
+    global KEY_right    as integer
+    KEY_right    = 32
+endif
+if KEY_forward  = 0
+    global KEY_forward  as integer
+    KEY_forward  = 17
+endif
+if KEY_backward = 0
+    global KEY_backward as integer
+    KEY_backward = 31
+endif
+if KEY_crouch   = 0
+    global KEY_crouch   as integer
+    KEY_crouch   = 46
+endif
+if KEY_prone    = 0
+    global KEY_prone    as integer
+    KEY_prone    = 47
+endif
+
+global PLR_footpos  as vector
+global PLR_headpos  as vector
+global PLR_velocity as vector
+global PLR_angle    as vector
+
+global PLR_object   as integer
+global PLR_stance   as integer
+
+global DIM PLR_speeds(3)  as float
+global DIM PLR_heights(3) as float
+
+global PLR_gravity       as float
+global PLR_heightspeed   as float `How fast the player crouches and such
+global PLR_currentheight as float
+
+global MOVE_keypress  as boolean
+global MOVE_fall      as boolean
+global MOVE_jumppress as boolean
+global MOVE_jump      as boolean
+
+//vars
+PLR_speeds(stance_WALK)   = 180.0
+PLR_speeds(stance_SPRINT) = PLR_speeds(stance_WALK) * 2.00
+PLR_speeds(stance_CROUCH) = PLR_speeds(stance_WALK) * 0.45
+PLR_speeds(stance_PRONE)  = PLR_speeds(stance_WALK) * 0.20
+
+PLR_heights(stance_WALK)   = 120.0
+PLR_heights(stance_SPRINT) = 110.0
+PLR_heights(stance_CROUCH) = 55.0
+PLR_heights(stance_PRONE)  = 15.0
+
+PLR_object    = 1
+PLR_footpos.x = 0.0
+PLR_footpos.y = 5.0
+PLR_footpos.z = 0.0
+PLR_stance    = stance_WALK
+PLR_headpos.x = PLR_footpos.x
+PLR_headpos.y = PLR_footpos.y + PLR_heights(PLR_stance)
+PLR_headpos.z = PLR_footpos.z
+
+PLR_gravity       = -550.0
+PLR_heightspeed   = 3.0
+PLR_currentheight = PLR_heights(stance_WALK)
+
+PLR_stamina as float
+
+//misc
+global mov_Mat1
+global mov_Mat2
+global mov_Mat3
+global mov_Mat4
+global mov_Vec5
+global mov_Vec6
+global mov_Vec7
+mov_Mat1 = grabResource(res_Matrix4)
+mov_Mat2 = grabResource(res_Matrix4)
+mov_Mat3 = grabResource(res_Matrix4)
+mov_Mat4 = grabResource(res_Matrix4)
+mov_Vec5 = grabResource(res_Vector3)
+mov_Vec6 = grabResource(res_Vector3)
+mov_Vec7 = grabResource(res_Vector3)
+null = Make Matrix4( mov_Mat1 )
+null = Make Matrix4( mov_Mat2 )
+null = Make Matrix4( mov_Mat3 )
+null = Make Matrix4( mov_Mat4 )
+null = Make Vector3( mov_Vec5 ) // lX
+null = Make Vector3( mov_Vec6 ) // lY
+null = Make Vector3( mov_Vec7 ) // lZ
+
+//MOVEMENT MODULE TIMER
+global timer_starttime as dword
+global synctime as float
+timer_starttime = timer()
+//MOVEMENT MODULE TIMER
+
+endfunction
+
+
+/////////////////////////////////////////////////////////
+// UPDATE                                              //
+/////////////////////////////////////////////////////////
+
+
+function updateMovement()
+
+local movementx as float
+local movementy as float
+local movementz as float
+
+//MOVEMENT MODULE TIMER
+local elapsedtime as float
+elapsedtime=(timer()-timer_starttime)/1000.0
+timer_starttime = timer()
+//MOVEMENT MODULE TIMER
+
+//moving
+Set Vector3 mov_Vec5, 1.0, 0.0, 0.0
+Build Rotation Axis Matrix4 mov_Mat1, mov_Vec5, PLR_angle.x * 0.017453292519943295769236907684886
+Set Vector3 mov_Vec5, 0.0, 1.0, 0.0
+Build Rotation Axis Matrix4 mov_Mat2, mov_Vec5, PLR_angle.y * 0.017453292519943295769236907684886
+Set Vector3 mov_Vec5, 0.0, 0.0, 1.0
+Build Rotation Axis Matrix4 mov_Mat3, mov_Vec5, PLR_angle.z * 0.017453292519943295769236907684886
+Multiply Matrix4 mov_Mat4, mov_Mat1, mov_Mat2
+Multiply Matrix4 mov_Mat4, mov_Mat4, mov_Mat3
+
+Set Vector3 mov_Vec5, 1.0, 0.0, 0.0
+Transform Coords Vector3 mov_Vec5, mov_Vec5, mov_Mat4
+Set Vector3 mov_Vec6, 0.0, 1.0, 0.0
+Transform Coords Vector3 mov_Vec6, mov_Vec6, mov_Mat4
+Set Vector3 mov_Vec7, 0.0, 0.0, 1.0
+Transform Coords Vector3 mov_Vec7, mov_Vec7, mov_Mat4
+
+`Find Left/Right and Forward/Back movement
+movementx = (keystate(KEY_right)   - keystate(KEY_left))     * PLR_speeds(PLR_stance)
+movementz = (keystate(KEY_forward) - keystate(KEY_backward)) * PLR_speeds(PLR_stance)
+
+`Set velocities if we're on the ground
+if MOVE_fall = 0
+   PLR_velocity.x = X Vector3(mov_Vec5) * movementx
+   PLR_velocity.z = Z Vector3(mov_Vec5) * movementx
+   PLR_velocity.x = PLR_velocity.x + X Vector3(mov_Vec6) * movementy + X Vector3(mov_Vec7) * movementz
+   PLR_velocity.z = PLR_velocity.z + Z Vector3(mov_Vec6) * movementy + Z Vector3(mov_Vec7) * movementz
+endif
+
+//stance change
+if keystate(KEY_sprint)
+   PLR_stance = stance_SPRINT
+   PLR_object = 1
+endif
+
+if keystate(KEY_crouch) and MOVE_keypress = 0
+   MOVE_keypress = 1
+   if PLR_stance = stance_CROUCH
+      PLR_stance = stance_WALK
+      else
+      PLR_stance = stance_CROUCH
+   endif
+endif
+
+if keystate(KEY_prone) and MOVE_keypress = 0
+   MOVE_keypress = 1
+   if PLR_stance = stance_PRONE
+      PLR_stance = stance_WALK
+      else
+      PLR_stance = stance_PRONE
+   endif
+endif
+
+
+//collision
+ground = sc_spherecast(0,PLR_headpos.x,PLR_headpos.y-2,PLR_headpos.z,PLR_footpos.x,PLR_footpos.y+2,PLR_footpos.z,2,PLR_object)
+if ground <> 0
+   `damage# = ((-PLR_velocity.y) - 100.0)
+   MOVE_fall = 0
+   PLR_velocity.y = 0
+//amendments for uneven terrain
+   PLR_footpos.y = sc_getcollisionslidey()-2    //positions the player at the appropriate height
+   temp# = sc_getcollisionnormaly()                //how flat the land is 1 for flat, 0 for vertical
+   if temp#<0.4 then temp#=0
+   PLR_velocity.x = PLR_velocity.x * temp#             //adjust speed to make up for grade
+   PLR_velocity.z = PLR_velocity.z * temp#
+else
+   //MOVEMENT MODULE TIMER
+   PLR_velocity.y = PLR_velocity.y + PLR_gravity * elapsedtime
+   //MOVEMENT MODULE TIMER
+endif
+
+//jumping
+if keystate(KEY_jump) and MOVE_jumppress = 0 and MOVE_fall = 0
+   PLR_stance = stance_WALK
+   MOVE_jumppress = 1
+   MOVE_jump = 1
+endif
+
+if MOVE_jump and MOVE_fall = 0
+   MOVE_jump = 0
+   MOVE_fall = 1
+   PLR_velocity.y = PLR_velocity.y + 300.0
+endif
+
+
+//update
+//MOVEMENT MODULE TIMER
+PLR_footpos.x = PLR_footpos.x + PLR_velocity.x * elapsedtime
+PLR_footpos.y = PLR_footpos.y + PLR_velocity.y * elapsedtime
+PLR_footpos.z = PLR_footpos.z + PLR_velocity.z * elapsedtime
+//MOVEMENT MODULE TIMER
+
+`Update playersize
+if PLR_heights(PLR_stance)>PLR_currentheight
+    inc PLR_currentheight,PLR_heightspeed
+    if PLR_currentheight>PLR_heights(PLR_stance) then PLR_currentheight = PLR_heights(PLR_stance)
+endif
+if PLR_heights(PLR_stance)<PLR_currentheight
+    dec PLR_currentheight,PLR_heightspeed
+    if PLR_currentheight<PLR_heights(PLR_stance) then PLR_currentheight = PLR_heights(PLR_stance)
+endif
+
+PLR_headpos.x = PLR_footpos.x
+PLR_headpos.y = PLR_footpos.y + PLR_currentheight
+PLR_headpos.z = PLR_footpos.z
+
+PLR_angle.y = PLR_angle.y + mousemovex()*0.2
+PLR_angle.x = PLR_angle.x + mousemovey()*0.2
+
+if keystate(KEY_jump) = 0 then MOVE_jumppress = 0
+if keystate(KEY_prone) = 0 and keystate(KEY_crouch) = 0 then MOVE_keypress = 0
+
+if keystate(KEY_sprint) = 0 and PLR_stance = stance_SPRINT
+   PLR_stance = stance_WALK
+endif
+
+//MOVEMENT MODULE TIMER
+synctime = synctime + elapsedtime
+if synctime > 0.01
+    synctime = 0
+    position camera 0, PLR_headpos.x, PLR_headpos.y, PLR_headpos.z
+    rotate camera 0, PLR_angle.x, PLR_angle.y, PLR_angle.z
+endif
+//MOVEMENT MODULE TIMER
+
+endfunction
+
+
+/////////////////////////////////////////////////////////
+// TERMINATE                                           //
+/////////////////////////////////////////////////////////
+
+
+function terminateMovement()
+
+UNDIM PLR_speeds(0)
+UNDIM PLR_heights(0)
+
+null = delete matrix4( mov_Mat1 )
+null = delete matrix4( mov_Mat2 )
+null = delete matrix4( mov_Mat3 )
+null = delete matrix4( mov_Mat4 )
+null = delete vector3( mov_Vec5 )
+null = delete vector3( mov_Vec6 )
+null = delete vector3( mov_Vec7 )
+
+freeResource(mov_Mat1,res_Matrix4)
+freeResource(mov_Mat2,res_Matrix4)
+freeResource(mov_Mat3,res_Matrix4)
+freeResource(mov_Mat4,res_Matrix4)
+freeResource(mov_Vec5,res_Vector3)
+freeResource(mov_Vec6,res_Vector3)
+freeResource(mov_Vec7,res_Vector3)
+
+endfunction

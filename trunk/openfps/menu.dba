@@ -1,0 +1,134 @@
+remstart
+/////////////////////////////////////////////////////
+//
+// OpenFPS MENU Module
+//
+// Created by thenerd
+// Maintained by thenerd
+//
+/////////////////////////////////////////////////////
+
+----- Changelog:
+(11/19/09) - BMacZero - Adapted to existing code.
+
+
+----- To-Do:
+Make buttons functional.
+
+
+----- Purpose:
+Runs the menu.
+
+
+----- Dependancies and Conflicts (IMPORTANT STUFF):
+-None-
+
+
+----- Other Notes:
+
+
+
+remend
+
+
+
+/////////////////////////////////////////////////////////
+// INIT                                                //
+/////////////////////////////////////////////////////////
+
+function initMenu()
+
+global menu_loadingimage
+global menu_loadingsprite
+menu_loadingimage  = grabResource(res_Image)
+menu_loadingsprite = grabResource(res_Sprite)
+load image "media\menu\loading-1.png",menu_loadingimage
+sprite menu_loadingsprite,0,0,menu_loadingimage
+set sprite priority menu_loadingsprite,1
+
+global menu_mainimage
+global menu_mainsprite
+menu_mainimage  = grabResource(res_Image)
+menu_mainsprite = grabResource(res_Sprite)
+load image "media\menu\main.png",menu_mainimage
+sprite menu_mainsprite,0,0,menu_mainimage
+show sprite menu_mainsprite
+
+endfunction
+
+
+
+/////////////////////////////////////////////////////////
+// CORE                                                //
+/////////////////////////////////////////////////////////
+
+function runMenu()
+
+local alpha as byte
+
+`Transition out of loading
+alpha=255
+do
+	alpha=alpha-20
+	if alpha<20 then exit
+	set sprite alpha menu_loadingsprite,alpha
+	sync
+loop
+set sprite alpha menu_loadingsprite,0
+
+
+global menu_button1 = grabResource(res_Image)
+global menu_button2 = grabResource(res_Image)
+global menu_button3 = grabResource(res_Image)
+
+load image "media\menu\button-normal.png",menu_button1
+load image "media\menu\button-hover.png",menu_button2
+load image "media\menu\button-clicked.png",menu_button3
+hide sprite menu_mainsprite
+do
+	paste sprite menu_mainsprite,0,0
+	if button("New Game",78,219)=1 then exit
+	button("Load Game",78,279)
+	button("Help/How To Play",78,339)
+	button("Options",78,399)
+	button("Credits",78,459)
+	button("Quit",78,519)
+	sync
+loop
+
+freeResource(menu_mainsprite   ,res_Sprite)
+freeResource(menu_mainimage    ,res_Image )
+freeResource(menu_loadingsprite,res_Sprite)
+freeResource(menu_loadingimage ,res_Image )
+
+freeResource(menu_button1,res_Image)
+freeResource(menu_button2,res_Image)
+freeResource(menu_button3,res_Image)
+
+endfunction
+
+
+
+/////////////////////////////////////////////////////////
+// SUPPORT                                             //
+/////////////////////////////////////////////////////////
+
+
+function button(text$,x,y):
+	clicked=0
+	mouse=in_box2d(x,y,x+178,y+50)
+	if mouse=0 then paste image menu_button1,x,y,1
+	if mouse=1 then paste image menu_button2,x,y,1
+	if mouse=2 then paste image menu_button3,x,y,1:clicked=1
+	center text x+89,y+25-(text height("OOO")/2),text$
+endfunction clicked
+
+function in_box2d(x1,y1,x2,y2):
+	mx=MouseX()
+	my=MouseY()
+	result=0
+	if (mx >= x1) and (mx <= x2) and (my >= y1) and (my <= y2):
+		if mouseclick()=0 then result = 1
+		if mouseclick()=1 then result = 2
+	endif
+endFunction result 

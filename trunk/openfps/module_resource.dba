@@ -1,0 +1,206 @@
+remstart
+/////////////////////////////////////////////////////
+//
+// OpenFPS RESOURCE MANAGEMENT Core Module
+//
+// Created by BMacZero
+// Maintained by BMacZero
+//
+/////////////////////////////////////////////////////
+
+----- Changelog:
+(11/18/09) - BMacZero - Created
+(12/16/09) - BMacZero - Fixed potentially serious bug concerning grabResource
+
+
+----- To-Do:
+Test
+
+
+----- Purpose:
+Assigns and frees resource numbers (ANYTHING that requires an
+    identification number with DB)
+
+
+----- Dependancies and Conflicts (IMPORTANT STUFF):
+-None-
+
+
+----- Other Notes:
+Usage (IMPORTANT***):
+Whenever ANY module needs ANY type of resource for ANY reason,
+    it MUST go through this module(excepting only BlitzTerrains)
+How do you do that?  Call the grabResource() function.  The parameter
+    represents the type of resource you want (see the constant
+    declarations after these statements).
+When you are through with a resource, free it with the freeResource()
+    function so it can be reused.
+
+
+remend
+
+#Constant res_Object   0
+#Constant res_Image    1
+#Constant res_Sprite   2
+#Constant res_File     3
+#Constant res_Sound    4
+#Constant res_Music    5
+#Constant res_Memblock 6
+#Constant res_Bitmap   7
+#Constant res_Anim     8
+#Constant res_Light    9
+#Constant res_Camera   10
+#Constant res_Mesh     11
+#Constant res_Matrix   12
+#Constant res_Particle 13
+#Constant res_Matrix4  14
+#Constant res_Vector2  15
+#Constant res_Vector3  16
+#Constant res_Vector4  17
+#Constant res_DLL      18
+
+#Constant res_Count    18
+
+type res_Type
+    start as integer
+    qty as integer
+endtype
+
+
+/////////////////////////////////////////////////////////
+// INIT                                                //
+/////////////////////////////////////////////////////////
+
+
+function initResource()
+
+global DIM ResourceCounters(res_Count)   as integer
+global DIM FreeResourcesIndex(res_Count) as res_Type
+global DIM FreeResources(0)              as integer
+
+endfunction
+
+
+/////////////////////////////////////////////////////////
+// CORE                                                //
+/////////////////////////////////////////////////////////
+
+
+function grabResource(restype)
+
+local result as integer
+
+if FreeResourcesIndex(restype).qty=0
+    inc ResourceCounters(res_Count)
+    result=ResourceCounters(res_Count)
+    
+    else
+    result=FreeResources(FreeResourcesIndex(restype).start)
+    array delete element FreeResources(0),FreeResourcesIndex(restype).start
+    dec FreeResourcesIndex(restype).qty
+    
+    for d=restype+1 to res_Count
+        dec FreeResourcesIndex(d).start
+    next d
+endif    
+
+endfunction result
+
+
+
+function freeResource(number,restype)
+
+local temp as integer
+
+`Delete it if it hasn't been
+select restype
+    case res_Object
+        if object exist(number) then delete object number
+    endcase
+    case res_Image
+        if image exist(number) then delete image number
+    endcase
+    case res_Sprite
+        if sprite exist(number) then delete sprite number
+    endcase
+    case res_File
+        if file open(number) then close file number
+    endcase
+    case res_Sound
+        if sound exist(number) then delete sound number
+    endcase
+    case res_Music
+        if music exist(number) then delete music number
+    endcase
+    case res_Memblock
+        if memblock exist(number) then delete memblock number
+    endcase
+    case res_Bitmap
+        if bitmap exist(number) then delete bitmap number
+    endcase
+    case res_Anim
+        if animation exist(number) then delete animation number
+    endcase
+    case res_Light
+        if light exist(number) then delete light number
+    endcase
+    case res_Camera
+        if camera exist(number) then delete camera number
+    endcase
+    case res_Mesh
+        if mesh exist(number) then delete mesh number
+    endcase
+    case res_Matrix
+        if matrix exist(number) then delete matrix number
+    endcase
+    case res_Particle
+        if particles exist(number) then delete particles number
+    endcase
+    case res_Matrix4
+        `if matrix4 exist(number) then delete matrix4 number
+    endcase
+    case res_Vector2
+        `if vector2 exist(number) then delete vector2 number
+    endcase
+    case res_Vector3
+        `if vector3 exist(number) then delete vector3 number
+    endcase
+    case res_Vector4
+        `if vector4 exist(number) then delete vector4 number
+    endcase
+    case res_DLL
+        if dll exist(number) then delete dll number
+    endcase
+    case default
+        exitfunction
+    endcase
+endselect
+
+if number=ResourceCounters(restype)
+    dec ResourceCounters(restype)
+    else
+    temp=FreeResourcesIndex(restype).start+FreeResourcesIndex(restype).qty
+    array insert at element FreeResources(0),temp
+    FreeResources(temp)=number
+    inc FreeResourcesIndex(restype).qty
+    
+    for d=restype+1 to res_Count
+        inc FreeResourcesIndex(d).start
+    next d
+endif
+
+endfunction
+
+
+/////////////////////////////////////////////////////////
+// TERMINATE                                           //
+/////////////////////////////////////////////////////////
+
+
+function terminateResource()
+
+UNDIM ResourceCounters(0)
+UNDIM FreeResourcesIndex(0)
+UNDIM FreeResources(0)
+
+endfunction
