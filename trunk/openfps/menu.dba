@@ -9,6 +9,7 @@ remstart
 /////////////////////////////////////////////////////
 
 ----- Changelog:
+(2/7/10) - thenerd - Updating and changing menu system, adding gui functions
 (11/19/09) - BMacZero - Adapted to existing code.
 (2/7/10)   - BMacZero - Fixed issue with buttons highlighting incorrectly
 
@@ -85,6 +86,16 @@ menu_button1 = grabResource(res_Image)
 menu_button2 = grabResource(res_Image)
 menu_button3 = grabResource(res_Image)
 
+global left_top as integer
+global right_top as integer
+global top_flat as integer
+left_top = grabResource(res_Image)
+right_top = grabResource(res_Image)
+top_flat = grabResource(res_Image)
+load image "media\menu\gui\left_top.png", left_top
+load image "media\menu\gui\right_top.png", right_top
+load image "media\menu\gui\top_flat.png", top_flat
+
 global menu_clickstate as boolean
 
 load image "media\menu\button-normal.png", menu_button1
@@ -96,14 +107,16 @@ freeResource(menu_mainsprite,res_Sprite)
 do
     cls
 	paste image menu_mainimage,0,0
-	if button("New Game",78,219)=1 then exit
-	   button("Load Game",78,279)
-	   button("Help",78,339)
-	   button("Options",78,399)
-	   button("Credits",78,459)
-	   button("Quit",78,519)=1
+	button("New Game",78,219)
+	button("Load Game",78,279)
+	button("Help",78,339)
+	button("Options",78,399)
+	button("Credits",78,459)
+	if button("Quit",78,519)=1 then end
 	
 	if mouseclick()=0 then menu_clickstate=0
+	
+	RenderWindow(mousex(),mousey(),640,480)
 	
 	sync
 loop
@@ -115,7 +128,9 @@ freeResource(menu_loadingimage ,res_Image )
 freeResource(menu_button1,res_Image)
 freeResource(menu_button2,res_Image)
 freeResource(menu_button3,res_Image)
-
+freeResource(left_top,res_Image)
+freeResource(right_top,res_Image)
+freeResource(top_flat,res_Image)
 endfunction
 
 
@@ -123,6 +138,20 @@ endfunction
 /////////////////////////////////////////////////////////
 // SUPPORT                                             //
 /////////////////////////////////////////////////////////
+
+function RenderWindow(x1,y1,x2,y2):
+	paste image left_top,x1,y1,1
+	paste image right_top,x2-image width(right_top),y1,1
+	tilex(top_flat,x1+image width(left_top),y1,(x2-x1)/image width(top_flat))
+endfunction
+
+function tilex(image,x,y,amount):
+for z=0 to amount:
+	paste image image,x+(z*image width(image)),y,1
+next z
+endfunction
+
+
 
 
 function button(text$,x,y):
