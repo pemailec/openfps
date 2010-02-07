@@ -8,6 +8,7 @@ remstart
 /////////////////////////////////////////////////////
 
 ----- Changelog (main source file only):
+(2/7/10) - thenerd - Changed screen res to 1024x768x32 fullscreen
 (11/19/09) - BMacZero - Created
 (11/23/09) - BMacZero - Added menu
 (11/24/09) - BMacZero - [Removed BlitzTerrain temporarily]
