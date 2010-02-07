@@ -9,13 +9,19 @@ remstart
 /////////////////////////////////////////////////////
 
 ----- Changelog:
-(2/7/10) - thenerd - Updating and changing menu system, adding gui functions
+
 (11/19/09) - BMacZero - Adapted to existing code.
 (2/7/10)   - BMacZero - Fixed issue with buttons highlighting incorrectly
-
+(2/7/10) - thenerd - Updating and changing menu system, adding gui functions
 
 ----- To-Do:
-Make buttons functional.
+- Make buttons functional. DONE
+- Add Custom GUI Elements/Functions:
+	*Slider
+	*Button - DONE
+	*Checkbox
+	*Window
+	*Text Box
 
 
 ----- Purpose:
@@ -142,7 +148,7 @@ endfunction
 function RenderWindow(x1,y1,x2,y2):
 	paste image left_top,x1,y1,1
 	paste image right_top,x2-image width(right_top),y1,1
-	tilex(top_flat,x1+image width(left_top),y1,(x2-x1)/image width(top_flat))
+	tilex(top_flat,x1+image width(left_top),y1,((x2-image width(right_top)*2)-x1)/image width(top_flat))
 endfunction
 
 function tilex(image,x,y,amount):
