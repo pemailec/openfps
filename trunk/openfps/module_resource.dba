@@ -11,6 +11,7 @@ remstart
 ----- Changelog:
 (11/18/09) - BMacZero - Created
 (12/16/09) - BMacZero - Fixed potentially serious bug concerning grabResource
+(2/7/10)   - BMacZero - Fixed more general bugs.
 
 
 ----- To-Do:
@@ -91,8 +92,8 @@ function grabResource(restype)
 local result as integer
 
 if FreeResourcesIndex(restype).qty=0
-    inc ResourceCounters(res_Count)
-    result=ResourceCounters(res_Count)
+    inc ResourceCounters(restype)
+    result=ResourceCounters(restype)
     
     else
     result=FreeResources(FreeResourcesIndex(restype).start)

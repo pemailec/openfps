@@ -43,7 +43,7 @@ runMenu()
 initMovement()
 
 `=================================================================
-`==== TEST CODE - SHOULD NOT BE USED LATER
+`==== BLITZ TERRAIN TEST CODE - SHOULD NOT BE USED LATER
 
 remstart
 bt_HeightmapImage  = grabResource(res_Image)
