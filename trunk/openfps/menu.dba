@@ -95,12 +95,21 @@ menu_button3 = grabResource(res_Image)
 global left_top as integer
 global right_top as integer
 global top_flat as integer
+global bottom_flat as integer
+global left_bottom as integer
+global right_bottom as integer
 left_top = grabResource(res_Image)
 right_top = grabResource(res_Image)
 top_flat = grabResource(res_Image)
+bottom_flat = grabResource(res_Image)
+left_bottom = grabResource(res_Image)
+right_bottom = grabResource(res_Image)
 load image "media\menu\gui\left_top.png", left_top
 load image "media\menu\gui\right_top.png", right_top
 load image "media\menu\gui\top_flat.png", top_flat
+load image "media\menu\gui\bottom_flat.png", bottom_flat
+load image "media\menu\gui\left_bottom.png", left_bottom
+load image "media\menu\gui\right_bottom.png", right_bottom
 
 global menu_clickstate as boolean
 
@@ -149,6 +158,10 @@ function RenderWindow(x1,y1,x2,y2):
 	paste image left_top,x1,y1,1
 	paste image right_top,x2-image width(right_top),y1,1
 	tilex(top_flat,x1+image width(left_top),y1,((x2-image width(right_top)*2)-x1)/image width(top_flat))
+	
+	paste image left_bottom,x1,y2,1
+	paste image right_bottom,x2-image width(right_bottom),y2,1
+	tilex(bottom_flat,x1+image width(left_bottom),y2,((x2-image width(right_bottom)*2)-x1)/image width(bottom_flat))
 endfunction
 
 function tilex(image,x,y,amount):
