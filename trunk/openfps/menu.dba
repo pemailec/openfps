@@ -98,18 +98,24 @@ global top_flat as integer
 global bottom_flat as integer
 global left_bottom as integer
 global right_bottom as integer
+global left_flat as integer
+global right_flat as integer
 left_top = grabResource(res_Image)
 right_top = grabResource(res_Image)
 top_flat = grabResource(res_Image)
 bottom_flat = grabResource(res_Image)
 left_bottom = grabResource(res_Image)
 right_bottom = grabResource(res_Image)
+left_flat = grabResource(res_Image)
+right_flat = grabResource(res_Image)
 load image "media\menu\gui\left_top.png", left_top
 load image "media\menu\gui\right_top.png", right_top
 load image "media\menu\gui\top_flat.png", top_flat
 load image "media\menu\gui\bottom_flat.png", bottom_flat
 load image "media\menu\gui\left_bottom.png", left_bottom
 load image "media\menu\gui\right_bottom.png", right_bottom
+load image "media\menu\gui\left_flat.png", left_flat
+load image "media\menu\gui\right_flat.png", right_flat
 
 global menu_clickstate as boolean
 
@@ -162,6 +168,9 @@ function RenderWindow(x1,y1,x2,y2):
 	paste image left_bottom,x1,y2,1
 	paste image right_bottom,x2-image width(right_bottom),y2,1
 	tilex(bottom_flat,x1+image width(left_bottom),y2,((x2-image width(right_bottom)*2)-x1)/image width(bottom_flat))
+	
+	tiley(left_flat,x1,y1+image height(left_top),((y2)-y1)/image height(left_flat))
+	
 endfunction
 
 function tilex(image,x,y,amount):
@@ -170,7 +179,11 @@ for z=0 to amount:
 next z
 endfunction
 
-
+function tiley(image,x,y,amount):
+for z=0 to amount:
+	paste image image,x,y+(z*image height(image)),1
+next z
+endfunction
 
 
 function button(text$,x,y):
