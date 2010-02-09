@@ -1,0 +1,14 @@
+Hi folks, I decided I'd create a design doc for all of the pages a website should have (like a sitemap, but before the site). Since the extension has been decided as of yet, I've used html as an example.
+
+Last Updated: 08/February/2010
+
+Page           |File             |Contents                                                  |
+--------------------------------------------------------------------------------------------|
+#Default Page  |default.html     |A general layout of the page for use whn creatin new pages|  
+Homepage       |index.html       |The websites homepage: News, links, releases, etc...      |
+Downloads      |downloads.html   |The place they'll que up to get their finished FPS game!  |
+About          |about.html       |General details on the project, and who made it           |
+Contact        |contact.html     |Always an essential on webpages; support, etc...          |
+               |                 |                                                          |
+               |                 |                                                          |
+               |                 |                                                          |
