@@ -1,0 +1,133 @@
+
+`Project: Experiment Six Level Editor
+`Created: 12/26/09
+`=================
+`Main Source File
+
+`Global Variables
+	global mainMenu
+	global fileMenu
+global Gadget1
+global Gadget2
+
+
+`Constants
+	#constant MENU_FILE 1
+	#constant MENU_FILE_EXIT 2
+
+startblue "DD6","583d7a"
+
+
+`Create user interface
+createUI()
+createUIMenu()
+autocam off
+set camera range 1,100000000
+assembleSkybox(9999, "skybox")
+scale object 9999,100000,100000,100000
+make object cube 1,50
+
+
+
+set camera view 150,0,640,480
+`Main Loop
+do
+	position camera 0,0,0
+	`Get information about gadget events
+	getEvent
+
+	`Process event information
+	processEvents()
+
+	`Non-windows related code goes here
+	    cx#=cx#+mousemovey()*0.2
+    	cy#=cy#+mousemovex()*0.2
+    	if cx#>80 then cx#=80
+    	if cx#<-80  then cx#=-80
+    	ncx#=curveangle(cx#,ncx#,2)
+    	ncy#=curveangle(cy#,ncy#,2)
+   		rotate camera 0,wrapvalue(ncy#-90),0
+    	rotate camera 0,wrapvalue(ncy#+90),0
+   		rotate camera ncx#,ncy#,0
+   		move camera -200
+loop
+
+`Main User Interface Function
+function processEvents()
+	
+	`Handle menu events
+	if eventType()=MENU_CLICK
+		eventMenu(eventData())
+	endif
+
+endfunction
+
+
+
+`Create a menu in the program
+function createUIMenu()
+	mainMenu=createMenu(0)
+	addMenuItem mainMenu,"File",MENU_FILE
+
+	fileMenu=createSubMenu(mainMenu,MENU_FILE)
+	addMenuItem fileMenu,"Exit",MENU_FILE_EXIT
+endfunction
+
+`Process menu selections
+function eventMenu(id)
+
+	select id
+		`insert case statements here to respond to each menu item click in turn
+		case MENU_FILE_EXIT
+			end
+		endcase
+	endselect
+
+endfunction
+
+function assembleSkybox(obj as dword, path as string)
+	set dir path
+	SKYBOX_TEX_START=800
+   make object plain obj, 0, 0 `Base object
+   position object obj, 0, 0, 0
+   make object plain obj + 1, 10000, 10000 ` The skybox will have the volume 10000^3 units by default
+      make mesh from object obj + 1, obj + 1
+         add limb obj, 1, obj + 1
+            offset limb obj, 1, 0, 5000, 0
+            rotate limb obj, 1, 90, 0, 0
+        add limb obj, 2, obj + 1
+            offset limb obj, 2, 0, 0, 5000
+         add limb obj, 3, obj + 1
+            offset limb obj, 3, 5000, 0, 0
+            rotate limb obj, 3, 0, 270, 0
+         add limb obj, 4, obj + 1
+            offset limb obj, 4, 0, 0, -5000
+            rotate limb obj, 2, 0, 180, 0
+         add limb obj, 5, obj + 1
+            offset limb obj, 5, -5000, 0, 0
+            rotate limb obj, 5, 0, 90, 0
+         add limb obj, 6, obj + 1
+            offset limb obj, 6, 0, -5000, 0
+            rotate limb obj, 6, 270, 0, 0
+
+
+      `message path + "pos_y." + ext + " exists: " + str$(file exist(path + "pos_y." + ext))
+      load image "pos_y.bmp", SKYBOX_TEX_START
+         texture limb obj, 1, SKYBOX_TEX_START
+      load image "pos_x.bmp", SKYBOX_TEX_START + 1
+         texture limb obj, 2, SKYBOX_TEX_START + 1
+      load image "pos_z.bmp", SKYBOX_TEX_START + 2
+         texture limb obj, 3, SKYBOX_TEX_START + 2
+      load image "neg_x.bmp", SKYBOX_TEX_START + 3
+         texture limb obj, 4, SKYBOX_TEX_START + 3
+      load image "neg_z.bmp", SKYBOX_TEX_START + 4
+         texture limb obj, 5, SKYBOX_TEX_START + 4
+      load image "neg_y.bmp", SKYBOX_TEX_START + 5
+         texture limb obj, 6, SKYBOX_TEX_START + 5
+
+      delete mesh obj + 1
+   delete object obj + 1
+   set object texture obj, 2, 0
+   set object light obj, false
+   set dir ".."
+endfunction
