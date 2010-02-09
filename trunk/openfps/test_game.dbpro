@@ -1,53 +1,37 @@
-; **** Dark BASIC Professional Project File ****
-; **** Written by DarkBASIC Professional Editor ****
+; **** DarkBASIC Professional Project ****
+; Created by CodeSurge IDE
 version=DBP1.00
 project name=Untitled
 
-; **** source file information ****
+; ****Source file information****
 main=test_game.dba
 include1=module_movement.dba
 include2=module_resource.dba
 include3=menu.dba
 final source=_Temp.dbsource
 
-; **** Executable Information  ***
-; build types: exe, media, installer, alone
+;***Executable filename***
 executable=Temp.exe
 build type=exe
-; ** Media file compression **
-compression=NO
 
-; ** Media file encryption **
+compression=NO
 encryption=NO
-; ** Display the card options screen window? **
 card options window=NO
 
-; **** debugger information ****
-; If the editor sets this to yes, it is running in debug mode
+; Debugger
 CLI=NO
-CommandLineArguments=
 
-; **** display mode information ****
+; *****Display Settings*****
 app title=My Project
-
-; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
 graphics mode=fullscreen
 fullscreen resolution=1024x768x32
-
-; arbitrary sizes are valid for windowed mode
 window resolution=1024x768
 
-; **** External Files Information ****
 
-; **** Media ****
-; Example entries: media1=graphics\*.jpg
-media root path=F:\openfps\
+;*****Media files, icons, cursors*****
+media root path=D:\Documents and Settings\Brian\Desktop\openfps\
 
-; **** Icons ****
-
-; **** Cursors ****
-
-; **** Version Info ****
+;****Version Information****
 VerComments=
 VerCompany=
 VerFileDesc=
@@ -58,7 +42,3 @@ VerTrademark=
 VerFilename=
 VerProduct=
 VerProductNumber=v1.0
-
-; **** To Do ****
-
-; **** Comments ****

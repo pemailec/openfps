@@ -228,6 +228,7 @@ timer_starttime = timer()
 
 //moving
 Set Vector3 mov_Vec5, 1.0, 0.0, 0.0
+if vector exist(mov_Vec5) then darkside_message_box_a
 Build Rotation Axis Matrix4 mov_Mat1, mov_Vec5, PLR_angle.x * 0.017453292519943295769236907684886
 Set Vector3 mov_Vec5, 0.0, 1.0, 0.0
 Build Rotation Axis Matrix4 mov_Mat2, mov_Vec5, PLR_angle.y * 0.017453292519943295769236907684886

@@ -92,30 +92,30 @@ menu_button1 = grabResource(res_Image)
 menu_button2 = grabResource(res_Image)
 menu_button3 = grabResource(res_Image)
 
-global left_top as integer
-global right_top as integer
-global top_flat as integer
-global bottom_flat as integer
-global left_bottom as integer
-global right_bottom as integer
-global left_flat as integer
-global right_flat as integer
-left_top = grabResource(res_Image)
-right_top = grabResource(res_Image)
-top_flat = grabResource(res_Image)
-bottom_flat = grabResource(res_Image)
-left_bottom = grabResource(res_Image)
-right_bottom = grabResource(res_Image)
-left_flat = grabResource(res_Image)
-right_flat = grabResource(res_Image)
-load image "media\menu\gui\left_top.png", left_top
-load image "media\menu\gui\right_top.png", right_top
-load image "media\menu\gui\top_flat.png", top_flat
-load image "media\menu\gui\bottom_flat.png", bottom_flat
-load image "media\menu\gui\left_bottom.png", left_bottom
-load image "media\menu\gui\right_bottom.png", right_bottom
-load image "media\menu\gui\left_flat.png", left_flat
-load image "media\menu\gui\right_flat.png", right_flat
+global menu_left_top as integer
+global menu_right_top as integer
+global menu_top_flat as integer
+global menu_bottom_flat as integer
+global menu_left_bottom as integer
+global menu_right_bottom as integer
+global menu_left_flat as integer
+global menu_right_flat as integer
+menu_left_top = grabResource(res_Image)
+menu_right_top = grabResource(res_Image)
+menu_top_flat = grabResource(res_Image)
+menu_bottom_flat = grabResource(res_Image)
+menu_left_bottom = grabResource(res_Image)
+menu_right_bottom = grabResource(res_Image)
+menu_left_flat = grabResource(res_Image)
+menu_right_flat = grabResource(res_Image)
+load image "media\menu\gui\left_top.png", menu_left_top
+load image "media\menu\gui\right_top.png", menu_right_top
+load image "media\menu\gui\top_flat.png", menu_top_flat
+load image "media\menu\gui\bottom_flat.png", menu_bottom_flat
+load image "media\menu\gui\left_bottom.png", menu_left_bottom
+load image "media\menu\gui\right_bottom.png", menu_right_bottom
+load image "media\menu\gui\left_flat.png", menu_left_flat
+load image "media\menu\gui\right_flat.png", menu_right_flat
 
 global menu_clickstate as boolean
 
@@ -128,7 +128,7 @@ freeResource(menu_mainsprite,res_Sprite)
 do
     cls
 	paste image menu_mainimage,0,0
-	button("New Game",78,219)
+	if button("New Game",78,219) then exit
 	button("Load Game",78,279)
 	button("Help",78,339)
 	button("Options",78,399)
@@ -149,9 +149,9 @@ freeResource(menu_loadingimage ,res_Image )
 freeResource(menu_button1,res_Image)
 freeResource(menu_button2,res_Image)
 freeResource(menu_button3,res_Image)
-freeResource(left_top,res_Image)
-freeResource(right_top,res_Image)
-freeResource(top_flat,res_Image)
+freeResource(menu_left_top,res_Image)
+freeResource(menu_right_top,res_Image)
+freeResource(menu_top_flat,res_Image)
 endfunction
 
 
@@ -161,15 +161,28 @@ endfunction
 /////////////////////////////////////////////////////////
 
 function RenderWindow(x1,y1,x2,y2):
-	paste image left_top,x1,y1,1
-	paste image right_top,x2-image width(right_top),y1,1
-	tilex(top_flat,x1+image width(left_top),y1,((x2-image width(right_top)*2)-x1)/image width(top_flat))
+
+    if y2<y1
+        temp=y2
+        y2=y1
+        y1=temp
+    endif
+    if x2<x1
+        temp=x2
+        x2=x1
+        x1=temp
+    endif
+
+	paste image menu_left_top, x1,y1,1
+	paste image menu_right_top,x2-image width(menu_right_top),y1,1
+	tilex(menu_top_flat,x1+image width(menu_left_top),y1,((x2-image width(menu_right_top)*2)-x1)/image width(menu_top_flat))
 	
-	paste image left_bottom,x1,y2,1
-	paste image right_bottom,x2-image width(right_bottom),y2,1
-	tilex(bottom_flat,x1+image width(left_bottom),y2,((x2-image width(right_bottom)*2)-x1)/image width(bottom_flat))
+	paste image menu_left_bottom,x1,y2,1
+	paste image menu_right_bottom,x2-image width(menu_right_bottom),y2,1
+	tilex(menu_bottom_flat,x1+image width(menu_left_bottom),y2,((x2-image width(menu_right_bottom)*2)-x1)/image width(menu_bottom_flat))
 	
-	tiley(left_flat,x1,y1+image height(left_top),((y2)-y1)/image height(left_flat))
+	tiley(menu_left_flat ,x1,y1+image height(menu_left_top),(y2-y1-image height(menu_left_bottom))/image height(menu_left_flat))
+	tiley(menu_right_flat,x2-image width(menu_right_flat),y1+image height(menu_left_top),(y2-y1-image height(menu_left_bottom))/image height(menu_left_flat))
 	
 endfunction
 
