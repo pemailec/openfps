@@ -34,8 +34,9 @@ SET CUBE MAPPING ON 2,3,3,3,3,3,3
 scale object 2,200,200,200
 set object light 2,0
 position object 2,0,-100,0
-
-
+set object transparency 2,1
+loop object 2
+set object speed 2,20
 
 `set camera view 150,0,640,480
 `Main Loop
