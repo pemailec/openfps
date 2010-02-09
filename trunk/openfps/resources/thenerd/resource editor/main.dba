@@ -3,7 +3,7 @@
 `Created: 12/26/09
 `=================
 `Main Source File
-
+maximize window
 `Global Variables
 	global mainMenu
 	global fileMenu
@@ -25,11 +25,19 @@ autocam off
 set camera range 1,100000000
 assembleSkybox(9999, "skybox")
 scale object 9999,100000,100000,100000
-make object cube 1,50
+
+load object "AI.dbo",2
+load image "ai_1_D2.dds",2
+texture object 2,2
+load image "metal.jpg",3
+SET CUBE MAPPING ON 2,3,3,3,3,3,3
+scale object 2,200,200,200
+set object light 2,0
+position object 2,0,-100,0
 
 
 
-set camera view 150,0,640,480
+`set camera view 150,0,640,480
 `Main Loop
 do
 	position camera 0,0,0

@@ -11,7 +11,7 @@ final source=_Temp.dbsource
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
-executable=project.exe
+executable=
 build type=exe
 ; ** Media file compression **
 compression=NO
@@ -34,16 +34,15 @@ graphics mode=Window
 fullscreen resolution=640x480
 
 ; arbitrary sizes are valid for windowed mode
-window resolution=640x480
+window resolution=1280x1024
 
 ; **** External Files Information ****
 
 ; **** Media ****
 ; Example entries: media1=graphics\*.jpg
-media root path=F:\Experiment Six\editor\Res\resource\
+media root path=F:\openfps\resources\thenerd\resource editor\
 
 ; **** Icons ****
-icon1=F:\Experiment Six\editor\Res\resource\add_folder_32[1].bmp
 
 ; **** Cursors ****
 
