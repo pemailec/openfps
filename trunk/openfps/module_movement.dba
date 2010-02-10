@@ -21,6 +21,7 @@ Apply different speeds and jump heights for different classes.
 Add more realism - camera bobs slightly when walking, more when
   running.  Camera bobs down before jumping.  Camera dips after
   landing from a jump - more if it was a hard landing.
+**FIX ISSUE 1 (line 231, Vector Does Not Exist)
 
 
 ----- Purpose:

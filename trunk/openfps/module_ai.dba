@@ -1,0 +1,70 @@
+remstart
+/////////////////////////////////////////////////////
+//
+// OpenFPS AI Mechanics Module
+//
+// Created by --
+// Maintained by --
+//
+/////////////////////////////////////////////////////
+
+----- Changelog:
+(2/8/10) - BMacZero - Created
+
+
+----- To-Do:
+Actual AI ;).
+
+
+----- Purpose:
+This module handles all pathfinding and decision-
+making for any non-player characters in the game.
+
+If the NPCs choose to shoot or use a similar ability,
+this module tells the appropriate module to take care
+of it.
+
+
+----- Dependancies and Conflicts (IMPORTANT STUFF):
+-None-
+
+
+----- Other Notes:
+
+
+
+remend
+
+
+
+/////////////////////////////////////////////////////////
+// INIT                                                //
+/////////////////////////////////////////////////////////
+
+
+function initAI()
+
+
+endfunction
+
+
+/////////////////////////////////////////////////////////
+// CORE                                                //
+/////////////////////////////////////////////////////////
+
+
+function updateAI()
+
+
+endfunction
+
+
+/////////////////////////////////////////////////////////
+// TERMINATE                                           //
+/////////////////////////////////////////////////////////
+
+
+function terminateAI()
+
+
+endfunction

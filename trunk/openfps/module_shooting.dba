@@ -1,0 +1,102 @@
+remstart
+/////////////////////////////////////////////////////
+//
+// OpenFPS SHOOTING Mechanics Module
+//
+// Created by --
+// Maintained by --
+//
+/////////////////////////////////////////////////////
+
+----- Changelog:
+(2/8/10) - BMacZero - Created
+
+
+----- To-Do:
+Replace placeholder raycasting with legitimate bullet physics.
+
+Bring input in-line with player configurations.
+
+
+----- Purpose:
+This module takes player input concerning shooting and abilities
+such as the Sentinel's shield, and takes care of most effects of
+these abilities.
+
+It does the same for NPCs, but only on the prompting of the AI
+module.
+
+
+----- Dependancies and Conflicts (IMPORTANT STUFF):
+-None-
+
+
+----- Other Notes:
+
+
+
+remend
+
+
+type shoot_Bullet
+    velx as float
+    vely as float
+    velz as float
+    posx as float
+    posy as float
+    posz as float
+    mass as float `in grams
+    twistrate as float
+endtype
+
+
+
+/////////////////////////////////////////////////////////
+// INIT                                                //
+/////////////////////////////////////////////////////////
+
+
+function initShooting()
+
+global DIM shoot_Bullets(0) as shoot_Bullet
+
+endfunction
+
+
+/////////////////////////////////////////////////////////
+// CORE                                                //
+/////////////////////////////////////////////////////////
+
+
+function updateShooting()
+
+if mouseclick()=1
+
+    `This will need more detailed info on gun fire rate and such later
+    array insert at top shoot_Bullets(0)
+    shoot_Bullets(1).posx=PLR_headpos.x
+    shoot_Bullets(1).posy=PLR_headpos.y
+    shoot_Bullets(1).posz=PLR_headpos.z
+    
+    `Temp
+    bulletspeed#=100.0
+    
+    shoot_Bullets(1).velx=bulletspeed#*cos(PLR_angle.x)*sin(PLR_angle.y)
+    shoot_Bullets(1).vely=bulletspeed#*sin(PLR_angle.x)
+    shoot_Bullets(1).velz=bulletspeed#*cos(PLR_angle.x)*cos(PLR_angle.y)
+    
+endif
+
+endfunction
+
+
+/////////////////////////////////////////////////////////
+// TERMINATE                                           //
+/////////////////////////////////////////////////////////
+
+
+function terminateShooting()
+
+UNDIM shoot_Bullets(0)
+
+endfunction

@@ -1,0 +1,64 @@
+remstart
+/////////////////////////////////////////////////////
+//
+// OpenFPS NETWORK FUNCTIONS Core Module
+//
+// Created by --
+// Maintained by --
+//
+/////////////////////////////////////////////////////
+
+----- Changelog:
+(2/8/10) - BMacZero - Created
+
+DO NOT MODIFY THIS MODULE YET.  Its structure will be heavily
+reliant on how the others shape up.
+
+
+----- To-Do:
+-None-
+
+----- Purpose:
+Communicates with host to retrieve updated information on
+player, enemy, and object positions and states.
+Passes this information to relevant modules to deal with it.
+
+
+----- Dependancies and Conflicts (IMPORTANT STUFF):
+-None-
+
+
+----- Other Notes:
+
+
+
+remend
+
+
+/////////////////////////////////////////////////////////
+// INIT                                                //
+/////////////////////////////////////////////////////////
+
+
+function initNetwork()
+
+
+endfunction
+
+
+/////////////////////////////////////////////////////////
+// CORE                                                //
+/////////////////////////////////////////////////////////
+
+
+
+
+/////////////////////////////////////////////////////////
+// TERMINATE                                           //
+/////////////////////////////////////////////////////////
+
+
+function terminateNetwork()
+
+
+endfunction
