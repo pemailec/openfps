@@ -11,9 +11,9 @@ remstart
 ----- Changelog:
 
 (11/19/09) - BMacZero - Adapted to existing code.
-(2/7/10)   - BMacZero - Fixed issue with buttons highlighting incorrectly
+(2/7/10) - BMacZero - Fixed issue with buttons highlighting incorrectly
 (2/7/10) - thenerd - Updating and changing menu system, adding gui functions
-(2/8/10) - BMacZero - Finished RenderWindow function, prefixed global vars with "menu"
+(2/8/10) - BMacZero - Polished RenderWindow function, prefixed global vars with "menu"
 (2/9/10) - thenerd - Finished RenderWindow function with fill
 
 ----- To-Do:
