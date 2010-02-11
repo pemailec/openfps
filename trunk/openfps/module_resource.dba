@@ -12,6 +12,7 @@ remstart
 (11/18/09) - BMacZero - Created
 (12/16/09) - BMacZero - Fixed potentially serious bug concerning grabResource
 (2/7/10)   - BMacZero - Fixed more general bugs.
+(2/11/10)  - Kaedroho - Made all math resource types the same type to avoid conflicts
 
 
 ----- To-Do:
@@ -52,14 +53,14 @@ remend
 #Constant res_Camera   10
 #Constant res_Mesh     11
 #Constant res_Matrix   12
+#Constant res_Matrix4  12
+#Constant res_Vector2  12
+#Constant res_Vector3  12
+#Constant res_Vector4  12
 #Constant res_Particle 13
-#Constant res_Matrix4  14
-#Constant res_Vector2  15
-#Constant res_Vector3  16
-#Constant res_Vector4  17
-#Constant res_DLL      18
+#Constant res_DLL      14
 
-#Constant res_Count    18
+#Constant res_Count    14
 
 type res_Type
     start as integer
