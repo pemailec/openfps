@@ -13,6 +13,7 @@ remstart
 (12/16/09) - BMacZero - Fixed potentially serious bug concerning grabResource
 (2/7/10)   - BMacZero - Fixed more general bugs.
 (2/11/10)  - Kaedroho - Made all math resource types the same type to avoid conflicts
+(2/12/10)  - BMacZero - Combined Vector values into one.
 
 
 ----- To-Do:
@@ -53,14 +54,12 @@ remend
 #Constant res_Camera   10
 #Constant res_Mesh     11
 #Constant res_Matrix   12
-#Constant res_Matrix4  12
-#Constant res_Vector2  12
-#Constant res_Vector3  12
-#Constant res_Vector4  12
-#Constant res_Particle 13
-#Constant res_DLL      14
+#Constant res_Matrix4  13
+#Constant res_Vector   13
+#Constant res_Particle 14
+#Constant res_DLL      15
 
-#Constant res_Count    14
+#Constant res_Count    15
 
 type res_Type
     start as integer
@@ -160,14 +159,8 @@ select restype
     case res_Matrix4
         `if matrix4 exist(number) then delete matrix4 number
     endcase
-    case res_Vector2
-        `if vector2 exist(number) then delete vector2 number
-    endcase
-    case res_Vector3
-        `if vector3 exist(number) then delete vector3 number
-    endcase
-    case res_Vector4
-        `if vector4 exist(number) then delete vector4 number
+    case res_Vector
+        `if vector exist(number) then delete vector number
     endcase
     case res_DLL
         if dll exist(number) then delete dll number

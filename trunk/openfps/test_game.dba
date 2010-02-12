@@ -94,6 +94,7 @@ remend
 planeObj = grabResource(res_Object)
 make object box planeObj,2000,200,2000
 sc_setupobject planeObj,0,2
+sc_updateobject planeObj
 
 hide mouse
 backdrop on
