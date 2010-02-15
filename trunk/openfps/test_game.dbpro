@@ -1,7 +1,7 @@
 ; **** DarkBASIC Professional Project ****
 ; Created by CodeSurge IDE
 version=DBP1.00
-project name=Untitled
+project name=OpenFPS
 
 ; ****Source file information****
 main=test_game.dba
@@ -25,7 +25,7 @@ card options window=NO
 CLI=NO
 
 ; *****Display Settings*****
-app title=My Project
+app title=BioStorm
 graphics mode=fullscreen
 fullscreen resolution=1024x768x32
 window resolution=1024x768

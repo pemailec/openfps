@@ -165,9 +165,9 @@ PLR_heights(stance_CROUCH) = 55.0
 PLR_heights(stance_PRONE)  = 15.0
 
 PLR_object    = 1
-PLR_footpos.x = 0.0
-PLR_footpos.y = 15.0
-PLR_footpos.z = 0.0
+PLR_footpos.x = 500.0
+PLR_footpos.y = BT GetGroundHeight(TerrainID,500.0,500.0)
+PLR_footpos.z = 500.0
 PLR_stance    = stance_WALK
 PLR_headpos.x = PLR_footpos.x
 PLR_headpos.y = PLR_footpos.y + PLR_heights(PLR_stance)

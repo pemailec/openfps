@@ -46,7 +46,9 @@ initMovement()
 `=================================================================
 `==== BLITZ TERRAIN TEST CODE - SHOULD NOT BE USED LATER
 
-remstart
+global TerrainID
+
+
 bt_HeightmapImage  = grabResource(res_Image)
 bt_TexturemapImage = grabResource(res_Image)
 bt_DetailmapImage  = grabResource(res_Image)
@@ -56,48 +58,56 @@ load image "media/BlitzTerrain/Heightmap.bmp", bt_HeightmapImage
 load image "media/BlitzTerrain/texture.jpg",   bt_TexturemapImage
 load image "media/BlitzTerrain/detail.tga",    bt_DetailmapImage
 
-terrain=UT MakeTerrain()
-UT SetTerrainHeightmap terrain, bt_HeightmapImage
-UT SetTerrainTexture terrain,   bt_TexturemapImage
-UT SetTerrainDetail terrain,    bt_DetailmapImage
-`Set how many LOD levels there are
-UT SetTerrainLOD terrain,3
-UT SetTerrainScale terrain,20
-UT SetTerrainYScale terrain,3
+//Make the terrain
+global TerrainID
+TerrainID=BT MakeTerrain()
 
-`Set the split (the terrain will be 8x8 so it will generate 64 sectors)
-UT SetTerrainSplit terrain,8
-UT SetTerrainDetailTile terrain,2
-UT SetTerrainLODDistances terrain,1000,3000,5500,0,0,0
+//Set images
+BT SetTerrainHeightmap TerrainID,bt_HeightmapImage
+BT SetTerrainTexture TerrainID,  bt_TexturemapImage
+BT SetTerrainDetail TerrainID,   bt_DetailmapImage
 
-UT BuildTerrain terrain
+//Set some other values
+BT SetTerrainScale TerrainID,12.0
+BT SetTerrainYScale TerrainID,2.0
+BT SetTerrainSplit TerrainID,8
+BT SetTerrainDetailTile TerrainID,3.0
 
-type bt_GroundType
-    obj as integer
-    phy as integer
-endtype
+//LOD
+BT SetTerrainLOD TerrainID,3
+BT SetTerrainLODDistance TerrainID,1,1000.0
+BT SetTerrainLODDistance TerrainID,2,2000.0
 
-DIM bt_GroundObjects(0) as bt_GroundType
+//Smoothing and Quad Rotation
+BT SetTerrainSmoothing TerrainID,1
+BT SetTerrainQuadRotation TerrainID,1
+
+
+global TerrainIDObj
+TerrainIDObj=grabResource(res_Object)
+BT BuildTerrain TerrainID,TerrainIDObj
+
+BT SetBuildStep 0
 
 repeat
-    array insert at top bt_GroundObjects(0)
-    bt_GroundObjects(1).obj=grabResource(res_Object)
-    bt_GroundObjects(1).phy=grabResource(res_Object)
-    progress=UT ContinueBuild(bt_GroundObjects(1).obj,bt_GroundObjects(1).phy,0)
-    sc_setupcomplexobject bt_GroundObjects(1).phy,0,4
+	progress=BT ContinueBuild()
 until progress=-1
 
-UT InitialiseTerrain terrain
+DIM tempTerObj(0)
 
-remend
+for i=0 to BT GetSectorCount(TerrainID,0)-1
+	if BT GetSectorExcluded(TerrainID,0,i)=0
+        array insert at top tempTerObj(0)
+        tempTerObj(1)=grabResource(res_Object)
+		BT MakeSectorObject TerrainID,0,i,tempTerObj(1)
+        position object tempTerObj(1),BT GetSectorPositionX(TerrainID,0,i),BT GetSectorPositionY(TerrainID,0,i),BT GetSectorPositionZ(TerrainID,0,i)
+        sc_setupcomplexobject tempTerObj(1),0,4
+    endif
+next i
 
-planeObj = grabResource(res_Object)
-make object box planeObj,2000,200,2000
-sc_setupobject planeObj,0,2
-sc_updateobject planeObj
-
+//Setup camera
+set camera range 10,10000
 hide mouse
-backdrop on
 
 `==
 `====================================================================
@@ -113,6 +123,12 @@ do
 updateMovement()
 
 text 10,10,str$(screen fps())
+
+`TEMPORARY
+`BT SetCurrentCamera 0
+`BT UpdateTerrainCull g_TerrainID
+`BT UpdateTerrainLOD g_TerrainID
+`BT RenderTerrain g_TerrainID
 
 sync
 loop
