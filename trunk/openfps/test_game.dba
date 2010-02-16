@@ -12,6 +12,7 @@ remstart
 (11/23/09) - BMacZero - Added menu
 (11/24/09) - BMacZero - [Removed BlitzTerrain temporarily]
 (2/7/10) - thenerd - Changed screen res to 1024x768x32 fullscreen, worked on menu functions
+(2/15/10) - BMacZero - Updated BlitzTerrain code for BT 2.0
 
 ----- To-Do
 Modules should be init between initMenu() and runMenu().
@@ -68,8 +69,8 @@ BT SetTerrainTexture TerrainID,  bt_TexturemapImage
 BT SetTerrainDetail TerrainID,   bt_DetailmapImage
 
 //Set some other values
-BT SetTerrainScale TerrainID,12.0
-BT SetTerrainYScale TerrainID,2.0
+BT SetTerrainScale TerrainID,24.0
+BT SetTerrainYScale TerrainID,6.0
 BT SetTerrainSplit TerrainID,8
 BT SetTerrainDetailTile TerrainID,3.0
 
@@ -100,6 +101,7 @@ for i=0 to BT GetSectorCount(TerrainID,0)-1
         array insert at top tempTerObj(0)
         tempTerObj(1)=grabResource(res_Object)
 		BT MakeSectorObject TerrainID,0,i,tempTerObj(1)
+		hide object tempTerObj(1)
         position object tempTerObj(1),BT GetSectorPositionX(TerrainID,0,i),BT GetSectorPositionY(TerrainID,0,i),BT GetSectorPositionZ(TerrainID,0,i)
         sc_setupcomplexobject tempTerObj(1),0,4
     endif
@@ -123,12 +125,13 @@ do
 updateMovement()
 
 text 10,10,str$(screen fps())
+text 10,20,"Stamina: "+str$(PLR_curstam)
 
 `TEMPORARY
-`BT SetCurrentCamera 0
-`BT UpdateTerrainCull g_TerrainID
-`BT UpdateTerrainLOD g_TerrainID
-`BT RenderTerrain g_TerrainID
+BT SetCurrentCamera 0
+BT UpdateTerrainCull TerrainID
+BT UpdateTerrainLOD TerrainID
+BT RenderTerrain TerrainID
 
 sync
 loop
