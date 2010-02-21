@@ -16,7 +16,6 @@ remstart
 
 ----- To-Do
 Modules should be init between initMenu() and runMenu().
-However, movement module does not work properly - fix.
 
 remend
 
