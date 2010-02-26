@@ -11,8 +11,9 @@ remstart
 (11/19/09) - BMacZero - Created
 (11/23/09) - BMacZero - Added menu
 (11/24/09) - BMacZero - [Removed BlitzTerrain temporarily]
-(2/7/10) - thenerd - Changed screen res to 1024x768x32 fullscreen, worked on menu functions
-(2/15/10) - BMacZero - Updated BlitzTerrain code for BT 2.0
+(2/7/10)   - thenerd - Changed screen res to 1024x768x32 fullscreen, worked on menu functions
+(2/15/10)  - BMacZero - Updated BlitzTerrain code for BT 2.0
+(2/25/10)  - BMacZero - Globalized timerbased system, added shooting
 
 ----- To-Do
 Modules should be init between initMenu() and runMenu().
@@ -42,6 +43,7 @@ runMenu()
 
 `Init other modules here
 initMovement()
+initShooting()
 
 `=================================================================
 `==== BLITZ TERRAIN TEST CODE - SHOULD NOT BE USED LATER
@@ -119,9 +121,19 @@ hide mouse
 /////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////
 
+`Timerbased
+global elapsedtime as float
+global timer_starttime as dword
+timer_starttime = timer()
+
 do
 
+`Timerbased
+elapsedtime=(timer()-timer_starttime)/1000.0
+timer_starttime = timer()
+
 updateMovement()
+updateShooting()
 
 text 10,10,str$(screen fps())
 text 10,20,"Stamina: "+str$(PLR_curstam)
@@ -134,5 +146,9 @@ BT RenderTerrain TerrainID
 
 sync
 loop
-end
 
+terminateMovement()
+terminateShooting()
+terminateAI()
+terminateResource()
+end

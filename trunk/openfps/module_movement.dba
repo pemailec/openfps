@@ -17,6 +17,7 @@ remstart
 (2/12/10)  - BMacZero - Brought in line w/ new R/M values.
 (2/16/10)  - BMacZero - Made the player less like a super-ninja
                       - Added stamina
+(2/25/10)  - BMacZero - Globalized timer-based system.
 
 
 ----- To-Do:
@@ -218,11 +219,7 @@ null = Make Vector3( mov_Vec5 ) // lX
 null = Make Vector3( mov_Vec6 ) // lY
 null = Make Vector3( mov_Vec7 ) // lZ
 
-//MOVEMENT MODULE TIMER
-global timer_starttime as dword
-global synctime as float
-timer_starttime = timer()
-//MOVEMENT MODULE TIMER
+global mov_synctime as float
 
 endfunction
 
@@ -237,12 +234,6 @@ function updateMovement()
 local movementx as float
 local movementy as float
 local movementz as float
-
-//MOVEMENT MODULE TIMER
-local elapsedtime as float
-elapsedtime=(timer()-timer_starttime)/1000.0
-timer_starttime = timer()
-//MOVEMENT MODULE TIMER
 
 //moving
 Set Vector3 mov_Vec5, 1.0, 0.0, 0.0
@@ -331,9 +322,7 @@ if ground <> 0
    PLR_velocity.x = PLR_velocity.x * temp#             //adjust speed to make up for grade
    PLR_velocity.z = PLR_velocity.z * temp#
 else
-   //MOVEMENT MODULE TIMER
    PLR_velocity.y = PLR_velocity.y + PLR_gravity * elapsedtime
-   //MOVEMENT MODULE TIMER
 endif
 
 //jumping
@@ -351,11 +340,9 @@ endif
 
 
 //update
-//MOVEMENT MODULE TIMER
 PLR_footpos.x = PLR_footpos.x + PLR_velocity.x * elapsedtime
 PLR_footpos.y = PLR_footpos.y + PLR_velocity.y * elapsedtime
 PLR_footpos.z = PLR_footpos.z + PLR_velocity.z * elapsedtime
-//MOVEMENT MODULE TIMER
 
 `Update playersize
 if PLR_heights(PLR_stance)>PLR_currentheight
@@ -381,14 +368,12 @@ if keystate(KEY_sprint) = 0 and PLR_stance = stance_SPRINT
    PLR_stance = stance_WALK
 endif
 
-//MOVEMENT MODULE TIMER
-synctime = synctime + elapsedtime
-if synctime > 0.01
-    synctime = 0
+mov_synctime = mov_synctime + elapsedtime
+if mov_synctime > 0.01
+    mov_synctime = 0
     position camera 0, PLR_headpos.x, PLR_headpos.y, PLR_headpos.z
     rotate camera 0, PLR_angle.x, PLR_angle.y, PLR_angle.z
 endif
-//MOVEMENT MODULE TIMER
 
 endfunction
 
