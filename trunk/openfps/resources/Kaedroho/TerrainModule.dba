@@ -1,0 +1,200 @@
+// OPENFPS TERRAIN MODULE
+// WRITTEN BY KARL HOBLEY (KAEDROHO)
+// REQUIRES BLITZTERRAIN 2.00
+// Written to comply with the OpenFPS Coding Standard
+
+//Global structure
+type sTerrain_Main
+   dwTerrainID as dword
+   dwObjectID as dword
+endtype
+
+type sTerrain_LoadStruct
+   iHeightmapImage as integer
+   iTextureImage as integer
+   iDetailmapImage as integer
+   iExclusionImage as integer
+   
+   bHeightmapIsColour as integer //boolean, integers are faster with boolean maths
+   bAdvancedTerrainMode as integer
+   
+   fScale as float
+   fYScale as float
+   
+   cSplit as byte
+   
+   cExclusionThreshold as byte
+   
+   cLODLevels as byte
+   fLODLevelADistance as float
+   fLODLevelBDistance as float
+   fLODLevelCDistance as float
+   fLODLevelDDistance as float
+   fLODLevelEDistance as float
+   fLODLevelFDistance as float
+   
+   fDetailTile as float
+endtype
+
+//Declare global structure
+global g_Terrain_Main as sTerrain_Main
+
+
+
+//Standard functions
+function initTerrain()
+
+//Setup BT
+   BT SetBuildStep 8       //Build 8 sectors at a time
+   BT EnableAutoRecovery 1 //Enable auto recovery
+   
+endfunction
+
+
+function updateTerrain()
+
+//Render terrain
+//I will do a simple single camera render here
+//If you want me to add support for multi cameras then just ask (or look at the BT Documentation)
+   if g_Terrain_Main.dwTerrainID
+      BT SetCurrentCamera 0
+      BT UpdateTerrainCull g_Terrain_Main.dwTerrainID
+      BT UpdateTerrainLOD g_Terrain_Main.dwTerrainID
+      BT RenderTerrain g_Terrain_Main.dwTerrainID
+   endif
+   
+endfunction
+
+
+function terminateTerrain()
+
+//Delete the terrain
+   if g_Terrain_Main.dwTerrainID
+      BT DeleteTerrain g_Terrain_Main.dwTerrainID
+   endif
+   
+endfunction
+
+
+
+//Extra functions
+function LoadTerrainFromFile(sFile as string)
+
+//Check if the terrain isnt already created
+   if g_Terrain_Main.dwTerrainID>0 then exitfunction //ERROR
+   
+//Check if the file exists
+   if file exist(sFile)=0 then exitfunction //ERROR
+   
+//Load the terrain
+   g_Terrain_Main.dwObjectID=grabResource(res_Object)
+   g_Terrain_Main.dwTerrainID=BT LoadTerrain(sFile,g_Terrain_Main.dwObjectID)
+   
+//Generate the terrain
+   local iProgress as integer
+   repeat
+      iProgress=BT ContinueBuild()
+   until iProgress=-1
+   
+endfunction
+
+
+function LoadTerrainFromStruct(Struct as sTerrain_LoadStruct)
+
+//Check if the terrain isnt already created
+   if g_Terrain_Main.dwTerrainID>0 then exitfunction //ERROR
+   
+//Make a terrain
+   g_Terrain_Main.dwTerrainID=BT MakeTerrain()
+   
+//Set values
+   //Heightmap
+   if Struct.iHeightmapImage>0
+      if Struct.bHeightmapIsColour=1
+         BT SetTerrainColourHeightmap g_Terrain_Main.dwTerrainID,Struct.iHeightmapImage
+      else
+         BT SetTerrainHeightmap g_Terrain_Main.dwTerrainID,Struct.iHeightmapImage
+      endif
+   else
+      exitfunction //ERROR
+   endif
+   
+   //Texture
+   if Struct.iTextureImage>0
+      BT SetTerrainTexture g_Terrain_Main.dwTerrainID,Struct.iTextureImage
+   endif
+   
+   //Detailmap
+   if Struct.iDetailmapImage>0
+      BT SetTerrainDetail g_Terrain_Main.dwTerrainID,Struct.iDetailmapImage
+   endif
+   
+   //Exclusionmap
+   if Struct.iExclusionImage>0
+      BT SetTerrainExclusion g_Terrain_Main.dwTerrainID,Struct.iExclusionImage
+      if Struct.cExclusionThreshold>0
+         BT SetTerrainExclusionThreshold g_Terrain_Main.dwTerrainID,Struct.cExclusionThreshold
+      endif
+   endif
+   
+   //Advanced terrain mode, this will just flip/rotate the terrain the same way AT does
+   BT SetATMode Struct.bAdvancedTerrainMode
+   
+   //Scale
+   if Struct.fScale>0.0
+      BT SetTerrainScale g_Terrain_Main.dwTerrainID,Struct.fScale
+   endif
+   if Struct.fYScale>0.0
+      BT SetTerrainYScale g_Terrain_Main.dwTerrainID,Struct.fYScale
+   endif
+   
+   //Split
+   if Struct.cSplit>0
+      BT SetTerrainSplit g_Terrain_Main.dwTerrainID,Struct.cSplit
+   endif
+   
+   //LOD
+   if Struct.cLODLevels>0
+      BT SetTerrainLOD g_Terrain_Main.dwTerrainID,Struct.cLODLevels+1
+      BT SetTerrainLODDistance g_Terrain_Main.dwTerrainID,1,Struct.fLODLevelADistance
+      if Struct.cLODLevels>1
+         BT SetTerrainLODDistance g_Terrain_Main.dwTerrainID,2,Struct.fLODLevelBDistance
+      endif
+      if Struct.cLODLevels>2
+         BT SetTerrainLODDistance g_Terrain_Main.dwTerrainID,3,Struct.fLODLevelCDistance
+      endif
+      if Struct.cLODLevels>3
+         BT SetTerrainLODDistance g_Terrain_Main.dwTerrainID,4,Struct.fLODLevelDDistance
+      endif
+      if Struct.cLODLevels>4
+         BT SetTerrainLODDistance g_Terrain_Main.dwTerrainID,5,Struct.fLODLevelEDistance
+      endif
+      if Struct.cLODLevels>5
+         BT SetTerrainLODDistance g_Terrain_Main.dwTerrainID,6,Struct.fLODLevelFDistance
+      endif
+   endif
+   
+   //Detail tile
+   if Struct.fDetailTile>0.0
+      BT SetTerrainDetailTile g_Terrain_Main.dwTerrainID,Struct.fDetailTile
+   endif
+   
+//Build the terrain
+   g_Terrain_Main.dwObjectID=grabResource(res_Object)
+   BT BuildTerrain g_Terrain_Main.dwTerrainID,g_Terrain_Main.dwObjectID
+   
+//Generate the terrain
+   local iProgress as integer
+   repeat
+      iProgress=BT ContinueBuild()
+   until iProgress=-1
+   
+endfunction
+
+
+function SetTerrainCollision()
+
+//This function will apply collision to the terrain.
+//I will add code in here when I know more about how the collision system works
+
+endfunction
