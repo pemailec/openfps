@@ -26,6 +26,7 @@ remend
 /////////////////////////////////////////////////////////
 
 sync on : sync rate 60
+set display mode 1024,768,screen depth(),1
 autocam off
 randomize timer()
 
@@ -43,16 +44,17 @@ runMenu()
 
 
 `Init other modules here
+initTerrain()
+`Temporary
+LoadTerrainFromFile("media/BlitzTerrain/Terrain.blitz","media/BlitzTerrain/texture.jpg","media/BlitzTerrain/detail.tga")
+
 initMovement()
 initShooting()
-initTerrain()
+initAI()
 
 //Setup camera
 set camera range 10,10000
 hide mouse
-
-`Temporary
-LoadTerrainFromFile("media/BlitzTerrain/Terrain.blitz")
 
 /////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////
@@ -74,6 +76,7 @@ timer_starttime = timer()
 updateMovement()
 updateShooting()
 updateTerrain()
+updateAI()
 
 text 10,10,str$(screen fps())
 text 10,20,"Stamina: "+str$(PLR_curstam)

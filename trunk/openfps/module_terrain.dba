@@ -39,6 +39,8 @@ remend
 type sTerrain_Main
    dwTerrainID as dword
    dwObjectID as dword
+   textureImage as dword
+   detailImage as dword
 endtype
 
 type sTerrain_LoadStruct
@@ -107,7 +109,7 @@ endfunction
 
 
 //Extra functions
-function LoadTerrainFromFile(sFile as string)
+function LoadTerrainFromFile(sFile as string, texture as string, detail as string)
 
 //Check if the terrain isnt already created
    if g_Terrain_Main.dwTerrainID>0 then exitfunction //ERROR
@@ -124,6 +126,15 @@ function LoadTerrainFromFile(sFile as string)
    repeat
       iProgress=BT ContinueBuild()
    until iProgress=-1
+   
+   g_Terrain_Main.textureImage = grabResource(res_Image)
+   g_Terrain_Main.detailImage = grabResource(res_Image)
+   load image texture,g_Terrain_Main.textureImage
+   load image detail,g_Terrain_Main.detailImage
+   BT SetTerrainTexture g_Terrain_Main.dwTerrainID,g_Terrain_Main.textureImage
+   BT SetTerrainDetail g_Terrain_Main.dwTerrainID,g_Terrain_Main.detailImage
+   
+   SetTerrainCollision()
    
 endfunction
 
@@ -225,8 +236,20 @@ endfunction
 
 function SetTerrainCollision()
 
-//This function will apply collision to the terrain.
-//I will add code in here when I know more about how the collision system works
+LODLevel=1 //Set this anywhere between 0 and 2
+
+UNDIM terrainSectors(0)
+DIM terrainSectors(BT GetSectorCount(g_Terrain_Main.dwTerrainID,LODLevel)-1) as dword
+
+for i=0 to BT GetSectorCount(g_Terrain_Main.dwTerrainID,LODLevel)-1
+    if BT GetSectorExcluded(g_Terrain_Main.dwTerrainID,LODLevel,i)=0
+        terrainSectors(i)=grabResource(res_Object)
+        BT MakeSectorObject g_Terrain_Main.dwTerrainID,LODLevel,i,terrainSectors(i)
+        position object terrainSectors(i),BT GetSectorPositionX(g_Terrain_Main.dwTerrainID,LODLevel,i),BT GetSectorPositionY(g_Terrain_Main.dwTerrainID,LODLevel,i),BT GetSectorPositionZ(g_Terrain_Main.dwTerrainID,LODLevel,i)
+        sc_setupcomplexobject terrainSectors(i),0,4
+        exclude object on terrainSectors(i)
+    endif
+next i
 
 endfunction
 
@@ -242,5 +265,7 @@ function terminateTerrain()
    if g_Terrain_Main.dwTerrainID
       BT DeleteTerrain g_Terrain_Main.dwTerrainID
    endif
+   
+   UNDIM terrainSectors(0)
 
 endfunction

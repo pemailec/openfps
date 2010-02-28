@@ -3,18 +3,19 @@ remstart
 //
 // OpenFPS AI Mechanics Module
 //
-// Created by --
-// Maintained by --
+// Created by darkvee
+// Maintained by darkvee
 //
 /////////////////////////////////////////////////////
 
 ----- Changelog:
 (2/8/10) - BMacZero - Created
+(2/28/10) - BMacZero - Incorporated darkvee's code
 
 
 ----- To-Do:
-Actual AI ;).
-
+Replace goodNPC state 2 with cover system
+Synchronize with module_shooting
 
 ----- Purpose:
 This module handles all pathfinding and decision-
@@ -37,6 +38,65 @@ remend
 
 
 
+`global timerBasedTimer as integer = timer()
+
+
+type GoodNpcType
+    ObjNum as integer
+    X as float
+    Y as float
+    Z as float
+    Speed as float
+    Distance as Float
+    Distance2 as float
+    DistanceX as float
+    DistanceZ as float
+    Distance2X as float
+    Distance2Z as float
+    Angle as float
+    Rotate as integer
+    Direction as integer
+    GoodNpcState as integer
+    DirectionTimer as integer = timer()
+    RotationTimer as integer = timer()
+endtype
+
+type BadNpcType
+    ObjNum as integer
+    X as float
+    Y as float
+    Z as float
+    Speed as float
+    Distance as Float
+    Angle as float
+    Rotate as integer
+    Direction as integer
+    DistanceX as float
+    DistanceZ as float
+    RandomTimer as integer = timer()
+    DirectionTimer as integer = timer()
+    Health as integer
+endtype
+
+type GoodNpcBulletType
+    ObjNum as integer
+    X as float
+    Y as float
+    Z as float
+    Speed as float
+    Distance as Float
+    Distance2 as float
+    Angle as float
+    Rotate as float
+    Alive as integer
+    Direction as integer
+    DistanceX as float
+    DistanceZ as float
+    DirectionTimer as integer = timer()
+    Range as integer
+endtype
+
+
 /////////////////////////////////////////////////////////
 // INIT                                                //
 /////////////////////////////////////////////////////////
@@ -44,6 +104,91 @@ remend
 
 function initAI()
 
+global goodNpcRange as float `Prefered player proximity
+goodNpcRange = 450.0
+
+global goodNpcRange2 as float
+goodNpcRange2 = 300.0
+
+global goodNpcRange3  as float
+goodNpcRange3 = 300.0
+
+global goodNpcRange4 as float
+goodNpcRange4 = 1200.0
+
+global badNpcRange as float
+badNpcRange = 1200.0
+
+
+rem just a bullet timer that tells how long to respawn a new bullet
+global goodNpcBulletTime  as integer = timer()
+
+global goodNpcs as integer
+goodNpcs = 7
+rem this is are name of are team mate npc type were going to use
+dim goodNpc(goodNpcs) as GoodNpcType
+
+rem tells how many bad npcs were making
+global badNpcs as integer
+badNpcs = 7
+rem we use badNpcs to give a value how many badNpcs are in the team
+dim badNpc(badNpcs) as BadNpcType
+
+rem this is how many goodNpc bullets we have
+global goodNpcBullets as integer
+rem this is how many goodNpc bullets we have
+goodNpcBullets = 7
+rem we plug this value in are array so it tells us how many bullets were going to have
+dim goodNpcBullet(goodNpcBullets) as GoodNpcBulletType
+
+
+
+for i = 0 to goodNpcs
+   goodNpc(i).ObjNum = grabResource(res_Object)
+rem this is are good npc position variable values
+rem this spreads them out for now so they don't touch each other at the start
+   goodNpc(i).X = -7+i*2
+rem this moves them behind each other in a random fashion
+   goodNpc(i).Z = 1000+rnd(600)
+   goodNpc(i).Y = BT GetGroundHeight(g_Terrain_Main.dwTerrainID,goodNpc(i).X,goodNpc(i).Z)
+rem this is are good npc speed how fast they will move first
+   goodNpc(i).Speed = 180
+
+   make object box  goodNpc(i).ObjNum,30,120,10
+   color object goodNpc(i).ObjNum,rgb(0,0,255)
+   position object  goodNpc(i).ObjNum,goodNpc(i).X,goodNpc(i).Y,goodNpc(i).Z
+next i
+
+for i = 0 to badNpcs
+   badNpc(i).ObjNum = grabResource(res_Object)
+rem this is are good npc position variable values
+rem this spreads them out for now so they don't touch each other at the start
+   badNpc(i).X = rnd(1000)
+rem this moves them behind each other in a random fashion
+   badNpc(i).Z = rnd(1000)
+   badNpc(i).Y = BT GetGroundHeight(g_Terrain_Main.dwTerrainID,badNpc(i).X,badNpc(i).Z)
+rem this is are good npc speed how fast they will move first
+   badNpc(i).Speed = 180
+
+   badNpc(i).Health = 1
+
+   make object box  badNpc(i).ObjNum,30,120,10
+   color object badNpc(i).ObjNum,rgb(255,0,0)
+   position object  badNpc(i).ObjNum,badNpc(i).X,badNpc(i).Y,badNpc(i).Z
+next i
+
+for  i = 0 to goodNpcBullets
+    goodNpcBullet(i).ObjNum = grabResource(res_Object)
+rem  just give the bullets a very long position off the screen
+    goodNpcBullet(i).X = 9999
+    goodNpcBullet(i).Z = 9999
+rem give the bullets some speed
+    goodNpcBullet(i).Speed = 500
+rem make are cube to represent are bullet
+    make object cube goodNpcBullet(i).ObjNum,5
+rem without this it wouldn't update the positions or rotations
+    position object  goodNpcBullet(i).ObjNum,goodNpcBullet(i).X,goodNpcBullet(i).Y,goodNpcBullet(i).Z
+next i
 
 endfunction
 
@@ -55,6 +200,493 @@ endfunction
 
 function updateAI()
 
+for i = 0 to goodNpcs
+rem follow the player mode:
+rem this is what makes the goodNpc move
+rem this is how we make the goodNpc follow the player
+  if goodNpc(i).goodNpcState = 0
+     Move_GoodNpc(i)
+     GoodNpc_Follow_The_Player(i)
+  endif
+rem scout mode:
+rem scout the area for enemies
+  if goodNpc(i).goodNpcState = 1
+     GoodNpc_Do_Random_Movement(i)
+  endif
+rem attack mode:
+rem if badNpc the enemy is in sight point at the enemy
+rem and move around randomly while pointing at the enemy this is attack mode
+  if goodNpc(i).goodNpcState = 2
+     GoodNpc_Do_Random_Movement(i)
+     GoodNpc_Point_At_BadNpc(i)
+     GoodNpc_Fire_Bullet(i)
+  endif
+
+rem this is what makes the GoodNpc Think
+  GoodNpc_Brain_Think(i)
+rem this uses any of are GoodNpc distance formulas
+  GoodNpc_Distance_Formulas(i)
+rem this makes sure are goodNpcs stay inbounds from the player, and not get out of bounds
+  GoodNpc_Stay_Inbounds(i)
+rem without this it wouldn't update the positions or rotations
+  position object goodNpc(i).ObjNum,goodNpc(i).X,60+BT GetGroundHeight(g_Terrain_Main.dwTerrainID,goodNpc(i).X,goodNpc(i).Z),goodNpc(i).Z
+next i
+
+
+for i = 0 to goodNpcBullets
+rem move the bullet
+   GoodNpc_Move_Bullet(i)
+rem get are distance formulas
+   GoodNpc_Bullet_Distance_Formulas(i)
+rem make sure are bullet stays inbounds
+   GoodNpc_Bullet_Stay_Inbounds(i)
+  `GoodNpcBullet_Point_At_BadNpc()
+rem updates all the goodNpcBullet position , and rotation
+  yrotate object goodNpcBullet(i).ObjNum,goodNpcBullet(i).Angle
+  position object goodNpcBullet(i).ObjNum,goodNpcBullet(i).X,goodNpcBullet(i).Y,goodNpcBullet(i).Z
+next i
+
+
+rem note I didn't add no ai states in the bad npc, so the code is just there
+for i = 0 to badNpcs
+rem this moves the bad npc randomly
+ BadNpc_Npc_Move_Random(i)
+rem this makes sure the bad npc stays inbounds
+ BadNpc_Npc_Stay_Inbounds(i)
+  `BadNpc_Point_At_GoodNpc(i)
+rem this is are bad npc distance formulas
+ BadNpc_Distance_Formulas(i)
+rem this tells us if a bad npc is dead respawn it
+ BadNpc_Respawn(i)
+rem without this it wouldn't update the positions or rotations
+  yrotate object badNpc(i).ObjNum,badNpc(i).Angle
+  position object badNpc(i).ObjNum,badNpc(i).X,60+BT GetGroundHeight(g_Terrain_Main.dwTerrainID,badNpc(i).X,badNpc(i).Z),badNpc(i).Z
+next i
+
+
+endfunction
+
+
+
+
+
+function GoodNpc_Bullet_Distance_Formulas(i as integer)
+rem we use are distance formulas here
+   for j = 0 to badNpcs-i
+rem make a distance formula
+      goodNpcBullet(i).Distance = sqrt((goodNpcBullet(i).X-badNpc(j).X)^2+(goodNpcBullet(i).Z-badNpc(j).Z)^2)
+rem if distance is less then 1 then a collision toke place, and
+rem killed a red BadNpc team mate
+      if goodNpcBullet(i).Distance < 1
+rem we now set the bullet to not alive, so bullet is now dead
+         goodNpcBullet(i).Alive = 0
+rem if bullet is dead then position the bullets far off
+         goodNpcBullet(i).X = - 9999
+         goodNpcBullet(i).Z = - 9999
+rem decrease Health by 1
+         badNpc(j).Health = badNpc(j).Health - 1
+rem if Health is less then  or equal to 0 then make sure Health doesn't go below 0
+         if badNpc(j).Health <= 0 then badNpc(j).Health = 0
+rem we now hide the object, because the bullet is dead
+         hide object goodNpcBullet(i).ObjNum
+      endif
+   next j
+endfunction
+
+function GoodNpc_Brain_Think(i as integer)
+rem this is how are GoodNpc thinks, and uses ai states
+rem if distance is greater then goodNpcRange
+rem then we tell the goodNpcs to follow the player
+   if goodNpc(i).Distance > goodNpcRange
+rem if goodNpc(i).goodNpcState = 0 it means follow the player
+      goodNpc(i).goodNpcState = 0
+   endif
+
+rem if distance is less then goodNpcRange and distance is greater then goodNpcRange2
+rem scout the area, and move random, then look around for the badNpcs
+   if goodNpc(i).Distance < goodNpcRange and goodNpc(i).Distance > goodNpcRange2
+rem if goodNpc(i).goodNpcState = 1 it means scout the area, and move random, then look around for bad guys
+      goodNpc(i).goodNpcState = 1
+   endif
+
+rem if Distance2 is less than goodNpcRange4 and Distance is < than goodNpcRange
+rem It means if a badNpc is around then go in attack mode.
+rem then point, aim, and fire at the bad guys
+   if goodNpc(i).Distance2 < goodNpcRange4 and goodNpc(i).Distance < goodNpcRange
+rem if goodNpc(i).goodNpcState = 2
+rem It means if a badNoc is around attack, and fire at them
+      goodNpc(i).goodNpcState = 2
+   else
+rem else if distance2 is greater than goodNpcRange4 and Distance is less than goodNpcRange
+rem go back to scout mode
+      if goodNpc(i).Distance2 > goodNpcRange4 and goodNpc(i).Distance < goodNpcRange
+rem if goodNpc(i).goodNpcState = 1 then return to scout mode
+         goodNpc(i).goodNpcState = 1
+      endif
+   endif
+
+endfunction
+
+function GoodNpc_Distance_Formulas(i as integer)
+rem we make are distance formulas
+   for j = 0 to badNpcs-i
+rem make this distance formula, because we need this to point the blue team at the player
+      goodNpc(i).Distance = sqrt((goodNpc(i).X-PLR_footpos.X)^2+(goodNpc(i).Z-PLR_footpos.Z)^2)
+rem make this distance formula, because it's needed for the red team to  point at the blue team.
+      goodNpc(i).Distance2 = sqrt((goodNpc(i).X-badNpc(j).X)^2+(goodNpc(i).Z-badNpc(j).Z)^2)
+   next j
+endfunction
+
+function GoodNpc_Follow_The_Player(i as integer)
+rem to make the goodNpc follow the player we need to see a range to cut them off
+rem we now say if goodNpc Distance is greater then goodNpcRange
+rem we need to make the goodNpc follow the player if the distance is greater range
+   if goodNpc(i).Distance > goodNpcRange
+rem we now use are point at  player function
+rem this is how we point the goodNpc at the player
+rem this is 10X faster then point object, so this gives us better performance
+rem were getting the point betwween the goodNpc x, and player x
+      goodNpcDistanceX = (goodNpc(i).X-PLR_footpos.X)
+rem were getting the point betwween the goodNpc z, and player z
+      goodNpcDistanceZ = (goodNpc(i).Z-PLR_footpos.Z)
+rem we then put are formula's in the atanfull to get the angle between to objects
+      goodNpc(i).Angle = atanfull(goodNpcDistanceX,goodNpcDistanceZ)
+   endif
+endfunction
+
+function GoodNpc_Do_Random_Movement(i as integer)
+rem this says if direction = 1 then move forward
+   if goodNpc(i).Direction = 1 then goodNpc(i).Z = goodNpc(i).Z + goodNpc(i).Speed * elapsedtime
+rem this says if direction = 2 then move backwards
+   if goodNpc(i).Direction = 2 then goodNpc(i).Z = goodNpc(i).Z - goodNpc(i).Speed * elapsedtime
+rem this says if direction = 3 then move right
+   if goodNpc(i).Direction = 3 then goodNpc(i).X = goodNpc(i).X + goodNpc(i).Speed * elapsedtime
+rem this says if direction = 4 then move left
+   if goodNpc(i).Direction = 4 then goodNpc(i).X = goodNpc(i).X - goodNpc(i).Speed * elapsedtime
+
+rem this says turn the npc clockwise
+   if goodNpc(i).Rotate = 1 then goodNpc(i).Angle = goodNpc(i).Angle + 3.141
+rem this says turn the npc counter-clockwise
+   if goodNpc(i).Rotate = 2 then goodNpc(i).Angle = goodNpc(i).Angle - 3.141
+rem make timer, and count 1000 milliseconds
+rem if it counts 1000 miliseconds then run this code goodNpc(i).Rotate = rnd(1)+1
+   if timer()-goodNpc(i).RotationTimer >3000
+rem use a random turn left, right or stop
+        goodNpc(i).Rotate = rnd(1)+1
+rem update the RotationTmer so it works
+       goodNpc(i).RotationTimer = timer()
+      endif
+rem updates are rotation
+      yrotate object goodNpc(i).ObjNum,goodNpc(i).Angle
+rem if timer greater than 200 milliseconds then choose a random direction
+rem notice I have more then 4 directions in there. I have rnd(16)+1 which means 17 directions
+rem that's, because I want my team mates to stop moving also.
+   if timer()-goodNpc(i).DirectionTimer> 200
+rem this changes the new direction
+      goodNpc(i).Direction = rnd(16)+1
+rem update timer so it works
+      goodNpc(i).DirectionTimer = timer()
+   endif
+endfunction
+
+
+function Move_GoodNpc(i as integer)
+rem this is how we calculate the right angle to move
+rem were setting are angle rule to move forward
+      if wrapvalue(goodNpc(i).Angle) >= 90 and wrapvalue(goodNpc(i).Angle) <= 270
+         goodNpc(i).Z = goodNpc(i).Z - ( cos( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
+      endif
+rem were setting are angle rule to move backwards
+      if wrapvalue(goodNpc(i).Angle) < 90 and wrapvalue(goodNpc(i).Angle) >=0
+         goodNpc(i).Z = goodNpc(i).Z - ( cos( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
+      endif
+rem were setting are angle rule to move backwards
+      if wrapvalue(goodNpc(i).Angle) < 360 and wrapvalue(goodNpc(i).Angle) >= 270
+         goodNpc(i).Z = goodNpc(i).Z - ( cos( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
+      endif
+rem were setting are angle rule to move left
+     if wrapvalue(goodNpc(i).Angle) >= 0 and wrapvalue(goodNpc(i).Angle) <= 180
+         goodNpc(i).X = goodNpc(i).X - ( sin( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
+      endif
+rem were setting are angle rule to move right
+      if wrapvalue(goodNpc(i).Angle) >= 180 and wrapvalue(goodNpc(i).Angle) <= 360
+        goodNpc(i).X = goodNpc(i).X - ( sin( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
+      endif
+rem updates angles so it works
+      yrotate object goodNpc(i).ObjNum,goodNpc(i).Angle
+endfunction
+
+
+function GoodNpc_Stay_Inbounds(i as integer)
+rem this keeps are goodNpc's from going out of bounds
+rem if Distance is greater then goodNpcRange3 and distance is less then goodNpcRange2
+rem then  start going back to following the player
+   if goodNpc(i).Distance > goodNpcRange3 and goodNpc(i).Distance < goodNpcRange2
+rem were setting are angle rule to move forward
+      if wrapvalue(goodNpc(i).Angle) >= 90 and wrapvalue(goodNpc(i).Angle) <= 270
+         goodNpc(i).Z = goodNpc(i).Z - ( cos( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
+      endif
+rem were setting are angle rule to move backwards
+      if wrapvalue(goodNpc(i).Angle) < 90 and wrapvalue(goodNpc(i).Angle) >=0
+         goodNpc(i).Z = goodNpc(i).Z - ( cos( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
+      endif
+rem were setting are angle rule to move backwards
+      if wrapvalue(goodNpc(i).Angle) < 360 and wrapvalue(goodNpc(i).Angle) >= 270
+         goodNpc(i).Z = goodNpc(i).Z - ( cos( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
+      endif
+rem were setting are angle rule to move left
+      if wrapvalue(goodNpc(i).Angle) >= 0 and wrapvalue(goodNpc(i).Angle) <= 180
+         goodNpc(i).X = goodNpc(i).X - ( sin( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
+      endif
+rem were setting are angle rule to move right
+      if wrapvalue(goodNpc(i).Angle) >= 180 and wrapvalue(goodNpc(i).Angle) <= 360
+        goodNpc(i).X = goodNpc(i).X - ( sin( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
+      endif
+rem updates angles so it works
+      yrotate object goodNpc(i).ObjNum,goodNpc(i).Angle
+   endif
+
+endfunction
+
+function GoodNpc_Bullet_Respawn()
+rem this is how to make a bullet respawn
+rem use this local variable to do something cool
+   goodNpcBulletRespawn as integer
+
+   for j = 0 to goodNpcs
+rem we use this method i = i + 1 if i greater then are bullets then i = 0
+rem tells us to start over, and keep checking through are array
+       i = i + 1
+       if i > goodNpcBullets then i = 0
+rem if goodNpcBulletRespawn equals 0 and Bullet Alive = 0
+       if goodNpcBulletRespawn = 0 and goodNpcBullet(i).Alive = 0
+rem bullet alive = 1, because we found a bullet
+          goodNpcBullet(i).Alive = 1
+rem Range = 0 to set this, so if the bullet doesn't hit a bad guy
+rem we use a counter to kill the bullet if not the bullet keeps going
+          goodNpcBullet(i).Range = 0
+rem give the bullet position the goodNpc position
+          goodNpcBullet(i).X = goodNpc(j).X
+          goodNpcBullet(i).Z = goodNpc(j).Z
+rem now we point are bullet at the bad npc
+          GoodNpcBullet_Point_At_BadNpc(i)
+rem we show the bullet
+          show object goodNpcBullet(i).ObjNum
+rem goodNpcBulletRespawn = 1 what this does it makes sure it only grabs 1 bullet at a time
+rem so we don't get any bugs that's why I needed that local variable there
+          goodNpcBulletRespawn = 1
+       endif
+   next j
+endfunction
+
+function GoodNpc_Move_Bullet(i as integer)
+rem we now move are goodNpc bullet
+rem if bullet Alive equals 1 then start moving the bullet
+   if goodNpcBullet(i).Alive = 1
+rem this is are counter Range start increasing its value
+      goodNpcBullet(i).Range = goodNpcBullet(i).Range + 1
+rem this moves are bullet at the angle of are bad npc and uses the old position so
+rem the angle doesn't update like a missle following the bad npc
+      goodNpcBullet(i).X = goodNpcBullet(i).X - ( sin( wrapvalue(goodNpcBullet(i).Angle ) ) *  goodNpcBullet(i).Speed  * elapsedtime)
+      goodNpcBullet(i).Z = goodNpcBullet(i).Z - ( cos( wrapvalue(goodNpcBullet(i).Angle ) ) *  goodNpcBullet(i).Speed  * elapsedtime)
+   endif
+endfunction
+
+function GoodNpc_Bullet_Stay_Inbounds(i as integer)
+rem this makes sure are bullet stays inbounds
+rem like frome xample if bullet doesn't hit a bad guy it keeps going so we
+rem must tell it to destroy the bullet if it does hit a bad guy
+   for j = 0 to goodNpcs-i
+rem bullet is alive
+      if goodNpcBullet(i).Alive = 1
+rem are counter which is Range is greater then 80 bullet dies
+         if goodNpcBullet(i).Range > 80
+rem we set bullet alive to 0, and range to 0
+            goodNpcBullet(i).Alive = 0
+            goodNpcBullet(i).Range = 0
+rem we position the bullet back at goodNpc
+            goodNpcBullet(i).X = goodNpc(j).X
+            goodNpcBullet(i).Z = goodNpc(j).Z
+rem we hide the buller because its destroyed
+            hide object goodNpcBullet(i).ObjNum
+         endif
+      endif
+   next j
+endfunction
+
+
+function GoodNpc_Bullet_Collision(i as integer)
+rem we use this to detect if it its a bad guy
+   for j = 0 to badNpcs-i
+rem if distance is less then 1 then we have a collision with a bad npc
+         if goodNpcBullet(i).Distance < 1
+rem kill bullet
+            goodNpcBullet(i).Alive = 0
+rem reset are counter to range to 0
+            goodNpcBullet(i).Range = 0
+rem if bullet is dead
+            if goodNpcBullet(i).Alive = 0
+rem decrease health by 1, and make sure health doesn't go below 0
+               `badNpc(j).Health = badNpc(j).Health - 1
+               `if badNpc(j).Health <= -1 then badNpc(j).Health = 0
+rem hide object because bullet is dead
+               hide object goodNpcBullet(i).ObjNum
+            endif
+         endif
+rem if Health = 0 then the bad npc is dead
+         `if badNpc(j).Health = 0
+rem just move the bad npc out of the way
+           ` badNpc(j).X = -9999
+           ` badNpc(j).Z = -9999
+        ` endif
+   next j
+endfunction
+
+function GoodNpc_Fire_Bullet(i as integer)
+rem make a timer each 200 millisecond's get a new bullet
+      if timer()-goodNpcBulletTime> 200
+rem we respawn the bullet
+         GoodNpc_Bullet_Respawn()
+rem update the timer so it works
+         goodNpcBulletTime = timer()
+      endif
+endfunction
+
+
+function BadNpc_Respawn(i as integer)
+rem if health  = 0 then respawn the bad npc
+   if badNpc(i).Health = 0
+rem give the bad npc health so there alive again
+      badNpc(i).Health = 1
+rem position the bad npc at a random location
+      badNpc(i).X = -rnd(30)+rnd(30)
+      badNpc(i).Z = -rnd(30)+rnd(30)
+   endif
+endfunction
+
+function BadNpc_Npc_Move_Random(i as integer)
+rem this tells the bad npcs which way to move
+rem if direction = 1 move forward
+if badNpc(i).Direction = 1 then badNpc(i).Z = badNpc(i).Z + badNpc(i).Speed * elapsedtime
+rem if direction = 2 move backwards
+if badNpc(i).Direction = 2 then badNpc(i).Z = badNpc(i).Z - badNpc(i).Speed * elapsedtime
+rem if direction = 3 move right
+if badNpc(i).Direction = 3 then badNpc(i).X = badNpc(i).X + badNpc(i).Speed * elapsedtime
+rem if direction = 4 move left
+if badNpc(i).Direction = 4 then badNpc(i).X = badNpc(i).X - badNpc(i).Speed * elapsedtime
+rem we make a timer to say each 2000 milliseconds change the bad npcs direction
+   if timer()-badNpc(i).RandomTimer > 2000
+rem pick a random direction
+      badNpc(i).Direction = rnd(3)+1
+rem update the timer so it works
+      badNpc(i).RandomTimer = timer()
+   endif
+endfunction
+
+function BadNpc_Distance_Formulas(i as integer)
+rem this is are badnpcs distance formulas
+   for j = 0 to goodNpcs-i
+rem this gets the distance from the bad npcs to the good npcs
+      badNpc(i).Distance = sqrt((badNpc(i).X-goodNpc(j).X)^2+(badNpc(i).Z-goodNpc(j).Z)^2)
+rem this points the bad npcs at the good npcs if its less then badNpcRange
+      if badNpc(i).Distance <  badNpcRange
+rem point at the good npcs
+         BadNpc_Point_At_GoodNpc(i)
+      endif
+   next j
+endfunction
+
+
+function BadNpc_Npc_Stay_Inbounds(i as integer)
+
+rem this is are tempary stay in bounds area
+rem if bad npc goes farther than 30
+rem  then change the bad npc direction, so the bad npc goes left
+if badNpc(i).X > 2000
+rem make the bad npc go left
+    badNpc(i).Direction = 4
+endif
+rem if bad npc goes less than -30
+rem  then change the bad npc direction, so the bad npc goes right
+if badNpc(i).X < 0
+rem make the bad npc go right
+    badNpc(i).Direction = 3
+endif
+rem if bad npc goes farther than 30
+rem  then change the bad npc direction, so the bad npc goes backwards
+if badNpc(i).Z > 2000
+rem makes the bad npc to backwards
+    badNpc(i).Direction = 2
+endif
+rem if bad npc goes less than -30
+rem  then change the bad npc direction, so the bad npc goes forward
+if badNpc(i).Z < 0
+rem makes the bad npc to forward
+    badNpc(i).Direction = 1
+endif
+
+endfunction
+
+function BadNpc_Point_At_GoodNpc(i as integer)
+rem this is how we point the goodNpc at the player
+rem this is 10X faster then point object, so this gives us better performance
+rem were getting the point between the badNpc, and goodNpc
+   for j = 0 to  goodNpcs-i
+rem were getting the point betwween the badNpc x, and goodNpc x
+       badNpc(i).DistanceX = (badNpc(i).X-goodNpc(j).X)
+rem were getting the point betwween the badNpc z, and goodNpc z
+      badNpc(i).DistanceZ = (badNpc(i).Z-goodNpc(j).Z)
+rem we then put are formula's in the atanfull to get the angle between to objects
+       badNpc(i).Angle = atanfull(badNpc(i).DistanceX ,badNpc(i).DistanceZ)
+    next j
+endfunction
+
+function GoodNpc_Point_At_BadNpc(i as integer)
+rem this is how we point the goodNpc at the player
+rem this is 10X faster then point object, so this gives us better performance
+rem were getting the point betwween the goodNpc x, and player x
+`if goodNpc(i).Rotate = 0
+   for j = 0 to  badNpcs-i
+      goodNpc(i).Distance2X = (goodNpc(i).X-badNpc(j).X)
+rem were getting the point betwween the goodNpc z, and player z
+      goodNpc(i).Distance2Z = (goodNpc(i).Z-badNpc(j).Z)
+rem we then put are formula's in the atanfull to get the angle between to objects
+      goodNpc(i).Angle = atanfull(goodNpc(i).Distance2X ,goodNpc(i).Distance2Z)
+      yrotate object goodNpc(i).ObjNum,goodNpc(i).Angle
+   next j
+endfunction
+
+function GoodNpcBullet_Point_At_BadNpc(i as integer)
+rem this is how we point the goodNpcBullet at the badNpc
+rem this is 10X faster then point object, so this gives us better performance
+rem were getting the point betwween the goodNpcBullet, and badNpc
+    for j = 0 to badNpcs-i
+rem were getting the point betwween the goodNpcBullet x, and badNpc x
+      goodNpcBullet(i).DistanceX = (goodNpcBullet(i).X-badNpc(j).X)
+rem were getting the point betwween the goodNpcBullet x, and badNpc x
+      goodNpcBullet(i).DistanceZ = (goodNpcBullet(i).Z-badNpc(j).Z)
+rem were getting the point betwween the
+rem we then put are formula's in the atanfull to get the angle between to objects
+      goodNpcBullet(i).Angle = atanfull(goodNpcBullet(i).DistanceX ,goodNpcBullet(i).DistanceZ)
+    next j
+endfunction
+
+function Debugg_Program()
+rem all debugg goes here
+rem shows the ai modes
+   for  i= 0 to goodNpcs
+      if goodNpc(i).goodNpcState = 0
+         text 20,20*i,"goodNpc "+str$(i)+" No threat Mode: "`+str$(goodNpc(i).goodNpcState)
+      endif
+
+      if goodNpc(i).goodNpcState = 1
+         text 20,20*i,"goodNpc "+str$(i)+" Scout Mode: "`+str$(goodNpc(i).goodNpcState)
+      endif
+
+      if goodNpc(i).goodNpcState = 2
+         text 20,20*i,"goodNpc "+str$(i)+ " Attack Mode: "`+str$(goodNpc(i).goodNpcState)
+      endif
+   next i
 
 endfunction
 
@@ -66,5 +698,19 @@ endfunction
 
 function terminateAI()
 
+for i=0 to array count(goodNpc(0))
+    freeResource(goodNpc(i).ObjNum,res_Object)
+next i
+UNDIM goodNpc(0)
+
+for i=0 to array count(badNpc(0))
+    freeResource(badNpc(i).ObjNum,res_Object)
+next i
+UNDIM badNpc(0)
+
+for i=0 to array count(goodNpcBullet(0))
+    freeResource(goodNpcBullet(i).ObjNum,res_Object)
+next i
+UNDIM goodNpcBullet(0)
 
 endfunction
