@@ -11,6 +11,7 @@ include3=menu.dba
 include4=module_network.dba
 include5=module_shooting.dba
 include6=module_ai.dba
+include7=module_terrain.dba
 final source=_Temp.dbsource
 
 ;***Executable filename***

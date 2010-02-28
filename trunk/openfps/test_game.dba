@@ -14,6 +14,7 @@ remstart
 (2/7/10)   - thenerd - Changed screen res to 1024x768x32 fullscreen, worked on menu functions
 (2/15/10)  - BMacZero - Updated BlitzTerrain code for BT 2.0
 (2/25/10)  - BMacZero - Globalized timerbased system, added shooting
+(2/28/10)  - BMacZero - Removed BT temporary code
 
 ----- To-Do
 Modules should be init between initMenu() and runMenu().
@@ -44,76 +45,14 @@ runMenu()
 `Init other modules here
 initMovement()
 initShooting()
-
-`=================================================================
-`==== BLITZ TERRAIN TEST CODE - SHOULD NOT BE USED LATER
-
-global TerrainID
-
-
-bt_HeightmapImage  = grabResource(res_Image)
-bt_TexturemapImage = grabResource(res_Image)
-bt_DetailmapImage  = grabResource(res_Image)
-
-//make terrain
-load image "media/BlitzTerrain/Heightmap.bmp", bt_HeightmapImage
-load image "media/BlitzTerrain/texture.jpg",   bt_TexturemapImage
-load image "media/BlitzTerrain/detail.tga",    bt_DetailmapImage
-
-//Make the terrain
-global TerrainID
-TerrainID=BT MakeTerrain()
-
-//Set images
-BT SetTerrainHeightmap TerrainID,bt_HeightmapImage
-BT SetTerrainTexture TerrainID,  bt_TexturemapImage
-BT SetTerrainDetail TerrainID,   bt_DetailmapImage
-
-//Set some other values
-BT SetTerrainScale TerrainID,24.0
-BT SetTerrainYScale TerrainID,6.0
-BT SetTerrainSplit TerrainID,8
-BT SetTerrainDetailTile TerrainID,3.0
-
-//LOD
-BT SetTerrainLOD TerrainID,3
-BT SetTerrainLODDistance TerrainID,1,1000.0
-BT SetTerrainLODDistance TerrainID,2,2000.0
-
-//Smoothing and Quad Rotation
-BT SetTerrainSmoothing TerrainID,1
-BT SetTerrainQuadRotation TerrainID,1
-
-
-global TerrainIDObj
-TerrainIDObj=grabResource(res_Object)
-BT BuildTerrain TerrainID,TerrainIDObj
-
-BT SetBuildStep 0
-
-repeat
-	progress=BT ContinueBuild()
-until progress=-1
-
-DIM tempTerObj(0)
-
-for i=0 to BT GetSectorCount(TerrainID,0)-1
-	if BT GetSectorExcluded(TerrainID,0,i)=0
-        array insert at top tempTerObj(0)
-        tempTerObj(1)=grabResource(res_Object)
-		BT MakeSectorObject TerrainID,0,i,tempTerObj(1)
-		hide object tempTerObj(1)
-        position object tempTerObj(1),BT GetSectorPositionX(TerrainID,0,i),BT GetSectorPositionY(TerrainID,0,i),BT GetSectorPositionZ(TerrainID,0,i)
-        sc_setupcomplexobject tempTerObj(1),0,4
-    endif
-next i
+initTerrain()
 
 //Setup camera
 set camera range 10,10000
 hide mouse
 
-`==
-`====================================================================
+`Temporary
+LoadTerrainFromFile("media/BlitzTerrain/Terrain.blitz")
 
 /////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////
@@ -134,15 +73,10 @@ timer_starttime = timer()
 
 updateMovement()
 updateShooting()
+updateTerrain()
 
 text 10,10,str$(screen fps())
 text 10,20,"Stamina: "+str$(PLR_curstam)
-
-`TEMPORARY
-BT SetCurrentCamera 0
-BT UpdateTerrainCull TerrainID
-BT UpdateTerrainLOD TerrainID
-BT RenderTerrain TerrainID
 
 sync
 loop
@@ -151,4 +85,5 @@ terminateMovement()
 terminateShooting()
 terminateAI()
 terminateResource()
+terminateTerrain()
 end
