@@ -15,6 +15,7 @@ remstart
 (2/15/10)  - BMacZero - Updated BlitzTerrain code for BT 2.0
 (2/25/10)  - BMacZero - Globalized timerbased system, added shooting
 (2/28/10)  - BMacZero - Removed BT temporary code
+(2/28/10)  - Kaedroho - Position mouse to centre of the screen added. This stops the program from exiting when using multiple monitors.
 
 ----- To-Do
 Modules should be init between initMenu() and runMenu().
@@ -80,6 +81,8 @@ updateAI()
 
 text 10,10,str$(screen fps())
 text 10,20,"Stamina: "+str$(PLR_curstam)
+
+position mouse screen width()/2,screen height()/2
 
 sync
 loop
