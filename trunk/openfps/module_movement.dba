@@ -18,6 +18,7 @@ remstart
 (2/16/10)  - BMacZero - Made the player less like a super-ninja
                       - Added stamina
 (2/25/10)  - BMacZero - Globalized timer-based system.
+(3/01/10)  - Kaedroho - Limited camera x angle to stop player from turning upside down!
 
 
 ----- To-Do:
@@ -360,6 +361,10 @@ PLR_headpos.z = PLR_footpos.z
 
 PLR_angle.y = PLR_angle.y + mousemovex()*0.2
 PLR_angle.x = PLR_angle.x + mousemovey()*0.2
+
+//Kaedroho add 03/01/2010
+	if PLR_angle.x > 90.0 then PLR_angle.x = 90.0
+	if PLR_angle.x < -90.0 then PLR_angle.x = -90.0
 
 if keystate(KEY_jump) = 0 then MOVE_jumppress = 0
 if keystate(KEY_prone) = 0 and keystate(KEY_crouch) = 0 then MOVE_keypress = 0
