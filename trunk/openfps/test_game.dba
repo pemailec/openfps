@@ -27,7 +27,7 @@ remend
 /////////////////////////////////////////////////////////
 
 sync on : sync rate 60
-set display mode 1024,768,screen depth(),1
+`set display mode 1024,768,screen depth(),1
 autocam off
 randomize timer()
 

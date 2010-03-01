@@ -130,6 +130,35 @@ SE_Main.checkobj=grabResource(res_Object)
 make object cube SE_Main.checkobj,1
 exclude object on SE_Main.checkobj
 
+
+`Make projectile types
+global shoot_basicbullet
+shoot_basicbullet=SE_MakeProjectiletype()
+
+
+`Set up guns
+global shoot_TestGunObject
+global shoot_guntype
+global shoot_TestGun
+shoot_TestGunObject=grabResource(res_Object)
+load object "media/guns/hud.x",shoot_TestGunObject
+hide object shoot_TestGunObject
+
+`Make the gun type we use our gun object number and out projectiletype number to tell the engine what the gun looks like and what it fires
+shoot_guntype=SE_MakeGunType(shoot_TestGunObject,shoot_basicbullet)
+
+`Scale the gun object (this is required because the gun object is cloned every time a new gun is made)
+SE_ScaleGuntypeObject(shoot_guntype,500)
+
+`This sets the muzzle direction (0 = normal, 1 = reverse) we are using an FPSC model so we need to reverse the direction
+SE_SetGuntypeMuzzleDirection(shoot_guntype,1)
+
+`This sets the muzzle position on the model
+SE_SetGunTypeMuzzlePosition(shoot_guntype,0,11,-25)
+
+`TEMPORARY Make a gun and position it
+shoot_TestGun=SE_MakeGun(shoot_guntype)
+
 endfunction
 
 
@@ -139,6 +168,11 @@ endfunction
 
 
 function updateShooting()
+
+`Position gun
+SE_PositionGun(shoot_TestGun,PLR_headpos.x,PLR_headpos.y,PLR_headpos.z)
+SE_RotateGun(shoot_TestGun,wrapvalue(360-PLR_angle.x-10),wrapvalue(PLR_angle.y+180),0)
+SE_OffsetGun(shoot_TestGun,23,0,-2)
 
 local oldx#
 local oldy#
