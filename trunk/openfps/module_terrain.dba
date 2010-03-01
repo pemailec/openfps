@@ -15,7 +15,7 @@ remstart
 
 ----- Changelog:
 (2/28/10) - BMacZero - Created
-
+(3/01/10) - Kaedroho - Converted SetTerrainCollision() into the same programming standard as the rest of the file (looks neater)
 
 ----- To-Do:
 
@@ -83,7 +83,7 @@ global g_Terrain_Main as sTerrain_Main
 //Setup BT
    BT SetBuildStep 8       //Build 8 sectors at a time
    BT EnableAutoRecovery 1 //Enable auto recovery
-
+	
 endfunction
 
 
@@ -103,7 +103,7 @@ function updateTerrain()
       BT UpdateTerrainLOD g_Terrain_Main.dwTerrainID
       BT RenderTerrain g_Terrain_Main.dwTerrainID
    endif
-
+	
 endfunction
 
 
@@ -236,21 +236,38 @@ endfunction
 
 function SetTerrainCollision()
 
-LODLevel=1 //Set this anywhere between 0 and 2
+//Set number of LOD levels
+	LODLevel=1 //Set this anywhere between 0 and total lod levels-1
 
-UNDIM terrainSectors(0)
-DIM terrainSectors(BT GetSectorCount(g_Terrain_Main.dwTerrainID,LODLevel)-1) as dword
-
-for i=0 to BT GetSectorCount(g_Terrain_Main.dwTerrainID,LODLevel)-1
-    if BT GetSectorExcluded(g_Terrain_Main.dwTerrainID,LODLevel,i)=0
-        terrainSectors(i)=grabResource(res_Object)
-        BT MakeSectorObject g_Terrain_Main.dwTerrainID,LODLevel,i,terrainSectors(i)
-        position object terrainSectors(i),BT GetSectorPositionX(g_Terrain_Main.dwTerrainID,LODLevel,i),BT GetSectorPositionY(g_Terrain_Main.dwTerrainID,LODLevel,i),BT GetSectorPositionZ(g_Terrain_Main.dwTerrainID,LODLevel,i)
-        sc_setupcomplexobject terrainSectors(i),0,4
-        exclude object on terrainSectors(i)
-    endif
-next i
-
+//Allocate Sector array
+	//UNDIM terrainSectors(0)  (No need to undim, this gets automatically done in the dim command)
+	DIM terrainSectors(BT GetSectorCount(g_Terrain_Main.dwTerrainID,LODLevel)-1) as dword
+	
+//Loop through sectors
+	for i=0 to BT GetSectorCount(g_Terrain_Main.dwTerrainID,LODLevel)-1
+	
+	//Check that the sector is not excluded
+	    if BT GetSectorExcluded(g_Terrain_Main.dwTerrainID,LODLevel,i)=0
+	    
+	    //Get an object
+	        terrainSectors(i)=grabResource(res_Object)
+	        
+ 		//Make the sector object
+	        BT MakeSectorObject g_Terrain_Main.dwTerrainID,LODLevel,i,terrainSectors(i)
+   
+		//Position it
+	        position object terrainSectors(i),BT GetSectorPositionX(g_Terrain_Main.dwTerrainID,LODLevel,i),BT GetSectorPositionY(g_Terrain_Main.dwTerrainID,LODLevel,i),BT GetSectorPositionZ(g_Terrain_Main.dwTerrainID,LODLevel,i)
+			
+		//Set it up for collision
+			sc_setupcomplexobject terrainSectors(i),0,4
+			
+		//Exclude it
+	        exclude object on terrainSectors(i)
+	        
+	    endif
+	    
+	next i
+	
 endfunction
 
 
