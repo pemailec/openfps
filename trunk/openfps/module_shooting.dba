@@ -11,6 +11,7 @@ remstart
 ----- Changelog:
 (2/8/10) - BMacZero - Created
 (2/24/10) - BMacZero - Integrated kaedroho's Shooting Engine
+(3/7/10) - BMacZero - Added DISABLE OBJECT ZDEPTH
 
 
 ----- To-Do:
@@ -334,6 +335,7 @@ SE_Gun(n).tipe=guntype
 instance object SE_Gun(n).objnum,SE_GunType(guntype).objnum
 scale object SE_Gun(n).objnum,SE_GunType(guntype).scale,SE_GunType(guntype).scale,SE_GunType(guntype).scale
 ptr=n
+disable object zdepth SE_Gun(n).objnum
 endfunction ptr
 
 function SE_PositionGun(gun,x#,y#,z#)

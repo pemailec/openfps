@@ -4,6 +4,7 @@ remstart
 // OpenFPS AI Mechanics Module
 //
 // Created by darkvee
+//   Pathfinding by BMacZero
 // Maintained by darkvee
 //
 /////////////////////////////////////////////////////
@@ -11,6 +12,7 @@ remstart
 ----- Changelog:
 (2/8/10) - BMacZero - Created
 (2/28/10) - BMacZero - Incorporated darkvee's code
+(3/7/10) - BMacZero - Started adding my pathfinding
 
 
 ----- To-Do:
@@ -103,6 +105,16 @@ endtype
 
 
 function initAI()
+
+`TEMP
+`Make some random boxes to path around.
+for c=1 to 50
+    temp=grabResource(res_Object)
+    make object box temp,rnd(200),(400),rnd(200)
+    position object temp,rnd(3000),200,rnd(3000)
+    sc_setupobject temp,0,2
+    sc_updateobject temp
+next c
 
 global goodNpcRange as float `Prefered player proximity
 goodNpcRange = 450.0

@@ -19,6 +19,7 @@ remstart
                       - Added stamina
 (2/25/10)  - BMacZero - Globalized timer-based system.
 (3/01/10)  - Kaedroho - Limited camera x angle to stop player from turning upside down!
+(3/7/10)   - BMacZero - Worked on player collision.
 
 
 ----- To-Do:
@@ -27,6 +28,8 @@ Add more realism - camera bobs slightly when walking, more when
   running.  Camera bobs down before jumping.  Camera dips after
   landing from a jump - more if it was a hard landing.
 Have stamina based on health - low health?  Low max stamina.
+
+**Stop the player for going up sheer cliffs**
 
 
 ----- Purpose:
@@ -197,6 +200,9 @@ PLR_curstam       = PLR_maxstam
 
 PLR_stamina as float
 
+`For head bob
+global mov_HeadOff as float
+
 //misc
 global mov_Mat1
 global mov_Mat2
@@ -310,18 +316,26 @@ if keystate(KEY_prone) and MOVE_keypress = 0
 endif
 
 
+//update
+PLR_footpos.x = PLR_footpos.x + PLR_velocity.x * elapsedtime
+PLR_footpos.y = PLR_footpos.y + PLR_velocity.y * elapsedtime
+PLR_footpos.z = PLR_footpos.z + PLR_velocity.z * elapsedtime
+
+
 //collision
-ground = sc_spherecast(0,PLR_headpos.x,PLR_headpos.y-2,PLR_headpos.z,PLR_footpos.x,PLR_footpos.y+2,PLR_footpos.z,2,0)
+ground = sc_spherecast(0,PLR_headpos.x,PLR_headpos.y-15,PLR_headpos.z,PLR_footpos.x,PLR_footpos.y+15,PLR_footpos.z,15,0)
 if ground <> 0
    `damage# = ((-PLR_velocity.y) - 100.0)
    MOVE_fall = 0
    PLR_velocity.y = 0
 //amendments for uneven terrain
-   PLR_footpos.y = sc_getcollisionslidey()-2    //positions the player at the appropriate height
+   PLR_footpos.x = sc_getcollisionslidex()
+   PLR_footpos.y = sc_getcollisionslidey()-15    //positions the player at the appropriate height
+   PLR_footpos.z = sc_getcollisionslidez()
    temp# = sc_getcollisionnormaly()                //how flat the land is 1 for flat, 0 for vertical
-   if temp#<0.4 then temp#=0
-   PLR_velocity.x = PLR_velocity.x * temp#             //adjust speed to make up for grade
-   PLR_velocity.z = PLR_velocity.z * temp#
+   if temp#<0.5 then temp#=0
+   PLR_footpos.x = PLR_footpos.x - (PLR_velocity.x * elapsedtime)*(1-temp#)
+   PLR_footpos.z = PLR_footpos.z - (PLR_velocity.z * elapsedtime)*(1-temp#)
 else
    PLR_velocity.y = PLR_velocity.y + PLR_gravity * elapsedtime
 endif
@@ -339,11 +353,6 @@ if MOVE_jump and MOVE_fall = 0
    PLR_velocity.y = PLR_velocity.y + PLR_jump
 endif
 
-
-//update
-PLR_footpos.x = PLR_footpos.x + PLR_velocity.x * elapsedtime
-PLR_footpos.y = PLR_footpos.y + PLR_velocity.y * elapsedtime
-PLR_footpos.z = PLR_footpos.z + PLR_velocity.z * elapsedtime
 
 `Update playersize
 if PLR_heights(PLR_stance)>PLR_currentheight
@@ -376,7 +385,7 @@ endif
 mov_synctime = mov_synctime + elapsedtime
 if mov_synctime > 0.01
     mov_synctime = 0
-    position camera 0, PLR_headpos.x, PLR_headpos.y, PLR_headpos.z
+    position camera 0, PLR_headpos.x, PLR_headpos.y + mov_HeadOff, PLR_headpos.z
     rotate camera 0, PLR_angle.x, PLR_angle.y, PLR_angle.z
 endif
 
