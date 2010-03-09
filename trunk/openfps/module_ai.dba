@@ -43,7 +43,35 @@ remend
 `global timerBasedTimer as integer = timer()
 
 
-type GoodNpcType
+`Pathfinding
+type path_Vector2
+    X as float
+    Y as float
+endtype
+
+type path_LineType
+    V1 as integer
+    V2 as integer
+endtype
+
+type path_AStarNode
+    F as integer
+    G as integer
+    H as integer
+    Open as boolean
+    Closed as boolean
+    Parent as integer
+endtype
+
+type path_Connection
+    V1 as integer
+    V2 as integer
+    Distance as integer
+endtype
+
+
+
+type ai_GoodNpcType
     ObjNum as integer
     X as float
     Y as float
@@ -53,17 +81,16 @@ type GoodNpcType
     Distance2 as float
     DistanceX as float
     DistanceZ as float
-    Distance2X as float
-    Distance2Z as float
     Angle as float
     Rotate as integer
-    Direction as integer
     GoodNpcState as integer
-    DirectionTimer as integer = timer()
     RotationTimer as integer = timer()
+    path_start as integer
+    target as path_Vector2
+    path_end as integer
 endtype
 
-type BadNpcType
+type ai_BadNpcType
     ObjNum as integer
     X as float
     Y as float
@@ -80,7 +107,7 @@ type BadNpcType
     Health as integer
 endtype
 
-type GoodNpcBulletType
+type ai_GoodNpcBulletType
     ObjNum as integer
     X as float
     Y as float
@@ -106,16 +133,6 @@ endtype
 
 function initAI()
 
-`TEMP
-`Make some random boxes to path around.
-for c=1 to 50
-    temp=grabResource(res_Object)
-    make object box temp,rnd(200),(400),rnd(200)
-    position object temp,rnd(3000),200,rnd(3000)
-    sc_setupobject temp,0,2
-    sc_updateobject temp
-next c
-
 global goodNpcRange as float `Prefered player proximity
 goodNpcRange = 450.0
 
@@ -138,20 +155,20 @@ global goodNpcBulletTime  as integer = timer()
 global goodNpcs as integer
 goodNpcs = 7
 rem this is are name of are team mate npc type were going to use
-dim goodNpc(goodNpcs) as GoodNpcType
+dim goodNpc(goodNpcs) as ai_GoodNpcType
 
 rem tells how many bad npcs were making
 global badNpcs as integer
 badNpcs = 7
 rem we use badNpcs to give a value how many badNpcs are in the team
-dim badNpc(badNpcs) as BadNpcType
+dim badNpc(badNpcs) as ai_BadNpcType
 
 rem this is how many goodNpc bullets we have
 global goodNpcBullets as integer
 rem this is how many goodNpc bullets we have
 goodNpcBullets = 7
 rem we plug this value in are array so it tells us how many bullets were going to have
-dim goodNpcBullet(goodNpcBullets) as GoodNpcBulletType
+dim goodNpcBullet(goodNpcBullets) as ai_GoodNpcBulletType
 
 
 
@@ -202,6 +219,141 @@ rem without this it wouldn't update the positions or rotations
     position object  goodNpcBullet(i).ObjNum,goodNpcBullet(i).X,goodNpcBullet(i).Y,goodNpcBullet(i).Z
 next i
 
+
+`Pathfinding
+DIM path_Lines(0) as path_LineType
+DIM path_Verts(0) as path_Vector2
+
+DIM path_Paths(0) as path_Vector2
+
+DIM PathingQueue(0) as integer
+
+`TEMP
+`Make some random boxes to path around.
+for c=1 to 50
+    temp=grabResource(res_Object)
+    make object box temp,rnd(200),(400),rnd(200)
+    position object temp,rnd(3000),200,rnd(3000)
+    sc_setupobject temp,0,2
+    sc_updateobject temp
+    
+    `Setup for pathing
+    temp2=array count(path_Verts(0))
+    array insert at bottom path_Verts(0)
+    array insert at bottom path_Verts(0)
+    array insert at bottom path_Verts(0)
+    array insert at bottom path_Verts(0)
+    
+    path_Verts(temp2+1).X = object position x(temp)-object size x(temp)/2
+    path_Verts(temp2+1).Y = object position y(temp)-object size y(temp)/2
+
+    path_Verts(temp2+2).X = object position x(temp)+object size x(temp)/2
+    path_Verts(temp2+2).Y = object position y(temp)-object size y(temp)/2
+
+    path_Verts(temp2+3).X = object position x(temp)+object size x(temp)/2
+    path_Verts(temp2+3).Y = object position y(temp)+object size y(temp)/2
+
+    path_Verts(temp2+4).X = object position x(temp)-object size x(temp)/2
+    path_Verts(temp2+4).Y = object position y(temp)+object size y(temp)/2
+    
+    array insert at top path_Lines(0)
+    path_Lines(1).V1 = temp2+1
+    path_Lines(1).V2 = temp2+2
+    array insert at top path_Lines(0)
+    path_Lines(1).V1 = temp2+2
+    path_Lines(1).V2 = temp2+3
+    array insert at top path_Lines(0)
+    path_Lines(1).V1 = temp2+3
+    path_Lines(1).V2 = temp2+4
+    array insert at top path_Lines(0)
+    path_Lines(1).V1 = temp2+4
+    path_Lines(1).V2 = temp2+1
+next c
+
+`Process all the lines we made into a map for pathing
+Path_ProcessData()
+
+endfunction
+
+
+
+
+
+function Path_ProcessData()
+
+`Process distances
+DIM path_Connections(0) as path_Connection
+local DIM Connectiondels(0) as boolean
+
+for c=1 to array count(path_Verts(0))
+    
+    for d=c+1 to array count(path_Verts(0))
+        if Raycast(path_Verts(c).X,path_Verts(c).Y,path_Verts(d).X,path_Verts(d).Y,0,0)=0
+            array insert at top path_Connections(0)
+            array insert at top Connectiondels(0)
+            path_Connections(1).V1=c
+            path_Connections(1).V2=d
+            path_Connections(1).Distance=SQRT((path_Verts(c).X-path_Verts(c).Y)^2+(path_Verts(c).Y-path_Verts(d).Y)^2)
+        endif
+    next d
+next c
+
+`Remove bad nodes (concave side)
+for c=1 to array count(path_Verts(0))
+    cv1=0
+    cv2=0
+    mode=0
+    wrapped=0
+    for d=1 to array count(path_Lines(0))
+        if mode=0
+            if path_Lines(d).V1=c then cv1=path_Lines(d).V2
+            if path_Lines(d).V2=c then cv1=path_Lines(d).V1
+            mode=1
+            else
+            if path_Lines(d).V1=c then cv2=path_Lines(d).V2
+            if path_Lines(d).V2=c then cv2=path_Lines(d).V1
+        endif
+    next d
+    
+    if cv1>0 and cv2>0
+    
+        ang1#=wrapvalue(atanfull(path_Verts(cv1).X-path_Verts(c).X,path_Verts(cv1).Y-path_Verts(c).Y))
+        ang2#=wrapvalue(atanfull(path_Verts(cv2).X-path_Verts(c).X,path_Verts(cv2).Y-path_Verts(c).Y))
+        temp#=ang1#
+        ang1#=max(ang1#,ang2#)
+        ang2#=min(temp#,ang2#)
+        if ang1#-ang2#>180 then wrapped=1
+        
+        for d=1 to array count(path_Connections(0))
+            vtemp=0
+            if path_Connections(d).V1=c then vtemp=path_Connections(d).V2
+            if path_Connections(d).V2=c then vtemp=path_Connections(d).V1
+    
+            if vtemp>0
+                angtemp#=wrapvalue(atanfull(path_Verts(vtemp).X-path_Verts(c).X,path_Verts(vtemp).Y-path_Verts(c).Y))
+    
+                bad=0
+                if wrapped=1
+                    if angtemp#>ang1# or angtemp#<ang2# then bad=1
+                    else
+                    if angtemp#<ang1# and angtemp#>ang2# then bad=1
+                endif
+                if bad=1 then connectiondels(d)=1
+            endif
+        
+        next d
+        
+    endif
+    
+next c
+
+`Delete
+for c=array count(path_Connections(0)) to 1 step -1
+    if Connectiondels(c)=1 then array delete element path_Connections(0),c
+next c
+
+UNDIM Connectondels(0)
+
 endfunction
 
 
@@ -213,36 +365,150 @@ endfunction
 function updateAI()
 
 for i = 0 to goodNpcs
-rem follow the player mode:
-rem this is what makes the goodNpc move
-rem this is how we make the goodNpc follow the player
-  if goodNpc(i).goodNpcState = 0
-     Move_GoodNpc(i)
-     GoodNpc_Follow_The_Player(i)
-  endif
-rem scout mode:
-rem scout the area for enemies
-  if goodNpc(i).goodNpcState = 1
-     GoodNpc_Do_Random_Movement(i)
-  endif
-rem attack mode:
-rem if badNpc the enemy is in sight point at the enemy
-rem and move around randomly while pointing at the enemy this is attack mode
-  if goodNpc(i).goodNpcState = 2
-     GoodNpc_Do_Random_Movement(i)
-     GoodNpc_Point_At_BadNpc(i)
-     GoodNpc_Fire_Bullet(i)
-  endif
 
-rem this is what makes the GoodNpc Think
-  GoodNpc_Brain_Think(i)
-rem this uses any of are GoodNpc distance formulas
-  GoodNpc_Distance_Formulas(i)
-rem this makes sure are goodNpcs stay inbounds from the player, and not get out of bounds
-  GoodNpc_Stay_Inbounds(i)
-rem without this it wouldn't update the positions or rotations
-  position object goodNpc(i).ObjNum,goodNpc(i).X,60+BT GetGroundHeight(g_Terrain_Main.dwTerrainID,goodNpc(i).X,goodNpc(i).Z),goodNpc(i).Z
+    `Move if we have a path
+    if goodNpc(i).path_start>0
+    
+        goodNpcDistanceX = (goodNpc(i).X-goodNpc(i).Target.X)
+        goodNpcDistanceZ = (goodNpc(i).Z-goodNpc(i).Target.Y)
+        goodNpc(i).Angle = atanfull(goodNpcDistanceX,goodNpcDistanceZ)
+        rem were setting are angle rule to move forward
+        if wrapvalue(goodNpc(i).Angle) >= 90 and wrapvalue(goodNpc(i).Angle) <= 270
+         goodNpc(i).Z = goodNpc(i).Z - ( cos( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
+        endif
+        rem were setting are angle rule to move backwards
+        if wrapvalue(goodNpc(i).Angle) < 90 and wrapvalue(goodNpc(i).Angle) >=0
+         goodNpc(i).Z = goodNpc(i).Z - ( cos( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
+        endif
+        rem were setting are angle rule to move backwards
+        if wrapvalue(goodNpc(i).Angle) < 360 and wrapvalue(goodNpc(i).Angle) >= 270
+         goodNpc(i).Z = goodNpc(i).Z - ( cos( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
+        endif
+        rem were setting are angle rule to move left
+        if wrapvalue(goodNpc(i).Angle) >= 0 and wrapvalue(goodNpc(i).Angle) <= 180
+         goodNpc(i).X = goodNpc(i).X - ( sin( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
+        endif
+        rem were setting are angle rule to move right
+        if wrapvalue(goodNpc(i).Angle) >= 180 and wrapvalue(goodNpc(i).Angle) <= 360
+        goodNpc(i).X = goodNpc(i).X - ( sin( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
+        endif
+        rem updates angles so it works
+        yrotate object goodNpc(i).ObjNum,goodNpc(i).Angle
+
+        `Switch to next pathing point if necessary
+        if near(goodNpc(i).X,path_Paths(goodNpc(i).Path_Start).X) and near(goodNpc(i).Y,path_Paths(goodNpc(i).Path_Start).Y)
+            array delete element path_Paths(0),goodNpc(i).Path_Start
+            dec goodNpc(i).Path_End
+            for d=1 to array count(goodNpc(0))
+                if d<>i and goodNpc(d).Path_Start>goodNpc(i).Path_Start
+                    dec goodNpc(d).Path_Start
+                    dec goodNpc(d).Path_End
+                endif
+            next d
+            if goodNpc(i).Path_Start>goodNpc(i).Path_End then goodNpc(i).Path_Start=0 : goodNpc(i).Path_End=0
+        endif
+        
+    endif
+    
+    ///////////////////////////
+    // The thinking part
+    // AI decides how to path
+    
+    if goodNpc(i).path_start=0
+        
+        `follow the player
+        if goodNpc(i).goodNpcState = 0
+            if goodNpc(i).Distance > goodNpcRange
+            
+                `Now, we add the NPC to the pathing queue to go to the player's position
+                array insert at bottom PathingQueue(0)
+                PathingQueue(array count(PathingQueue(0)))=i
+                goodNpc(i).Target.X = PLR_footpos.x
+                goodNpc(i).Target.Y = PLR_footpos.z
+            
+            endif
+        endif
+    
+        `scout the area for enemies
+        if goodNpc(i).goodNpcState = 1
+            `We now pick a random point near the player and path to it
+            array insert at bottom PathingQueue(0)
+            PathingQueue(array count(PathingQueue(0)))=i
+            
+            goodNpc(i).Target.X=rnd(300)-150+PLR_footpos.x
+            goodNpc(i).Target.Y=rnd(300)-150+PLR_footpos.z
+        endif
+        
+        `attack mode
+            `if badNpc the enemy is in sight point at the enemy
+            `and move around randomly while pointing at the enemy this is attack mode
+        if goodNpc(i).goodNpcState = 2
+            `We now pick a random point near the player and path to it
+            array insert at bottom PathingQueue(0)
+            PathingQueue(array count(PathingQueue(0)))=i
+            
+            goodNpc(i).Target.X=rnd(300)-150+PLR_footpos.x
+            goodNpc(i).Target.Y=rnd(300)-150+PLR_footpos.z
+            
+            for j = 0 to  badNpcs-i
+                DistanceX2 = (goodNpc(i).X-badNpc(j).X)
+                rem were getting the point betwween the goodNpc z, and player z
+                DistanceZ2 = (goodNpc(i).Z-badNpc(j).Z)
+                rem we then put are formula's in the atanfull to get the angle between to objects
+                goodNpc(i).Angle = atanfull(DistanceX2 ,DistanceZ2)
+                yrotate object goodNpc(i).ObjNum,goodNpc(i).Angle
+            next j
+            GoodNpc_Fire_Bullet(i)
+        endif
+    
+    endif
+
+    `Check distances and stuff
+    if goodNpc(i).Distance > goodNpcRange
+        `follow the player
+        goodNpc(i).goodNpcState = 0
+    endif
+    
+    if goodNpc(i).Distance < goodNpcRange and goodNpc(i).Distance > goodNpcRange2
+        `scout the area, and move random, then look around for bad guys
+        goodNpc(i).goodNpcState = 1
+    endif
+    
+    if goodNpc(i).Distance2 < goodNpcRange4 and goodNpc(i).Distance < goodNpcRange
+        `if a badNoc is around attack, and fire at them
+        goodNpc(i).goodNpcState = 2
+        else
+        
+        if goodNpc(i).Distance2 > goodNpcRange4 and goodNpc(i).Distance < goodNpcRange
+            `return to scout mode
+            goodNpc(i).goodNpcState = 1
+        endif
+    endif
+   
+    rem we make are distance formulas
+    for j = 0 to badNpcs-i
+        rem make this distance formula, because we need this to point the blue team at the player
+        goodNpc(i).Distance = sqrt((goodNpc(i).X-PLR_footpos.X)^2+(goodNpc(i).Z-PLR_footpos.Z)^2)
+        rem make this distance formula, because it's needed for the red team to  point at the blue team.
+        goodNpc(i).Distance2 = sqrt((goodNpc(i).X-badNpc(j).X)^2+(goodNpc(i).Z-badNpc(j).Z)^2)
+    next j
+    
+    rem without this it wouldn't update the positions or rotations
+    position object goodNpc(i).ObjNum,goodNpc(i).X,60+BT GetGroundHeight(g_Terrain_Main.dwTerrainID,goodNpc(i).X,goodNpc(i).Z),goodNpc(i).Z
 next i
+
+
+`DEBUG
+for c=1 to array count(path_Paths(0))
+    text 10,c*10,str$(path_Paths(c).X)+","+str$(path_Paths(c).Y)
+next c
+for c=1 to array count(goodNpc(0))
+    text 100,goodNpc(c).Path_Start*10,str$(c)
+    text 100,goodNpc(c).Path_End*10,"/"+str$(c)
+next c
+
+text 600,10,str$(PLR_footpos.x)+","+str$(PLR_footpos.z)
+
 
 
 for i = 0 to goodNpcBullets
@@ -276,6 +542,15 @@ rem without this it wouldn't update the positions or rotations
 next i
 
 
+`Run pathing queue
+if array count(PathingQueue(0))>0
+    goodNpc(PathingQueue(1)).path_start=array count(path_Paths(0))+1
+    Path(goodNpc(PathingQueue(1)).X,goodNpc(PathingQueue(1)).Y,goodNpc(PathingQueue(1)).Target.X,goodNpc(PathingQueue(1)).Target.Y)
+    goodNpc(PathingQueue(1)).path_end=array count(path_Paths(0))
+    array delete element PathingQueue(0),1
+endif
+
+
 endfunction
 
 
@@ -305,160 +580,6 @@ rem we now hide the object, because the bullet is dead
    next j
 endfunction
 
-function GoodNpc_Brain_Think(i as integer)
-rem this is how are GoodNpc thinks, and uses ai states
-rem if distance is greater then goodNpcRange
-rem then we tell the goodNpcs to follow the player
-   if goodNpc(i).Distance > goodNpcRange
-rem if goodNpc(i).goodNpcState = 0 it means follow the player
-      goodNpc(i).goodNpcState = 0
-   endif
-
-rem if distance is less then goodNpcRange and distance is greater then goodNpcRange2
-rem scout the area, and move random, then look around for the badNpcs
-   if goodNpc(i).Distance < goodNpcRange and goodNpc(i).Distance > goodNpcRange2
-rem if goodNpc(i).goodNpcState = 1 it means scout the area, and move random, then look around for bad guys
-      goodNpc(i).goodNpcState = 1
-   endif
-
-rem if Distance2 is less than goodNpcRange4 and Distance is < than goodNpcRange
-rem It means if a badNpc is around then go in attack mode.
-rem then point, aim, and fire at the bad guys
-   if goodNpc(i).Distance2 < goodNpcRange4 and goodNpc(i).Distance < goodNpcRange
-rem if goodNpc(i).goodNpcState = 2
-rem It means if a badNoc is around attack, and fire at them
-      goodNpc(i).goodNpcState = 2
-   else
-rem else if distance2 is greater than goodNpcRange4 and Distance is less than goodNpcRange
-rem go back to scout mode
-      if goodNpc(i).Distance2 > goodNpcRange4 and goodNpc(i).Distance < goodNpcRange
-rem if goodNpc(i).goodNpcState = 1 then return to scout mode
-         goodNpc(i).goodNpcState = 1
-      endif
-   endif
-
-endfunction
-
-function GoodNpc_Distance_Formulas(i as integer)
-rem we make are distance formulas
-   for j = 0 to badNpcs-i
-rem make this distance formula, because we need this to point the blue team at the player
-      goodNpc(i).Distance = sqrt((goodNpc(i).X-PLR_footpos.X)^2+(goodNpc(i).Z-PLR_footpos.Z)^2)
-rem make this distance formula, because it's needed for the red team to  point at the blue team.
-      goodNpc(i).Distance2 = sqrt((goodNpc(i).X-badNpc(j).X)^2+(goodNpc(i).Z-badNpc(j).Z)^2)
-   next j
-endfunction
-
-function GoodNpc_Follow_The_Player(i as integer)
-rem to make the goodNpc follow the player we need to see a range to cut them off
-rem we now say if goodNpc Distance is greater then goodNpcRange
-rem we need to make the goodNpc follow the player if the distance is greater range
-   if goodNpc(i).Distance > goodNpcRange
-rem we now use are point at  player function
-rem this is how we point the goodNpc at the player
-rem this is 10X faster then point object, so this gives us better performance
-rem were getting the point betwween the goodNpc x, and player x
-      goodNpcDistanceX = (goodNpc(i).X-PLR_footpos.X)
-rem were getting the point betwween the goodNpc z, and player z
-      goodNpcDistanceZ = (goodNpc(i).Z-PLR_footpos.Z)
-rem we then put are formula's in the atanfull to get the angle between to objects
-      goodNpc(i).Angle = atanfull(goodNpcDistanceX,goodNpcDistanceZ)
-   endif
-endfunction
-
-function GoodNpc_Do_Random_Movement(i as integer)
-rem this says if direction = 1 then move forward
-   if goodNpc(i).Direction = 1 then goodNpc(i).Z = goodNpc(i).Z + goodNpc(i).Speed * elapsedtime
-rem this says if direction = 2 then move backwards
-   if goodNpc(i).Direction = 2 then goodNpc(i).Z = goodNpc(i).Z - goodNpc(i).Speed * elapsedtime
-rem this says if direction = 3 then move right
-   if goodNpc(i).Direction = 3 then goodNpc(i).X = goodNpc(i).X + goodNpc(i).Speed * elapsedtime
-rem this says if direction = 4 then move left
-   if goodNpc(i).Direction = 4 then goodNpc(i).X = goodNpc(i).X - goodNpc(i).Speed * elapsedtime
-
-rem this says turn the npc clockwise
-   if goodNpc(i).Rotate = 1 then goodNpc(i).Angle = goodNpc(i).Angle + 3.141
-rem this says turn the npc counter-clockwise
-   if goodNpc(i).Rotate = 2 then goodNpc(i).Angle = goodNpc(i).Angle - 3.141
-rem make timer, and count 1000 milliseconds
-rem if it counts 1000 miliseconds then run this code goodNpc(i).Rotate = rnd(1)+1
-   if timer()-goodNpc(i).RotationTimer >3000
-rem use a random turn left, right or stop
-        goodNpc(i).Rotate = rnd(1)+1
-rem update the RotationTmer so it works
-       goodNpc(i).RotationTimer = timer()
-      endif
-rem updates are rotation
-      yrotate object goodNpc(i).ObjNum,goodNpc(i).Angle
-rem if timer greater than 200 milliseconds then choose a random direction
-rem notice I have more then 4 directions in there. I have rnd(16)+1 which means 17 directions
-rem that's, because I want my team mates to stop moving also.
-   if timer()-goodNpc(i).DirectionTimer> 200
-rem this changes the new direction
-      goodNpc(i).Direction = rnd(16)+1
-rem update timer so it works
-      goodNpc(i).DirectionTimer = timer()
-   endif
-endfunction
-
-
-function Move_GoodNpc(i as integer)
-rem this is how we calculate the right angle to move
-rem were setting are angle rule to move forward
-      if wrapvalue(goodNpc(i).Angle) >= 90 and wrapvalue(goodNpc(i).Angle) <= 270
-         goodNpc(i).Z = goodNpc(i).Z - ( cos( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
-      endif
-rem were setting are angle rule to move backwards
-      if wrapvalue(goodNpc(i).Angle) < 90 and wrapvalue(goodNpc(i).Angle) >=0
-         goodNpc(i).Z = goodNpc(i).Z - ( cos( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
-      endif
-rem were setting are angle rule to move backwards
-      if wrapvalue(goodNpc(i).Angle) < 360 and wrapvalue(goodNpc(i).Angle) >= 270
-         goodNpc(i).Z = goodNpc(i).Z - ( cos( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
-      endif
-rem were setting are angle rule to move left
-     if wrapvalue(goodNpc(i).Angle) >= 0 and wrapvalue(goodNpc(i).Angle) <= 180
-         goodNpc(i).X = goodNpc(i).X - ( sin( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
-      endif
-rem were setting are angle rule to move right
-      if wrapvalue(goodNpc(i).Angle) >= 180 and wrapvalue(goodNpc(i).Angle) <= 360
-        goodNpc(i).X = goodNpc(i).X - ( sin( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
-      endif
-rem updates angles so it works
-      yrotate object goodNpc(i).ObjNum,goodNpc(i).Angle
-endfunction
-
-
-function GoodNpc_Stay_Inbounds(i as integer)
-rem this keeps are goodNpc's from going out of bounds
-rem if Distance is greater then goodNpcRange3 and distance is less then goodNpcRange2
-rem then  start going back to following the player
-   if goodNpc(i).Distance > goodNpcRange3 and goodNpc(i).Distance < goodNpcRange2
-rem were setting are angle rule to move forward
-      if wrapvalue(goodNpc(i).Angle) >= 90 and wrapvalue(goodNpc(i).Angle) <= 270
-         goodNpc(i).Z = goodNpc(i).Z - ( cos( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
-      endif
-rem were setting are angle rule to move backwards
-      if wrapvalue(goodNpc(i).Angle) < 90 and wrapvalue(goodNpc(i).Angle) >=0
-         goodNpc(i).Z = goodNpc(i).Z - ( cos( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
-      endif
-rem were setting are angle rule to move backwards
-      if wrapvalue(goodNpc(i).Angle) < 360 and wrapvalue(goodNpc(i).Angle) >= 270
-         goodNpc(i).Z = goodNpc(i).Z - ( cos( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
-      endif
-rem were setting are angle rule to move left
-      if wrapvalue(goodNpc(i).Angle) >= 0 and wrapvalue(goodNpc(i).Angle) <= 180
-         goodNpc(i).X = goodNpc(i).X - ( sin( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
-      endif
-rem were setting are angle rule to move right
-      if wrapvalue(goodNpc(i).Angle) >= 180 and wrapvalue(goodNpc(i).Angle) <= 360
-        goodNpc(i).X = goodNpc(i).X - ( sin( wrapvalue(goodNpc(i).Angle ) ) * goodNpc(i).Speed  * elapsedtime)
-      endif
-rem updates angles so it works
-      yrotate object goodNpc(i).ObjNum,goodNpc(i).Angle
-   endif
-
-endfunction
 
 function GoodNpc_Bullet_Respawn()
 rem this is how to make a bullet respawn
@@ -481,7 +602,7 @@ rem give the bullet position the goodNpc position
           goodNpcBullet(i).X = goodNpc(j).X
           goodNpcBullet(i).Z = goodNpc(j).Z
 rem now we point are bullet at the bad npc
-          GoodNpcBullet_Point_At_BadNpc(i)
+          `GoodNpcBullet_Point_At_BadNpc(i)
 rem we show the bullet
           show object goodNpcBullet(i).ObjNum
 rem goodNpcBulletRespawn = 1 what this does it makes sure it only grabs 1 bullet at a time
@@ -653,20 +774,6 @@ rem we then put are formula's in the atanfull to get the angle between to object
     next j
 endfunction
 
-function GoodNpc_Point_At_BadNpc(i as integer)
-rem this is how we point the goodNpc at the player
-rem this is 10X faster then point object, so this gives us better performance
-rem were getting the point betwween the goodNpc x, and player x
-`if goodNpc(i).Rotate = 0
-   for j = 0 to  badNpcs-i
-      goodNpc(i).Distance2X = (goodNpc(i).X-badNpc(j).X)
-rem were getting the point betwween the goodNpc z, and player z
-      goodNpc(i).Distance2Z = (goodNpc(i).Z-badNpc(j).Z)
-rem we then put are formula's in the atanfull to get the angle between to objects
-      goodNpc(i).Angle = atanfull(goodNpc(i).Distance2X ,goodNpc(i).Distance2Z)
-      yrotate object goodNpc(i).ObjNum,goodNpc(i).Angle
-   next j
-endfunction
 
 function GoodNpcBullet_Point_At_BadNpc(i as integer)
 rem this is how we point the goodNpcBullet at the badNpc
@@ -701,6 +808,127 @@ rem shows the ai modes
    next i
 
 endfunction
+
+
+////////// PATHING /////////////
+function Path(StartX,StartY,EndX,EndY)
+
+UNDIM TempNodes(0)
+local DIM TempNodes(array count(path_Verts(0))) as path_AStarNode
+
+`Straight line path exemption
+`If there is a direct path, don't bother pathfinding!
+if Raycast(StartX,StartY,EndX,EndY,0,0)=0
+    array insert at bottom path_Paths(0)
+    path_Paths(array count(path_Paths(0))).X=EndX
+    path_Paths(array count(path_Paths(0))).Y=EndY
+    exitfunction
+endif
+
+`Set any nodes visible from start location to "Open"
+for c=1 to array count(path_Verts(0))
+    if Raycast(StartX,StartY,path_Verts(c).X,path_Verts(c).Y,0,0)=0
+        TempNodes(c).Open=1
+        TempNodes(c).Parent=0
+        TempNodes(c).G=SQRT((StartX-path_Verts(c).X)^2+(StartY-path_Verts(c).y)^2)
+        TempNodes(c).H=abs(StartX-path_Verts(c).X)+abs(StartY-path_Verts(c).y)
+        TempNodes(c).F=TempNodes(c).G+TempNodes(c).H
+    endif
+next c
+
+`While we can't see the destination...
+while Raycast(path_Verts(winner).X,path_Verts(winner).Y,EndX,EndY,0,0)=1 or winner=0
+
+    `Find the open node with the lowest score
+    score=99999
+    winner=0
+    for c=1 to array count(TempNodes(0))
+        if TempNodes(c).Open=1 and TempNodes(c).Closed=0
+            if TempNodes(c).F<score
+                winner=c
+                score=TempNodes(c).F
+            endif
+        endif
+    next c
+    
+    `If we didn't find any open nodes, we're stuck.  Quit and blacklist.
+    if winner=0 then exitfunction
+    
+    TempNodes(winner).Closed=1
+    
+    `Open any nodes visible from the one we found above
+    for c=1 to array count(path_Connections(0))
+        temp=0
+        if path_Connections(c).V1=winner then temp=path_Connections(c).V2
+        if path_Connections(c).V2=winner then temp=path_Connections(c).V1
+        
+        `Make sure this doesn't cross through the vertex
+        if temp>0 `Angle stuff
+            if TempNodes(temp).Open=0
+                TempNodes(temp).Open=1
+                TempNodes(temp).Parent=winner
+                TempNodes(temp).G=TempNodes(winner).G+path_Connections(c).Distance
+                TempNodes(temp).H=abs(path_Verts(winner).X-path_Verts(temp).X)+abs(path_Verts(winner).Y-path_Verts(temp).y)
+                TempNodes(temp).F=TempNodes(temp).G+TempNodes(temp).H
+                else
+                if TempNodes(temp).G>TempNodes(winner).G+path_Connections(c).Distance
+                    TempNodes(temp).Parent=winner
+                    TempNodes(temp).G=TempNodes(winner).G+path_Connections(c).Distance
+                    TempNodes(temp).F=TempNodes(temp).G+TempNodes(temp).H
+                endif
+            endif                    
+        endif
+    next c
+
+endwhile
+
+`Backtrack to find path
+if winner>0
+    repeat
+        array insert at top path_Paths(0)
+        path_Paths(1).X=path_Verts(winner).X
+        path_Paths(1).Y=path_Verts(winner).Y
+        winner=TempNodes(winner).Parent
+    until winner=0
+endif
+
+array insert at bottom path_Paths(0)
+path_Paths(array count(path_Paths(0))).X=EndX
+path_Paths(array count(path_Paths(0))).Y=EndY
+
+endfunction
+
+
+
+
+function Raycast(X1 as integer,Y1 as integer,X2 as integer,Y2 as integer,NL1,NL2)
+for c=1 to array count(path_Lines(0))
+    if c<>NL1 and c<>NL2
+        if FastLineIntersection(X1,Y1,X2,Y2,path_Verts(path_Lines(c).V1).X,path_Verts(path_Lines(c).V1).Y,path_Verts(path_Lines(c).V2).X,path_Verts(path_Lines(c).V2).Y) then exitfunction 1
+    endif
+next c
+endfunction 0
+
+
+`by IanM
+function FastLineIntersection(Ax as float,Ay as float,Bx as float,By as float,Cx as float,Cy as float,Dx as float,Dy as float)
+local r as float : local s as float : local d as float : local n as float
+n = ((Ay - Cy) * (Dx - Cx)) - ((Ax - Cx) * (Dy - Cy))
+d = ((Bx - Ax) * (Dy - Cy)) - ((By - Ay) * (Dx - Cx))
+if d = 0 then exitfunction 0
+r = n / d
+s = ( ((Ay-Cy)*(Bx-Ax))-((Ax-Cx)*(By-Ay)) ) / d
+if r <= 0 then exitfunction 0
+if r >= 1 then exitfunction 0
+if s <= 0 then exitfunction 0
+if s >= 1 then exitfunction 0
+endfunction 1
+
+
+function near(a#,b#)
+temp#=30.0
+if a#+temp#>b# and a#-temp#<b# or b#+temp#>a# and b#-temp#<a# then exitfunction 1
+endfunction 0
 
 
 /////////////////////////////////////////////////////////
