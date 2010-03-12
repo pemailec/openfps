@@ -153,7 +153,7 @@ rem just a bullet timer that tells how long to respawn a new bullet
 global goodNpcBulletTime  as integer = timer()
 
 global goodNpcs as integer
-goodNpcs = 7
+goodNpcs = 2
 rem this is are name of are team mate npc type were going to use
 dim goodNpc(goodNpcs) as ai_GoodNpcType
 
@@ -367,10 +367,10 @@ function updateAI()
 for i = 0 to goodNpcs
 
     `Move if we have a path
-    if goodNpc(i).path_start>0
+    if goodNpc(i).path_start>0 and controlkey()
     
-        goodNpcDistanceX = (goodNpc(i).X-goodNpc(i).Target.X)
-        goodNpcDistanceZ = (goodNpc(i).Z-goodNpc(i).Target.Y)
+        goodNpcDistanceX = (goodNpc(i).X-path_Paths(goodNpc(i).path_start).X)
+        goodNpcDistanceZ = (goodNpc(i).Z-path_Paths(goodNpc(i).path_start).Y)
         goodNpc(i).Angle = atanfull(goodNpcDistanceX,goodNpcDistanceZ)
         rem were setting are angle rule to move forward
         if wrapvalue(goodNpc(i).Angle) >= 90 and wrapvalue(goodNpc(i).Angle) <= 270
@@ -397,15 +397,15 @@ for i = 0 to goodNpcs
 
         `Switch to next pathing point if necessary
         if near(goodNpc(i).X,path_Paths(goodNpc(i).Path_Start).X) and near(goodNpc(i).Y,path_Paths(goodNpc(i).Path_Start).Y)
-            array delete element path_Paths(0),goodNpc(i).Path_Start
-            dec goodNpc(i).Path_End
+            array delete element path_Paths(0),goodNpc(i).path_start
+            dec goodNpc(i).path_end
             for d=1 to array count(goodNpc(0))
-                if d<>i and goodNpc(d).Path_Start>goodNpc(i).Path_Start
-                    dec goodNpc(d).Path_Start
-                    dec goodNpc(d).Path_End
+                if d<>i and goodNpc(d).path_start>goodNpc(i).path_start
+                    dec goodNpc(d).path_start
+                    dec goodNpc(d).path_end
                 endif
             next d
-            if goodNpc(i).Path_Start>goodNpc(i).Path_End then goodNpc(i).Path_Start=0 : goodNpc(i).Path_End=0
+            if goodNpc(i).Path_Start>goodNpc(i).Path_End then goodNpc(i).Path_Start=0 : goodNpc(i).Path_End=0 : goodNpc(i).Target.X=0
         endif
         
     endif
@@ -414,7 +414,7 @@ for i = 0 to goodNpcs
     // The thinking part
     // AI decides how to path
     
-    if goodNpc(i).path_start=0
+    if goodNpc(i).Target.X=0
         
         `follow the player
         if goodNpc(i).goodNpcState = 0
@@ -499,15 +499,30 @@ next i
 
 
 `DEBUG
+ink rgb(255,255,255)
 for c=1 to array count(path_Paths(0))
-    text 10,c*10,str$(path_Paths(c).X)+","+str$(path_Paths(c).Y)
+    text 10,c*10+200,str$(path_Paths(c).X)+","+str$(path_Paths(c).Y)
 next c
 for c=1 to array count(goodNpc(0))
-    text 100,goodNpc(c).Path_Start*10,str$(c)
-    text 100,goodNpc(c).Path_End*10,"/"+str$(c)
+    text 100,goodNpc(c).Path_Start*10+200,str$(c)
+    text 100,goodNpc(c).Path_End*10+200,"/"+str$(c)
 next c
 
 text 600,10,str$(PLR_footpos.x)+","+str$(PLR_footpos.z)
+
+for c=1 to array count(path_Lines(0))
+    dk convert 3d to 2d 0,path_Verts(path_Lines(c).V1).X,BT GetGroundHeight(g_Terrain,path_Verts(path_Lines(c).V1).X,path_Verts(path_Lines(c).V1).Y),path_Verts(path_Lines(c).V1).Y
+    tempx#=dk get pick vector x()
+    tempy#=dk get pick vector y()
+    dk convert 3d to 2d 0,path_Verts(path_Lines(c).V2).X,BT GetGroundHeight(g_Terrain,path_Verts(path_Lines(c).V2).X,path_Verts(path_Lines(c).V2).Y),path_Verts(path_Lines(c).V2).Y
+    line tempx#,tempy#,dk get pick vector x(),dk get pick vector y()
+next c
+
+ink rgb(255,0,0)
+for c=1 to array count(goodNpc(0))
+    
+next c
+`/DEBUG
 
 
 

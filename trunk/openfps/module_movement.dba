@@ -185,9 +185,9 @@ PLR_heights(stance_SPRINT) = 110.0
 PLR_heights(stance_CROUCH) = 55.0
 PLR_heights(stance_PRONE)  = 15.0
 
-PLR_footpos.x = 1000.0
-PLR_footpos.y = BT GetGroundHeight(g_Terrain_Main.dwTerrainID,1000.0,1000.0)
-PLR_footpos.z = 1000.0
+PLR_footpos.x = 2000.0
+PLR_footpos.y = BT GetGroundHeight(g_Terrain_Main.dwTerrainID,2000.0,2000.0)
+PLR_footpos.z = 2000.0
 PLR_stance    = stance_WALK
 PLR_headpos.x = PLR_footpos.x
 PLR_headpos.y = PLR_footpos.y + PLR_heights(PLR_stance)
@@ -315,29 +315,28 @@ if keystate(KEY_prone) and MOVE_keypress = 0
    endif
 endif
 
-
 //update
+PLR_velocity.y = PLR_velocity.y + PLR_gravity * elapsedtime
 PLR_footpos.x = PLR_footpos.x + PLR_velocity.x * elapsedtime
 PLR_footpos.y = PLR_footpos.y + PLR_velocity.y * elapsedtime
 PLR_footpos.z = PLR_footpos.z + PLR_velocity.z * elapsedtime
 
-
 //collision
-ground = sc_spherecast(0,PLR_headpos.x,PLR_headpos.y-15,PLR_headpos.z,PLR_footpos.x,PLR_footpos.y+15,PLR_footpos.z,15,0)
-if ground <> 0
-   `damage# = ((-PLR_velocity.y) - 100.0)
-   MOVE_fall = 0
-   PLR_velocity.y = 0
-//amendments for uneven terrain
-   PLR_footpos.x = sc_getcollisionslidex()
-   PLR_footpos.y = sc_getcollisionslidey()-15    //positions the player at the appropriate height
-   PLR_footpos.z = sc_getcollisionslidez()
-   temp# = sc_getcollisionnormaly()                //how flat the land is 1 for flat, 0 for vertical
-   if temp#<0.5 then temp#=0
-   PLR_footpos.x = PLR_footpos.x - (PLR_velocity.x * elapsedtime)*(1-temp#)
-   PLR_footpos.z = PLR_footpos.z - (PLR_velocity.z * elapsedtime)*(1-temp#)
+ground = sc_sphereslide(0,PLR_headpos.x,PLR_headpos.y-15,PLR_headpos.z,PLR_footpos.x,PLR_footpos.y+15,PLR_footpos.z,15,0)
+if ground <> 0 and sc_getcollisionnormaly()>0.4
+    MOVE_fall = 0
+    PLR_velocity.y = 0.0
+    
+    `if sqrt((PLR_footpos.x-sc_getcollisionslidex())^2+(PLR_footpos.z-sc_getcollisionslidez())^2)>0.08
+        PLR_footpos.x = sc_getcollisionslidex()
+        PLR_footpos.z = sc_getcollisionslidez()
+    `endif
+    
+    PLR_footpos.y = sc_getcollisionslidey()-15    //positions the player at the appropriate height
 else
-   PLR_velocity.y = PLR_velocity.y + PLR_gravity * elapsedtime
+    PLR_footpos.x = sc_getcollisionslidex()
+    PLR_footpos.y = sc_getcollisionslidey()-15
+    PLR_footpos.z = sc_getcollisionslidez()
 endif
 
 //jumping
