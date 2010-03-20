@@ -20,6 +20,7 @@ remstart
 (2/25/10)  - BMacZero - Globalized timer-based system.
 (3/01/10)  - Kaedroho - Limited camera x angle to stop player from turning upside down!
 (3/7/10)   - BMacZero - Worked on player collision.
+(3/16/10)  - BMacZero - Reworking Sparky's system.
 
 
 ----- To-Do:
@@ -315,28 +316,21 @@ if keystate(KEY_prone) and MOVE_keypress = 0
    endif
 endif
 
-//update
-PLR_velocity.y = PLR_velocity.y + PLR_gravity * elapsedtime
-PLR_footpos.x = PLR_footpos.x + PLR_velocity.x * elapsedtime
-PLR_footpos.y = PLR_footpos.y + PLR_velocity.y * elapsedtime
-PLR_footpos.z = PLR_footpos.z + PLR_velocity.z * elapsedtime
 
 //collision
-ground = sc_sphereslide(0,PLR_headpos.x,PLR_headpos.y-15,PLR_headpos.z,PLR_footpos.x,PLR_footpos.y+15,PLR_footpos.z,15,0)
-if ground <> 0 and sc_getcollisionnormaly()>0.4
-    MOVE_fall = 0
-    PLR_velocity.y = 0.0
-    
-    `if sqrt((PLR_footpos.x-sc_getcollisionslidex())^2+(PLR_footpos.z-sc_getcollisionslidez())^2)>0.08
-        PLR_footpos.x = sc_getcollisionslidex()
-        PLR_footpos.z = sc_getcollisionslidez()
-    `endif
-    
-    PLR_footpos.y = sc_getcollisionslidey()-15    //positions the player at the appropriate height
+ground = sc_spherecast(0,PLR_headpos.x,PLR_headpos.y-2,PLR_headpos.z,PLR_footpos.x,PLR_footpos.y+2,PLR_footpos.z,2,0)
+if ground <> 0
+   `damage# = ((-PLR_velocity.y) - 100.0)
+   MOVE_fall = 0
+   PLR_velocity.y = 0
+//amendments for uneven terrain
+   PLR_footpos.y = sc_getcollisionslidey()-2    //positions the player at the appropriate height
+   temp# = sc_getcollisionnormaly()                //how flat the land is 1 for flat, 0 for vertical
+   if temp#<0.4 then temp#=0
+   PLR_velocity.x = PLR_velocity.x * temp#             //adjust speed to make up for grade
+   PLR_velocity.z = PLR_velocity.z * temp#
 else
-    PLR_footpos.x = sc_getcollisionslidex()
-    PLR_footpos.y = sc_getcollisionslidey()-15
-    PLR_footpos.z = sc_getcollisionslidez()
+   PLR_velocity.y = PLR_velocity.y + PLR_gravity * elapsedtime
 endif
 
 //jumping
@@ -352,6 +346,11 @@ if MOVE_jump and MOVE_fall = 0
    PLR_velocity.y = PLR_velocity.y + PLR_jump
 endif
 
+
+//update
+PLR_footpos.x = PLR_footpos.x + PLR_velocity.x * elapsedtime
+PLR_footpos.y = PLR_footpos.y + PLR_velocity.y * elapsedtime
+PLR_footpos.z = PLR_footpos.z + PLR_velocity.z * elapsedtime
 
 `Update playersize
 if PLR_heights(PLR_stance)>PLR_currentheight
@@ -384,7 +383,7 @@ endif
 mov_synctime = mov_synctime + elapsedtime
 if mov_synctime > 0.01
     mov_synctime = 0
-    position camera 0, PLR_headpos.x, PLR_headpos.y + mov_HeadOff, PLR_headpos.z
+    position camera 0, PLR_headpos.x, PLR_headpos.y, PLR_headpos.z
     rotate camera 0, PLR_angle.x, PLR_angle.y, PLR_angle.z
 endif
 
