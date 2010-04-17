@@ -64,6 +64,10 @@ load image "media\menu\main.png",menu_mainimage
 sprite menu_mainsprite,0,0,menu_mainimage
 show sprite menu_mainsprite
 
+global menu_music
+menu_music  = grabResource(res_Music)
+load music "media\audio\The Awakening.mp3",menu_music
+play music menu_music
 endfunction
 
 
