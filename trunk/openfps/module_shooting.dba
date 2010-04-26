@@ -13,6 +13,7 @@ remstart
 (2/24/10) - BMacZero - Integrated kaedroho's Shooting Engine
 (3/7/10) - BMacZero - Added DISABLE OBJECT ZDEPTH
 (4/26/10) - Balrog_Bob - Added texture loading code for the gun model
+(4/26/10) - Balrog_Bob - Oops, forgot to free my resource. fixed.
 
 
 ----- To-Do:
@@ -49,6 +50,7 @@ remend
 type SE_Main
     projectiles as dword
     checkobj as dword
+    checkimg as dword
     guns as dword
     projectiletypes as dword
     guntypes as dword
@@ -129,6 +131,7 @@ global dim SE_GunType(0) as SE_GunType
 global dim SE_Collision(0) as SE_Collision
 
 SE_Main.checkobj=grabResource(res_Object)
+SE_Main.checkimg=grabResource(res_Image)
 make object cube SE_Main.checkobj,1
 exclude object on SE_Main.checkobj
 
@@ -144,7 +147,7 @@ global shoot_TestGunTexture
 global shoot_guntype
 global shoot_TestGun
 shoot_TestGunObject=grabResource(res_Object)
-shoot_TestGun_Texture=grabResource(res_Image)
+shoot_TestGunTexture=grabResource(res_Image)
 load object "media/guns/hud.x",shoot_TestGunObject
 load image "media/guns/gun_D2.dds",shoot_TestGunTexture `added by balrog bob. I find your lack of textures disturbing.
 texture object shoot_TestGunObject,shoot_TestGunTexture 
@@ -498,5 +501,6 @@ undim SE_GunType(0)
 undim SE_Collision(0)
 
 freeResource(SE_Main.checkobj,res_Object)
+freeResource(SE_Main.checkimg,res_Image)
 
 endfunction
