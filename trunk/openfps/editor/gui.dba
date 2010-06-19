@@ -1,0 +1,74 @@
+`User Interface Setup Code
+`===========================================
+`Call createUI() to setup the user interface
+`-------------------------------------------
+
+`Global Variable Declarations for Gadgets
+`----------------------------------------
+global DivHorizontal
+global DivVertical
+global Toolbar
+global StatusBar
+global SideMenuMain
+global SideMenuSub
+global Toolbar_panel
+global Toolbar_offset
+global DivCenter
+global camera3dtext
+Toolbar_offset=28
+`Menu Gloals
+`-----------
+    global menu
+    #constant MENU_FILE 0
+    #constant MENU_EDIT 1
+    #constant MENU_VIEW 2
+    #constant MENU_TOOLS 3
+    #constant MENU_HELP 4
+
+`Create User Interface
+`---------------------
+function createUI()
+
+    If Not GUI_CONSTANTS Then errorMessage "GUI Constants not defined.  Please include gui.dba when you compile" : end
+
+    StatusBar=createStatusBar(0)
+    camera3dtext=createlabel(0,26,480,15,"null",0)
+    Toolbar_panel=createPanel(0,0,280000,27,0)
+    Toolbar=createToolbar(Toolbar_panel)
+    addStandardToolbarButtons Toolbar
+	addToolbarButton Toolbar,TOOLBAR_NEW,0
+	addToolbarButton Toolbar,TOOLBAR_OPEN,0
+	addToolbarButton Toolbar,TOOLBAR_SAVE,0
+	addToolbarSplitter Toolbar
+	addToolbarButton Toolbar,TOOLBAR_CUT,0
+    addToolbarButton Toolbar,TOOLBAR_COPY,0
+    addToolbarButton Toolbar,TOOLBAR_PASTE,0
+    DivHorizontal=createPanel(0,0,2400,4,0)
+    setPanelBorderStyle DivHorizontal,BORDER_3D
+    DivVertical=createPanel(0,0,4,2400,0)
+    setPanelBorderStyle DivVertical,BORDER_3D
+    DivCenter=createPanel(0,0,6,3,0)  
+     
+    SideMenuMain=createPanel(0,0,170,4280,0)
+    SideMenuSub=createPanel(2,28,166,4280,SideMenuMain)
+    setPanelBorderStyle SideMenuSub,BORDER_SUNKEN
+    bringtofront SideMenuMain
+    bringtofront StatusBar
+    bringtofront Toolbar_panel
+    bringtofront DivCenter
+    
+    setGadgetAlign SideMenuMain,ALIGN_RIGHT
+    doGadgetalign SideMenuMain
+	
+endfunction
+
+`Create Main Menu
+`----------------
+function createMainMenu()
+menu=createMenu(0)
+    addMenuItem menu,"File",0
+    addMenuItem menu,"Edit",1
+    addMenuItem menu,"View",2
+    addMenuItem menu,"Tools",3
+    addMenuItem menu,"Help",4
+endfunction

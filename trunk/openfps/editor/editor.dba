@@ -1,0 +1,188 @@
+load dll "user32.dll",1
+Sw=call dll(1,"GetSystemMetrics",0)
+Sh=call dll(1,"GetSystemMetrics",1)
+delete dll 1
+set display mode Sw,Sh,32,1
+
+sync on
+sync rate 0
+backdrop on
+color backdrop 0
+
+`you need bluegui if you want to compile this
+startblue "USERID","KEY"
+
+d3d_init
+createUI()
+createMainMenu()
+global Camera3d
+
+aspect#=1.5
+
+Camera3d=1
+make camera Camera3d
+
+make object cube 1,10
+
+position camera Camera3d,0,50,0
+point camera Camera3d,0,0,0
+`set camera to image Camera3d,1,800,600
+set camera view Camera3d,0,0,0,0
+backdrop on Camera3d
+color backdrop Camera3d,rgb(0,100,160)
+set camera view 0,0,0,1,1
+`set camera aspect Camera3d,aspect
+
+CameraTop=2
+make camera CameraTop
+position camera CameraTop,0,0,0
+set camera view CameraTop,0,0,0,0
+backdrop on CameraTop
+color backdrop CameraTop,rgb(40,40,40)
+
+
+CameraFront=3
+make camera CameraFront
+position camera CameraFront,0,0,0
+set camera view CameraFront,0,0,0,0
+backdrop on CameraFront
+color backdrop CameraFront,rgb(40,40,40)
+
+CameraSide=4
+make camera CameraSide
+position camera CameraSide,0,0,0
+set camera view CameraSide,0,0,0,0
+backdrop on CameraSide
+color backdrop CameraSide,rgb(40,40,40)
+
+`make object cube 1,10
+
+remstart
+load object "skydome.x",1
+set object light 1,0
+scale object 1,1000,1000,1000
+disable object zwrite 1
+
+load object "skydome.x",2
+load image "skyflipped.jpg",2
+texture object 2,2
+set object light 2,0
+scale object 2,1000,1000,1000
+disable object zwrite 2
+zrotate object 2,180
+`yrotate object 2,180
+remend
+maximize window 
+camera3d_move=0
+`make matrix 1,20,20,10,10  
+LineColor1=D3D_RGBA(0,0,255,255)
+LineColor2=D3D_RGBA(255,0,0,255)
+LineColor3=D3D_RGBA(0,255,0,255)
+
+position camera Camera3d,-93.4,80.5,-85.6
+point camera Camera3d,0,0,0
+cx#=camera angle x(Camera3d)
+cy#=camera angle y(Camera3d)
+ncx#=cx#
+ncy#=cy#
+
+do
+	set camera aspect CameraSide,aspect#
+	set camera aspect CameraFront,aspect#
+	set camera aspect CameraTop,aspect#
+	d3d_line3d Camera3d,0,0,0,0,25,0,LineColor3,LineColor3, 1
+	d3d_line3d Camera3d,0,0,0,25,0,0,LineColor2,LineColor2, 1
+	d3d_line3d Camera3d,0,0,0,0,0,25,LineColor1,LineColor1, 1
+	
+	Width#=Get Window Client Width()
+	Height#=Get Window Client Height()
+	positionGadget DivHorizontal,0,Height#/2
+	positionGadget DivVertical,(Width#-180)/2,0
+	positionGadget DivCenter,(Width#-180)/2,Height#/2
+	
+	
+	Camera3dX=(((Width#-180)/2)*screen width())/Width#+2
+	Camera3dY=((GadgetHeight(Toolbar_panel))*screen height())/Height#
+	Camera3dY2=((Height#/2)*screen height())/Height#
+	ink rgb(0,0,255)
+	set camera view Camera3d,0,Camera3dY,Camera3dX,Camera3dY2
+	
+	CameraTopX=((((Width#-180)/2)*screen width())/Width#)*2+10
+	CameraTopY=(((Height#/2)*screen height())/Height#)*2	
+	ink rgb(255,255,255)
+	
+	`top view
+	set camera view CameraTop,Camera3dX,Camera3dY,CameraTopX,Camera3dY2
+	`center text CameraTopX-(CameraTopX-Camera3dX)/2,Camera3dY2-(Camera3dY2-Camera3dY)/2,"Weighted screen TEMP (Top View)"
+	position camera CameraTop,0,50,0
+	point camera CameraTop,0,0,0
+	
+	`front view
+	set camera view CameraFront,Camera3dX,Camera3dY2,CameraTopX,Camera3dY2+(Camera3dY2-Camera3dY)+10
+	position camera CameraFront,0,0,50
+	point camera CameraFront,0,0,0
+	`center text CameraTopX-(CameraTopX-Camera3dX)/2,Camera3dY2+(Camera3dY2-Camera3dY)/2,"Weighted screen TEMP (Frontal View)"
+	
+	`side view
+	set camera view CameraSide,0,Camera3dY2,Camera3dX,Camera3dY2+(Camera3dY2-Camera3dY)+10
+	position camera CameraSide,50,0,0
+	point camera CameraSide,0,0,0
+		
+	mx=mousex()
+	my=mousey()
+	mclick=mouseclick()
+	if mx>0:
+		if my>Camera3dY:
+			if mx<Camera3dX:
+				if my<Camera3dY2:
+					if mclick=2:
+						if camera3d_move=0 and clicking=0 then camera3d_move=1:clicking=1:goto skip
+						if camera3d_move=1 and clicking=0 then camera3d_move=0:clicking=1:goto skip
+						skip:
+					else:
+						if clicking=1 then clicking=0
+					endif
+				endif
+			endif
+		endif
+	endif
+	if camera3d_move=0 then setgadgettext camera3dtext,"3d (FPS: "+str$(screen fps())+") - Right-click to enter camera mode"
+	if camera3d_move=1 then setgadgettext camera3dtext,"3d (FPS: "+str$(screen fps())+") - Camera mode - WASD or arrow keys to move, mouse to look"
+	resizegadget camera3dtext,(Width#-180)/2,15
+	
+	if camera3d_move=0:
+		show mouse
+		null=mousemovex()
+		null=mousemovey()
+	endif
+	if camera3d_move=1:
+		hide mouse
+		position mouse Camera3dX/2,Camera3dY2/2
+		cr#=0:cf#=0
+        if rightkey()=1 or KEYSTATE(32)=1 then cr#=-3
+        if leftkey()=1 or KEYSTATE(30)=1 then cr#=3
+        if upkey()=1 or KEYSTATE(17)=1 then cf#=3
+        if downkey()=1 or KEYSTATE(31)=1 then cf#=-3
+        ncr#=curvevalue(cr#,ncr#,5)
+        ncf#=curvevalue(cf#,ncf#,5)
+        cx#=cx#+mousemovey()*0.2
+        cy#=cy#+mousemovex()*0.2
+        if cx#>80 then cx#=80
+        if cx#<-80  then cx#=-80
+        ncx#=curveangle(cx#,ncx#,2)
+        ncy#=curveangle(cy#,ncy#,2)
+        move camera Camera3d,ncf#
+        rotate camera Camera3d,0,wrapvalue(ncy#-90),0
+        move camera Camera3d,ncr#
+        rotate camera Camera3d,0,wrapvalue(ncy#+90),0
+        rotate camera Camera3d,ncx#,ncy#,0
+	endif
+	`position object 1,camera position x(Camera3d),camera position y(Camera3d),camera position z(Camera3d)
+	`position object 2,camera position x(Camera3d),camera position y(Camera3d),camera position z(Camera3d)
+	sync
+loop
+
+`debug(str$(camera position x(Camera3d))+","+str$(camera position y(Camera3d))+","+str$(camera position z(Camera3d)))
+function debug(printout$):
+	message "debug printout",printout$
+endfunction
