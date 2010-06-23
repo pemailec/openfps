@@ -1,0 +1,223 @@
+Remstart
+/////////////////////////////////////////////////////
+//
+// OpenFPS USER INTERFACE MODULE            
+//
+// Created by miso    
+//                           
+//
+/////////////////////////////////////////////////////
+***** Included Source File *****
+
+----- Changelog:
+(06/23/10) - miso     - Created
+                      - Implemented the basic text and bitmap font commands
+
+
+----- To-Do:
+
+
+
+----- Purpose:
+Shows information on screen for players. Handle graphic fonts, mouse, buttons, sliders.
+Includes text, centertext, input, console and window functions.
+
+
+----- Dependancies and Conflicts (IMPORTANT STUFF):
+Needs the free plugin Advanced Sprites.
+http://forum.thegamecreators.com/?m=forum_view&t=113378&b=5
+
+----- Other Notes:
+Usage (IMPORTANT***):
+
+This module loads graphic fonts, can be used in any of the other modules. It does not load the usual media type
+like Db images, it handles its own resources. Variables here are hidden, no need to modify or watch them.
+
+remend
+
+
+
+`=========Constants=========`
+#Constant UI_False     = 0          :` mania
+#Constant UI_True      = 1          :` mania
+#Constant UI_Maxfonts  = 8          :` maximum fonts, that can be loaded, 8 should be more than enough
+`===========================`
+
+`==========Globals==========`
+Global UI_Display as MyScreenType   : `for basic display data
+`===========================`
+
+`===========Types===========`
+//will hold basic ascii data for bitmap fonts
+Type MyStringmapType
+   Ascii  	 as Byte                : `ascii code table refined to the bitmap font image. Saves memory if remains byte.
+   BitmapID  as Integer             : `pointer ID for the bitmap image
+Endtype
+
+//
+Type MyCharType
+   Character as Integer             :  `basic string data
+Endtype
+
+//will hold basic data for the user interface module
+Type MyScreenType
+	Width                as Integer : `screen width
+	Height               as Integer : `screen height
+	Middlewidth          as Integer : `halfwidth, in some cases we save a divide to count that value
+	Middleheight         as Integer : `halfheight, in soma cases, we save a divide   
+	Dxspriteinitialized  as Boolean : `1=initialized (I prefer to keep it boolean, for the final build we may change it to integer, if you like)
+Endtype
+`===========================`
+
+
+`=========Functions=========`
+`----------------------------------------------------------------------------------------
+Function UI_Init()
+//***************************************************************************************
+//*   miso                                                                              *
+//*     This command will initialize the ui functions, and starts the advanced sprite   *
+//*     plugin.                                                                         *
+//***************************************************************************************
+
+// Setup basic data
+	UI_Display.Width                = Screen Width()
+	UI_Display.Height               = Screen Height()
+	UI_Display.MiddleWidth          = UI_Display.Width/2 
+	UI_Display.MiddleHeight         = UI_Display.Height/2 
+	UI_Display.Dxspriteinitialized  = UI_True
+// Init Advanced Sprite
+	Dxs Initialize
+// creates 8 blank ascii font
+    Global Dim UI_Stringmap(8,258)  as Mystringmaptype
+    Global Dim UI_chain(512)        as Mychartype
+// load our test fonts
+	UI_loadStringmap(1,"media\fonts\smallgoldfont.dat",8)
+	UI_loadStringmap(2,"media\fonts\lcdred.dat",16)
+	UI_loadStringmap(3,"media\fonts\testfont.dat",16)
+	rem UI_loadStringmap(4,"media\fonts\system_w_8x8.dat",8)
+	
+Endfunction
+`----------------------------------------------------------------------------------------
+
+
+`----------------------------------------------------------------------------------------
+Function UI_Terminate()
+//***************************************************************************************
+//*   miso                                                                              *
+//*     This command will unload all ui related media.                                  *
+//*                                                                                     *
+//***************************************************************************************
+Local x as Integer
+
+	If UI_Display.DxSpriteInitialized=UI_True
+		For x=1 to UI_MaxFonts
+			If UI_stringmap(x,258).bitmapID>0 Then DXS DELETE SPRITE UI_stringmap(x,258).bitmapID	
+		Next x
+	    UnDim UI_Stringmap()
+    	UnDim UI_chain()
+	Endif
+
+Endfunction
+`----------------------------------------------------------------------------------------
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_LoadStringMap(ID,name$,spacing)
+//***************************************************************************************
+//*   miso                                                                              *
+//*     This command will load a bitmap font. ID must be 1-8, name$ must be the route   *
+//*     and name of the font.dat file, spacing will be the space between chars in pixel.*
+//*                                                                                     *
+//***************************************************************************************
+  Local a$ as String:Local b$ as String:Local c$ as String
+	Open To Read 1,name$
+			//read the bitmapfontname and load
+			Read String 1,a$:b$=First Token$(a$,"="):c$=Next Token$("=")
+			 UI_stringmap(ID,258).bitmapID= DXS CREATE SPRITE(c$)
+			DXS SET SPRITE CENTER  UI_stringmap(ID,258).bitmapID,0,0
+    
+		    //read the bitmap font width
+		    Read String 1,a$:b$=First Token$(a$,"="):c$=Next Token$("=")
+		    UI_stringmap(ID,257).ascii = Val(c$)
+		
+			//read the bitmap font height
+			Read String 1,a$:b$=First Token$(a$,"="):c$=Next Token$("=")
+			UI_stringmap(ID,257).bitmapID = val(c$)
+			DXS SET SPRITE TILE SIZE  UI_stringmap(ID,258).bitmapID, UI_stringmap(ID,257).ascii, UI_stringmap(ID,257).bitmapID    ` Cut the sprites into 32x32 pixels tiles.
+			DXS SET SPRITE SCALE  UI_stringmap(ID,258).bitmapID,100,100
+		    UI_stringmap(ID,258).ascii=spacing
+		
+			//load the ascii codetable
+			For x=1 to 256
+				 Read String 1,a$
+				 b$=First Token$(a$,"=")
+				 c$=Next Token$("=")
+				 UI_stringmap(ID,x).ascii=Val(b$)
+				 UI_stringmap(ID,x).bitmapID=Val(c$)
+			Next x
+	Close File 1
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_Text(ID,x,y,sstring$)
+//***************************************************************************************
+//*   miso                                                                              *
+//*     This command put a graphic text to the screen with bitmapfont ID,               *
+//*     drawing to screen x,y in pixel, and the text will be sstring$.                  *
+//*     Function was created to work similar to the normal DB Text command.             *
+//*                                                                                     *
+//***************************************************************************************
+  Local UI_StringWidth as Integer:Local xx as Integer
+
+  UI_StringWidth=len(sstring$)
+	For xx=1 to UI_StringWidth:UI_chain(xx).character=Asc(Mid$(sstring$,xx)):Next xx
+	  DXS BEGIN SPRITE RENDER UI_stringmap(ID,258).bitmapID
+		  For xx=1 to UI_StringWidth
+		        DXS DRAW SPRITE TILE UI_stringmap(ID,258).bitmapID,UI_stringmap(ID,UI_chain(xx).character).bitmapID,x+((xx-1)*UI_stringmap(ID,258).ascii),y
+		  Next xx
+	  DXS END SPRITE RENDER UI_stringmap(ID,258).bitmapID
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_CenterText(ID,x,y,sstring$)
+//***************************************************************************************
+//*   miso                                                                              *
+//*     Center text command.                                                            *
+//*                                                                                     *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+  Local UI_StringWidth as Integer:Local xx as Integer
+  Local UI_BitmapWidth as Integer:Local UI_BitmapOffset as Integer
+
+   UI_StringWidth=Len(sstring$)
+   UI_BitmapOffset=(UI_stringmap(ID,258).ascii*UI_StringWidth)/2
+	 For xx=1 to UI_StringWidth:UI_chain(xx).character=Asc(Mid$(sstring$,xx)):Next xx
+		DXS BEGIN SPRITE RENDER UI_stringmap(ID,258).bitmapID
+			For xx=1 to UI_StringWidth
+					DXS DRAW SPRITE TILE UI_stringmap(ID,258).bitmapID,UI_stringmap(ID,UI_chain(xx).character).bitmapID,x+((xx-1)*UI_stringmap(ID,258).ascii)-UI_BitmapOffset,y
+			Next xx
+		DXS END SPRITE RENDER UI_stringmap(ID,258).bitmapID
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_Destroystringmap()
+	DXS DELETE SPRITE (UI_stringmap(ID,258).bitmapID)
+	   Undim UI_stringmap()
+	Undim UI_chain()
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+
+Function TerminateUI()
+//***************************************************************************************
+//*   miso                                                                              *
+//*     This command will unload all ui related media.                                  *
+//*                                                                                     *
+//***************************************************************************************
+UI_Terminate()
+Endfunction

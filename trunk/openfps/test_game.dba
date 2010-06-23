@@ -16,6 +16,8 @@ remstart
 (2/25/10)  - BMacZero - Globalized timerbased system, added shooting
 (2/28/10)  - BMacZero - Removed BT temporary code
 (2/28/10)  - Kaedroho - Position mouse to centre of the screen added. This stops the program from exiting when using multiple monitors.
+(6/23/10)  - miso     - Replaced 2 standard text command to the new UI_Text command, yet using placeholder fonts
+(6/23/10)  - miso     - added an UI_CenterText command, just to show how it works, can be deleted
 
 ----- To-Do
 Modules should be init between initMenu() and runMenu().
@@ -35,6 +37,8 @@ randomize timer()
 `/ INITIATE CORE MODULES
 initResource()
 
+`/ INITIATE USER INTERFACE MODULE
+UI_init():`best to init before initMenu(), it may use UI commands later.
 
 `/ START LOADING
 initMenu()
@@ -79,8 +83,13 @@ updateShooting()
 updateTerrain()
 updateAI()
 
-text 10,10,str$(screen fps())
-text 10,20,"Stamina: "+str$(PLR_curstam)
+
+UI_Text(1,10,10,str$(screen fps()))
+UI_Text(1,10,20,"Stamina: "+str$(PLR_curstam))
+UI_Text(2,10,35,"Different font")
+UI_Centertext(3,UI_display.middlewidth,UI_display.height-40,"<Center Text Showcase, delete this line>")
+
+
 
 position mouse screen width()/2,screen height()/2
 
@@ -92,4 +101,5 @@ terminateShooting()
 terminateAI()
 terminateResource()
 terminateTerrain()
+terminateUI()
 end
