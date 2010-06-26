@@ -209,8 +209,6 @@ for i=1 to SE_Main.Projectiles
             if SE_Projectile(i).objnum
                 freeResource(SE_Projectile(i).objnum,res_object)
                 SE_Projectile(i).objnum=0
-            else
-                d3d_line3d oldx#,oldy#,oldz#,sc_getstaticcollisionx(),sc_getstaticcollisiony(),sc_getstaticcollisionz()
             endif
             x#=sc_getstaticcollisionx()
             y#=sc_getstaticcollisiony()
@@ -226,8 +224,6 @@ for i=1 to SE_Main.Projectiles
             if SE_Projectile(i).objnum
                 position object SE_Projectile(i).objnum,SE_Projectile(i).x,SE_Projectile(i).y,SE_Projectile(i).z
                 point object SE_Projectile(i).objnum,SE_Projectile(i).x+SE_Projectile(i).xvel,SE_Projectile(i).y+SE_Projectile(i).yvel,SE_Projectile(i).z+SE_Projectile(i).zvel
-            else
-                d3d_line3d oldx#,oldy#,oldz#,SE_Projectile(i).x,SE_Projectile(i).y,SE_Projectile(i).z
             endif
             if SE_Projectile(i).emitter
                 position object SE_Main.checkobj,SE_Projectile(i).x,SE_Projectile(i).y,SE_Projectile(i).z

@@ -1,84 +1,49 @@
-; **** Dark BASIC Professional Project File ****
-; **** Written by Synergy Editor ****
+; **** DarkBASIC Professional Project ****
+; Created by CodeSurge IDE
 version=DBP1.00
 project name=OpenFPS
 
-; **** source file information ****
+; ****Source file information****
 main=test_game.dba
-LineMain=0
 include1=module_movement.dba
-LineInclude1=0
 include2=module_resource.dba
-LineInclude2=0
 include3=menu.dba
-LineInclude3=0
 include4=module_network.dba
-LineInclude4=0
 include5=module_shooting.dba
-LineInclude5=0
 include6=module_ai.dba
-LineInclude6=303
 include7=module_terrain.dba
-LineInclude7=0
 include8=module_ui.dba
-LineInclude8=26
+final source=_Temp.dbsource
 
-; **** Executable Information  ***
-; build types: exe, media, installer, alone
+;***Executable filename***
 executable=Temp.exe
 build type=exe
-; ** Media file compression **
-compression=NO
 
-; ** Media file encryption **
+compression=NO
 encryption=NO
-; ** Display the card options screen window? **
 card options window=NO
 
-; **** debugger information ****
-; If the editor sets this to yes, it is running in debug mode
+; Debugger
 CLI=NO
-CommandLineArguments=
 
-; **** display mode information ****
+; *****Display Settings*****
 app title=BioStorm
-
-; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
 graphics mode=fullscreen
 fullscreen resolution=1024x768x32
-
-; arbitrary sizes are valid for windowed mode
 window resolution=1024x768
 
-; **** External Files Information ****
 
-; **** Media ****
-; Example entries: media1=graphics\*.jpg
-media root path=C:\openfps\
+;*****Media files, icons, cursors*****
+media root path=C:\Users\Brian\Documents\aa Docs\Programming\OpenFPS\
 
-; **** Icons ****
-
-; **** Cursors ****
-
-; **** Version Info ****
+;****Version Information****
 VerComments=
 VerCompany=
 VerFileDesc=
-VerFileNumber=v1.0
+VerFileNumber=
 VerInternal=v1.0
 VerCopyright=
 VerTrademark=
 VerFilename=
 VerProduct=
 VerProductNumber=v1.0
-
-; **** To Do ****
-
-; **** Comments ****
-comments1=
-
-; **** Advanced (setup.ini) configuration ****
-RemoveSafetyCode=NO
-SafeArrays=YES
-LocalTempFolder=NO
-ExternaliseDLLS=NO
