@@ -14,6 +14,7 @@ Remstart
                       - Implemented the basic text and bitmap font commands
 (06/26/10) - miso     - Implemented the Graphic Cursor commands
 (06/26/10) - miso     - Added Globals SyS_MouseMoveX, MouseMoveY
+(06/26/10) - miso     - Updated UI_Terminate() to clear the mouse image too
 ----- To-Do:
 
 
@@ -27,7 +28,7 @@ Includes text, centertext, input, console and window functions.
 Needs the free plugin Advanced Sprites.
 http://forum.thegamecreators.com/?m=forum_view&t=113378&b=5
 
-With the mosue commands, it needs Ians matrix utils too.
+With the mouse commands, it needs Ians matrix utils too.
 
 ----- Conflicts
 Conflicts with the movement module, because mouse commands and movement module both use
@@ -195,6 +196,7 @@ Local x as Integer
 		Next x
 	    UnDim UI_Stringmap()
     	UnDim UI_chain()
+		If UI_Mouse.Initialized=UI_True then DXS DELETE SPRITE UI_Mouse.ID
 	Endif
 Endfunction
 
