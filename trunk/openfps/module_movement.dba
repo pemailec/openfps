@@ -21,7 +21,11 @@ remstart
 (3/01/10)  - Kaedroho - Limited camera x angle to stop player from turning upside down!
 (3/7/10)   - BMacZero - Worked on player collision.
 (3/16/10)  - BMacZero - Reworking Sparky's system.
-
+(6/25/10)  - Miso     - Replaced every mousemovex() calls with SyS_MouseMoveX variable
+(6/25/10)  - Miso     - Replaced every mousemovey() calls with SyS_MouseMoveY variable
+                      - Calling the above commands clears the mouse movement buffers, and other modules
+                        can't get proper results. Using these variables in all modules solves this problem.
+						User interface module refreshes the values of both variable with every loop.
 
 ----- To-Do:
 Apply different speeds and jump heights for different classes.
@@ -366,8 +370,8 @@ PLR_headpos.x = PLR_footpos.x
 PLR_headpos.y = PLR_footpos.y + PLR_currentheight
 PLR_headpos.z = PLR_footpos.z
 
-PLR_angle.y = PLR_angle.y + mousemovex()*0.2
-PLR_angle.x = PLR_angle.x + mousemovey()*0.2
+PLR_angle.y = PLR_angle.y + SyS_MouseMoveX*0.2
+PLR_angle.x = PLR_angle.x + SyS_MouseMoveY*0.2
 
 //Kaedroho add 03/01/2010
 	if PLR_angle.x > 90.0 then PLR_angle.x = 90.0

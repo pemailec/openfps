@@ -12,8 +12,8 @@ Remstart
 ----- Changelog:
 (06/23/10) - miso     - Created
                       - Implemented the basic text and bitmap font commands
-
-
+(06/26/10) - miso     - Implemented the Graphic Cursor commands
+(06/26/10) - miso     - Added Globals SyS_MouseMoveX, MouseMoveY
 ----- To-Do:
 
 
@@ -27,11 +27,51 @@ Includes text, centertext, input, console and window functions.
 Needs the free plugin Advanced Sprites.
 http://forum.thegamecreators.com/?m=forum_view&t=113378&b=5
 
+With the mosue commands, it needs Ians matrix utils too.
+
+----- Conflicts
+Conflicts with the movement module, because mouse commands and movement module both use
+the mousemovex() and mousemovey() commands, and calling it clears the mousemove puffers.
+Need a Global variable, that knows who may control these commands first.
+
 ----- Other Notes:
 Usage (IMPORTANT***):
 
 This module loads graphic fonts, can be used in any of the other modules. It does not load the usual media type
 like Db images, it handles its own resources. Variables here are hidden, no need to modify or watch them.
+
+----- Function List:
+
+----------MAIN  COMMANDS
+UI_Init()     - no parameters, start all gui functions
+UI_Handle()   - no parameters, handle all gui functions, must be before sync
+UI_Terminate()- no parameters, unload all gui media, free used arrays
+TerminateUI() - no params, just the same as before, made this one just to be similar to the other terminate functions
+
+----------TEXT  COMMANDS
+UI_LoadStringMap(ID,name$,spacing) - loads a font file to ID(integer 1-8),name$ will be the route and name.
+                                     Font will be a monospace font with space value spacing (integer) 
+UI_Text(ID,x,y,sstring$)           - draws a text(sstring$) with the choosen font ID to screen x,y.
+UI_Centertext(ID,x,y,sstring$)     - same as before, just centered
+
+----------MOUSE COMMANDS
+UI_InitMouse(string$)        - loads a mousecursor image from HDD (route and filename=string$). Sets the basic mouse variables.
+UI_HandleMouse()             - no parameters, handle the mouse. 
+UI_HideMouse()               - no params, hides the graphic mouse.
+UI_ShowMouse()               - no params, hides the graphic mouse.
+UI_SetSmoothMouseOn(value)   - its a test, doesnot work well yet, dont use
+UI_SetSmoothMouseOff()       - no params, its a test, doesnot work well yet, dont use
+UI_FadeOutMouse()            - fades out the mouse
+UI_FadeInMouse()             - fades in the mouse
+UI_SetMousePosition(x,y)     - set the graphic mouse cursor position to screen x,y in pixels
+UI_MouseX()                  - returns the graphic mouse position X in pixels
+UI_MouseY()                  - returns the graphic mouse position Y in pixels
+UI_AskMouseHidden()          - returns 1 if graphic mouse is hidden           
+
+----------TIMER COMMANDS
+UI_CreateMouseFaderTicker()  - Timer command for internal use, dont bother with it
+UI_AskMouseFaderTicker()     - Timer command for internal use, dont bother with it
+UI_DestroyMouseFaderTicker() - Timer command for internal use, dont bother with it
 
 remend
 
@@ -44,7 +84,13 @@ remend
 `===========================`
 
 `==========Globals==========`
-Global UI_Display as MyScreenType   : `for basic display data
+Global UI_Display          as MyScreenType    : `for basic display data
+Global UI_Mouse            as MouseType       : `stores the parameters of the graphic mouse
+Global UI_Mousefadertimer  as Integer         : `ticker for mousefader commands, no need to handle manually
+Global SyS_MouseMoveX      as Integer         : `replacement of mousemovex()
+Global SyS_MouseMoveY      as Integer         : `replacement of mousemovey()
+
+
 `===========================`
 
 `===========Types===========`
@@ -67,11 +113,32 @@ Type MyScreenType
 	Middleheight         as Integer : `halfheight, in soma cases, we save a divide   
 	Dxspriteinitialized  as Boolean : `1=initialized (I prefer to keep it boolean, for the final build we may change it to integer, if you like)
 Endtype
+
+//will hold basic data for the graphic mouse
+Type MouseType
+    Initialized   as  Boolean          : `true if initialized         
+	ID            as  Integer          : `mouse cursor image image pointer ID (adv spr)
+	Hidden        as  Boolean          : `true if mouse is hidden     
+	X             as  Integer          : `mouse x coord    
+	Y             as  Integer          : `mouse y coord    
+	Smooth        as  Boolean          : `true=smoothmouse on
+	Smoothvalue   as  Integer          : `smoothing value 
+	XMoveBuffer   as  Integer          : `smooth puffer                                   
+	YMoveBuffer   as  Integer          : `smooth puffer                                         
+	Fadevalue     as  Integer          : `current alpha value, dont change manually
+	Fadingout     as  Boolean          : `1 if mouse cursor is currently fading out                  
+	Fadingin      as  Boolean          : `1 if mouse cursor is currently fading in                      
+Endtype
+
+
 `===========================`
 
 
 `=========Functions=========`
-`----------------------------------------------------------------------------------------
+/////////////////////////////////////////////////////
+//MAIN COMMANDS
+/////////////////////////////////////////////////////
+
 Function UI_Init()
 //***************************************************************************************
 //*   miso                                                                              *
@@ -96,11 +163,24 @@ Function UI_Init()
 	UI_loadStringmap(3,"media\fonts\testfont.dat",16)
 	rem UI_loadStringmap(4,"media\fonts\system_w_8x8.dat",8)
 	
+// load and init graphic mouse
+	UI_InitMouse("media\cursors\testcursor.dds")	
+
 Endfunction
-`----------------------------------------------------------------------------------------
 
 
-`----------------------------------------------------------------------------------------
+Function UI_Handle()
+//***************************************************************************************
+//*   miso                                                                              *
+//*     This command will handle graphic mouses, windows buttons and bars, etc.         *
+//*                                                                                     *
+//***************************************************************************************
+SyS_MouseMoveX=MouseMoveX():SyS_MouseMoveY=MouseMoveY()
+UI_HandleMouse()
+Endfunction
+
+
+
 Function UI_Terminate()
 //***************************************************************************************
 //*   miso                                                                              *
@@ -116,12 +196,25 @@ Local x as Integer
 	    UnDim UI_Stringmap()
     	UnDim UI_chain()
 	Endif
-
 Endfunction
-`----------------------------------------------------------------------------------------
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+Function TerminateUI()
+//***************************************************************************************
+//*   miso                                                                              *
+//*     This command will unload all ui related media.                                  *
+//*                                                                                     *
+//***************************************************************************************
+UI_Terminate()
+Endfunction
+
+
+/////////////////////////////////////////////////////
+//FONT COMMANDS
+/////////////////////////////////////////////////////
+
 Function UI_LoadStringMap(ID,name$,spacing)
 //***************************************************************************************
 //*   miso                                                                              *
@@ -157,9 +250,9 @@ Function UI_LoadStringMap(ID,name$,spacing)
 			Next x
 	Close File 1
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
 Function UI_Text(ID,x,y,sstring$)
 //***************************************************************************************
 //*   miso                                                                              *
@@ -178,9 +271,10 @@ Function UI_Text(ID,x,y,sstring$)
 		  Next xx
 	  DXS END SPRITE RENDER UI_stringmap(ID,258).bitmapID
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
 Function UI_CenterText(ID,x,y,sstring$)
 //***************************************************************************************
 //*   miso                                                                              *
@@ -201,23 +295,331 @@ Function UI_CenterText(ID,x,y,sstring$)
 			Next xx
 		DXS END SPRITE RENDER UI_stringmap(ID,258).bitmapID
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
-
-`--------------------------------------------------------------------------------------------------------------------
-Function UI_Destroystringmap()
-	DXS DELETE SPRITE (UI_stringmap(ID,258).bitmapID)
-	   Undim UI_stringmap()
-	Undim UI_chain()
-Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
+/////////////////////////////////////////////////////
+//WINDOWS COMMANDS
+/////////////////////////////////////////////////////
 
-Function TerminateUI()
+
+/////////////////////////////////////////////////////
+//MOUSE   COMMANDS
+/////////////////////////////////////////////////////
+
+Function UI_InitMouse(param_cursorimage$ as String)
 //***************************************************************************************
-//*   miso                                                                              *
-//*     This command will unload all ui related media.                                  *
+//*   Miso                                                                              *
+//*     This function initiate the graphic mouse.                                       *
 //*                                                                                     *
 //***************************************************************************************
-UI_Terminate()
+	If UI_Mouse.Initialized = UI_True Then ExitFunction
+
+REM 	UI_SetDebugPosition("AE_InitMouse","ae_mouse.dba")  :` Tells the debugger where we are               
+	REM 	UI_CheckDxSprites()                             :` Checks adv spr
+	REM 	UI_Checkfile(param_cursorimage$)                :` Checks if mouse image exist in HD                        
+		UI_Mouse.ID          = DXS CREATE SPRITE(param_cursorimage$)
+		UI_Mouse.Initialized = UI_True
+		UI_Mouse.Hidden      = UI_False
+		UI_Mouse.x           = MouseX()
+		UI_Mouse.Y           = MouseY()
+		UI_Mouse.FadeValue   = 255
+REM 	UI_RestoreDebugPosition()                           :` Restore debugger position                              
+Endfunction
+
+
+
+
+
+
+Function UI_HandleMouse()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Handles the mouse movements.                                                    *
+//*                                                                                     *
+//***************************************************************************************
+If UI_Mouse.Initialized = UI_True 
+REM 	UI_SetDebugPosition("UI_MouseHandle()","ae_mouse.dba")  :`
+	
+			If  UI_Mouse.smooth      = UI_False
+				UI_Mouse.x           = UI_Mouse.X+SyS_MouseMoveX
+				UI_Mouse.Y           = UI_Mouse.Y+SyS_MouseMoveY
+			Else
+				UI_Mouse.XMoveBuffer = UI_Mouse.XMoveBuffer+SyS_MouseMoveX
+				UI_Mouse.YMoveBuffer = UI_Mouse.YMoveBuffer+SyS_MouseMoveY
+				
+				If UI_Mouse.xmovebuffer>4
+					UI_Mouse.X           = UI_Mouse.X+UI_Mouse.Xmovebuffer/UI_Mouse.Smoothvalue
+					UI_Mouse.XMoveBuffer =(UI_Mouse.XMoveBuffer/UI_Mouse.SmoothValue)*(UI_Mouse.SmoothValue-1)
+				Else
+					If UI_Mouse.XMoveBuffer<>0
+						UI_Mouse.X           = UI_Mouse.X+UI_Mouse.Xmovebuffer
+						UI_Mouse.XMoveBuffer = 0
+					Endif
+				Endif
+				
+				If Abs(UI_Mouse.YMoveBuffer)> UI_Mouse.SmoothValue
+					UI_Mouse.Y              = UI_Mouse.Y+UI_Mouse.YMoveBuffer/UI_Mouse.SmoothValue
+					UI_Mouse.YMoveBuffer    =(UI_Mouse.YMoveBuffer/UI_Mouse.SmoothValue)*(UI_Mouse.SmoothValue-1)
+				Else
+					If UI_Mouse.YMoveBuffer<>0
+						UI_Mouse.Y           = UI_Mouse.Y+UI_Mouse.YMoveBuffer
+						UI_Mouse.YMoveBuffer = 0
+					Endif
+				Endif
+			
+			Endif
+			
+
+			If UI_Mouse.X>UI_Display.Width-1  Then UI_Mouse.X = UI_Display.Width-1
+			If UI_Mouse.X<0                    Then UI_Mouse.X = 0
+			If UI_Mouse.Y>UI_Display.Height-1 Then UI_Mouse.Y = UI_Display.Height-1
+			If UI_Mouse.Y<0                    Then UI_Mouse.Y = 0
+			
+	
+			If UI_Mouse.Hidden=UI_False
+				DXS BEGIN SPRITE RENDER UI_Mouse.ID
+	    		DXS DRAW SPRITE         UI_Mouse.ID,UI_Mouse.X,UI_Mouse.Y
+				DXS END SPRITE RENDER   UI_Mouse.ID
+			Endif
+	
+	rem ====Fade handle  ====
+	If UI_Mouse.fadingout      = UI_True
+		If  UI_Mouse.FadeValue = UI_False
+			UI_Mouse.Fadingout = UI_False
+			UI_DestroyMouseFaderTicker()
+			UI_Mouse.Hidden    = UI_True
+		Else
+			If UI_AskMouseFaderTicker()=UI_True Then UI_Mouse.FadeValue=UI_Mouse.FadeValue-15
+			DXS SET SPRITE ALPHA UI_Mouse.ID,UI_Mouse.FadeValue
+		Endif
+	
+	Endif
+	
+	If UI_Mouse.fadingin      = UI_True
+		If UI_mouse.fadevalue = 255
+			UI_Mouse.fadingin = UI_False
+			UI_DestroyMousefaderticker()
+			UI_Mouse.Hidden   = UI_False
+		Else
+			If UI_AskMouseFaderTicker()=UI_True then UI_Mouse.FadeValue=UI_Mouse.FadeValue+15
+			DXS SET SPRITE ALPHA UI_Mouse.ID,UI_Mouse.FadeValue
+		Endif
+	
+	Endif
+	
+REM 	UI_RestoreDebugPosition()      :`
+Endif
+Endfunction
+
+
+
+
+
+Function UI_HideMouse()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Hides graphic mouse.                                                            *
+//*                                                                                     *
+//***************************************************************************************
+	If UI_Mouse.Initialized = UI_True and UI_Mouse.Hidden=UI_False
+		UI_Mouse.Hidden     = UI_True
+		UI_Mouse.FadeValue  = UI_False
+		UI_Mouse.Fadingin   = UI_False
+		UI_Mouse.Fadingout  = UI_False
+		DXS SET SPRITE ALPHA UI_Mouse.ID,UI_Mouse.fadevalue
+	Endif
+Endfunction
+
+
+
+
+
+
+
+Function UI_ShowMouse()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Shows mouse                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+	If UI_Mouse.Initialized = UI_True and UI_Mouse.Hidden=UI_True
+		UI_Mouse.hidden     = UI_False
+		UI_mouse.fadevalue  = 255
+		UI_MOuse.fadingin   = UI_False
+		UI_MOuse.fadingout  = UI_False
+		DXS SET SPRITE ALPHA UI_Mouse.ID,UI_Mouse.Fadevalue
+	Endif
+Endfunction
+
+
+
+
+
+
+Function UI_SetSmoothMouseOn(param_smoothvalue as Integer )
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Turns on mouse smooth, it doesnot work very well.                               *
+//*                                                                                     *
+//***************************************************************************************
+	If UI_Mouse.Initialized  = UI_True
+		UI_Mouse.smooth      = UI_True
+		UI_Mouse.Smoothvalue = param_smoothvalue
+	Endif
+Endfunction
+
+
+
+
+Function UI_SetSmoothMouseOff()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Turns mouse smooth off.                                                         *
+//*                                                                                     *
+//***************************************************************************************
+	If UI_Mouse.Initialized = UI_True Then UI_Mouse.Smooth=0
+Endfunction
+
+
+
+
+
+
+Function UI_FadeOutMouse()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Fades out the mouse cursor.                                                     *
+//*     (uses ians matrix plugin)                                                       *
+//*                                                                                     *
+//***************************************************************************************
+	If  UI_Mouse.Initialized  = UI_True 
+		UI_Mouse.fadingout    = UI_True
+		UI_Mouse.fadingin     = UI_False
+		If UI_Mousefadertimer = UI_False Then UI_CreateMousefaderTicker()
+	Endif
+Endfunction
+
+
+
+
+
+Function UI_FadeinMouse()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Fade in the mouse cursor.                                                       *
+//*                                                                                     *
+//***************************************************************************************
+	If  UI_Mouse.Initialized  = 1 
+		UI_Mouse.Fadingout    = 0
+		UI_Mouse.Fadingin     = 1
+		UI_Mouse.Hidden       = 0
+		If UI_Mousefadertimer = 0 then UI_CreateMousefaderTicker()
+	Endif
+Endfunction
+
+
+
+
+
+Function UI_SetMousePosition(param_mx,param_my)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Set the position of the mouse cursor.                                           *
+//*                                                                                     *
+//***************************************************************************************
+	If UI_Mouse.Initialized = 1 
+		UI_Mouse.X=param_mx
+		UI_Mouse.Y=param_my
+	Endif
+Endfunction
+
+
+
+
+
+Function UI_MouseX()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Returns with the graphic mouse x position in pixels.                            *
+//*                                                                                     *
+//***************************************************************************************
+Local return_mousex as Integer
+	If UI_Mouse.Initialized = 1 then return_mousex=UI_Mouse.X
+Endfunction return_mousex
+
+
+
+
+
+Function UI_MouseY()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Returns the graphic mouse y position in pixels.                                 *
+//*                                                                                     *
+//***************************************************************************************
+Local return_mousey as Integer
+	If UI_Mouse.Initialized = 1 then return_mousey=UI_Mouse.Y
+Endfunction return_mousey
+
+Function UI_AskMouseHidden()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Returns 1 if mouse is hidden.                                                   *
+//*                                                                                     *
+//***************************************************************************************
+Local return_mousey as Integer
+	If UI_Mouse.hidden = UI_True then return_mousey=UI_True
+Endfunction return_mousey
+
+
+
+
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////
+//TIMER   COMMANDS
+/////////////////////////////////////////////////////
+Function UI_CreateMouseFaderTicker()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Dont call manually. Mouse commands may call it intenrally, they destroy it      *
+//*     when not needed.                                                                *
+//***************************************************************************************
+	UI_MouseFaderTimer=FIND FREE TICKER()
+	MAKE TICKER UI_MouseFaderTimer,1
+Endfunction
+
+
+
+
+
+
+Function UI_AskMouseFaderTicker()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Dont call manually. Its for internal use.                                       *
+//*                                                                                     *
+//***************************************************************************************
+	Local tickresult as Integer
+	tickresult=TICKER(UI_Mousefadertimer,1)
+Endfunction tickresult
+
+
+
+
+
+
+Function UI_DestroyMouseFaderTicker()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Mouse commands will call it when needed. Dont call manually.                    *
+//*                                                                                     *
+//***************************************************************************************
+	DELETE TICKER UI_MouseFaderTimer
+	UI_mousefadertimer=0
 Endfunction
