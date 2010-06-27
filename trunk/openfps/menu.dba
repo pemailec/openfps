@@ -17,7 +17,7 @@ remstart
 (2/9/10) - thenerd - Finished RenderWindow function with fill
 (6/27/10)  - thenerd  - Added some effects to the menu background.
 (6/27/10)  - miso  - Changed 2 mouseX() mouseY() commands to UI_MouseX() and UI_MouseY()
-
+(6/27/10)  - thenerd  - Added color parameter to button function
 
 ----- To-Do:
 - Make buttons functional. DONE
@@ -158,15 +158,16 @@ do
 	paste image menu_mainimage,0,0,1
 	scroll object texture menu_bgfx1,0.001,0
 	`buttons
-	if button("New Game",78,219) then exit
-	button("Load Game",78,279)
-	button("Help",78,339)
-	button("Options",78,399)
-	button("Credits",78,459)
-	if button("Quit",78,519)=1 then end
+	if button("<GAME ENGINE TEST>",78,219,rgb(255,0,0)) then exit `Campaign Mode
+	button("Versus Mode",78,279,rgb(255,255,255))
+	button("Help",78,339,rgb(255,255,255))
+	button("Options",78,399,rgb(255,255,255))
+	button("Credits",78,459,rgb(255,255,255))
+	if button("Quit",78,519,rgb(255,255,255))=1 then end
 	
 	if mouseclick()=0 then menu_clickstate=0
 	
+	if mouseclick()=1 then UI_FadeinMouse():if mouseclick()=2 then UI_FadeoutMouse()
 	`RenderWindow(mousex(),mousey(),640,480)
     UI_Handle()
 	sync
@@ -234,7 +235,7 @@ next z
 endfunction
 
 
-function button(text$,x,y):
+function button(text$,x,y,color):
 
     local mouse as integer
     local clicked as boolean
@@ -253,7 +254,7 @@ function button(text$,x,y):
             menu_clickstate=1
         endcase
     endselect
-    
+    ink color,0
 	center text x+89,y+25-(text height("Oj")/2),text$
 	
 endfunction clicked

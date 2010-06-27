@@ -99,7 +99,7 @@ UI_Centertext(3,UI_display.middlewidth,UI_display.height-40,"<Center Text Showca
 position mouse screen width()/2,screen height()/2
 
 //test command for mouse fade, can be deleted.
-if mouseclick()=1 then UI_FadeinMouse():if mouseclick()=2 then UI_FadeoutMouse()
+
 //handle all Gui functions
 UI_Handle()
 sync
