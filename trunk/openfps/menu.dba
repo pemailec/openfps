@@ -16,6 +16,8 @@ remstart
 (2/8/10) - BMacZero - Polished RenderWindow function, prefixed global vars with "menu"
 (2/9/10) - thenerd - Finished RenderWindow function with fill
 (6/27/10)  - thenerd  - Added some effects to the menu background.
+(6/27/10)  - miso  - Changed 2 mouseX() mouseY() commands to UI_MouseX() and UI_MouseY()
+
 
 ----- To-Do:
 - Make buttons functional. DONE
@@ -264,8 +266,8 @@ function in_box2d(x1,y1,x2,y2):
     result=0
     local mx as integer
     local my as integer
-	mx=MouseX()
-	my=MouseY()
+	mx=UI_MouseX()
+	my=UI_MouseY()
 
 	if (mx >= x1) and (mx <= x2) and (my >= y1) and (my <= y2)
 		if mouseclick()=0 then result = 1

@@ -5,13 +5,13 @@ project name=OpenFPS
 
 ; **** source file information ****
 main=test_game.dba
-LineMain=20
+LineMain=0
 include1=module_movement.dba
 LineInclude1=0
 include2=module_resource.dba
 LineInclude2=0
 include3=menu.dba
-LineInclude3=0
+LineInclude3=18
 include4=module_network.dba
 LineInclude4=0
 include5=module_shooting.dba
@@ -54,7 +54,7 @@ window resolution=1024x768
 
 ; **** Media ****
 ; Example entries: media1=graphics\*.jpg
-media root path=C:\==Darkbasic Pro==\Dark Basic Professional\Projects\=Realwork=\openfps\
+media root path=C:\openfps\
 
 ; **** Icons ****
 
