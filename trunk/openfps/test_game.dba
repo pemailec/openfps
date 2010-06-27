@@ -27,7 +27,7 @@ remstart
 ----- To-Do
 Modules should be init between initMenu() and runMenu().
 
-Important note for all modules: don't use mousemovex() and mousemovey() commands, it clears the mouse movement puffer.
+Important note for all modules: don't use mousemovex() and mousemovey() commands, it clears the mouse movement buffer.
                                 Instead, use SyS_MouseMoveX and SyS_MouseMoveY integer variables if needed,
                                 they get their value every loop. (miso.)
 
