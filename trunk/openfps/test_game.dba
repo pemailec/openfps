@@ -20,6 +20,8 @@ remstart
 (6/23/10)  - miso     - Added an UI_CenterText command, just to show how it works, can be deleted
 (6/26/10)  - miso     - Wrote a To-Do note.
 (6/27/10)  - thenerd  - Added some effects to the menu background.
+(6/27/10)  - thenerd  - Added some effects to the menu background.
+(6/27/10)  - miso     - Repositioned the texts to give space for the appearing console
 
 
 ----- To-Do
@@ -91,9 +93,9 @@ updateTerrain()
 updateAI()
 
 
-UI_Text(1,10,10,str$(screen fps()))
-UI_Text(1,10,20,"Stamina: "+str$(PLR_curstam))
-UI_Text(2,10,35,"Different font")
+UI_Text(1,10,50,str$(screen fps()))
+UI_Text(1,10,60,"Stamina: "+str$(PLR_curstam))
+UI_Text(2,10,75,"Different font")
 UI_Centertext(3,UI_display.middlewidth,UI_display.height-40,"<Center Text Showcase, delete this line>")
 
 position mouse screen width()/2,screen height()/2

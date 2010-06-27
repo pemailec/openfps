@@ -7,21 +7,21 @@ project name=OpenFPS
 main=test_game.dba
 LineMain=0
 include1=module_movement.dba
-LineInclude1=0
+LineInclude1=279
 include2=module_resource.dba
 LineInclude2=0
 include3=menu.dba
-LineInclude3=18
+LineInclude3=256
 include4=module_network.dba
 LineInclude4=0
 include5=module_shooting.dba
-LineInclude5=0
+LineInclude5=152
 include6=module_ai.dba
-LineInclude6=337
+LineInclude6=324
 include7=module_terrain.dba
 LineInclude7=0
 include8=module_ui.dba
-LineInclude8=95
+LineInclude8=0
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
@@ -54,7 +54,7 @@ window resolution=1024x768
 
 ; **** Media ****
 ; Example entries: media1=graphics\*.jpg
-media root path=C:\openfps\
+media root path=C:\==Darkbasic Pro==\Dark Basic Professional\Projects\=Realwork=\openfps\
 
 ; **** Icons ****
 

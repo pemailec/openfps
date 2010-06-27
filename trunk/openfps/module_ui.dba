@@ -18,6 +18,11 @@ Remstart
 (06/26/10) - miso     - Modified UI_Mousehandle() not to move cursor when faded out
 (06/27/10) - miso     - Added some basic debug commands for internal use, its works only 1 function deep yet,
                         no need to bother with it.
+(06/27/10) - miso     - Added basic input commands and window commands.
+						Added console, can be called pressing TAB key.
+						Added 2 test console commands, show mouse, hide mouse.
+						(Be patient, I will add the comments soon, and reorganize the whole)
+ 
 
 ----- To-Do:
 
@@ -85,6 +90,17 @@ UI_SetDebugPosition(function$,source$) - Tells the debugger wich function we use
 UI_RestoreDebugPosition()              - Tells the debugger, that we finished our function
 UI_CheckDXSprites()                    - No parameters, checks if advanced sprites initialized, stops running of does not
 UI_CheckFile(filename$)                - Checks if file is on HDD in given route and with given name, halt if does not exists
+
+----------WINDOW COMMANDS    :will fit as a background for console commands
+UI_InitAndLoadWindow(filename$)        - loads a window image for use. only 1 window implemented for the console
+UI_PutWindow(X,Y,width,heigth)         - Draws a window to screen with preloaded gui to x y. Can be called multiple times.
+
+----------INPUT COMMANDS     :basic input commands, later it will be enhanced.       
+UI_InitInput()                         - as for now, its unused... yet.
+UI_CMDInput(fontID,X,Y,fixstring$,maxcharacter) -begins an input event with font ID at x,y
+UI_CheckInput()                        - called by UI_handle, no need to bother
+UI_Inputready()                        - returns 1 if an input procedure is ongoing
+UI_DestroyInput()                      - finishes the ongoing input event. (happens when user hits enter)
 remend
 
 
@@ -107,6 +123,15 @@ Global UI_FunctionName$        as String      : `internal debug variables, no ne
 Global UI_IncludedFileName$    as String      : `internal debug variables, no need to worry about them
 Global UI_OldFunctionName$     as String      : `internal debug variables, no need to worry about them
 Global UI_OldIncludedFileName$ as String      : `internal debug variables, no need to worry about them
+
+Global UI_mywindow             as Mywindowtype: `for windows commands, not very useful, gadgets are better     
+Global UI_Input                as myinputtype : `basic input data will be stored here
+
+Global UI_EVENT_ConsoleInput    as Boolean     : `true, if the console is shown
+Global UI_EVENT_ConsoleChanged  as Boolean     : `true if user just hitted tab
+Global UI_EVENT_ConsoleOffset   as Integer     : `Y offset for command line
+Global UI_EVENT_ConsoleState    as Integer     : `1 if console is appearing 2 if disappearing, 0 if nothing to do
+
 
 `===========================`
 
@@ -147,7 +172,27 @@ Type MouseType
 	Fadingin      as  Boolean          : `1 if mouse cursor is currently fading in                      
 Endtype
 
+//will hold basic data for the input commands
+ TYPE myinputtype
+   ID           AS INTEGER
+   FixString    AS STRING
+   MaxCharacter AS INTEGER
+   PosX         AS INTEGER
+   PosY         AS INTEGER
+   Alive        AS INTEGER
+   Current      AS STRING
+   Result       AS STRING
+   Center       AS INTEGER
+   Initialized  AS INteger
+ENDTYPE
 
+
+//will hold basic data for a window gui graph
+Type mywindowtype
+   ID 		as Integer
+   Xwidth 	as Integer
+   Yrow 	as Integer
+Endtype
 `===========================`
 
 
@@ -181,10 +226,15 @@ Function UI_Init()
 	UI_loadStringmap(1,"media\fonts\smallgoldfont.dat",8)
 	UI_loadStringmap(2,"media\fonts\lcdred.dat",16)
 	UI_loadStringmap(3,"media\fonts\testfont.dat",16)
-	rem UI_loadStringmap(4,"media\fonts\system_w_8x8.dat",8)
+	UI_loadStringmap(4,"media\fonts\system_w_8x8.dat",8)
+
+// load test window
+	UI_InitandloadWindow("media\windows\windowuntitled2.dat")
 	
 // load and init graphic mouse
 	UI_InitMouse("media\cursors\testcursor.dds")	
+
+	
 
 Endfunction
 
@@ -196,6 +246,8 @@ Function UI_Handle()
 //*                                                                                     *
 //***************************************************************************************
 SyS_MouseMoveX=MouseMoveX():SyS_MouseMoveY=MouseMoveY()
+UI_CheckInput()
+UI_HandleConsole()
 UI_HandleMouse()
 Endfunction
 
@@ -326,13 +378,168 @@ Function UI_CenterText(ID,x,y,sstring$)
 Endfunction
 
 /////////////////////////////////////////////////////
+//CONSOLE  COMMANDS
+/////////////////////////////////////////////////////
+Function UI_HandleConsole()
+  If inkey$()="	" and UI_EVENT_ConsoleChanged=0
+	Clear Entry Buffer
+	UI_Input.Current=""
+	If UI_EVENT_Consoleinput=0
+		    UI_EVENT_ConsoleOffset=-48
+			UI_EVENT_Consolestate=1
+  			UI_EVENT_Consoleinput=1
+			UI_CMDInput(3,0,8+UI_EVENT_ConsoleOffset,"CMD>",30)
+			UI_EVENT_ConsoleChanged=1
+	Else
+	UI_EVENT_Consolestate=2
+	UI_EVENT_Consoleinput=0
+	UI_EVENT_ConsoleChanged=1
+	UI_DestroyInput()
+	Clear Entry Buffer
+	UI_Input.Current=""
+  	Endif
+  Endif
+  
+  If UI_Event_ConsoleState=1
+  	UI_EVENT_ConsoleOffset=UI_EVENT_ConsoleOffset+4
+  	UI_CMDInput(3,0,8+UI_EVENT_ConsoleOffset,"CMD>",30)
+  Endif
+  If UI_Event_ConsoleState=2
+ 	UI_EVENT_ConsoleOffset=UI_EVENT_ConsoleOffset-4
+ 	UI_CMDInput(3,0,8+UI_EVENT_ConsoleOffset,"CMD>",30)
+  Endif
+   
+  If UI_EVENT_ConsoleOffset=-48 then UI_Event_ConsoleState=0
+  If UI_EVENT_ConsoleOffset=0 then UI_Event_ConsoleState=0
+   
+  
+  	If UI_EVENT_Consoleinput=1 or UI_EVENT_Consolestate=2
+  		UI_Putwindow(0,0+UI_EVENT_ConsoleOffset,63,2)
+  	Endif
+	
+	If UI_EVENT_ConsoleChanged=1
+		If Inkey$()<>"	" then UI_EVENT_ConsoleChanged=0
+	Endif
+  
+ // Checks the possible results and apply the commands
+ If UI_Input.alive=3
+	UI_EVENT_ConsoleInput=0
+	If Upper$(UI_Input.result)="HIDE MOUSE" then UI_FadeOutMouse()
+	If Upper$(UI_Input.result)="SHOW MOUSE" then UI_FadeInMouse()
+ Endif
+
+Endfunction
+
+
+
+
+/////////////////////////////////////////////////////
 //INPUT   COMMANDS
 /////////////////////////////////////////////////////
+Function UI_InitInput()
+   rem its evaluated
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_CheckInput()
+If UI_Input.alive=1    
+
+      If Returnkey()=1
+         Clear Entry Buffer
+         UI_Input.result=UI_Input.current
+         UI_Input.alive=3
+      Endif
+
+      UI_Input.current=UI_Input.current+Entry$() : Clear Entry Buffer
+      If Scancode()=14
+      	If Scancode()=14 Then UI_Input.current=Left$(UI_Input.current,Len(UI_Input.current)-1)
+      	Clear Entry Buffer
+      Endif
+
+      rem Entry Line
+      If Len(UI_Input.current)>UI_Input.maxcharacter then UI_Input.current=Left$(UI_Input.current,UI_Input.maxcharacter)
+      UI_Text(UI_Input.id,UI_Input.posx,UI_Input.posy,UI_Input.fixstring+(UI_Input.current)+"*")
+
+Endif
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_CMDInput(stringmapID,x,y,fixstring$,maxcharacter)
+	Clear Entry Buffer:Clear Entry Buffer
+	rem freestring myinput(1)(1).result
+	UI_Input.ID=stringmapid
+	UI_Input.fixstring=fixstring$
+	UI_Input.posx=x
+	UI_Input.posy=y
+	UI_Input.alive=1
+	UI_Input.center=0
+	UI_Input.maxcharacter=maxcharacter
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_DestroyInput()
+	UI_Input.alive=0
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_InputReady()
+	Local a as Integer
+	a=UI_Input.alive
+Endfunction a
+`--------------------------------------------------------------------------------------------------------------------
 
 
 /////////////////////////////////////////////////////
 //WINDOWS COMMANDS
 /////////////////////////////////////////////////////
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_InitAndLoadWindow(name$)
+Local a$ as String:Local b$ as String:Local c$ as String
+	UI_SetDebugPosition("UI_InitAndLoadWindow()","module_ui.dba")
+		UI_CheckDXSprites():UI_Checkfile(name$)	
+		Open to Read 1,name$
+				`read the windowname and load
+				Read String 1,a$:b$=First Token$(a$,"="):c$=Next Token$("=")
+				UI_mywindow.ID=DXS CREATE SPRITE(c$)
+				Read String 1,a$:b$=First Token$(a$,"="):c$=Next Token$("=")
+				UI_mywindow.xwidth = Val(c$)
+				`read the window height
+				Read String 1,a$:b$=First Token$(a$,"="):c$=Next Token$("=")
+				UI_mywindow.yrow = Val(c$)
+				DXS SET SPRITE TILE SIZE UI_mywindow.ID,UI_mywindow.xwidth,UI_mywindow.yrow    ` Cut the sprites into x * y pixels tiles.
+		Close File 1
+	UI_RestoreDebugPosition()
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_PutWindow(x,y,xwidth,ywidth)
+  Local stringhossz as Integer:Local xx as Integer
+   stringhossz=Len(sstring$)
+	DXS BEGIN SPRITE RENDER UI_MyWindow.id
+		For xx=0 to xwidth
+		  For yy=0 to ywidth
+			If xx=0 And yy=0 Then DXS DRAW SPRITE TILE UI_Mywindow.ID,1,x+xx*UI_mywindow.xwidth,y+yy*UI_mywindow.yrow
+			If xx=0 And yy>0 And yy<ywidth Then DXS DRAW SPRITE TILE UI_mywindow.ID,4,x+xx*UI_mywindow.xwidth,y+yy*UI_mywindow.yrow
+			If xx=0 And yy=ywidth Then DXS DRAW SPRITE TILE UI_mywindow.ID,7,x+xx*UI_mywindow.xwidth,y+yy*UI_mywindow.yrow
+			If xx>0 And xx<xwidth And yy=0 Then DXS DRAW SPRITE TILE UI_mywindow.ID,2,x+xx*UI_mywindow.xwidth,y+yy*UI_mywindow.yrow
+			If xx>0 And xx<xwidth And yy>0 And yy<ywidth Then DXS DRAW SPRITE TILE UI_mywindow.ID,5,x+xx*UI_mywindow.xwidth,y+yy*UI_mywindow.yrow
+			If xx>0 And xx<xwidth And yy=ywidth Then DXS DRAW SPRITE TILE UI_mywindow.ID,8,x+xx*UI_mywindow.xwidth,y+yy*UI_mywindow.yrow
+			If xx=xwidth And yy=0 Then DXS DRAW SPRITE TILE UI_mywindow.ID,3,x+xx*UI_mywindow.xwidth,y+yy*UI_mywindow.yrow
+			If xx=xwidth And yy>0 And yy<ywidth Then DXS DRAW SPRITE TILE UI_mywindow.ID,6,x+xx*UI_mywindow.xwidth,y+yy*UI_mywindow.yrow
+			If xx=xwidth And yy=ywidth Then DXS DRAW SPRITE TILE UI_mywindow.ID,9,x+xx*UI_mywindow.xwidth,y+yy*UI_mywindow.yrow
+		  Next yy
+		Next xx
+	DXS END SPRITE RENDER UI_mywindow.ID
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
 
 
 /////////////////////////////////////////////////////
