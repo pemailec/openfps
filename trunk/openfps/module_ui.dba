@@ -268,6 +268,7 @@ Local x as Integer
 	    UnDim UI_Stringmap()
     	UnDim UI_chain()
 		If UI_Mouse.Initialized=UI_True then DXS DELETE SPRITE UI_Mouse.ID
+		If UI_Mywindow.ID>0 then DXS DELETE SPRITE UI_Mywindow.ID
 	Endif
 Endfunction
 
