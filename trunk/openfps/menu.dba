@@ -46,7 +46,7 @@ remend
 /////////////////////////////////////////////////////////
 
 function initMenu()
-
+`loading sprite
 global menu_loadingimage
 global menu_loadingsprite
 menu_loadingimage  = grabResource(res_Image)
@@ -55,6 +55,7 @@ load image "media\menu\loading-1.png",menu_loadingimage
 sprite menu_loadingsprite,0,0,menu_loadingimage
 set sprite priority menu_loadingsprite,1
 
+`main sprite
 global menu_mainimage
 global menu_mainsprite
 menu_mainimage  = grabResource(res_Image)
@@ -64,16 +65,21 @@ sprite menu_mainsprite,0,0,menu_mainimage
 show sprite menu_mainsprite
 
 backdrop on
-color backdrop 0
-autocam off
+color backdrop rgb(0,0,255)
+`autocam on
 
+`background effects
 global menu_bgfx1
 menu_bgfx1  = grabResource(res_Object)
-make object plain menu_bgfx1,256,512
-position object menu_bgfx1,0,0,-1024
-`zrotate object menu_bgfx1,45
+menu_bgfx1img  = grabResource(res_Image)
+load image "media\menu\menu_bgfx1img.png",menu_bgfx1img
+make object plain menu_bgfx1,1024,768
+texture object menu_bgfx1,menu_bgfx1img
+set object transparency menu_bgfx1,1
+position object menu_bgfx1,0,0,512
+point object menu_bgfx1,0,0,0
 
-
+`music
 global menu_music
 menu_music  = grabResource(res_Music)
 load music "media\audio\The Awakening.mp3",menu_music
@@ -93,6 +99,7 @@ local alpha as byte
 `Transition out of loading
 alpha=255
 do
+
 	alpha=alpha-20
 	if alpha<20 then exit
 	set sprite alpha menu_loadingsprite,alpha
@@ -100,7 +107,7 @@ do
 loop
 set sprite alpha menu_loadingsprite,0
 
-
+`init gui variables
 global menu_button1 as integer
 global menu_button2 as integer
 global menu_button3 as integer
@@ -124,6 +131,8 @@ menu_left_bottom = grabResource(res_Image)
 menu_right_bottom = grabResource(res_Image)
 menu_left_flat = grabResource(res_Image)
 menu_right_flat = grabResource(res_Image)
+
+`load gui images
 load image "media\menu\gui\left_top.png", menu_left_top
 load image "media\menu\gui\right_top.png", menu_right_top
 load image "media\menu\gui\top_flat.png", menu_top_flat
@@ -139,11 +148,14 @@ load image "media\menu\button-normal.png", menu_button1
 load image "media\menu\button-hover.png",  menu_button2
 load image "media\menu\button-clicked.png",menu_button3
 
-`freeResource(menu_mainsprite,res_Sprite)
+`delete temporary main menu sprite
+freeResource(menu_mainsprite,res_Sprite)
 
 do
-    cls
-	paste sprite menu_mainsprite,0,0
+	`bg
+	paste image menu_mainimage,0,0,1
+	scroll object texture menu_bgfx1,0.001,0
+	`buttons
 	if button("New Game",78,219) then exit
 	button("Load Game",78,279)
 	button("Help",78,339)
@@ -154,10 +166,12 @@ do
 	if mouseclick()=0 then menu_clickstate=0
 	
 	`RenderWindow(mousex(),mousey(),640,480)
-	UI_Handle()
+    UI_Handle()
 	sync
 loop
 
+delete object menu_bgfx1
+freeResource(menu_bgfx1        ,res_Object)
 freeResource(menu_mainimage    ,res_Image )
 freeResource(menu_loadingsprite,res_Sprite)
 freeResource(menu_loadingimage ,res_Image )
