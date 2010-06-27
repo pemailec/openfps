@@ -1,0 +1,62 @@
+Rem ***** Included Source File *****
+Remstart
+/////////////////////////////////////////////////////
+//
+// OpenFPS USER INTERFACE SUBMODULE            
+//
+// Created by miso    
+//
+/////////////////////////////////////////////////////
+`***** Included Source File *****
+`----- Changelog:
+`(06/27/10) - miso     - Created
+
+`----- To-Do:
+
+`----- Purpose:
+`Here are the console command check, use it to implement your own ingame console command.
+`Maybe it can be useful to hide and show debug informations and such things.
+
+`----- Dependancies and Conflicts (IMPORTANT STUFF):
+`Uses the main user interface module. (module_ui.dba)
+
+`----- Conflicts
+
+`----- Other Notes:
+`Usage (IMPORTANT***):
+
+`Just put your own console command here, as the examles shows.
+
+`----- Function List:
+
+`----------MAIN  COMMANDS
+
+
+`=========Constants=========`
+`===========================`
+
+`==========Globals==========`
+`===========================`
+
+`===========Types===========`
+`===========================`
+
+
+`=========Functions=========`
+Remend
+/////////////////////////////////////////////////////
+//MAIN COMMANDS
+/////////////////////////////////////////////////////
+
+Function UI_SUB_CheckConsoleCommand()
+//***************************************************************************************
+//*   Miso   : how to add new console command?                                          *
+//*     USAGE: Duplicate a line, change the text and change the function name           *
+//*                                                                  to be called.      *
+//*                                                                                     *
+//***************************************************************************************
+	If Upper$(UI_Input.result)="HIDE MOUSE" then UI_FadeOutMouse()
+	If Upper$(UI_Input.result)="SHOW MOUSE" then UI_FadeInMouse()
+
+Endfunction
+

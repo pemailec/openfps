@@ -381,6 +381,14 @@ Endfunction
 //CONSOLE  COMMANDS
 /////////////////////////////////////////////////////
 Function UI_HandleConsole()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function handles the console using the window and input commands.          *
+//*     For console command check (last five rows) should be in a different module,     *
+//*     so others may put their console commands there, separetly.                      *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
   If inkey$()="	" and UI_EVENT_ConsoleChanged=0
 	Clear Entry Buffer
 	UI_Input.Current=""
@@ -424,8 +432,7 @@ Function UI_HandleConsole()
  // Checks the possible results and apply the commands
  If UI_Input.alive=3
 	UI_EVENT_ConsoleInput=0
-	If Upper$(UI_Input.result)="HIDE MOUSE" then UI_FadeOutMouse()
-	If Upper$(UI_Input.result)="SHOW MOUSE" then UI_FadeInMouse()
+	UI_SUB_CheckConsoleCommand()
  Endif
 
 Endfunction
@@ -439,11 +446,19 @@ Endfunction
 Function UI_InitInput()
    rem its evaluated
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
 Function UI_CheckInput()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function handles input event, if theres one.                               *
+//*                                                                                     *
+//*     If Enter pressed, then it saves the result sring in UI_Input.result variable,   *
+//*     and changes the UI_Input.alive variable to 3.                                   *
+//*                                                                                     *
+//***************************************************************************************
 If UI_Input.alive=1    
 
       If Returnkey()=1
@@ -464,13 +479,24 @@ If UI_Input.alive=1
 
 Endif
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
-`--------------------------------------------------------------------------------------------------------------------
-Function UI_CMDInput(stringmapID,x,y,fixstring$,maxcharacter)
+
+
+
+
+Function UI_CMDInput(FontID,x,y,fixstring$,maxcharacter)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function start an input event.                                             *
+//*     For the text, it will use FontID, starting to draw the text at x,y.             *
+//*     Fixstring$ will always shown before the user input text.                        *
+//*     Maxcharacter vill be the maximum character the user may type in.                *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
 	Clear Entry Buffer:Clear Entry Buffer
 	rem freestring myinput(1)(1).result
-	UI_Input.ID=stringmapid
+	UI_Input.ID=FontID
 	UI_Input.fixstring=fixstring$
 	UI_Input.posx=x
 	UI_Input.posy=y
@@ -478,28 +504,45 @@ Function UI_CMDInput(stringmapID,x,y,fixstring$,maxcharacter)
 	UI_Input.center=0
 	UI_Input.maxcharacter=maxcharacter
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
 Function UI_DestroyInput()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function closes input event, if theres any.                                *
+//*                                                                                     *
+//***************************************************************************************
 	UI_Input.alive=0
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
 Function UI_InputReady()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function returns 0 if an theres no ongoing input event.                    *
+//*                   returns 1 if an theres an ongoing input event.                    *
+//*                   returns 3 if theres a result.                                     *
+//*                                                                                     *
+//***************************************************************************************
 	Local a as Integer
 	a=UI_Input.alive
 Endfunction a
-`--------------------------------------------------------------------------------------------------------------------
+
+
 
 
 /////////////////////////////////////////////////////
 //WINDOWS COMMANDS
 /////////////////////////////////////////////////////
-
-`--------------------------------------------------------------------------------------------------------------------
 Function UI_InitAndLoadWindow(name$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function loads the image of the window used by putwindow() command         *
+//*                                                                                     *
+//***************************************************************************************
 Local a$ as String:Local b$ as String:Local c$ as String
 	UI_SetDebugPosition("UI_InitAndLoadWindow()","module_ui.dba")
 		UI_CheckDXSprites():UI_Checkfile(name$)	
@@ -516,10 +559,17 @@ Local a$ as String:Local b$ as String:Local c$ as String
 		Close File 1
 	UI_RestoreDebugPosition()
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
 Function UI_PutWindow(x,y,xwidth,ywidth)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function will draw a window with the preloaded imagetiles to x,y.          *
+//*     The width parameters will be the number of middle tiles.                        *
+//*     You may call it multiple times to draw multiple windows.                        *
+//*                                                                                     *
+//***************************************************************************************
   Local stringhossz as Integer:Local xx as Integer
    stringhossz=Len(sstring$)
 	DXS BEGIN SPRITE RENDER UI_MyWindow.id
@@ -538,9 +588,6 @@ Function UI_PutWindow(x,y,xwidth,ywidth)
 		Next xx
 	DXS END SPRITE RENDER UI_mywindow.ID
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
-
-
 
 /////////////////////////////////////////////////////
 //MOUSE   COMMANDS

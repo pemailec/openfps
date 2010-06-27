@@ -19,9 +19,11 @@ LineInclude5=152
 include6=module_ai.dba
 LineInclude6=324
 include7=module_terrain.dba
-LineInclude7=0
+LineInclude7=122
 include8=module_ui.dba
-LineInclude8=0
+LineInclude8=434
+include9=module_ui_console.dba
+LineInclude9=54
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
