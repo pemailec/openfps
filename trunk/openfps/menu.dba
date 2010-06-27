@@ -158,7 +158,7 @@ do
 	paste image menu_mainimage,0,0,1
 	scroll object texture menu_bgfx1,0.001,0
 	`buttons
-	if button("<GAME ENGINE TEST>",78,219,rgb(255,0,0)) then exit `Campaign Mode
+	if button("<GAME ENGINE TEST>",78,219,rgb(255,100,100)) then exit `Campaign Mode
 	button("Versus Mode",78,279,rgb(255,255,255))
 	button("Help",78,339,rgb(255,255,255))
 	button("Options",78,399,rgb(255,255,255))
