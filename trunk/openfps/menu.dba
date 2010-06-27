@@ -15,6 +15,7 @@ remstart
 (2/7/10) - thenerd - Updating and changing menu system, adding gui functions
 (2/8/10) - BMacZero - Polished RenderWindow function, prefixed global vars with "menu"
 (2/9/10) - thenerd - Finished RenderWindow function with fill
+(6/27/10)  - thenerd  - Added some effects to the menu background.
 
 ----- To-Do:
 - Make buttons functional. DONE
@@ -35,12 +36,10 @@ Runs the menu.
 
 
 ----- Other Notes:
-
+-None-
 
 
 remend
-
-
 
 /////////////////////////////////////////////////////////
 // INIT                                                //
@@ -63,6 +62,17 @@ menu_mainsprite = grabResource(res_Sprite)
 load image "media\menu\main.png",menu_mainimage
 sprite menu_mainsprite,0,0,menu_mainimage
 show sprite menu_mainsprite
+
+backdrop on
+color backdrop 0
+autocam off
+
+global menu_bgfx1
+menu_bgfx1  = grabResource(res_Object)
+make object plain menu_bgfx1,256,512
+position object menu_bgfx1,0,0,-1024
+`zrotate object menu_bgfx1,45
+
 
 global menu_music
 menu_music  = grabResource(res_Music)
@@ -129,11 +139,11 @@ load image "media\menu\button-normal.png", menu_button1
 load image "media\menu\button-hover.png",  menu_button2
 load image "media\menu\button-clicked.png",menu_button3
 
-freeResource(menu_mainsprite,res_Sprite)
+`freeResource(menu_mainsprite,res_Sprite)
 
 do
     cls
-	paste image menu_mainimage,0,0
+	paste sprite menu_mainsprite,0,0
 	if button("New Game",78,219) then exit
 	button("Load Game",78,279)
 	button("Help",78,339)
@@ -144,7 +154,7 @@ do
 	if mouseclick()=0 then menu_clickstate=0
 	
 	`RenderWindow(mousex(),mousey(),640,480)
-	
+	UI_Handle()
 	sync
 loop
 
