@@ -15,6 +15,10 @@ Remstart
 (06/26/10) - miso     - Implemented the Graphic Cursor commands
 (06/26/10) - miso     - Added Globals SyS_MouseMoveX, MouseMoveY
 (06/26/10) - miso     - Updated UI_Terminate() to clear the mouse image too
+(06/26/10) - miso     - Modified UI_Mousehandle() not to move cursor when faded out
+(06/27/10) - miso     - Added some basic debug commands for internal use, its works only 1 function deep yet,
+                        no need to bother with it.
+
 ----- To-Do:
 
 
@@ -59,7 +63,7 @@ UI_Centertext(ID,x,y,sstring$)     - same as before, just centered
 UI_InitMouse(string$)        - loads a mousecursor image from HDD (route and filename=string$). Sets the basic mouse variables.
 UI_HandleMouse()             - no parameters, handle the mouse. 
 UI_HideMouse()               - no params, hides the graphic mouse.
-UI_ShowMouse()               - no params, hides the graphic mouse.
+UI_ShowMouse()               - no params, shows the graphic mouse.
 UI_SetSmoothMouseOn(value)   - its a test, doesnot work well yet, dont use
 UI_SetSmoothMouseOff()       - no params, its a test, doesnot work well yet, dont use
 UI_FadeOutMouse()            - fades out the mouse
@@ -74,6 +78,13 @@ UI_CreateMouseFaderTicker()  - Timer command for internal use, dont bother with 
 UI_AskMouseFaderTicker()     - Timer command for internal use, dont bother with it
 UI_DestroyMouseFaderTicker() - Timer command for internal use, dont bother with it
 
+----------DEBUG COMMANDS     :for internal use, we wont call them in the final build
+UI_StartDebugMode()                    - No parameters
+UI_StopDebugMode()                     - No parameters
+UI_SetDebugPosition(function$,source$) - Tells the debugger wich function we use at the moment
+UI_RestoreDebugPosition()              - Tells the debugger, that we finished our function
+UI_CheckDXSprites()                    - No parameters, checks if advanced sprites initialized, stops running of does not
+UI_CheckFile(filename$)                - Checks if file is on HDD in given route and with given name, halt if does not exists
 remend
 
 
@@ -91,6 +102,11 @@ Global UI_Mousefadertimer  as Integer         : `ticker for mousefader commands,
 Global SyS_MouseMoveX      as Integer         : `replacement of mousemovex()
 Global SyS_MouseMoveY      as Integer         : `replacement of mousemovey()
 
+Global UI_DebugMode            as Boolean     : `internal debug variables, no need to worry about them
+Global UI_FunctionName$        as String      : `internal debug variables, no need to worry about them
+Global UI_IncludedFileName$    as String      : `internal debug variables, no need to worry about them
+Global UI_OldFunctionName$     as String      : `internal debug variables, no need to worry about them
+Global UI_OldIncludedFileName$ as String      : `internal debug variables, no need to worry about them
 
 `===========================`
 
@@ -146,6 +162,9 @@ Function UI_Init()
 //*     This command will initialize the ui functions, and starts the advanced sprite   *
 //*     plugin.                                                                         *
 //***************************************************************************************
+
+// Start Debugmode
+	UI_StartDebugmode()
 
 // Setup basic data
 	UI_Display.Width                = Screen Width()
@@ -206,8 +225,8 @@ Endfunction
 Function TerminateUI()
 //***************************************************************************************
 //*   miso                                                                              *
-//*     This command will unload all ui related media.                                  *
-//*                                                                                     *
+//*     This command will unload all ui related media. Made only to be similar to the   *
+//*     other modules terminate functions.                                              *
 //***************************************************************************************
 UI_Terminate()
 Endfunction
@@ -224,33 +243,41 @@ Function UI_LoadStringMap(ID,name$,spacing)
 //*     and name of the font.dat file, spacing will be the space between chars in pixel.*
 //*                                                                                     *
 //***************************************************************************************
-  Local a$ as String:Local b$ as String:Local c$ as String
-	Open To Read 1,name$
-			//read the bitmapfontname and load
-			Read String 1,a$:b$=First Token$(a$,"="):c$=Next Token$("=")
-			 UI_stringmap(ID,258).bitmapID= DXS CREATE SPRITE(c$)
-			DXS SET SPRITE CENTER  UI_stringmap(ID,258).bitmapID,0,0
+Local a$ as String:Local b$ as String:Local c$ as String
+	UI_SetDebugPosition("UI_LoadStringMap()","module_ui.dba")
+	// check if advanced sprites initialized
+	UI_CheckDXSprites()
+	// check if fontfile exist
+	UI_CheckFile(name$)
+		Open To Read 1,name$
+				//read the bitmapfontname and load
+				Read String 1,a$:b$=First Token$(a$,"="):c$=Next Token$("=")
+				//Check if bitmapfont image exist
+				 UI_CheckFile(c$)
+				 UI_stringmap(ID,258).bitmapID= DXS CREATE SPRITE(c$)
+				DXS SET SPRITE CENTER  UI_stringmap(ID,258).bitmapID,0,0
     
-		    //read the bitmap font width
-		    Read String 1,a$:b$=First Token$(a$,"="):c$=Next Token$("=")
-		    UI_stringmap(ID,257).ascii = Val(c$)
+			    //read the bitmap font width
+			    Read String 1,a$:b$=First Token$(a$,"="):c$=Next Token$("=")
+			    UI_stringmap(ID,257).ascii = Val(c$)
 		
-			//read the bitmap font height
-			Read String 1,a$:b$=First Token$(a$,"="):c$=Next Token$("=")
-			UI_stringmap(ID,257).bitmapID = val(c$)
-			DXS SET SPRITE TILE SIZE  UI_stringmap(ID,258).bitmapID, UI_stringmap(ID,257).ascii, UI_stringmap(ID,257).bitmapID    ` Cut the sprites into 32x32 pixels tiles.
-			DXS SET SPRITE SCALE  UI_stringmap(ID,258).bitmapID,100,100
-		    UI_stringmap(ID,258).ascii=spacing
+				//read the bitmap font height
+				Read String 1,a$:b$=First Token$(a$,"="):c$=Next Token$("=")
+				UI_stringmap(ID,257).bitmapID = val(c$)
+				DXS SET SPRITE TILE SIZE  UI_stringmap(ID,258).bitmapID, UI_stringmap(ID,257).ascii, UI_stringmap(ID,257).bitmapID    ` Cut the sprites into 32x32 pixels tiles.
+				DXS SET SPRITE SCALE  UI_stringmap(ID,258).bitmapID,100,100
+			    UI_stringmap(ID,258).ascii=spacing
 		
-			//load the ascii codetable
-			For x=1 to 256
-				 Read String 1,a$
-				 b$=First Token$(a$,"=")
-				 c$=Next Token$("=")
-				 UI_stringmap(ID,x).ascii=Val(b$)
-				 UI_stringmap(ID,x).bitmapID=Val(c$)
-			Next x
-	Close File 1
+				//load the ascii codetable
+				For x=1 to 256
+					 Read String 1,a$
+					 b$=First Token$(a$,"=")
+					 c$=Next Token$("=")
+					 UI_stringmap(ID,x).ascii=Val(b$)
+					 UI_stringmap(ID,x).bitmapID=Val(c$)
+				Next x
+		Close File 1
+	UI_RestoreDebugPosition()
 Endfunction
 
 
@@ -298,6 +325,10 @@ Function UI_CenterText(ID,x,y,sstring$)
 		DXS END SPRITE RENDER UI_stringmap(ID,258).bitmapID
 Endfunction
 
+/////////////////////////////////////////////////////
+//INPUT   COMMANDS
+/////////////////////////////////////////////////////
+
 
 /////////////////////////////////////////////////////
 //WINDOWS COMMANDS
@@ -314,18 +345,18 @@ Function UI_InitMouse(param_cursorimage$ as String)
 //*     This function initiate the graphic mouse.                                       *
 //*                                                                                     *
 //***************************************************************************************
-	If UI_Mouse.Initialized = UI_True Then ExitFunction
+    If UI_Mouse.Initialized = UI_True Then ExitFunction
 
-REM 	UI_SetDebugPosition("AE_InitMouse","ae_mouse.dba")  :` Tells the debugger where we are               
-	REM 	UI_CheckDxSprites()                             :` Checks adv spr
-	REM 	UI_Checkfile(param_cursorimage$)                :` Checks if mouse image exist in HD                        
+	UI_SetDebugPosition("UI_InitMouse()","module_ui.dba")      :` Tells the debugger where we are               
+ 		UI_CheckDxSprites()                                    :` Checks adv spr
+ 		UI_Checkfile(param_cursorimage$)                       :` Checks if mouse image exist in HD                        
 		UI_Mouse.ID          = DXS CREATE SPRITE(param_cursorimage$)
 		UI_Mouse.Initialized = UI_True
 		UI_Mouse.Hidden      = UI_False
 		UI_Mouse.x           = MouseX()
 		UI_Mouse.Y           = MouseY()
 		UI_Mouse.FadeValue   = 255
-REM 	UI_RestoreDebugPosition()                           :` Restore debugger position                              
+	UI_RestoreDebugPosition()                                  :` Restore debugger position                              
 Endfunction
 
 
@@ -340,7 +371,7 @@ Function UI_HandleMouse()
 //*                                                                                     *
 //***************************************************************************************
 If UI_Mouse.Initialized = UI_True 
-REM 	UI_SetDebugPosition("UI_MouseHandle()","ae_mouse.dba")  :`
+	If UI_Mouse.hidden=UI_False or UI_Mouse.FadingOut=UI_True
 	
 			If  UI_Mouse.smooth      = UI_False
 				UI_Mouse.x           = UI_Mouse.X+SyS_MouseMoveX
@@ -383,6 +414,9 @@ REM 	UI_SetDebugPosition("UI_MouseHandle()","ae_mouse.dba")  :`
 	    		DXS DRAW SPRITE         UI_Mouse.ID,UI_Mouse.X,UI_Mouse.Y
 				DXS END SPRITE RENDER   UI_Mouse.ID
 			Endif
+
+	Endif
+
 	
 	rem ====Fade handle  ====
 	If UI_Mouse.fadingout      = UI_True
@@ -408,8 +442,7 @@ REM 	UI_SetDebugPosition("UI_MouseHandle()","ae_mouse.dba")  :`
 		Endif
 	
 	Endif
-	
-REM 	UI_RestoreDebugPosition()      :`
+
 Endif
 Endfunction
 
@@ -575,6 +608,9 @@ Endfunction return_mousey
 
 
 
+/////////////////////////////////////////////////////
+//GADGET   COMMANDS
+/////////////////////////////////////////////////////
 
 
 
@@ -625,3 +661,150 @@ Function UI_DestroyMouseFaderTicker()
 	DELETE TICKER UI_MouseFaderTimer
 	UI_mousefadertimer=0
 Endfunction
+
+
+/////////////////////////////////////////////////////
+//DEBUG   COMMANDS
+/////////////////////////////////////////////////////
+Function UI_StartDebugMode()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Starts the debug mode.                                                          *
+//*                                                                                     *
+//***************************************************************************************
+  UI_DebugMode = UI_True
+  UI_SetDebugPosition("main program","test_game.dba")
+Endfunction
+
+
+
+
+Function UI_StopDebugMode()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Stops  the debug mode.                                                          *
+//*                                                                                     *
+//***************************************************************************************
+  UI_DebugMode = UI_False
+Endfunction
+
+
+
+
+Function UI_SetDebugPosition(functionname$ as string ,modulename$ as string )
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Set debug mode position to a named function in a named source file.             *
+//*                                                                                     *
+//***************************************************************************************
+	If UI_DebugMode=UI_True	
+			UI_OldFunctionName$     = UI_FunctionName$
+			UI_OldIncludedFileName$ = UI_IncludedFileName$
+			UI_FunctionName$        = functionname$
+			UI_IncludedFileName$    = modulename$
+	Endif
+Endfunction
+
+
+
+
+Function UI_RestoreDebugPosition()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Sets the debug position to the main program.                                    *
+//*                                                                                     *
+//***************************************************************************************
+	If UI_DebugMode=UI_True	
+		rem UI_FunctionName$     = UI_OldFunctionName$
+		rem UI_IncludedFileName$ = UI_OldIncludedFileName$
+		UI_FunctionName$         = "main program"
+		UI_IncludedFileName$     = "test_game.dba"
+	Endif
+Endfunction
+
+
+
+
+
+Function UI_Checkdxsprites()
+//***************************************************************************************
+//*  Miso:                                                                              *
+//*    Checks if advanced sprites initialized.                                          *
+//*                                                                                     *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+	If UI_DebugMode=UI_True 
+		If UI_display.dxspriteinitialized=1 
+				exitfunction
+			else
+				repeat
+					cls:set cursor 1,1
+					print " "
+					print "********************************"
+					Print "*                              *"
+					print "*  miso's UI Debugger V 1.0    *"
+					Print "*                              *"
+					Print "********************************"
+					Print " "
+					Print "ERROR: Advanced Sprites not Initialized."
+					Print " "
+					Print " "
+					Print " "
+					Print "__________________________________________________________________________________________________________________________"
+					print "The "+UI_FunctionName$+" in "+UI_IncludedFilename$+" tries to use"
+			    	print "Advanced Sprite functions, while DxSpriteInitialized=0."
+			    	Print "__________________________________________________________________________________________________________________________"
+					Print " "
+				    print " "
+			    	Print "Press Enter to Halt."
+			    	sync
+				until returnkey()=1
+			End
+		Endif
+	Endif
+Endfunction
+
+
+
+
+
+Function UI_CheckFile(filename$ as string )
+//***************************************************************************************
+//*  Miso:                                                                              *
+//*    Checks if a file is exist on HDD, if does not, then stops the program.           *
+//*                                                                                     *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+	If UI_DebugMode=UI_True 
+		If file exist(filename$) = 1
+				exitfunction
+			else
+				repeat
+					cls:set cursor 1,1
+					print " "
+					print "********************************"
+					Print "*                              *"
+					print "*  miso's UI Debugger V 1.0    *"
+					Print "*                              *"
+					Print "********************************"
+					Print " "
+					Print "Error: File not found."
+					Print " "
+					Print " "
+					Print " "
+					Print "_______________________________________________________________________________________________________________________"
+					print "The "+UI_FunctionName$+" in "+UI_IncludedFilename$+" tries to manipulate"
+			    	print filename$+", but it does not exist there."
+			    	Print "_______________________________________________________________________________________________________________________"
+					Print " "
+				    print " "
+			    	Print "Press Enter to Halt."
+			    	sync
+				until returnkey()=1
+			End
+		Endif
+	Endif
+Endfunction
+

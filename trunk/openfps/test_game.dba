@@ -27,7 +27,7 @@ Modules should be init between initMenu() and runMenu().
 
 Important note for all modules: don't use mousemovex() and mousemovey() commands, it clears the mouse movement puffer.
                                 Instead, use SyS_MouseMoveX and SyS_MouseMoveY integer variables if needed,
-                                they get their value every loop. (Thank's, miso.)
+                                they get their value every loop. (miso.)
 
 remend
 
@@ -96,9 +96,10 @@ UI_Text(1,10,20,"Stamina: "+str$(PLR_curstam))
 UI_Text(2,10,35,"Different font")
 UI_Centertext(3,UI_display.middlewidth,UI_display.height-40,"<Center Text Showcase, delete this line>")
 
-
 position mouse screen width()/2,screen height()/2
 
+//test command for mouse fade, can be deleted.
+if mouseclick()=1 then UI_FadeinMouse():if mouseclick()=2 then UI_FadeoutMouse()
 //handle all Gui functions
 UI_Handle()
 sync

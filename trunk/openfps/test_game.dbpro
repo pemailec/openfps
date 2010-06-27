@@ -17,11 +17,11 @@ LineInclude4=0
 include5=module_shooting.dba
 LineInclude5=0
 include6=module_ai.dba
-LineInclude6=0
+LineInclude6=337
 include7=module_terrain.dba
 LineInclude7=0
 include8=module_ui.dba
-LineInclude8=0
+LineInclude8=95
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
