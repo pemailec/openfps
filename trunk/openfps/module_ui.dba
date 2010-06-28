@@ -225,7 +225,7 @@ Function UI_Init()
 // load our test fonts
 	UI_loadStringmap(1,"media\fonts\smallgoldfont.dat",8)
 	UI_loadStringmap(2,"media\fonts\lcdred.dat",16)
-	UI_loadStringmap(3,"media\fonts\testfont.dat",16)
+	UI_loadStringmap(3,"media\fonts\newfont.dat",16)
 	UI_loadStringmap(4,"media\fonts\system_w_8x8.dat",8)
 
 // load test window

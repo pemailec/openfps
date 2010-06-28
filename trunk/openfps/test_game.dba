@@ -103,7 +103,9 @@ position mouse screen width()/2,screen height()/2
 //test command for mouse fade, can be deleted.
 
 //handle all Gui functions
+if DebugScreenFPS=1 then UI_Text(2,screen width()-50,screen height()-40,str$(screen fps())) 
 UI_Handle()
+
 sync
 loop
 

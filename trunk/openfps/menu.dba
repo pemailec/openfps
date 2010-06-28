@@ -56,7 +56,8 @@ menu_loadingsprite = grabResource(res_Sprite)
 load image "media\menu\loading-1.png",menu_loadingimage
 sprite menu_loadingsprite,0,0,menu_loadingimage
 set sprite priority menu_loadingsprite,1
-
+global DebugScreenFPS
+DebugScreenFPS=0
 `main sprite
 global menu_mainimage
 global menu_mainsprite
@@ -169,7 +170,9 @@ do
 	
 	if mouseclick()=1 then UI_FadeinMouse():if mouseclick()=2 then UI_FadeoutMouse()
 	`RenderWindow(mousex(),mousey(),640,480)
+	if DebugScreenFPS=1 then UI_Text(2,screen width()-50,screen height()-40,str$(screen fps())) 
     UI_Handle()
+    
 	sync
 loop
 
