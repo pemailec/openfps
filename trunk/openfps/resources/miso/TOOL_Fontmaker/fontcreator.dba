@@ -1,0 +1,93 @@
+Remstart
+/////////////////////////////////////////////////////
+//
+// OpenFPS FontMaker Tool            
+//
+// Created by miso    
+//                           
+//
+/////////////////////////////////////////////////////
+
+----- Changelog:
+(06/28/10) - miso     - Created
+
+----- To-Do:
+
+----- Purpose:
+	Saves a preloaded windows .ttf font to a proper bitmap. It can be redrawn or colored using a paint program.
+
+----- Dependancies and Conflicts (IMPORTANT STUFF):
+	None, uses ascii codes, so it can be used with any of the ttf font files.
+
+----- Conflicts
+	None
+
+----- Other Notes:
+Usage (IMPORTANT***):
+
+Change the font name, the color and parameters in main program. Build and run it.
+Press Space, and fonts will be saved to newfont.bmp, using alpha channel.
+
+Modify bitmap using a paint program. Rename it.
+After that, open the newfont.dat file, and change the route and name of the font image to fit.
+Save.
+
+
+----- Function List:
+Remend
+
+`=========Constants=========`
+`===========================`
+
+`==========Globals==========`
+Global Textcolor as MyColorType         : `Holds the rgb value of the font to be drawn
+`===========================`
+
+`===========Types===========`
+//Holds the rgb value of the font to be drawn
+Type MyColorType
+	rr as Integer
+	gg as Integer
+	bb as Integer
+Endtype
+`===========================`
+
+//----------- PROGRAM START
+
+	//------- Set Display Mode
+		Set Display Mode 1024,768,32:Sync On:Hide mouse
+
+
+	//------- Set the font color  (rgb color 0,0,0 will be excluded) 
+		Textcolor.rr=255
+		Textcolor.gg=255
+		Textcolor.bb=255
+
+
+	//----------LOAD AND SET THE FONT YOU WANT
+		Set Text Font "arial"
+		Set Text Size 32         :`-----Size may be 8-32
+		Set Text to Bold
+	//----------Change INK color	
+		Ink RGB(Textcolor.rr,Textcolor.gg,Textcolor.bb),RGB(0,0,0)
+
+
+
+	//----------Draws font on screen
+		Repeat
+			For x=0 to 15
+				For y=0 to 15
+					a  =  x*32+16
+					b  =  y*32+16
+					a$ =  CHR$(x*16+y+1)
+					Center Text b,a,a$:Center Text b,a,a$
+				Next y
+			Next x
+			Sync
+		Until Spacekey()
+
+//----------Will Save the file
+	Get Image 1,0,82,511,593
+	If File Exist("newfont.bmp")=1 then Delete File "newfont.bmp"
+	Save Image "newfont.bmp" ,1,1
+
