@@ -13,7 +13,7 @@ Remstart
 (06/23/10) - miso     - Created
                       - Implemented the basic text and bitmap font commands
 (06/26/10) - miso     - Implemented the Graphic Cursor commands
-(06/26/10) - miso     - Added Globals SyS_MouseMoveX, MouseMoveY
+(06/26/10) - miso     - Added Globals SyS_MouseMoveX, SyS_MouseMoveY
 (06/26/10) - miso     - Updated UI_Terminate() to clear the mouse image too
 (06/26/10) - miso     - Modified UI_Mousehandle() not to move cursor when faded out
 (06/27/10) - miso     - Added some basic debug commands for internal use, its works only 1 function deep yet,
@@ -22,10 +22,12 @@ Remstart
 						Added console, can be called pressing TAB key.
 						Added 2 test console commands, show mouse, hide mouse.
 						(Be patient, I will add the comments soon, and reorganize the whole)
- 
-
+(06/27/10) - miso     - Added new internal timer commands.                       
+                        Implementing the hard part, panel, button, checkbox, bar and slider gadgets. 
+                        UI_Init loads 2 sound for mouseover and mouseclick, setup the gadget commands
+                        UI_Handle now handles gadgets too.
 ----- To-Do:
-
+Comment the rest, create a tutorial how to build a menu system using these commands.
 
 
 ----- Purpose:
@@ -109,30 +111,57 @@ remend
 #Constant UI_False     = 0          :` mania
 #Constant UI_True      = 1          :` mania
 #Constant UI_Maxfonts  = 8          :` maximum fonts, that can be loaded, 8 should be more than enough
+#Constant UI_Left      = 1          :` left oriented texts used when you add mouseinfo for a gdget
+#Constant UI_Middle    = 2          :` middle oriented texts
+#Constant UI_Right     = 3          :` right oriented texts
 `===========================`
 
 `==========Globals==========`
-Global UI_Display          as MyScreenType    : `for basic display data
-Global UI_Mouse            as MouseType       : `stores the parameters of the graphic mouse
-Global UI_Mousefadertimer  as Integer         : `ticker for mousefader commands, no need to handle manually
-Global SyS_MouseMoveX      as Integer         : `replacement of mousemovex()
-Global SyS_MouseMoveY      as Integer         : `replacement of mousemovey()
+//-----Display Globals
+Global UI_Display               as MyScreenType : `for basic display data
 
-Global UI_DebugMode            as Boolean     : `internal debug variables, no need to worry about them
-Global UI_FunctionName$        as String      : `internal debug variables, no need to worry about them
-Global UI_IncludedFileName$    as String      : `internal debug variables, no need to worry about them
-Global UI_OldFunctionName$     as String      : `internal debug variables, no need to worry about them
-Global UI_OldIncludedFileName$ as String      : `internal debug variables, no need to worry about them
+//-----Mouse Globals
+Global UI_Mouse                 as MouseType    : `stores the parameters of the graphic mouse
+Global UI_Mousefadertimer       as Integer      : `ticker for mousefader commands, no need to handle manually
+Global UI_TextScrolltimer       as Integer      :` ticker for textscroll commands, no need to handle manually
 
-Global UI_mywindow             as Mywindowtype: `for windows commands, not very useful, gadgets are better     
-Global UI_Input                as myinputtype : `basic input data will be stored here
+//-----Mouse movement Globals
+Global SyS_MouseMoveX           as Integer      : `replacement of mousemovex()
+Global SyS_MouseMoveY           as Integer      : `replacement of mousemovey()
 
-Global UI_EVENT_ConsoleInput    as Boolean     : `true, if the console is shown
-Global UI_EVENT_ConsoleChanged  as Boolean     : `true if user just hitted tab
-Global UI_EVENT_ConsoleOffset   as Integer     : `Y offset for command line
-Global UI_EVENT_ConsoleState    as Integer     : `1 if console is appearing 2 if disappearing, 0 if nothing to do
+//-----Debug Globals
+Global UI_DebugMode             as Boolean      : `internal debug variables, no need to worry about them
+Global UI_FunctionName$         as String       : `internal debug variables, no need to worry about them
+Global UI_IncludedFileName$     as String       : `internal debug variables, no need to worry about them
+Global UI_OldFunctionName$      as String       : `internal debug variables, no need to worry about them
+Global UI_OldIncludedFileName$  as String       : `internal debug variables, no need to worry about them
 
+//-----Window Globals
+Global UI_mywindow              as Mywindowtype : `for windows commands, not very useful, gadgets are better     
+Global UI_Input                 as myinputtype  : `basic input data will be stored here
 
+//-----Console Globals
+Global UI_EVENT_ConsoleInput    as Boolean      : `true, if the console is shown
+Global UI_EVENT_ConsoleChanged  as Boolean      : `true if user just hitted tab
+Global UI_EVENT_ConsoleOffset   as Integer      : `Y offset for command line
+Global UI_EVENT_ConsoleState    as Integer      : `1 if console is appearing 2 if disappearing, 0 if nothing to do
+
+//-----Gadget Globals
+Global MainMenuElementImage 		as Integer:` 0, yet unused
+Global UI_GuiStatus            	    as Boolean:` UI_True if some gui and mouse is present
+Global UI_GuiInitialized       	    as Boolean:` UI_True if UI_Initmainmenugrapfhics initialized
+Global UI_GadgetImageNumbers     	as Integer:` Number of the loaded gadget images
+Global UI_GadgetNumbers     		as Integer:` Number of the currently created gadgets.             
+Global UI_TextLines                 as Integer:` Number of the individual text gadgets (for scrolling)  
+Global UI_TextlinesXOffset          as Integer:` For text scrolls        
+Global UI_TextlinesYOffset          as Integer:` For text scrolls             
+Global UI_GadgetFunctionReturner 	as Integer:` 0, yet unused
+Global UI_MouseOveredGadget$        as String :` Value=IDname of the currently mouseovered gadget. Gets its value from (UI_Gadgets(x).gadgetname).
+Global UI_OldMouseoveredGadget$     as String :` IDname of the mouseovered gadget of the last loop.  
+Global UI_MouseClicked              as Boolean:` 1 if mouse left click is pressed, otherwise 0               
+Global UI_MouseOverSND              as Integer:` DBPro sound ID for mousover sound  
+Global UI_MouseClickSND             as Integer:` DBPro sound ID for mouseclick sound   
+Global UI_GuiFaded                  as Boolean:` 1 if we faded out all gui gadget, otherwise 0        
 `===========================`
 
 `===========Types===========`
@@ -142,7 +171,7 @@ Type MyStringmapType
    BitmapID  as Integer             : `pointer ID for the bitmap image
 Endtype
 
-//
+//-------------
 Type MyCharType
    Character as Integer             :  `basic string data
 Endtype
@@ -193,7 +222,61 @@ Type mywindowtype
    Xwidth 	as Integer
    Yrow 	as Integer
 Endtype
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Type MyGuiType
+`--------------------------------------------------------------------------------------------------------------------
+	ID               		as   Integer  :` ASprite image pointer. it gets value from UI_Gadgetimages(x).GadgetImagePointer.
+	MouseoverID      		as   Integer  :` Image pointer of gadget if mouseovered.
+	GadgetName       		as   String   :` IDname of the gadget, Case sensitive, please use a prefix if you create a gadget
+	GadgetType       		as   String   :` Remained unused, will remove later
+	X                		as   Integer  :` Gadget upper left x coord in pixels              
+	Y                		as   Integer  :` Gadget upper left y coord in pixels                
+	Width            		as   Integer  :` Gadget width in pixels, auto counted.                         
+	Height           		as   Integer  :` Gadget height in pixels, auto counted.                           
+	Barwidth                as   Integer  :` Width of a single bar image. (bars and sliders)
+	BarHeight               as   Integer  :` Height if a single bar.                
+	TitleFontID				as   Integer  :` Font ID of the gadgets title text.    
+	TitleX					as   Integer  :` Middle x coordinata of the gadgets title text
+	TitleY 					as   Integer  :` Middle y coordinata of the gadgets title text
+	Title            		as   String   :` Text of the gadget's title, if has one
+	MouseoverTitleFontID    as   Integer  :` Font ID in case of mouseovered status
+	MouseovertitleX 		as   Integer  :` mouseover titlefont x position
+	MouseoverTitleY 		as   Integer  :` mouseover titlefont y position
+	MOuseoverTitle          as   String   :` mouseover text              
+	Selected                as   Boolean  :` radiobutton status on=1,off=0
+	SelectedID              as   Integer  :` gagdget Image pointer if selected=1
+	Faded                   as   Boolean  :` 1, if we faded out Gadget
+	Value                   as   Integer  :` Current value of gadget, it makes sense only if the gadget is a slider ot bar
+	MaxValue                as   Integer  :` value maximum
+	MouseInfoExist          as   Boolean  :` 1, if mouseover info text exists                            
+	MouseInfoText           as   String   :` Mouseinfo text                                        
+	MouseInfoOrientation    as   Integer  :` 1=left 2=middle 3=right                            
+EndType
+`--------------------------------------------------------------------------------------------------------------------
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Type MyGuiImageType
+`--------------------------------------------------------------------------------------------------------------------
+	GadgetImagePointer as integer         :` advanced sprite pointers to gadget images             
+	GadgetImageName    as string          :` ID for the image, case sensitive, use prefix
+EndType
+`--------------------------------------------------------------------------------------------------------------------
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Type MytextoutputType
+`--------------------------------------------------------------------------------------------------------------------
+	ID               		as   Integer  :` Asprite pointer ID, gets value from a font image pointer
+	X                		as   Integer  :` X coord in pixel
+	Y                		as   Integer  :` Y coord in pixel
+	Title            		as   String   :` Text
+EndType
+`--------------------------------------------------------------------------------------------------------------------
 `===========================`
+
 
 
 `=========Functions=========`
@@ -226,16 +309,29 @@ Function UI_Init()
 	UI_loadStringmap(1,"media\fonts\smallgoldfont.dat",8)
 	UI_loadStringmap(2,"media\fonts\lcdred.dat",16)
 	UI_loadStringmap(3,"media\fonts\newfont.dat",16)
-	UI_loadStringmap(4,"media\fonts\system_w_8x8.dat",8)
+	UI_loadStringmap(4,"media\fonts\System_w_8x8.dat",8)
 
 // load test window
 	UI_InitandloadWindow("media\windows\windowuntitled2.dat")
 	
 // load and init graphic mouse
 	UI_InitMouse("media\cursors\testcursor.dds")	
+// load sound for mouse events
+	UI_LoadandSetMouseoverSND("media\cursors\Hit tree.wav")
+	UI_LoadandSetMouseClickSND("media\cursors\Hit tree.wav")
 
-	
+// Init Gui functions
+	UI_InitGuiGraphics()	
+// Load some Image for gadgets
+	UI_LoadGuiGraphics("media\menu\button-normal.png","UI_button")
+	UI_LoadGuiGraphics("media\menu\button-hover.png","UI_buttonmouseover")
 
+// Add a testbutton	
+	UI_AddCenterGadgettoScreen("UI_testbutton",1,512,650,"UI_button")		
+	UI_Addmouseoverimagetogadget("UI_testbutton","UI_buttonmouseover")
+	UI_AddTitletoGadget("UI_testbutton",3,512-8,650-14,"Test")
+	UI_AddMouseoverTitletoGadget("UI_testbutton",3,512-8,650-14,"-Test-")
+    UI_AddInfotogadget("UI_testbutton",1,"Test GUI button, will remove soon.",1)
 Endfunction
 
 
@@ -245,10 +341,17 @@ Function UI_Handle()
 //*     This command will handle graphic mouses, windows buttons and bars, etc.         *
 //*                                                                                     *
 //***************************************************************************************
-SyS_MouseMoveX=MouseMoveX():SyS_MouseMoveY=MouseMoveY()
-UI_CheckInput()
-UI_HandleConsole()
-UI_HandleMouse()
+
+//Add value to the mouse variables
+	SyS_MouseMoveX=MouseMoveX():SyS_MouseMoveY=MouseMoveY()
+//-Checks input events
+	UI_CheckInput()
+//-Handle all the gadgets
+	UI_HandleGadgets()
+//-Handle all the console
+	UI_HandleConsole()
+//-Handle all the mouse
+	UI_HandleMouse()
 Endfunction
 
 
@@ -262,13 +365,32 @@ Function UI_Terminate()
 Local x as Integer
 
 	If UI_Display.DxSpriteInitialized=UI_True
-		For x=1 to UI_MaxFonts
-			If UI_stringmap(x,258).bitmapID>0 Then DXS DELETE SPRITE UI_stringmap(x,258).bitmapID	
-		Next x
-	    UnDim UI_Stringmap()
-    	UnDim UI_chain()
-		If UI_Mouse.Initialized=UI_True then DXS DELETE SPRITE UI_Mouse.ID
-		If UI_Mywindow.ID>0 then DXS DELETE SPRITE UI_Mywindow.ID
+		//--Destroy font images if loaded
+			For x=1 to UI_MaxFonts
+				If UI_stringmap(x,258).bitmapID>0 Then DXS DELETE SPRITE UI_stringmap(x,258).bitmapID	
+			Next x
+	
+		//--Destroy allocated arrays of the text commands	
+		    UnDim UI_Stringmap()
+	    	UnDim UI_chain()
+	
+	    //--Destroy Mouse Image if loaded	
+			If UI_Mouse.Initialized=UI_True then DXS DELETE SPRITE UI_Mouse.ID
+	
+		//--Destroy Window image if loaded
+			If UI_Mywindow.ID>0 then DXS DELETE SPRITE UI_Mywindow.ID
+	
+		//--Destroy mouse sounds if loaded
+			If UI_MouseclickSND>0 then delete sound UI_MouseClickSND
+			If UI_MouseOverSND>0 then delete sound UI_MouseOverSND
+		
+		//--Unload Gadget images if loaded any
+			If GadgetimageNumbers>0
+				For x=1 to GadgetImageNumbers
+					DXS Delete Sprite UI_Gadgetimages(x).gadgetimagepointer
+				Next X
+			Endif
+		
 	Endif
 Endfunction
 
@@ -658,9 +780,9 @@ If UI_Mouse.Initialized = UI_True
 			Endif
 			
 
-			If UI_Mouse.X>UI_Display.Width-1  Then UI_Mouse.X = UI_Display.Width-1
+			If UI_Mouse.X>UI_Display.Width-1   Then UI_Mouse.X = UI_Display.Width-1
 			If UI_Mouse.X<0                    Then UI_Mouse.X = 0
-			If UI_Mouse.Y>UI_Display.Height-1 Then UI_Mouse.Y = UI_Display.Height-1
+			If UI_Mouse.Y>UI_Display.Height-1  Then UI_Mouse.Y = UI_Display.Height-1
 			If UI_Mouse.Y<0                    Then UI_Mouse.Y = 0
 			
 	
@@ -677,8 +799,8 @@ If UI_Mouse.Initialized = UI_True
 	If UI_Mouse.fadingout      = UI_True
 		If  UI_Mouse.FadeValue = UI_False
 			UI_Mouse.Fadingout = UI_False
-			UI_DestroyMouseFaderTicker()
 			UI_Mouse.Hidden    = UI_True
+			UI_DestroyMouseFaderTicker()
 		Else
 			If UI_AskMouseFaderTicker()=UI_True Then UI_Mouse.FadeValue=UI_Mouse.FadeValue-15
 			DXS SET SPRITE ALPHA UI_Mouse.ID,UI_Mouse.FadeValue
@@ -868,6 +990,985 @@ Endfunction return_mousey
 /////////////////////////////////////////////////////
 
 
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_AddTextLine(FontID,Xx,Yy,stringtext$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Creates a text gadget without any button or panel.                              *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+If UI_GuiInitialized=UI_True
+	UI_SetDebugPosition("UI_AddTextLine()","module_ui.dba")
+		UI_CheckDxSprites()    
+		UI_TextLines=UI_TextLines+1
+		array insert at bottom UI_TextoutputLines()
+		UI_Textoutputlines(UI_TextLines).ID    = FontID
+		UI_Textoutputlines(UI_TextLines).X     = Xx
+		UI_Textoutputlines(UI_TextLines).Y     = Yy
+		UI_Textoutputlines(UI_TextLines).Title = stringtext$
+	UI_RestoreDebugPosition()
+Endif
+
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_ScrollTextLine(Xoffset,Yoffset)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Scrolls all the created text gadgets with the offset values                     *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+If UI_GuiInitialized=UI_True
+	UI_TextLinesXOffset=UI_TextLinesXOffset+xoffset
+	UI_TextLinesYOffset=UI_TextLinesYOffset+yoffset
+Endif
+
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_ResetTextLineOffset()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*    Set text gadgets offset to 0.                                                    *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+If UI_GuiInitialized=UI_True
+	UI_TextLinesXOffset=0
+	UI_TextLinesYOffset=0
+Endif
+
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_SetTextLineOffset(param_x as integer ,param_y as integer )
+//***************************************************************************************
+//*   Miso                                                                              *
+//*      Sets the text gadgets offset.                                                  *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+If UI_GuiInitialized=UI_True
+	UI_TextLinesXOffset=param_x
+	UI_TextLinesYOffset=param_y
+Endif
+
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_Fadeoutallguis()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Fades out all gadgets. Not too handy, dont know why i made this.                *
+//*                                                                                     *
+//***************************************************************************************
+	If UI_GuiInitialized=1 and UI_GadgetNumbers>0 and UI_GuiFaded=0
+		UI_GuiFaded=1
+		For x=1 to UI_GadgetNumbers
+			DXS SET SPRITE ALPHA UI_Gadgets(x).ID,50
+			If UI_Gadgets(x).mouseoverid>0 then DXS SET SPRITE ALPHA UI_Gadgets(x).mouseoverID,50
+			If UI_Gadgets(x).selectedid>0 then DXS SET SPRITE ALPHA UI_Gadgets(x).selectedID,50
+			UI_Gadgets(x).faded=1
+		Next x
+	Endif
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_Fadeinallguis()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Fades in all gadgets.                                                           *
+//*                                                                                     *
+//***************************************************************************************
+	If UI_GuiInitialized=1 and UI_GadgetNumbers>0 and UI_GuiFaded=1
+		UI_GuiFaded=0
+		For x=1 to UI_GadgetNumbers
+			DXS SET SPRITE ALPHA UI_Gadgets(x).ID,255
+			If UI_Gadgets(x).mouseoverid>0 then DXS SET SPRITE ALPHA UI_Gadgets(x).mouseoverID,255
+			If UI_Gadgets(x).selectedid>0 then DXS SET SPRITE ALPHA UI_Gadgets(x).selectedID,255
+			UI_Gadgets(x).faded=0
+		Next x
+	Endif
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_ClearAllGuis()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Deletes all gadgets, but leaves the images.                                     *
+//*                                                                                     *
+//***************************************************************************************
+	If UI_GuiInitialized=1
+		
+		//Check if Gadgets exist
+		If UI_GadgetNumbers>0
+			Undim UI_Gadgets()
+			Dim UI_Gadgets(0) as MyGuiType
+			UI_Gadgetnumbers=0
+		Endif
+		
+		// check if independent texts exist
+		If UI_TextLines>0
+			Undim UI_TextoutputLines()
+			Dim UI_TextoutputLines(0) as mytextoutputtype
+			UI_TextLines=0
+		Endif
+		UI_Settextlineoffset(0,0)
+		
+	Endif
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_LoadAndSetMouseOverSND(snd$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Load a sound for mouseover event. Automata.                                     *
+//*                                                                                     *
+//***************************************************************************************
+	UI_SetDebugPosition("UI_SetMouseOverSND()","module_ui.dba")
+		UI_CheckFile(snd$)
+		UI_MouseOverSND=GrabResource(res_Sound)
+		load sound snd$,UI_MouseOverSND
+	UI_RestoreDebugPosition()
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_LoadAndSetMouseClickSND(snd$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Loads a sound for mouseclick events. Playing that sound is not automatical.     *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+	UI_SetDebugPosition("UI_SetMouseClickSND()","module_ui.dba")
+		UI_CheckFile(snd$)
+		UI_MouseClickSND=GrabResource(res_Sound)
+		load sound snd$,UI_MouseClickSND
+	UI_RestoreDebugPosition()      :
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_PlayMouseClickSND()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Plays the mouseclick sound, if we loaded one before.                            *
+//*                                                                                     *
+//***************************************************************************************
+	UI_SetDebugPosition("UI_PlayMouseClickSND()","module_ui.dba")
+	If UI_MouseclickSND>0 and Sound exist(UI_MouseclickSND)=1 and UI_MouseClicked=0 then play Sound UI_MouseclickSND
+	UI_MouseClicked=1
+	UI_RestoreDebugPosition()
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_InitGuiGraphics()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Initiate the gui graphics for gadgets, creates the necessery arrays.            *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+	UI_SetDebugPosition("UI_InitGuiGraphics()","module_ui.dba")
+		UI_CheckDxSprites()
+		Dim UI_Gadgets(0)      as MyGuiType
+		Dim UI_Gadgetimages(0)     as MyGuiImageType
+		Dim UI_TextOutputlines(0) as Mytextoutputtype
+		UI_TextLines=0
+		UI_GuiInitialized=UI_True
+	UI_RestoreDebugPosition()
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_LoadGuiGraphics(ImageID$,GadgetID$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This will load an image for gadgets, and sets GadgetID to it as an ID.           *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+	UI_SetDebugPosition("UI_LoadGuiGraphics(menugombimage$)","module_ui.dba")
+	
+		UI_CheckDxSprites():UI_CheckFile(ImageID$)
+		Array Insert at Bottom UI_Gadgetimages()
+		
+		UI_GadgetImageNumbers                             = UI_GadgetImageNumbers+1
+		UI_Gadgetimages(UI_GadgetImageNumbers).GadgetImagePointer = DXS CREATE SPRITE(imageID$)
+		UI_Gadgetimages(UI_GadgetImageNumbers).GadgetImageName    = GadgetID$
+		
+	UI_RestoreDebugPosition()      
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_CenterPercentPositionGadget(gadgetidname$,posx,posy)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Brings gadgets to posx and posy, centered. Posx and posy are percentages.       *
+//*     (0-100)                                                                         *
+//*                                                                                     *
+//***************************************************************************************
+
+If UI_GuiInitialized=UI_True
+local relativeX# as float
+local relativeY# as float
+local offsetX as integer
+local offsetY as integer
+local xdiff as integer
+local ydiff as integer
+
+relativeX#=(UI_Display.Width/100.0)*posx
+relativeY#=(UI_Display.Height/100.0)*posy
+relativeX#=int(relativeX#)
+relativeY#=int(relativeY#)
+
+	UI_SetDebugPosition("UI_AddCenterPercentPositionGadget()","module_ui.dba")
+		UI_CheckDxSprites()
+		For x=1 to UI_Gadgetnumbers
+			If UI_Gadgets(x).Gadgetname=gadgetidname$
+				offsetX=0+relativeX#-(UI_Gadgets(x).width/2)
+				OffsetY=0+relativeY#-(UI_Gadgets(x).height/2)
+				
+				 xdiff=UI_Gadgets(x).X-OffsetX
+				 ydiff=UI_Gadgets(x).Y-OffsetY
+				UI_Gadgets(x).X=offsetX
+				UI_Gadgets(x).Y=offsetY
+
+
+				UI_Gadgets(x).TitleX=UI_Gadgets(x).TitleX-XDiff
+				UI_Gadgets(x).TitleY=UI_Gadgets(x).TitleY-YDiff
+				UI_Gadgets(x).MouseoverTitleX=UI_Gadgets(x).MouseoverTitleX-XDiff
+				UI_Gadgets(x).MouseoverTitleY=UI_Gadgets(x).MouseoverTitleY-YDiff
+			Endif
+		Next x
+	UI_RestoreDebugPosition()
+Endif
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_CenterPositionGadget(gadgetidname$,posx,posy)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Position gadget to posx, posy, centered. posx and posy are pixels.              *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+
+If UI_GuiInitialized=UI_True
+local offsetX as integer
+local offsetY as integer
+local xdiff as integer
+local ydiff as integer
+
+
+	UI_SetDebugPosition("UI_CenterPositionGadget()","module_ui.dba")
+		UI_CheckDxSprites()
+		For x=1 to UI_Gadgetnumbers
+			If UI_Gadgets(x).Gadgetname=gadgetidname$
+				offsetX=posx-(UI_Gadgets(x).width/2)
+				OffsetY=posy-(UI_Gadgets(x).height/2)
+				
+				 xdiff=UI_Gadgets(x).X-OffsetX
+				 ydiff=UI_Gadgets(x).Y-OffsetY
+				UI_Gadgets(x).X=offsetX
+				UI_Gadgets(x).Y=offsetY
+
+
+				UI_Gadgets(x).TitleX=UI_Gadgets(x).TitleX-XDiff
+				UI_Gadgets(x).TitleY=UI_Gadgets(x).TitleY-YDiff
+				UI_Gadgets(x).MouseoverTitleX=UI_Gadgets(x).MouseoverTitleX-XDiff
+				UI_Gadgets(x).MouseoverTitleY=UI_Gadgets(x).MouseoverTitleY-YDiff
+			Endif
+		Next x
+	UI_RestoreDebugPosition()
+Endif
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_PositionGadget(gadgetidname$,posx,posy)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Positions a gadget to posx, posy. Posx and Posy will be the top left point of   *
+//*     the gadget in pixels.                                                           *
+//*                                                                                     *
+//***************************************************************************************
+If UI_GuiInitialized=UI_True
+local offsetX as integer
+local offsetY as integer
+local xdiff as integer
+local ydiff as integer
+
+
+	UI_SetDebugPosition("UI_PositionGadget()","module_ui.dba")
+		UI_CheckDxSprites()
+		For x=1 to UI_Gadgetnumbers
+			If UI_Gadgets(x).Gadgetname=gadgetidname$
+				offsetX=posx
+				OffsetY=posy
+				
+				 xdiff=UI_Gadgets(x).X-OffsetX
+				 ydiff=UI_Gadgets(x).Y-OffsetY
+				UI_Gadgets(x).X=offsetX
+				UI_Gadgets(x).Y=offsetY
+
+
+				UI_Gadgets(x).TitleX=UI_Gadgets(x).TitleX-XDiff
+				UI_Gadgets(x).TitleY=UI_Gadgets(x).TitleY-YDiff
+				UI_Gadgets(x).MouseoverTitleX=UI_Gadgets(x).MouseoverTitleX-XDiff
+				UI_Gadgets(x).MouseoverTitleY=UI_Gadgets(x).MouseoverTitleY-YDiff
+			Endif
+		Next x
+	UI_RestoreDebugPosition()
+Endif
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_AddCenterGadgetToScreen(gadgetidname$,gadgettype,posx,posy,gadgetimagename$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Add a new gadget to the list. Posx and posy will be the center point of the     *
+//*     gadget in pixels.                                                               *
+//*                                                                                     *
+//***************************************************************************************
+If UI_GuiInitialized=UI_True
+	UI_SetDebugPosition("UI_AddCenterGadgettoscreen()","module_ui.dba")
+		UI_CheckDxSprites()
+		For x=1 to UI_GadgetImageNumbers
+			If UI_Gadgetimages(x).Gadgetimagename=gadgetimagename$
+				Array Insert at Bottom UI_Gadgets(1)
+				UI_GadgetNumbers                   =UI_GadgetNumbers+1
+				UI_Gadgets(UI_GadgetNumbers).ID        =UI_Gadgetimages(x).gadgetimagepointer
+				UI_Gadgets(UI_GadgetNumbers).Gadgetname=gadgetIDname$
+				UI_Gadgets(UI_GadgetNumbers).Width     =DXS GET SPRITE TEXTURE WIDTH(UI_Gadgets(UI_GadgetNumbers).ID)
+				UI_Gadgets(UI_GadgetNumbers).Height    =DXS GET SPRITE TEXTURE HEIGHT(UI_Gadgets(UI_GadgetNumbers).ID)
+				UI_Gadgets(UI_GadgetNumbers).X         =posx-(UI_Gadgets(UI_GadgetNumbers).Width/2)
+				UI_Gadgets(UI_GadgetNumbers).Y         =posy-(UI_Gadgets(UI_GadgetNumbers).Height/2)
+			
+			Endif
+		Next x
+	UI_RestoreDebugPosition()
+Endif
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_AddGadgetToScreen(gadgetidname$,gadgettype,posx,posy,gadgetimagename$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Add a gadget to the list, posx and posy will be the gadgets upper left point in *
+//*     pixels.                                                                         *
+//*                                                                                     *
+//***************************************************************************************
+If UI_GuiInitialized=UI_True
+	UI_SetDebugPosition("UI_AddGadgetToScreen()","module_ui.dba")
+		UI_CheckDxSprites()
+		For x=1 to UI_GadgetImageNumbers
+			If UI_Gadgetimages(x).Gadgetimagename=gadgetimagename$
+				Array Insert at Bottom UI_Gadgets(1)
+				UI_GadgetNumbers                   =UI_GadgetNumbers+1
+				UI_Gadgets(UI_GadgetNumbers).ID        =UI_Gadgetimages(x).gadgetimagepointer
+				UI_Gadgets(UI_GadgetNumbers).Gadgetname=gadgetIDname$
+				UI_Gadgets(UI_GadgetNumbers).x         =posx
+				UI_Gadgets(UI_GadgetNumbers).y         =posy
+				UI_Gadgets(UI_GadgetNumbers).width     =DXS GET SPRITE TEXTURE WIDTH(UI_Gadgets(UI_GadgetNumbers).ID)
+				UI_Gadgets(UI_GadgetNumbers).height    =DXS GET SPRITE TEXTURE HEIGHT(UI_Gadgets(UI_GadgetNumbers).ID)
+			Endif
+		Next x
+	UI_RestoreDebugPosition()
+Endif
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_AddBarGadgetToScreen(gadgetidname$,posx,posy,gadgetimagename$,maxvalue)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Creates a barslider gadget. Posx and posy will be the upper left point of       *
+//*     the gadget in pixels.                                                           *
+//*                                                                                     *
+//***************************************************************************************
+If UI_GuiInitialized=UI_True
+	UI_SetDebugPosition("UI_AddBarGadgetToScreen()","module_ui.dba") 
+		UI_CheckDxSprites()
+		For x=1 to UI_GadgetImageNumbers
+			If UI_Gadgetimages(x).Gadgetimagename=gadgetimagename$
+				Array Insert at Bottom UI_Gadgets(1)
+				UI_GadgetNumbers                      =  UI_GadgetNumbers+1
+				UI_Gadgets(UI_GadgetNumbers).ID           =  UI_Gadgetimages(x).gadgetimagepointer
+				UI_Gadgets(UI_GadgetNumbers).Gadgetname   =  gadgetIDname$
+				UI_Gadgets(UI_GadgetNumbers).x            =  posx
+				UI_Gadgets(UI_GadgetNumbers).y            =  posy
+				UI_Gadgets(UI_GadgetNumbers).width        =  DXS GET SPRITE TEXTURE WIDTH(UI_Gadgets(UI_GadgetNumbers).ID)*maxvalue
+				UI_Gadgets(UI_GadgetNumbers).height       =  DXS GET SPRITE TEXTURE HEIGHT(UI_Gadgets(UI_GadgetNumbers).ID)
+				UI_Gadgets(UI_GadgetNumbers).barwidth     =  DXS GET SPRITE TEXTURE WIDTH(UI_Gadgets(UI_GadgetNumbers).ID)
+				UI_Gadgets(UI_GadgetNumbers).barheight    =  DXS GET SPRITE TEXTURE HEIGHT(UI_Gadgets(UI_GadgetNumbers).ID)
+				UI_Gadgets(UI_GadgetNumbers).maxvalue     =  maxvalue
+				UI_Gadgets(UI_GadgetNumbers).GadgetType   =  "bar"
+			Endif
+		Next x
+	UI_RestoreDebugPosition()
+Endif
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_SetGadgetValue(gadgetID$,value)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Sets the value of the gadget. It makes sense only with bars and sliders.        *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+If UI_GuiInitialized=UI_True
+		For y=1 to UI_GadgetNumbers
+			If UI_Gadgets(y).Gadgetname=gadgetID$ Then UI_Gadgets(y).value=value
+		Next y
+Endif
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_GetGadgetValue(gadgetID$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Returns the value of the gadget. Makes sense with sliders.                      *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+local valuereturner as integer
+If UI_GuiInitialized=UI_True
+		For y=1 to UI_GadgetNumbers
+			If UI_Gadgets(y).Gadgetname=gadgetID$ Then valuereturner=UI_Gadgets(y).value
+		Next y
+Endif
+Endfunction valuereturner
+`--------------------------------------------------------------------------------------------------------------------
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_GetGadgetSelection(gadgetID$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Returns 1 if radiobutton is selected/checked.                                   *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+local valuereturner as integer
+If UI_GuiInitialized=UI_True
+		For y=1 to UI_GadgetNumbers
+			If UI_Gadgets(y).Gadgetname=gadgetID$ Then valuereturner=UI_Gadgets(y).Selected
+		Next y
+Endif
+Endfunction valuereturner
+`--------------------------------------------------------------------------------------------------------------------
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_CountNewValue(gadgetID$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Count a new value of a slider based on the mouse coords and bar positions.      *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+If UI_GuiInitialized=UI_True
+local minimumx as integer
+local maximumx as integer
+local Barwidth as integer
+local mouse_x  as integer
+local mouse_y  as integer
+local newvalue as integer
+	For y=1 to UI_GadgetNumbers
+		If UI_Gadgets(y).Gadgetname=gadgetID$ 
+			minimumx=UI_Gadgets(y).x
+			barwidth=UI_Gadgets(y).barwidth
+			mouse_x=UI_Mouse.x
+			mouse_y=UI_Mouse.y
+			newvalue=(mouse_x-minimumx)/barwidth
+			if newvalue<0 then newvalue=0
+			if newvalue>UI_Gadgets(y).maxvalue then newvalue=UI_Gadgets(y).maxvalue
+			UI_Gadgets(y).value=newvalue-1
+		Endif
+	Next y
+Endif
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_AddMOuseOverImageToGadget(gadgetID$,gadgetimagename$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Set an image to a gadget mouseover status. If a gadget dont have mouseover      *
+//*     image, then mouseover sound wont be played. (Gadget is a panel then)            *
+//*                                                                                     *
+//***************************************************************************************
+Local x as Integer
+Local y as Integer
+
+If UI_GuiInitialized=UI_True
+	UI_SetDebugPosition("UI_AddMouseOverImageToGadget()","module_ui.dba")
+		UI_CheckDxSprites()
+		For x=1 to UI_GadgetImageNumbers
+			If UI_Gadgetimages(x).Gadgetimagename=gadgetimagename$
+					For y=1 to UI_GadgetNumbers
+						If UI_Gadgets(y).Gadgetname=gadgetID$ Then UI_Gadgets(y).mouseoverid=UI_Gadgetimages(x).Gadgetimagepointer
+					Next y
+			Endif
+		Next x
+	UI_RestoreDebugPosition()
+Endif
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_AddSelectedImageToGadget(gadgetID$,gadgetimagename$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     SEts an image to a gadget, shown if the gadget is in selected status.           *
+//*     (radiobuttons)                                                                  *
+//*                                                                                     *
+//***************************************************************************************
+Local x as Integer
+Local y as integer
+
+If UI_GuiInitialized=UI_True
+	UI_SetDebugPosition("UI_AddSelectionImageToGadget()","module_ui.dba")  :
+		UI_CheckDxSprites()          :
+		for x=1 to UI_GadgetImageNumbers
+			If UI_Gadgetimages(x).Gadgetimagename=gadgetimagename$
+					For y=1 to UI_GadgetNumbers
+						If UI_Gadgets(y).Gadgetname=gadgetID$ Then UI_Gadgets(y).selectedid=UI_Gadgetimages(x).Gadgetimagepointer
+					Next y
+			Endif
+			
+		Next x
+	UI_RestoreDebugPosition()
+Endif
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_AddTitleToGadget(GadgetID$,FontID,Xx,Yy,stringtext$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Add a title text to gadget.                                                     *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+Local x as Integer
+Local y as Integer
+
+If UI_GuiInitialized=UI_True
+	UI_SetDebugPosition("UI_AddTitleToGadget()","module_ui.dba")
+		UI_CheckDxSprites()    
+					For y=1 to UI_GadgetNumbers
+						If UI_Gadgets(y).Gadgetname    =  GadgetID$
+							UI_Gadgets(y).titlefontid  =  fontid
+							UI_Gadgets(y).title        =  stringtext$
+							UI_Gadgets(y).titlex       =  xx
+							UI_Gadgets(y).titley       =  yy
+						Endif
+					Next y
+	UI_RestoreDebugPosition()
+Endif
+
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_ChangeGadgetTitle(gadgetimagename$,stringtext$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Changes the title text of the gadget.                                           *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+Local x as Integer
+Local y as Integer
+
+If UI_GuiInitialized=UI_True
+	UI_SetDebugPosition("UI_ChangeGadgetTitle()","module_ui.dba")
+		UI_CheckDxSprites()    
+					For y=1 to UI_GadgetNumbers
+						If UI_Gadgets(y).Gadgetname    =  gadgetimagename$
+							UI_Gadgets(y).title        =  stringtext$
+						Endif
+					Next y
+	UI_RestoreDebugPosition()
+Endif
+
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_ChangeGadgetMouseoverTitle(gadgetimagename$,stringtext$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Change te title text of the gadget for mouseovered event.                       *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+Local x as Integer
+Local y as Integer
+
+If UI_GuiInitialized=UI_True
+	UI_SetDebugPosition("UI_ChangeGadgetMouseoverTitle()","module_ui.dba")
+		UI_CheckDxSprites()    
+					For y=1 to UI_GadgetNumbers
+						If UI_Gadgets(y).Gadgetname             =  gadgetimagename$
+							UI_Gadgets(y).Mouseovertitle        =  stringtext$
+						Endif
+					Next y
+	UI_RestoreDebugPosition()
+Endif
+
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_SelectGadget(gadgetname$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Adds selected status to gadget.                                                 *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+If UI_GuiInitialized=UI_True
+	UI_SetDebugPosition("UI_SelectGadget()","module_ui.dba")
+		UI_CheckDxSprites()
+		
+					For y=1 to UI_GadgetNumbers
+							If UI_Gadgets(y).Gadgetname=gadgetname$
+								UI_Gadgets(y).Selected =1
+							Endif
+					Next y
+		
+	UI_RestoreDebugPosition()
+Endif
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_DeSelectGadget(gadgetimagename$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Removes selected status from gadget.                                            *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+If UI_GuiInitialized=UI_True
+	UI_SetDebugPosition("UI_DeselectGadget()","module_ui.dba")
+		UI_CheckDxSprites()
+		
+					For y=1 to UI_GadgetNumbers
+							If UI_Gadgets(y).Gadgetname=gadgetimagename$
+								UI_Gadgets(y).Selected=0
+							Endif
+					Next y
+		
+	UI_RestoreDebugPosition()
+Endif
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_ToggleGadget(param_gadgetname$ as String )
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Revert selected status of the gadget.                                           *
+//*     (radiobuttons)                                                                  *
+//*                                                                                     *
+//***************************************************************************************
+local return_value as Boolean
+	If UI_GuiInitialized=UI_True
+		UI_SetDebugPosition("UI_ToggleGadget()","module_ui.dba")
+			UI_CheckDxSprites()
+					For y=1 to UI_GadgetNumbers
+						If UI_Gadgets(y).Gadgetname=param_gadgetname$
+							If UI_Gadgets(y).Selected =1
+								UI_Gadgets(y).Selected=0:return_value=0
+							Else
+								UI_Gadgets(y).Selected=1:return_value=1
+							Endif
+						Endif
+					Next y
+		UI_RestoreDebugPosition()
+	Endif
+Endfunction return_value
+`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_AddMouseoverTitleToGadget(gadgetimagename$,FontID,Xx,Yy,stringtext$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Adds a title to the gadget for mouseover event.                                 *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+If UI_GuiInitialized=UI_True
+	UI_SetDebugPosition("UI_AddMouseOverTitleToGadget()","module_ui.dba")
+		UI_CheckDxSprites()
+					For y=1 to UI_GadgetNumbers
+							If UI_Gadgets(y).Gadgetname=gadgetimagename$
+								UI_Gadgets(y).mouseovertitlefontid  =  fontid
+								UI_Gadgets(y).mouseovertitle        =  stringtext$
+								UI_Gadgets(y).mouseovertitlex       =  xx
+								UI_Gadgets(y).mouseovertitley       =  yy
+							Endif
+					Next y
+	UI_RestoreDebugPosition()
+Endif
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_AddInfoToGadget(gadgetimagename$,FontID,stringtext$,param_orientation)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Add information text to the gadget. Information will be displayed at the mouse. *
+//*     param_orientation can be 1,2,3, means oriented left middle and right.           *
+//*                                                                                     *
+//***************************************************************************************
+
+If UI_GuiInitialized=UI_True
+	UI_SetDebugPosition("UI_AddInfoToGadget()","module_ui.dba")
+		UI_CheckDxSprites()
+					For y=1 to UI_GadgetNumbers
+							If UI_Gadgets(y).Gadgetname=gadgetimagename$
+								UI_Gadgets(y).mouseinfoexist        =  fontid
+								UI_Gadgets(y).mouseinfotext         =  stringtext$
+								UI_Gadgets(y).mouseinfoorientation  =  param_orientation
+							Endif
+					Next y
+	UI_RestoreDebugPosition()
+Endif
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
+`--------------------------------------------------------------------------------------------------------------------
+Function UI_HandleGadgets()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Auto handles all gadget event. Sets values and draws gadgets.                   *
+//*                                                                                     *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+
+If UI_GuiInitialized=UI_True 
+	UI_SetDebugPosition("UI_HandleGadgets()","module_ui.dba")
+		UI_CheckDxSprites()
+		
+		If UI_Gadgetnumbers>0
+			UI_MouseOveredGadget$=" "
+				for x=1 to UI_GadgetNumbers
+			
+						if UI_Gadgets(x).mouseoveriD>0 and UI_Mouse.hidden=0
+if UI_Mouse.X>UI_Gadgets(x).x and UI_Mouse.X<UI_Gadgets(x).x+UI_Gadgets(x).width and UI_Mouse.Y>UI_Gadgets(x).y and UI_Mouse.Y<UI_Gadgets(x).y+UI_Gadgets(x).height
+	If UI_Gadgets(x).gadgettype="bar"
+	dxs begin sprite render UI_Gadgets(x).MouseoverID
+		for ax=0 to UI_Gadgets(x).value
+		dxs draw sprite UI_Gadgets(x).MOuseoverID,UI_Gadgets(x).x+ax*UI_Gadgets(x).barwidth,UI_Gadgets(x).y	
+		next ax
+	Dxs End Sprite render UI_Gadgets(x).MouseoverID
+	else
+    	dxs begin sprite render UI_Gadgets(x).MouseoverID
+		dxs draw sprite UI_Gadgets(x).MOuseoverID,UI_Gadgets(x).x,UI_Gadgets(x).y	
+		Dxs End Sprite render UI_Gadgets(x).MouseoverID
+	endif
+
+	UI_MouseOveredGadget$=UI_Gadgets(x).GadgetName
+	If UI_Mouseclicked=1 then UI_OldMouseOveredGadget$=UI_MouseOveredGadget$
+
+
+Else
+
+						  If UI_Gadgets(x).selected=1
+						  	If UI_Gadgets(x).gadgettype="bar"
+						  		Dxs Begin Sprite render UI_Gadgets(x).SelectedID
+						  		for ax=0 to UI_Gadgets(x).value
+						  		Dxs Draw Sprite UI_Gadgets(x).SelectedID,UI_Gadgets(x).x+ax*UI_Gadgets(x).barwidth,UI_Gadgets(x).y	
+						  		next ax
+						  		Dxs End Sprite render UI_Gadgets(x).SelectedID
+						  	else
+						  		Dxs Begin Sprite render UI_Gadgets(x).SelectedID
+						  		Dxs Draw Sprite UI_Gadgets(x).SelectedID,UI_Gadgets(x).x,UI_Gadgets(x).y	
+						  		Dxs End Sprite render UI_Gadgets(x).SelectedID
+						  	endif
+						  Else
+							If UI_Gadgets(x).gadgettype="bar"
+								Dxs Begin Sprite render UI_Gadgets(x).ID
+								for ax=0 to UI_Gadgets(x).value
+						  		Dxs Draw Sprite UI_Gadgets(x).ID,UI_Gadgets(x).x+UI_Gadgets(x).barwidth*ax,UI_Gadgets(x).y	
+						  		next ax
+						  		Dxs End Sprite render UI_Gadgets(x).ID
+							Else
+						  		Dxs Begin Sprite render UI_Gadgets(x).ID
+						  		Dxs Draw Sprite UI_Gadgets(x).ID,UI_Gadgets(x).x,UI_Gadgets(x).y	
+						  		Dxs End Sprite render UI_Gadgets(x).ID
+						    Endif
+						  Endif
+	
+Endif
+			
+						Else
+						  If UI_Gadgets(x).selected=1
+						  	If UI_Gadgets(x).gadgettype="bar"
+						  		Dxs Begin Sprite render UI_Gadgets(x).SelectedID
+						  			For ax=0 to UI_Gadgets(x).value
+						  				Dxs Draw Sprite UI_Gadgets(x).SelectedID,UI_Gadgets(x).x+UI_Gadgets(x).barwidth*ax,UI_Gadgets(x).y	
+						  			Next ax
+						  		Dxs End Sprite render UI_Gadgets(x).SelectedID
+						   	Else
+						   		Dxs Begin Sprite render UI_Gadgets(x).SelectedID
+						  			Dxs Draw Sprite UI_Gadgets(x).SelectedID,UI_Gadgets(x).x,UI_Gadgets(x).y	
+						  		Dxs End Sprite render UI_Gadgets(x).SelectedID
+						  	Endif
+						  
+						  Else
+						  
+						  	If UI_Gadgets(x).Gadgettype="bar"
+						  		Dxs Begin Sprite render UI_Gadgets(x).ID
+						  		for ax=0 to UI_Gadgets(x).value
+						  		Dxs Draw Sprite UI_Gadgets(x).ID,UI_Gadgets(x).x+UI_Gadgets(x).barwidth*ax,UI_Gadgets(x).y	
+						  		next ax
+						  		Dxs End Sprite render UI_Gadgets(x).ID
+						  	Else
+						  		Dxs Begin Sprite render UI_Gadgets(x).ID
+						  		Dxs Draw Sprite UI_Gadgets(x).ID,UI_Gadgets(x).x,UI_Gadgets(x).y	
+						  		Dxs End Sprite render UI_Gadgets(x).ID
+						  	Endif
+						  Endif
+		Endif
+
+If UI_Gadgets(x).titlefontid>0 
+	If UI_Mouse.X>UI_Gadgets(x).x and UI_Mouse.X<UI_Gadgets(x).x+UI_Gadgets(x).width and UI_Mouse.Y>UI_Gadgets(x).y and UI_Mouse.Y<UI_Gadgets(x).y+UI_Gadgets(x).height and UI_Mouse.hidden=0
+
+		If UI_Gadgets(x).mouseovertitlefontid>0 
+			UI_CenterText(UI_Gadgets(x).MouseovertitlefontID,UI_Gadgets(x).mouseovertitlex,UI_Gadgets(x).mouseovertitley,UI_Gadgets(x).mouseovertitle)
+		Else
+			UI_CenterText(UI_Gadgets(x).titlefontID,UI_Gadgets(x).titlex,UI_Gadgets(x).titley,UI_Gadgets(x).title)
+		Endif
+		
+	Else
+		UI_CenterText(UI_Gadgets(x).titlefontID,UI_Gadgets(x).titlex,UI_Gadgets(x).titley,UI_Gadgets(x).title)
+	Endif
+Endif
+
+
+// mouseoverinfo check          
+If UI_Gadgets(x).mouseinfoexist>0 
+	if UI_Mouse.X>UI_Gadgets(x).x and UI_Mouse.X<UI_Gadgets(x).x+UI_Gadgets(x).width and UI_Mouse.Y>UI_Gadgets(x).y and UI_Mouse.Y<UI_Gadgets(x).y+UI_Gadgets(x).height and UI_Mouse.hidden=0
+		stringhossz    = len(UI_Gadgets(x).mouseinfotext)
+		ID             = UI_Gadgets(x).mouseinfoexist
+		karaktereltolas= UI_stringmap(ID,258).ascii
+		bitmapeltolas  = karaktereltolas*stringhossz
+		
+		if UI_Gadgets(x).mouseinfoorientation=1  then UI_Text(UI_Gadgets(x).mouseinfoexist,UI_Mouse.x+25,UI_Mouse.Y+25,UI_Gadgets(x).mouseinfotext)
+		if UI_Gadgets(x).mouseinfoorientation=2 then UI_CenterText(UI_Gadgets(x).mouseinfoexist,UI_Mouse.x,UI_Mouse.Y+25,UI_Gadgets(x).mouseinfotext)
+		if UI_Gadgets(x).mouseinfoorientation=3 then UI_Text(UI_Gadgets(x).mouseinfoexist,UI_Mouse.x+25-bitmapeltolas,UI_Mouse.Y+25,UI_Gadgets(x).mouseinfotext)
+		
+	Endif
+Endif
+
+
+Next x
+Endif   :
+
+
+if UI_mouseoveredgadget$<>UI_OldMouseOveredGadget$ 
+	If UI_mouseoveredgadget$<>" "
+		If sound exist(UI_MouseOverSND)=1 and UI_mouseclicked=0 then play Sound UI_MouseoverSND
+		UI_OldMouseOveredGadget$=UI_MouseOveredGadget$
+	Endif
+	UI_OldMouseOveredGadget$=UI_MouseOveredGadget$
+Endif
+	UI_RestoreDebugPosition()
+Endif
+
+
+// Check the independent texts
+If UI_TextLines>0
+	for y=1 to UI_TextLines
+		UI_CenterText(UI_Textoutputlines(y).ID,UI_Textoutputlines(y).X+UI_TextLinesXOffset,UI_Textoutputlines(y).Y+UI_TextLinesYOffset,UI_Textoutputlines(y).Title)
+	Next y
+Endif
+
+
+If UI_MouseClicked=1 and Mouseclick()=0 then UI_Mouseclicked=0
+
+Endfunction
+`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
 
 
 
@@ -906,7 +2007,6 @@ Endfunction tickresult
 
 
 
-
 Function UI_DestroyMouseFaderTicker()
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -916,6 +2016,47 @@ Function UI_DestroyMouseFaderTicker()
 	DELETE TICKER UI_MouseFaderTimer
 	UI_mousefadertimer=0
 Endfunction
+
+
+Function UI_CreateTextScrollTicker()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Internal timer command for textscrolls. Auto creates and destroys when needed.  *
+//*                                                                                     *
+//***************************************************************************************
+	UI_Textscrolltimer=FIND FREE TICKER()
+	MAKE TICKER UI_TextscrollTimer,60
+Endfunction
+
+
+
+Function UI_AskTextScrollTicker()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Internal timer command for textscrolls. Automatic.                              *
+//*                                                                                     *
+//***************************************************************************************
+	Local tickresult as Integer
+	tickresult=TICKER(UI_textscrolltimer,1)
+Endfunction tickresult
+`----------------------------------------------------------------------------------------------------------------
+
+`----------------------------------------------------------------------------------------------------------------
+Function UI_DestroyTextScrollTicker()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Internal timer command  for textscrolls. Autocalled.                            *
+//*                                                                                     *
+//***************************************************************************************
+	DELETE TICKER UI_textscrollTimer
+	UI_textscrolltimer=0
+Endfunction
+`----------------------------------------------------------------------------------------------------------------
+
+
+
+
+
 
 
 /////////////////////////////////////////////////////
