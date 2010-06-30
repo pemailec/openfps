@@ -27,6 +27,8 @@ remstart
                         Implementing the hard part, panel, button, checkbox, bar and slider gadgets. 
                         UI_Init loads 2 sound for mouseover and mouseclick, setup the gadget commands
                         UI_Handle now handles gadgets too.
+(06/30/10) - miso     - Removed a testbutton.                                    
+
 ----- To-Do:
 Comment the rest, create a tutorial how to build a menu system using these commands.
 
@@ -323,16 +325,8 @@ Function UI_Init()
 
 // Init Gui functions
 	UI_InitGuiGraphics()	
-// Load some Image for gadgets
-	UI_LoadGuiGraphics("media\menu\button-normal.png","UI_button")
-	UI_LoadGuiGraphics("media\menu\button-hover.png","UI_buttonmouseover")
 
-// Add a testbutton	
-	UI_AddCenterGadgettoScreen("UI_testbutton",512,650,"UI_button")		
-	UI_Addmouseoverimagetogadget("UI_testbutton","UI_buttonmouseover")
-	UI_AddTitletoGadget("UI_testbutton",3,512-8,650-14,"Test")
-	UI_AddMouseoverTitletoGadget("UI_testbutton",3,512-8,650-14,"-Test-")
-    UI_AddInfotogadget("UI_testbutton",1,"Test GUI button, will remove soon.",1)
+
 Endfunction
 
 

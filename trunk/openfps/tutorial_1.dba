@@ -72,7 +72,7 @@ Global BackGroundCube as Integer
 //-----Adding the Gadgets
 
 Gadgetcreator:
-//-----Creating a simple panel at 10,10 with id "firstpanel" using image "miso_panel"
+//-----Creating a simple panel at 0,10 with id "firstpanel" using image "miso_panel"
 		UI_AddGadgetToScreen("firstpanel",0,10,"miso_panel")
 
 //-----Creating a second panel and add a title to it
