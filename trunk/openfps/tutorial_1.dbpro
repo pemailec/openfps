@@ -1,33 +1,21 @@
 ; **** Dark BASIC Professional Project File ****
 ; **** Written by Synergy Editor ****
 version=DBP1.00
-project name=OpenFPS
+project name=tpu
 
 ; **** source file information ****
-main=test_game.dba
-LineMain=65
-include1=module_movement.dba
-LineInclude1=279
-include2=module_resource.dba
-LineInclude2=47
-include3=menu.dba
-LineInclude3=256
-include4=module_network.dba
-LineInclude4=0
-include5=module_shooting.dba
-LineInclude5=152
-include6=module_ai.dba
-LineInclude6=338
-include7=module_terrain.dba
-LineInclude7=122
-include8=module_ui.dba
-LineInclude8=1202
-include9=module_ui_console.dba
-LineInclude9=13
+main=tutorial_1.dba
+LineMain=53
+include1=module_ui.dba
+LineInclude1=1168
+include2=module_ui_console.dba
+LineInclude2=1
+include3=module_resource.dba
+LineInclude3=8
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
-executable=Temp.exe
+executable=new.exe
 build type=exe
 ; ** Media file compression **
 compression=NO
@@ -43,14 +31,14 @@ CLI=NO
 CommandLineArguments=
 
 ; **** display mode information ****
-app title=BioStorm
+app title=new
 
 ; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
 graphics mode=fullscreen
-fullscreen resolution=1024x768x32
+fullscreen resolution=640x480x32
 
 ; arbitrary sizes are valid for windowed mode
-window resolution=1024x768
+window resolution=640x480
 
 ; **** External Files Information ****
 

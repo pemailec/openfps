@@ -1,5 +1,5 @@
-Remstart
-/////////////////////////////////////////////////////
+Rem ***** Included Source File *****
+/////////////////////////
 //
 // OpenFPS USER INTERFACE MODULE            
 //
@@ -7,6 +7,7 @@ Remstart
 //                           
 //
 /////////////////////////////////////////////////////
+remstart
 ***** Included Source File *****
 
 ----- Changelog:
@@ -327,7 +328,7 @@ Function UI_Init()
 	UI_LoadGuiGraphics("media\menu\button-hover.png","UI_buttonmouseover")
 
 // Add a testbutton	
-	UI_AddCenterGadgettoScreen("UI_testbutton",1,512,650,"UI_button")		
+	UI_AddCenterGadgettoScreen("UI_testbutton",512,650,"UI_button")		
 	UI_Addmouseoverimagetogadget("UI_testbutton","UI_buttonmouseover")
 	UI_AddTitletoGadget("UI_testbutton",3,512-8,650-14,"Test")
 	UI_AddMouseoverTitletoGadget("UI_testbutton",3,512-8,650-14,"-Test-")
@@ -1129,6 +1130,7 @@ Function UI_ClearAllGuis()
 		Endif
 		UI_Settextlineoffset(0,0)
 		
+		
 	Endif
 Endfunction
 `--------------------------------------------------------------------------------------------------------------------
@@ -1211,7 +1213,7 @@ Endfunction
 
 
 `--------------------------------------------------------------------------------------------------------------------
-Function UI_LoadGuiGraphics(ImageID$,GadgetID$)
+Function UI_LoadGuiGraphics(ImageFile$,ImageID$)
 //***************************************************************************************
 //*   Miso                                                                              *
 //*     This will load an image for gadgets, and sets GadgetID to it as an ID.           *
@@ -1220,12 +1222,12 @@ Function UI_LoadGuiGraphics(ImageID$,GadgetID$)
 //***************************************************************************************
 	UI_SetDebugPosition("UI_LoadGuiGraphics(menugombimage$)","module_ui.dba")
 	
-		UI_CheckDxSprites():UI_CheckFile(ImageID$)
+		UI_CheckDxSprites():UI_CheckFile(ImageFile$)
 		Array Insert at Bottom UI_Gadgetimages()
 		
 		UI_GadgetImageNumbers                             = UI_GadgetImageNumbers+1
-		UI_Gadgetimages(UI_GadgetImageNumbers).GadgetImagePointer = DXS CREATE SPRITE(imageID$)
-		UI_Gadgetimages(UI_GadgetImageNumbers).GadgetImageName    = GadgetID$
+		UI_Gadgetimages(UI_GadgetImageNumbers).GadgetImagePointer = DXS CREATE SPRITE(ImageFile$)
+		UI_Gadgetimages(UI_GadgetImageNumbers).GadgetImageName    = ImageID$
 		
 	UI_RestoreDebugPosition()      
 Endfunction
@@ -1359,7 +1361,7 @@ Endfunction
 
 
 `--------------------------------------------------------------------------------------------------------------------
-Function UI_AddCenterGadgetToScreen(gadgetidname$,gadgettype,posx,posy,gadgetimagename$)
+Function UI_AddCenterGadgetToScreen(gadgetidname$,posx,posy,gadgetimagename$)
 //***************************************************************************************
 //*   Miso                                                                              *
 //*     Add a new gadget to the list. Posx and posy will be the center point of the     *
@@ -1390,7 +1392,7 @@ Endfunction
 
 
 `--------------------------------------------------------------------------------------------------------------------
-Function UI_AddGadgetToScreen(gadgetidname$,gadgettype,posx,posy,gadgetimagename$)
+Function UI_AddGadgetToScreen(gadgetidname$,posx,posy,gadgetimagename$)
 //***************************************************************************************
 //*   Miso                                                                              *
 //*     Add a gadget to the list, posx and posy will be the gadgets upper left point in *

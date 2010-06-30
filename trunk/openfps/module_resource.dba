@@ -1,5 +1,6 @@
 remstart
-/////////////////////////////////////////////////////
+Rem ***** Included Source File *****
+/////////////////////////
 //
 // OpenFPS RESOURCE MANAGEMENT Core Module
 //
@@ -61,7 +62,7 @@ remend
 
 #Constant res_Count    15
 
-type res_Type
+Type res_Type
     start as integer
     qty as integer
 endtype
