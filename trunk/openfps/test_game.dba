@@ -96,17 +96,22 @@ updateTerrain()
 updateAI()
 
 //displays some info
-UI_Text(1,10,55,str$(screen fps()))
-UI_Text(1,10,70,"Stamina: "+str$(PLR_curstam))
+`UI_Text(1,10,55,str$(screen fps()))
+`UI_Text(1,10,70,"Stamina: "+str$(PLR_curstam))
 UI_Text(2,10,80,"Open FPS Engine")
-UI_Centertext(3,UI_display.middlewidth,UI_display.height-40,"<Center Text Showcase, delete this line>")
+`UI_Centertext(3,UI_display.middlewidth,UI_display.height-40,"<Center Text Showcase, delete this line>")
 
 position mouse screen width()/2,screen height()/2
 
 //test command for mouse fade, can be deleted.
 
 //handle all Gui functions
-if DebugScreenFPS=1 then UI_Text(2,screen width()-50,screen height()-40,str$(screen fps())) 
+if DebugScreen=1:
+	UI_Text(2,screen width()-50,screen height()-40,str$(screen fps())) 
+	UI_Centertext(3,UI_display.middlewidth,UI_display.height-40,"<Center Text Showcase, delete this line>")
+	UI_Text(1,10,70,"Stamina: "+str$(PLR_curstam))
+	UI_Text(1,10,55,str$(screen fps()))
+endif
 UI_Handle()
 
 sync

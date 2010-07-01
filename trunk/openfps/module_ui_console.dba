@@ -58,6 +58,6 @@ Function UI_SUB_CheckConsoleCommand()
 	If Upper$(UI_Input.result)="HIDE MOUSE" then UI_FadeOutMouse()
 	If Upper$(UI_Input.result)="SHOW MOUSE" then UI_FadeInMouse()
 	If Upper$(UI_Input.result)="EXIT" then end
-	If Upper$(UI_Input.result)="FPS" then DebugScreenFPS=1
+	If Upper$(UI_Input.result)="DEBUG" then DebugScreen=1
 Endfunction
 
