@@ -18,6 +18,8 @@ remstart
 (6/27/10)  - thenerd  - Added some effects to the menu background.
 (6/27/10)  - miso  - Changed 2 mouseX() mouseY() commands to UI_MouseX() and UI_MouseY()
 (6/27/10)  - thenerd  - Added color parameter to button function
+(7/01/10)  - miso  - Hides ui_mouse before entering game mode
+                     Creates a stamina bar, before jumping to game mode (won't crash the game if we delete this part)
 
 ----- To-Do:
 - Make buttons functional. DONE
@@ -159,7 +161,35 @@ do
 	paste image menu_mainimage,0,0,1
 	scroll object texture menu_bgfx1,0.001,0
 	`buttons
-	if button("<GAME ENGINE TEST>",78,219,rgb(255,100,100)) then exit `Campaign Mode
+
+		If button("<GAME ENGINE TEST>",78,219,rgb(255,100,100)) 
+			
+					//--Hide graphic mouse
+						UI_HideMouse():`Hide mouse before entering game mode
+					//--add a stamina bar before run game part
+						aa=140:bb=145		
+						UI_AddCenterGadgetToScreen("UI_staminabarholder",0+aa,0+bb,"UI_barholderimage")
+					//--add the BAR for STAMINA
+						UI_AddbarGadgetToScreen("UI_stamina",3+aa,3+bb,"UI_redbar",50)
+						UI_CenterPositionGadget("UI_stamina",aa,bb)
+						UI_addtitletogadget("UI_stamina",3,aa-8,bb-14,"STAMINA")
+
+					//--add a FATIGUE bar before run game part (reverse of the stamina bar)
+						aa=140:bb=185		
+						UI_AddCenterGadgetToScreen("UI_fatiguebarholder",0+aa,0+bb,"UI_barholderimage")
+					//--add the BAR for STAMINA
+						UI_AddbarGadgetToScreen("UI_fatigue",3+aa,3+bb,"UI_orangebar",50)
+						UI_CenterPositionGadget("UI_fatigue",aa,bb)
+						UI_addtitletogadget("UI_fatigue",3,aa-8,bb-14,"FATIGUE")
+
+
+
+					//--Jumps to the game mode	
+						Exit `Campaign Mode
+						
+		Endif
+
+
 	button("Versus Mode",78,279,rgb(255,255,255))
 	button("Help",78,339,rgb(255,255,255))
 	button("Options",78,399,rgb(255,255,255))

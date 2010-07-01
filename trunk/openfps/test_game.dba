@@ -83,6 +83,9 @@ timer_starttime = timer()
 
 do
 
+//draws a window
+UI_putwindow(0,48,17,9)
+
 `Timerbased
 elapsedtime=(timer()-timer_starttime)/1000.0
 timer_starttime = timer()
@@ -92,10 +95,10 @@ updateShooting()
 updateTerrain()
 updateAI()
 
-
-UI_Text(1,10,50,str$(screen fps()))
-UI_Text(1,10,60,"Stamina: "+str$(PLR_curstam))
-UI_Text(2,10,75,"Different font")
+//displays some info
+UI_Text(1,10,55,str$(screen fps()))
+UI_Text(1,10,70,"Stamina: "+str$(PLR_curstam))
+UI_Text(2,10,80,"Open FPS Engine")
 UI_Centertext(3,UI_display.middlewidth,UI_display.height-40,"<Center Text Showcase, delete this line>")
 
 position mouse screen width()/2,screen height()/2

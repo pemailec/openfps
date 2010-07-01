@@ -23,11 +23,15 @@ remstart
 						Added console, can be called pressing TAB key.
 						Added 2 test console commands, show mouse, hide mouse.
 						(Be patient, I will add the comments soon, and reorganize the whole)
-(06/27/10) - miso     - Added new internal timer commands.                       
+(06/27/10) - miso     - Added new internal timer commands. (uses Ian's matrix1)
                         Implementing the hard part, panel, button, checkbox, bar and slider gadgets. 
                         UI_Init loads 2 sound for mouseover and mouseclick, setup the gadget commands
                         UI_Handle now handles gadgets too.
 (06/30/10) - miso     - Removed a testbutton.                                    
+(07/01/10) - miso     - Adding 2 new function UI_EnableNonGuiMouse() and UI_DisableNonGuiMouse()
+                        Adding stamina bar update to UI_handle()
+
+
 
 ----- To-Do:
 Comment the rest, create a tutorial how to build a menu system using these commands.
@@ -42,7 +46,9 @@ Includes text, centertext, input, console and window functions.
 Needs the free plugin Advanced Sprites.
 http://forum.thegamecreators.com/?m=forum_view&t=113378&b=5
 
-With the mouse commands, it needs Ians matrix utils too.
+With the mouse commands, it also needs Ians matrix utils too.
+
+
 
 ----- Conflicts
 Conflicts with the movement module, because mouse commands and movement module both use
@@ -165,6 +171,7 @@ Global UI_MouseClicked              as Boolean:` 1 if mouse left click is presse
 Global UI_MouseOverSND              as Integer:` DBPro sound ID for mousover sound  
 Global UI_MouseClickSND             as Integer:` DBPro sound ID for mouseclick sound   
 Global UI_GuiFaded                  as Boolean:` 1 if we faded out all gui gadget, otherwise 0        
+Global UI_NonGuiMouseDisabled       as Boolean:` true if we disabled the nongui mousemoves
 `===========================`
 
 `===========Types===========`
@@ -325,7 +332,16 @@ Function UI_Init()
 
 // Init Gui functions
 	UI_InitGuiGraphics()	
+	
+// Load internal Gui Images
+	UI_LoadGuiGraphics("media\bars\barholder.png","UI_barholderimage")
+	UI_LoadGuiGraphics("media\bars\redbar.png","UI_redbar")
+	UI_LoadGuiGraphics("media\bars\orangebar.png","UI_orangebar")
+	
+		
 
+// Disable escapekey
+	Disable Escapekey
 
 Endfunction
 
@@ -347,6 +363,19 @@ Function UI_Handle()
 	UI_HandleConsole()
 //-Handle all the mouse
 	UI_HandleMouse()
+//-Check if we disabled non gui mouse movements
+	If UI_NonguiMouseDisabled=UI_True
+		SyS_MouseMoveX=0:SyS_MouseMoveY=0
+	Endif 
+
+// Update staminabar
+	UI_SetGadgetValue("UI_stamina",Floor(PLR_Curstam/2.0)-1)
+	UI_SetGadgetValue("UI_fatigue",50-Floor(PLR_Curstam/2.0)-1)
+
+
+//- If pressed esc then quit
+	If Keystate(1)=1 then End
+
 Endfunction
 
 
@@ -981,8 +1010,26 @@ Endfunction return_mousey
 
 
 /////////////////////////////////////////////////////
-//GADGET   COMMANDS
+//GADGET and GUI  COMMANDS
 /////////////////////////////////////////////////////
+
+Function UI_DisableNonguiMouse()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Disables all nongui mouse movements. Camera wont rotate if we set this.         *
+//*                                                                                     *
+//***************************************************************************************
+	UI_NonGuiMouseDisabled=1
+Endfunction
+
+Function UI_EnableNonguiMouse()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Ensables all nongui mouse movements. Camera will rotate if we set this.         *
+//*                                                                                     *
+//***************************************************************************************
+	UI_NonGuiMouseDisabled=0
+Endfunction
 
 
 `--------------------------------------------------------------------------------------------------------------------
