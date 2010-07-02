@@ -5,23 +5,23 @@ project name=OpenFPS
 
 ; **** source file information ****
 main=test_game.dba
-LineMain=99
+LineMain=0
 include1=module_movement.dba
 LineInclude1=0
 include2=module_resource.dba
 LineInclude2=200
 include3=menu.dba
-LineInclude3=177
+LineInclude3=161
 include4=module_network.dba
 LineInclude4=0
 include5=module_shooting.dba
 LineInclude5=501
 include6=module_ai.dba
-LineInclude6=338
+LineInclude6=318
 include7=module_terrain.dba
 LineInclude7=0
 include8=module_ui.dba
-LineInclude8=372
+LineInclude8=36
 include9=module_ui_console.dba
 LineInclude9=0
 

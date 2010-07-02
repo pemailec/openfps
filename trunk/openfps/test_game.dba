@@ -112,6 +112,10 @@ if DebugScreen=1:
 	UI_Text(1,10,70,"Stamina: "+str$(PLR_curstam))
 	UI_Text(1,10,55,str$(screen fps()))
 endif
+
+//Test delete gadget function
+If Inkey$()="P" then UI_DeleteGadget("UI_staminabarholder")
+
 UI_Handle()
 
 sync

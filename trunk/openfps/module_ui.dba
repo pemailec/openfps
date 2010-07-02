@@ -30,8 +30,11 @@ remstart
 (06/30/10) - miso     - Removed a testbutton.                                    
 (07/01/10) - miso     - Adding 2 new function UI_EnableNonGuiMouse() and UI_DisableNonGuiMouse()
                         Adding stamina bar update to UI_handle()
-
-
+(07/02/10) - miso     - Modified Code looks, hoping to be a bit more readable.
+                        If there are spelling mistakes in my comments, please feel free to correct them.
+                      - Added new command to delete a single gadget if exists. Nothing happens if theres no 
+                        such gadget.
+                      - Added new command to delete a single image. Will crash game if image is in use.
 
 ----- To-Do:
 Comment the rest, create a tutorial how to build a menu system using these commands.
@@ -46,8 +49,8 @@ Includes text, centertext, input, console and window functions.
 Needs the free plugin Advanced Sprites.
 http://forum.thegamecreators.com/?m=forum_view&t=113378&b=5
 
-With the mouse commands, it also needs Ians matrix utils too.
-
+With the mouse commands, it also needs Ian's matrix utils too.
+http://forum.thegamecreators.com/?m=forum_view&t=85209&b=18
 
 
 ----- Conflicts
@@ -150,52 +153,52 @@ Global UI_mywindow              as Mywindowtype : `for windows commands, not ver
 Global UI_Input                 as myinputtype  : `basic input data will be stored here
 
 //-----Console Globals
-Global UI_EVENT_ConsoleInput    as Boolean      : `true, if the console is shown
-Global UI_EVENT_ConsoleChanged  as Boolean      : `true if user just hitted tab
-Global UI_EVENT_ConsoleOffset   as Integer      : `Y offset for command line
-Global UI_EVENT_ConsoleState    as Integer      : `1 if console is appearing 2 if disappearing, 0 if nothing to do
+Global UI_EVENT_ConsoleInput        as Boolean  : `true, if the console is shown
+Global UI_EVENT_ConsoleChanged      as Boolean  : `true if user just hitted tab
+Global UI_EVENT_ConsoleOffset       as Integer  : `Y offset for command line
+Global UI_EVENT_ConsoleState        as Integer  : `1 if console is appearing 2 if disappearing, 0 if nothing to do
 
 //-----Gadget Globals
-Global MainMenuElementImage 		as Integer:` 0, yet unused
-Global UI_GuiStatus            	    as Boolean:` UI_True if some gui and mouse is present
-Global UI_GuiInitialized       	    as Boolean:` UI_True if UI_Initmainmenugrapfhics initialized
-Global UI_GadgetImageNumbers     	as Integer:` Number of the loaded gadget images
-Global UI_GadgetNumbers     		as Integer:` Number of the currently created gadgets.             
-Global UI_TextLines                 as Integer:` Number of the individual text gadgets (for scrolling)  
-Global UI_TextlinesXOffset          as Integer:` For text scrolls        
-Global UI_TextlinesYOffset          as Integer:` For text scrolls             
-Global UI_GadgetFunctionReturner 	as Integer:` 0, yet unused
-Global UI_MouseOveredGadget$        as String :` Value=IDname of the currently mouseovered gadget. Gets its value from (UI_Gadgets(x).gadgetname).
-Global UI_OldMouseoveredGadget$     as String :` IDname of the mouseovered gadget of the last loop.  
-Global UI_MouseClicked              as Boolean:` 1 if mouse left click is pressed, otherwise 0               
-Global UI_MouseOverSND              as Integer:` DBPro sound ID for mousover sound  
-Global UI_MouseClickSND             as Integer:` DBPro sound ID for mouseclick sound   
-Global UI_GuiFaded                  as Boolean:` 1 if we faded out all gui gadget, otherwise 0        
-Global UI_NonGuiMouseDisabled       as Boolean:` true if we disabled the nongui mousemoves
+Global MainMenuElementImage 		as Integer  :` 0, yet unused
+Global UI_GuiStatus            	    as Boolean  :` UI_True if some gui and mouse is present
+Global UI_GuiInitialized       	    as Boolean  :` UI_True if UI_Initmainmenugrapfhics initialized
+Global UI_GadgetImageNumbers     	as Integer  :` Number of the loaded gadget images
+Global UI_GadgetNumbers     		as Integer  :` Number of the currently created gadgets.             
+Global UI_TextLines                 as Integer  :` Number of the individual text gadgets (for scrolling)  
+Global UI_TextlinesXOffset          as Integer  :` For text scrolls        
+Global UI_TextlinesYOffset          as Integer  :` For text scrolls             
+Global UI_GadgetFunctionReturner 	as Integer  :` 0, yet unused
+Global UI_MouseOveredGadget$        as String   :` Value=IDname of the currently mouseovered gadget. Gets its value from (UI_Gadgets(x).gadgetname).
+Global UI_OldMouseoveredGadget$     as String   :` IDname of the mouseovered gadget of the last loop.  
+Global UI_MouseClicked              as Boolean  :` 1 if mouse left click is pressed, otherwise 0               
+Global UI_MouseOverSND              as Integer  :` DBPro sound ID for mousover sound  
+Global UI_MouseClickSND             as Integer  :` DBPro sound ID for mouseclick sound   
+Global UI_GuiFaded                  as Boolean  :` 1 if we faded out all gui gadget, otherwise 0        
+Global UI_NonGuiMouseDisabled       as Boolean  :` true if we disabled the nongui mousemoves
 `===========================`
 
 `===========Types===========`
 //will hold basic ascii data for bitmap fonts
 Type MyStringmapType
-   Ascii  	 as Byte                : `ascii code table refined to the bitmap font image. Saves memory if remains byte.
-   BitmapID  as Integer             : `pointer ID for the bitmap image
+   Ascii  	 as Byte                   : `ascii code table refined to the bitmap font image. Saves memory if remains byte.
+   BitmapID  as Integer                : `pointer ID for the bitmap image
 Endtype
 
 //-------------
 Type MyCharType
-   Character as Integer             :  `basic string data
+   Character as Integer                :  `basic string data
 Endtype
 
-//will hold basic data for the user interface module
+//--will hold basic data for the user interface module
 Type MyScreenType
-	Width                as Integer : `screen width
-	Height               as Integer : `screen height
-	Middlewidth          as Integer : `halfwidth, in some cases we save a divide to count that value
-	Middleheight         as Integer : `halfheight, in soma cases, we save a divide   
-	Dxspriteinitialized  as Boolean : `1=initialized (I prefer to keep it boolean, for the final build we may change it to integer, if you like)
+	Width                as Integer    : `screen width
+	Height               as Integer    : `screen height
+	Middlewidth          as Integer    : `halfwidth, in some cases we save a divide to count that value
+	Middleheight         as Integer    : `halfheight, in soma cases, we save a divide   
+	Dxspriteinitialized  as Boolean    : `1=initialized (I prefer to keep it boolean, for the final build we may change it to integer, if you like)
 Endtype
 
-//will hold basic data for the graphic mouse
+//--will hold basic data for the graphic mouse
 Type MouseType
     Initialized   as  Boolean          : `true if initialized         
 	ID            as  Integer          : `mouse cursor image image pointer ID (adv spr)
@@ -211,7 +214,7 @@ Type MouseType
 	Fadingin      as  Boolean          : `1 if mouse cursor is currently fading in                      
 Endtype
 
-//will hold basic data for the input commands
+//--will hold basic data for the input commands
  TYPE myinputtype
    ID           AS INTEGER
    FixString    AS STRING
@@ -226,17 +229,15 @@ Endtype
 ENDTYPE
 
 
-//will hold basic data for a window gui graph
+//--will hold basic data for a window gui graph
 Type mywindowtype
    ID 		as Integer
    Xwidth 	as Integer
    Yrow 	as Integer
 Endtype
 
-
-`--------------------------------------------------------------------------------------------------------------------
+//--will hold the gadgets data
 Type MyGuiType
-`--------------------------------------------------------------------------------------------------------------------
 	ID               		as   Integer  :` ASprite image pointer. it gets value from UI_Gadgetimages(x).GadgetImagePointer.
 	MouseoverID      		as   Integer  :` Image pointer of gadget if mouseovered.
 	GadgetName       		as   String   :` IDname of the gadget, Case sensitive, please use a prefix if you create a gadget
@@ -264,16 +265,13 @@ Type MyGuiType
 	MouseInfoText           as   String   :` Mouseinfo text                                        
 	MouseInfoOrientation    as   Integer  :` 1=left 2=middle 3=right                            
 EndType
-`--------------------------------------------------------------------------------------------------------------------
 
 
-`--------------------------------------------------------------------------------------------------------------------
+//--Will hold the gadget image's pointers
 Type MyGuiImageType
-`--------------------------------------------------------------------------------------------------------------------
-	GadgetImagePointer as integer         :` advanced sprite pointers to gadget images             
-	GadgetImageName    as string          :` ID for the image, case sensitive, use prefix
+	GadgetImagePointer      as Integer    :` advanced sprite pointers to gadget images             
+	GadgetImageName         as String     :` ID for the image, case sensitive, use prefix
 EndType
-`--------------------------------------------------------------------------------------------------------------------
 
 
 `--------------------------------------------------------------------------------------------------------------------
@@ -354,7 +352,7 @@ Function UI_Handle()
 //***************************************************************************************
 
 //Add value to the mouse variables
-	SyS_MouseMoveX=MouseMoveX():SyS_MouseMoveY=MouseMoveY()
+	SyS_MouseMoveX = MouseMoveX():SyS_MouseMoveY = MouseMoveY()
 //-Checks input events
 	UI_CheckInput()
 //-Handle all the gadgets
@@ -364,8 +362,8 @@ Function UI_Handle()
 //-Handle all the mouse
 	UI_HandleMouse()
 //-Check if we disabled non gui mouse movements
-	If UI_NonguiMouseDisabled=UI_True
-		SyS_MouseMoveX=0:SyS_MouseMoveY=0
+	If UI_NonguiMouseDisabled = UI_True
+		SyS_MouseMoveX = 0:SyS_MouseMoveY = 0
 	Endif 
 
 // Update staminabar
@@ -388,7 +386,7 @@ Function UI_Terminate()
 //***************************************************************************************
 Local x as Integer
 
-	If UI_Display.DxSpriteInitialized=UI_True
+	If UI_Display.DxSpriteInitialized = UI_True
 		//--Destroy font images if loaded
 			For x=1 to UI_MaxFonts
 				If UI_stringmap(x,258).bitmapID>0 Then DXS DELETE SPRITE UI_stringmap(x,258).bitmapID	
@@ -399,7 +397,7 @@ Local x as Integer
 	    	UnDim UI_chain()
 	
 	    //--Destroy Mouse Image if loaded	
-			If UI_Mouse.Initialized=UI_True then DXS DELETE SPRITE UI_Mouse.ID
+			If UI_Mouse.Initialized = UI_True then DXS DELETE SPRITE UI_Mouse.ID
 	
 		//--Destroy Window image if loaded
 			If UI_Mywindow.ID>0 then DXS DELETE SPRITE UI_Mywindow.ID
@@ -450,30 +448,30 @@ Local a$ as String:Local b$ as String:Local c$ as String
 	UI_CheckFile(name$)
 		Open To Read 1,name$
 				//read the bitmapfontname and load
-				Read String 1,a$:b$=First Token$(a$,"="):c$=Next Token$("=")
+				Read String 1,a$:b$ = First Token$(a$,"="):c$=Next Token$("=")
 				//Check if bitmapfont image exist
 				 UI_CheckFile(c$)
-				 UI_stringmap(ID,258).bitmapID= DXS CREATE SPRITE(c$)
+				 UI_stringmap(ID,258).bitmapID = DXS CREATE SPRITE(c$)
 				DXS SET SPRITE CENTER  UI_stringmap(ID,258).bitmapID,0,0
     
 			    //read the bitmap font width
-			    Read String 1,a$:b$=First Token$(a$,"="):c$=Next Token$("=")
+			    Read String 1,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
 			    UI_stringmap(ID,257).ascii = Val(c$)
 		
 				//read the bitmap font height
-				Read String 1,a$:b$=First Token$(a$,"="):c$=Next Token$("=")
+				Read String 1,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
 				UI_stringmap(ID,257).bitmapID = val(c$)
 				DXS SET SPRITE TILE SIZE  UI_stringmap(ID,258).bitmapID, UI_stringmap(ID,257).ascii, UI_stringmap(ID,257).bitmapID    ` Cut the sprites into 32x32 pixels tiles.
 				DXS SET SPRITE SCALE  UI_stringmap(ID,258).bitmapID,100,100
-			    UI_stringmap(ID,258).ascii=spacing
+			    UI_stringmap(ID,258).ascii = spacing
 		
 				//load the ascii codetable
 				For x=1 to 256
 					 Read String 1,a$
-					 b$=First Token$(a$,"=")
-					 c$=Next Token$("=")
-					 UI_stringmap(ID,x).ascii=Val(b$)
-					 UI_stringmap(ID,x).bitmapID=Val(c$)
+					 b$ = First Token$(a$,"=")
+					 c$ = Next Token$("=")
+					 UI_stringmap(ID,x).ascii    = Val(b$)
+					 UI_stringmap(ID,x).bitmapID = Val(c$)
 				Next x
 		Close File 1
 	UI_RestoreDebugPosition()
@@ -491,8 +489,8 @@ Function UI_Text(ID,x,y,sstring$)
 //***************************************************************************************
   Local UI_StringWidth as Integer:Local xx as Integer
 
-  UI_StringWidth=len(sstring$)
-	For xx=1 to UI_StringWidth:UI_chain(xx).character=Asc(Mid$(sstring$,xx)):Next xx
+  UI_StringWidth = len(sstring$)
+	For xx=1 to UI_StringWidth:UI_chain(xx).character = Asc(Mid$(sstring$,xx)):Next xx
 	  DXS BEGIN SPRITE RENDER UI_stringmap(ID,258).bitmapID
 		  For xx=1 to UI_StringWidth
 		        DXS DRAW SPRITE TILE UI_stringmap(ID,258).bitmapID,UI_stringmap(ID,UI_chain(xx).character).bitmapID,x+((xx-1)*UI_stringmap(ID,258).ascii),y
@@ -514,8 +512,8 @@ Function UI_CenterText(ID,x,y,sstring$)
   Local UI_StringWidth as Integer:Local xx as Integer
   Local UI_BitmapWidth as Integer:Local UI_BitmapOffset as Integer
 
-   UI_StringWidth=Len(sstring$)
-   UI_BitmapOffset=(UI_stringmap(ID,258).ascii*UI_StringWidth)/2
+   UI_StringWidth  = Len(sstring$)
+   UI_BitmapOffset = (UI_stringmap(ID,258).ascii*UI_StringWidth)/2
 	 For xx=1 to UI_StringWidth:UI_chain(xx).character=Asc(Mid$(sstring$,xx)):Next xx
 		DXS BEGIN SPRITE RENDER UI_stringmap(ID,258).bitmapID
 			For xx=1 to UI_StringWidth
@@ -540,45 +538,46 @@ Function UI_HandleConsole()
 	Clear Entry Buffer
 	UI_Input.Current=""
 	If UI_EVENT_Consoleinput=0
-		    UI_EVENT_ConsoleOffset=-48
-			UI_EVENT_Consolestate=1
-  			UI_EVENT_Consoleinput=1
+		    UI_EVENT_ConsoleOffset  = -48
+			UI_EVENT_Consolestate   = 1
+  			UI_EVENT_Consoleinput   = 1
+			UI_EVENT_ConsoleChanged = 1
 			UI_CMDInput(3,0,8+UI_EVENT_ConsoleOffset,"CMD>",30)
-			UI_EVENT_ConsoleChanged=1
 	Else
-	UI_EVENT_Consolestate=2
-	UI_EVENT_Consoleinput=0
-	UI_EVENT_ConsoleChanged=1
-	UI_DestroyInput()
-	Clear Entry Buffer
-	UI_Input.Current=""
+			UI_EVENT_Consolestate   = 2
+			UI_EVENT_Consoleinput   = 0
+			UI_EVENT_ConsoleChanged = 1
+			UI_Input.Current        = ""
+			UI_DestroyInput()
+			Clear Entry Buffer
   	Endif
   Endif
   
-  If UI_Event_ConsoleState=1
-  	UI_EVENT_ConsoleOffset=UI_EVENT_ConsoleOffset+4
+  If UI_Event_ConsoleState = 1
+  	UI_EVENT_ConsoleOffset = UI_EVENT_ConsoleOffset+4
   	UI_CMDInput(3,0,8+UI_EVENT_ConsoleOffset,"CMD>",30)
   Endif
-  If UI_Event_ConsoleState=2
- 	UI_EVENT_ConsoleOffset=UI_EVENT_ConsoleOffset-4
+ 
+  If UI_Event_ConsoleState = 2
+ 	UI_EVENT_ConsoleOffset = UI_EVENT_ConsoleOffset-4
  	UI_CMDInput(3,0,8+UI_EVENT_ConsoleOffset,"CMD>",30)
   Endif
    
-  If UI_EVENT_ConsoleOffset=-48 then UI_Event_ConsoleState=0
-  If UI_EVENT_ConsoleOffset=0 then UI_Event_ConsoleState=0
+  If UI_EVENT_ConsoleOffset = -48 then UI_Event_ConsoleState = 0
+  If UI_EVENT_ConsoleOffset = 0 then UI_Event_ConsoleState   = 0
    
   
-  	If UI_EVENT_Consoleinput=1 or UI_EVENT_Consolestate=2
-  		UI_Putwindow(0,0+UI_EVENT_ConsoleOffset,63,2)
-  	Endif
+  If UI_EVENT_Consoleinput = 1 or UI_EVENT_Consolestate = 2
+  	UI_Putwindow(0,0+UI_EVENT_ConsoleOffset,63,2)
+  Endif
 	
-	If UI_EVENT_ConsoleChanged=1
-		If Inkey$()<>"	" then UI_EVENT_ConsoleChanged=0
-	Endif
+  If UI_EVENT_ConsoleChanged = 1
+	If Inkey$()<>"	" then UI_EVENT_ConsoleChanged = 0
+  Endif
   
  // Checks the possible results and apply the commands
- If UI_Input.alive=3
-	UI_EVENT_ConsoleInput=0
+ If UI_Input.alive        = 3
+	UI_EVENT_ConsoleInput = 0
 	UI_SUB_CheckConsoleCommand()
  Endif
 
@@ -606,22 +605,22 @@ Function UI_CheckInput()
 //*     and changes the UI_Input.alive variable to 3.                                   *
 //*                                                                                     *
 //***************************************************************************************
-If UI_Input.alive=1    
+If UI_Input.alive = UI_True
 
-      If Returnkey()=1
+      If Returnkey() = UI_True
          Clear Entry Buffer
-         UI_Input.result=UI_Input.current
-         UI_Input.alive=3
+         UI_Input.result = UI_Input.current
+         UI_Input.alive  = 3
       Endif
 
       UI_Input.current=UI_Input.current+Entry$() : Clear Entry Buffer
-      If Scancode()=14
-      	If Scancode()=14 Then UI_Input.current=Left$(UI_Input.current,Len(UI_Input.current)-1)
+      If Scancode() = 14
+      	If Scancode() = 14 Then UI_Input.current = Left$(UI_Input.current,Len(UI_Input.current)-1)
       	Clear Entry Buffer
       Endif
 
       rem Entry Line
-      If Len(UI_Input.current)>UI_Input.maxcharacter then UI_Input.current=Left$(UI_Input.current,UI_Input.maxcharacter)
+      If Len(UI_Input.current)>UI_Input.maxcharacter then UI_Input.current = Left$(UI_Input.current,UI_Input.maxcharacter)
       UI_Text(UI_Input.id,UI_Input.posx,UI_Input.posy,UI_Input.fixstring+(UI_Input.current)+"*")
 
 Endif
@@ -643,13 +642,13 @@ Function UI_CMDInput(FontID,x,y,fixstring$,maxcharacter)
 //***************************************************************************************
 	Clear Entry Buffer:Clear Entry Buffer
 	rem freestring myinput(1)(1).result
-	UI_Input.ID=FontID
-	UI_Input.fixstring=fixstring$
-	UI_Input.posx=x
-	UI_Input.posy=y
-	UI_Input.alive=1
-	UI_Input.center=0
-	UI_Input.maxcharacter=maxcharacter
+	UI_Input.ID = FontID
+	UI_Input.fixstring = fixstring$
+	UI_Input.posx      = x
+	UI_Input.posy      = y
+	UI_Input.alive     = UI_True
+	UI_Input.center    = UI_False
+	UI_Input.maxcharacter = maxcharacter
 Endfunction
 
 
@@ -661,7 +660,7 @@ Function UI_DestroyInput()
 //*     This function closes input event, if theres any.                                *
 //*                                                                                     *
 //***************************************************************************************
-	UI_Input.alive=0
+	UI_Input.alive = 0
 Endfunction
 
 
@@ -674,8 +673,8 @@ Function UI_InputReady()
 //*                   returns 3 if theres a result.                                     *
 //*                                                                                     *
 //***************************************************************************************
-	Local a as Integer
-	a=UI_Input.alive
+Local a as Integer
+	a = UI_Input.alive
 Endfunction a
 
 
@@ -695,13 +694,13 @@ Local a$ as String:Local b$ as String:Local c$ as String
 		UI_CheckDXSprites():UI_Checkfile(name$)	
 		Open to Read 1,name$
 				`read the windowname and load
-				Read String 1,a$:b$=First Token$(a$,"="):c$=Next Token$("=")
-				UI_mywindow.ID=DXS CREATE SPRITE(c$)
-				Read String 1,a$:b$=First Token$(a$,"="):c$=Next Token$("=")
-				UI_mywindow.xwidth = Val(c$)
+				Read String 1,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
+				UI_mywindow.ID      = DXS CREATE SPRITE(c$)
+				Read String 1,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
+				UI_mywindow.xwidth  = Val(c$)
 				`read the window height
-				Read String 1,a$:b$=First Token$(a$,"="):c$=Next Token$("=")
-				UI_mywindow.yrow = Val(c$)
+				Read String 1,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
+				UI_mywindow.yrow    = Val(c$)
 				DXS SET SPRITE TILE SIZE UI_mywindow.ID,UI_mywindow.xwidth,UI_mywindow.yrow    ` Cut the sprites into x * y pixels tiles.
 		Close File 1
 	UI_RestoreDebugPosition()
@@ -718,7 +717,7 @@ Function UI_PutWindow(x,y,xwidth,ywidth)
 //*                                                                                     *
 //***************************************************************************************
   Local stringhossz as Integer:Local xx as Integer
-   stringhossz=Len(sstring$)
+   stringhossz = Len(sstring$)
 	DXS BEGIN SPRITE RENDER UI_MyWindow.id
 		For xx=0 to xwidth
 		  For yy=0 to ywidth
@@ -774,16 +773,16 @@ Function UI_HandleMouse()
 If UI_Mouse.Initialized = UI_True 
 	If UI_Mouse.hidden=UI_False or UI_Mouse.FadingOut=UI_True
 	
-			If  UI_Mouse.smooth      = UI_False
-				UI_Mouse.x           = UI_Mouse.X+SyS_MouseMoveX
-				UI_Mouse.Y           = UI_Mouse.Y+SyS_MouseMoveY
+			If  UI_Mouse.smooth              = UI_False
+				UI_Mouse.x                   = UI_Mouse.X+SyS_MouseMoveX
+				UI_Mouse.Y                   = UI_Mouse.Y+SyS_MouseMoveY
 			Else
-				UI_Mouse.XMoveBuffer = UI_Mouse.XMoveBuffer+SyS_MouseMoveX
-				UI_Mouse.YMoveBuffer = UI_Mouse.YMoveBuffer+SyS_MouseMoveY
+				UI_Mouse.XMoveBuffer         = UI_Mouse.XMoveBuffer+SyS_MouseMoveX
+				UI_Mouse.YMoveBuffer         = UI_Mouse.YMoveBuffer+SyS_MouseMoveY
 				
 				If UI_Mouse.xmovebuffer>4
-					UI_Mouse.X           = UI_Mouse.X+UI_Mouse.Xmovebuffer/UI_Mouse.Smoothvalue
-					UI_Mouse.XMoveBuffer =(UI_Mouse.XMoveBuffer/UI_Mouse.SmoothValue)*(UI_Mouse.SmoothValue-1)
+					UI_Mouse.X               = UI_Mouse.X+UI_Mouse.Xmovebuffer/UI_Mouse.Smoothvalue
+					UI_Mouse.XMoveBuffer     =(UI_Mouse.XMoveBuffer/UI_Mouse.SmoothValue)*(UI_Mouse.SmoothValue-1)
 				Else
 					If UI_Mouse.XMoveBuffer<>0
 						UI_Mouse.X           = UI_Mouse.X+UI_Mouse.Xmovebuffer
@@ -792,8 +791,8 @@ If UI_Mouse.Initialized = UI_True
 				Endif
 				
 				If Abs(UI_Mouse.YMoveBuffer)> UI_Mouse.SmoothValue
-					UI_Mouse.Y              = UI_Mouse.Y+UI_Mouse.YMoveBuffer/UI_Mouse.SmoothValue
-					UI_Mouse.YMoveBuffer    =(UI_Mouse.YMoveBuffer/UI_Mouse.SmoothValue)*(UI_Mouse.SmoothValue-1)
+					UI_Mouse.Y               = UI_Mouse.Y+UI_Mouse.YMoveBuffer/UI_Mouse.SmoothValue
+					UI_Mouse.YMoveBuffer     =(UI_Mouse.YMoveBuffer/UI_Mouse.SmoothValue)*(UI_Mouse.SmoothValue-1)
 				Else
 					If UI_Mouse.YMoveBuffer<>0
 						UI_Mouse.Y           = UI_Mouse.Y+UI_Mouse.YMoveBuffer
@@ -812,7 +811,7 @@ If UI_Mouse.Initialized = UI_True
 	
 			If UI_Mouse.Hidden=UI_False
 				DXS BEGIN SPRITE RENDER UI_Mouse.ID
-	    		DXS DRAW SPRITE         UI_Mouse.ID,UI_Mouse.X,UI_Mouse.Y
+		    		DXS DRAW SPRITE         UI_Mouse.ID,UI_Mouse.X,UI_Mouse.Y
 				DXS END SPRITE RENDER   UI_Mouse.ID
 			Endif
 
@@ -826,7 +825,7 @@ If UI_Mouse.Initialized = UI_True
 			UI_Mouse.Hidden    = UI_True
 			UI_DestroyMouseFaderTicker()
 		Else
-			If UI_AskMouseFaderTicker()=UI_True Then UI_Mouse.FadeValue=UI_Mouse.FadeValue-15
+			If UI_AskMouseFaderTicker() = UI_True Then UI_Mouse.FadeValue=UI_Mouse.FadeValue-15
 			DXS SET SPRITE ALPHA UI_Mouse.ID,UI_Mouse.FadeValue
 		Endif
 	
@@ -835,13 +834,12 @@ If UI_Mouse.Initialized = UI_True
 	If UI_Mouse.fadingin      = UI_True
 		If UI_mouse.fadevalue = 255
 			UI_Mouse.fadingin = UI_False
-			UI_DestroyMousefaderticker()
 			UI_Mouse.Hidden   = UI_False
+			UI_DestroyMousefaderticker()
 		Else
-			If UI_AskMouseFaderTicker()=UI_True then UI_Mouse.FadeValue=UI_Mouse.FadeValue+15
+			If UI_AskMouseFaderTicker() = UI_True then UI_Mouse.FadeValue = UI_Mouse.FadeValue+15
 			DXS SET SPRITE ALPHA UI_Mouse.ID,UI_Mouse.FadeValue
 		Endif
-	
 	Endif
 
 Endif
@@ -913,7 +911,7 @@ Function UI_SetSmoothMouseOff()
 //*     Turns mouse smooth off.                                                         *
 //*                                                                                     *
 //***************************************************************************************
-	If UI_Mouse.Initialized = UI_True Then UI_Mouse.Smooth=0
+	If UI_Mouse.Initialized = UI_True Then UI_Mouse.Smooth = UI_False
 Endfunction
 
 
@@ -945,11 +943,11 @@ Function UI_FadeinMouse()
 //*     Fade in the mouse cursor.                                                       *
 //*                                                                                     *
 //***************************************************************************************
-	If  UI_Mouse.Initialized  = 1 
-		UI_Mouse.Fadingout    = 0
-		UI_Mouse.Fadingin     = 1
-		UI_Mouse.Hidden       = 0
-		If UI_Mousefadertimer = 0 then UI_CreateMousefaderTicker()
+	If  UI_Mouse.Initialized  = UI_True 
+		UI_Mouse.Fadingout    = UI_False
+		UI_Mouse.Fadingin     = UI_True
+		UI_Mouse.Hidden       = UI_False
+		If UI_Mousefadertimer = UI_False then UI_CreateMousefaderTicker()
 	Endif
 Endfunction
 
@@ -963,9 +961,9 @@ Function UI_SetMousePosition(param_mx,param_my)
 //*     Set the position of the mouse cursor.                                           *
 //*                                                                                     *
 //***************************************************************************************
-	If UI_Mouse.Initialized = 1 
-		UI_Mouse.X=param_mx
-		UI_Mouse.Y=param_my
+	If UI_Mouse.Initialized = UI_True 
+		UI_Mouse.X = param_mx
+		UI_Mouse.Y = param_my
 	Endif
 Endfunction
 
@@ -980,7 +978,7 @@ Function UI_MouseX()
 //*                                                                                     *
 //***************************************************************************************
 Local return_mousex as Integer
-	If UI_Mouse.Initialized = 1 then return_mousex=UI_Mouse.X
+	If UI_Mouse.Initialized = UI_True then return_mousex = UI_Mouse.X
 Endfunction return_mousex
 
 
@@ -994,7 +992,7 @@ Function UI_MouseY()
 //*                                                                                     *
 //***************************************************************************************
 Local return_mousey as Integer
-	If UI_Mouse.Initialized = 1 then return_mousey=UI_Mouse.Y
+	If UI_Mouse.Initialized = UI_True then return_mousey = UI_Mouse.Y
 Endfunction return_mousey
 
 Function UI_AskMouseHidden()
@@ -1004,7 +1002,7 @@ Function UI_AskMouseHidden()
 //*                                                                                     *
 //***************************************************************************************
 Local return_mousey as Integer
-	If UI_Mouse.hidden = UI_True then return_mousey=UI_True
+	If UI_Mouse.hidden = UI_True then return_mousey = UI_True
 Endfunction return_mousey
 
 
@@ -1019,7 +1017,7 @@ Function UI_DisableNonguiMouse()
 //*     Disables all nongui mouse movements. Camera wont rotate if we set this.         *
 //*                                                                                     *
 //***************************************************************************************
-	UI_NonGuiMouseDisabled=1
+	UI_NonGuiMouseDisabled = UI_True
 Endfunction
 
 Function UI_EnableNonguiMouse()
@@ -1028,11 +1026,11 @@ Function UI_EnableNonguiMouse()
 //*     Ensables all nongui mouse movements. Camera will rotate if we set this.         *
 //*                                                                                     *
 //***************************************************************************************
-	UI_NonGuiMouseDisabled=0
+	UI_NonGuiMouseDisabled = UI_False
 Endfunction
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
 Function UI_AddTextLine(FontID,Xx,Yy,stringtext$)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1043,7 +1041,7 @@ Function UI_AddTextLine(FontID,Xx,Yy,stringtext$)
 If UI_GuiInitialized=UI_True
 	UI_SetDebugPosition("UI_AddTextLine()","module_ui.dba")
 		UI_CheckDxSprites()    
-		UI_TextLines=UI_TextLines+1
+		UI_TextLines = UI_TextLines+1
 		array insert at bottom UI_TextoutputLines()
 		UI_Textoutputlines(UI_TextLines).ID    = FontID
 		UI_Textoutputlines(UI_TextLines).X     = Xx
@@ -1053,9 +1051,10 @@ If UI_GuiInitialized=UI_True
 Endif
 
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
 Function UI_ScrollTextLine(Xoffset,Yoffset)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1063,17 +1062,17 @@ Function UI_ScrollTextLine(Xoffset,Yoffset)
 //*                                                                                     *
 //*                                                                                     *
 //***************************************************************************************
-If UI_GuiInitialized=UI_True
-	UI_TextLinesXOffset=UI_TextLinesXOffset+xoffset
-	UI_TextLinesYOffset=UI_TextLinesYOffset+yoffset
+If UI_GuiInitialized = UI_True
+	UI_TextLinesXOffset = UI_TextLinesXOffset+xoffset
+	UI_TextLinesYOffset = UI_TextLinesYOffset+yoffset
 Endif
 
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
 Function UI_ResetTextLineOffset()
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1081,15 +1080,17 @@ Function UI_ResetTextLineOffset()
 //*                                                                                     *
 //*                                                                                     *
 //***************************************************************************************
-If UI_GuiInitialized=UI_True
-	UI_TextLinesXOffset=0
-	UI_TextLinesYOffset=0
+If UI_GuiInitialized = UI_True
+	UI_TextLinesXOffset = 0
+	UI_TextLinesYOffset = 0
 Endif
 
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
 Function UI_SetTextLineOffset(param_x as integer ,param_y as integer )
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1097,88 +1098,91 @@ Function UI_SetTextLineOffset(param_x as integer ,param_y as integer )
 //*                                                                                     *
 //*                                                                                     *
 //***************************************************************************************
-If UI_GuiInitialized=UI_True
-	UI_TextLinesXOffset=param_x
-	UI_TextLinesYOffset=param_y
+If UI_GuiInitialized = UI_True
+	UI_TextLinesXOffset = param_x
+	UI_TextLinesYOffset = param_y
 Endif
 
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
 Function UI_Fadeoutallguis()
 //***************************************************************************************
 //*   Miso                                                                              *
 //*     Fades out all gadgets. Not too handy, dont know why i made this.                *
 //*                                                                                     *
 //***************************************************************************************
-	If UI_GuiInitialized=1 and UI_GadgetNumbers>0 and UI_GuiFaded=0
-		UI_GuiFaded=1
+	If UI_GuiInitialized = UI_True and UI_GadgetNumbers>0 and UI_GuiFaded=UI_False
+		UI_GuiFaded = UI_True
 		For x=1 to UI_GadgetNumbers
 			DXS SET SPRITE ALPHA UI_Gadgets(x).ID,50
 			If UI_Gadgets(x).mouseoverid>0 then DXS SET SPRITE ALPHA UI_Gadgets(x).mouseoverID,50
 			If UI_Gadgets(x).selectedid>0 then DXS SET SPRITE ALPHA UI_Gadgets(x).selectedID,50
-			UI_Gadgets(x).faded=1
+			UI_Gadgets(x).faded = 1
 		Next x
 	Endif
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
 Function UI_Fadeinallguis()
 //***************************************************************************************
 //*   Miso                                                                              *
 //*     Fades in all gadgets.                                                           *
 //*                                                                                     *
 //***************************************************************************************
-	If UI_GuiInitialized=1 and UI_GadgetNumbers>0 and UI_GuiFaded=1
-		UI_GuiFaded=0
-		For x=1 to UI_GadgetNumbers
+	If UI_GuiInitialized=UI_True and UI_GadgetNumbers>0 and UI_GuiFaded=UI_True
+		UI_GuiFaded = UI_False
+		For x = 1 to UI_GadgetNumbers
 			DXS SET SPRITE ALPHA UI_Gadgets(x).ID,255
 			If UI_Gadgets(x).mouseoverid>0 then DXS SET SPRITE ALPHA UI_Gadgets(x).mouseoverID,255
 			If UI_Gadgets(x).selectedid>0 then DXS SET SPRITE ALPHA UI_Gadgets(x).selectedID,255
-			UI_Gadgets(x).faded=0
+			UI_Gadgets(x).faded = UI_False
 		Next x
 	Endif
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
 Function UI_ClearAllGuis()
 //***************************************************************************************
 //*   Miso                                                                              *
 //*     Deletes all gadgets, but leaves the images.                                     *
 //*                                                                                     *
 //***************************************************************************************
-	If UI_GuiInitialized=1
+	If UI_GuiInitialized = UI_True
 		
 		//Check if Gadgets exist
 		If UI_GadgetNumbers>0
 			Undim UI_Gadgets()
 			Dim UI_Gadgets(0) as MyGuiType
-			UI_Gadgetnumbers=0
+			UI_Gadgetnumbers = 0
 		Endif
 		
 		// check if independent texts exist
 		If UI_TextLines>0
 			Undim UI_TextoutputLines()
 			Dim UI_TextoutputLines(0) as mytextoutputtype
-			UI_TextLines=0
+			UI_TextLines = 0
 		Endif
 		UI_Settextlineoffset(0,0)
 		
-		
 	Endif
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
 Function UI_LoadAndSetMouseOverSND(snd$)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1187,17 +1191,17 @@ Function UI_LoadAndSetMouseOverSND(snd$)
 //***************************************************************************************
 	UI_SetDebugPosition("UI_SetMouseOverSND()","module_ui.dba")
 		UI_CheckFile(snd$)
-		UI_MouseOverSND=GrabResource(res_Sound)
-		load sound snd$,UI_MouseOverSND
+		UI_MouseOverSND = GrabResource(res_Sound)
+		Load Sound snd$,UI_MouseOverSND
 	UI_RestoreDebugPosition()
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
 
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
 Function UI_LoadAndSetMouseClickSND(snd$)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1207,33 +1211,35 @@ Function UI_LoadAndSetMouseClickSND(snd$)
 //***************************************************************************************
 	UI_SetDebugPosition("UI_SetMouseClickSND()","module_ui.dba")
 		UI_CheckFile(snd$)
-		UI_MouseClickSND=GrabResource(res_Sound)
+		UI_MouseClickSND = GrabResource(res_Sound)
 		load sound snd$,UI_MouseClickSND
 	UI_RestoreDebugPosition()      :
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
 Function UI_PlayMouseClickSND()
 //***************************************************************************************
 //*   Miso                                                                              *
 //*     Plays the mouseclick sound, if we loaded one before.                            *
 //*                                                                                     *
 //***************************************************************************************
-	UI_SetDebugPosition("UI_PlayMouseClickSND()","module_ui.dba")
-	If UI_MouseclickSND>0 and Sound exist(UI_MouseclickSND)=1 and UI_MouseClicked=0 then play Sound UI_MouseclickSND
-	UI_MouseClicked=1
-	UI_RestoreDebugPosition()
+	`UI_SetDebugPosition("UI_PlayMouseClickSND()","module_ui.dba")
+	If UI_MouseclickSND>0 and Sound exist(UI_MouseclickSND)=1 and UI_MouseClicked=UI_False then play Sound UI_MouseclickSND
+	UI_MouseClicked = UI_True
+	`UI_RestoreDebugPosition()
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
 Function UI_InitGuiGraphics()
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1243,17 +1249,20 @@ Function UI_InitGuiGraphics()
 //***************************************************************************************
 	UI_SetDebugPosition("UI_InitGuiGraphics()","module_ui.dba")
 		UI_CheckDxSprites()
-		Dim UI_Gadgets(0)      as MyGuiType
+		Dim UI_Gadgets(0)          as MyGuiType
 		Dim UI_Gadgetimages(0)     as MyGuiImageType
-		Dim UI_TextOutputlines(0) as Mytextoutputtype
-		UI_TextLines=0
-		UI_GuiInitialized=UI_True
+		Dim UI_TextOutputlines(0)  as Mytextoutputtype
+		UI_TextLines = 0
+		UI_GuiInitialized = UI_True
 	UI_RestoreDebugPosition()
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
 Function UI_LoadGuiGraphics(ImageFile$,ImageID$)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1266,16 +1275,63 @@ Function UI_LoadGuiGraphics(ImageFile$,ImageID$)
 		UI_CheckDxSprites():UI_CheckFile(ImageFile$)
 		Array Insert at Bottom UI_Gadgetimages()
 		
-		UI_GadgetImageNumbers                             = UI_GadgetImageNumbers+1
+		UI_GadgetImageNumbers                                     = UI_GadgetImageNumbers+1
 		UI_Gadgetimages(UI_GadgetImageNumbers).GadgetImagePointer = DXS CREATE SPRITE(ImageFile$)
 		UI_Gadgetimages(UI_GadgetImageNumbers).GadgetImageName    = ImageID$
 		
 	UI_RestoreDebugPosition()      
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
+Function UI_GadgetExist(gadgetidname$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Returns 1 if gadget exists with the given name.                                 *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+local return_param as Boolean
+local x as Integer
+	If UI_GuiInitialized = UI_True
+		If UI_GadgetNumbers>UI_False
+			For x=1 to UI_GadgetNumbers
+				If UI_Gadgets(x).Gadgetname = gadgetIDname$ then return_param = UI_True
+			Next x
+		Endif
+	Endif
+Endfunction return_param
+
+
+
+
+
+
+Function UI_GadgetImageExist(gadgetimagename$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Returns 1 if the gadgetimage exists with the specified name.                    *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+local return_param as Boolean
+local x as Integer
+	If UI_GuiInitialized = UI_True
+		If UI_GadgetimageNumbers>UI_False
+			For x=1 to UI_GadgetimageNumbers
+				If UI_Gadgetimages(x).Gadgetimagename = gadgetimagename$ then return_param = UI_True
+			Next x
+		Endif
+	Endif
+Endfunction return_param
+
+
+
+
+
 Function UI_CenterPercentPositionGadget(gadgetidname$,posx,posy)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1285,43 +1341,43 @@ Function UI_CenterPercentPositionGadget(gadgetidname$,posx,posy)
 //***************************************************************************************
 
 If UI_GuiInitialized=UI_True
-local relativeX# as float
-local relativeY# as float
-local offsetX as integer
-local offsetY as integer
-local xdiff as integer
-local ydiff as integer
+local relativeX# as Float
+local relativeY# as Float
+local offsetX    as Integer
+local offsetY    as Integer
+local xdiff      as Integer
+local ydiff      as Integer
 
-relativeX#=(UI_Display.Width/100.0)*posx
-relativeY#=(UI_Display.Height/100.0)*posy
-relativeX#=int(relativeX#)
-relativeY#=int(relativeY#)
+relativeX# = (UI_Display.Width/100.0)*posx
+relativeY# = (UI_Display.Height/100.0)*posy
+relativeX# = Int(relativeX#)
+relativeY# = Int(relativeY#)
 
 	UI_SetDebugPosition("UI_AddCenterPercentPositionGadget()","module_ui.dba")
 		UI_CheckDxSprites()
 		For x=1 to UI_Gadgetnumbers
-			If UI_Gadgets(x).Gadgetname=gadgetidname$
-				offsetX=0+relativeX#-(UI_Gadgets(x).width/2)
-				OffsetY=0+relativeY#-(UI_Gadgets(x).height/2)
-				
-				 xdiff=UI_Gadgets(x).X-OffsetX
-				 ydiff=UI_Gadgets(x).Y-OffsetY
-				UI_Gadgets(x).X=offsetX
-				UI_Gadgets(x).Y=offsetY
-
-
-				UI_Gadgets(x).TitleX=UI_Gadgets(x).TitleX-XDiff
-				UI_Gadgets(x).TitleY=UI_Gadgets(x).TitleY-YDiff
-				UI_Gadgets(x).MouseoverTitleX=UI_Gadgets(x).MouseoverTitleX-XDiff
-				UI_Gadgets(x).MouseoverTitleY=UI_Gadgets(x).MouseoverTitleY-YDiff
+			If UI_Gadgets(x).Gadgetname = gadgetidname$
+				offsetX = 0+relativeX#-(UI_Gadgets(x).width/2)
+				OffsetY = 0+relativeY#-(UI_Gadgets(x).height/2)
+				xdiff = UI_Gadgets(x).X-OffsetX
+				ydiff = UI_Gadgets(x).Y-OffsetY
+				UI_Gadgets(x).X               = offsetX
+				UI_Gadgets(x).Y               = offsetY
+				UI_Gadgets(x).TitleX          = UI_Gadgets(x).TitleX-XDiff
+				UI_Gadgets(x).TitleY          = UI_Gadgets(x).TitleY-YDiff
+				UI_Gadgets(x).MouseoverTitleX = UI_Gadgets(x).MouseoverTitleX-XDiff
+				UI_Gadgets(x).MouseoverTitleY = UI_Gadgets(x).MouseoverTitleY-YDiff
 			Endif
 		Next x
 	UI_RestoreDebugPosition()
 Endif
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
 Function UI_CenterPositionGadget(gadgetidname$,posx,posy)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1331,37 +1387,37 @@ Function UI_CenterPositionGadget(gadgetidname$,posx,posy)
 //***************************************************************************************
 
 If UI_GuiInitialized=UI_True
-local offsetX as integer
-local offsetY as integer
-local xdiff as integer
-local ydiff as integer
+local offsetX as Integer
+local offsetY as Integer
+local xdiff   as Integer
+local ydiff   as Integer
 
 
 	UI_SetDebugPosition("UI_CenterPositionGadget()","module_ui.dba")
 		UI_CheckDxSprites()
 		For x=1 to UI_Gadgetnumbers
-			If UI_Gadgets(x).Gadgetname=gadgetidname$
-				offsetX=posx-(UI_Gadgets(x).width/2)
-				OffsetY=posy-(UI_Gadgets(x).height/2)
-				
-				 xdiff=UI_Gadgets(x).X-OffsetX
-				 ydiff=UI_Gadgets(x).Y-OffsetY
-				UI_Gadgets(x).X=offsetX
-				UI_Gadgets(x).Y=offsetY
-
-
-				UI_Gadgets(x).TitleX=UI_Gadgets(x).TitleX-XDiff
-				UI_Gadgets(x).TitleY=UI_Gadgets(x).TitleY-YDiff
-				UI_Gadgets(x).MouseoverTitleX=UI_Gadgets(x).MouseoverTitleX-XDiff
-				UI_Gadgets(x).MouseoverTitleY=UI_Gadgets(x).MouseoverTitleY-YDiff
+			If UI_Gadgets(x).Gadgetname = gadgetidname$
+				offsetX                       = posx-(UI_Gadgets(x).width/2)
+				OffsetY                       = posy-(UI_Gadgets(x).height/2)
+				xdiff                         = UI_Gadgets(x).X-OffsetX
+				ydiff                         = UI_Gadgets(x).Y-OffsetY
+				UI_Gadgets(x).X               = offsetX
+				UI_Gadgets(x).Y               = offsetY
+				UI_Gadgets(x).TitleX          = UI_Gadgets(x).TitleX-XDiff
+				UI_Gadgets(x).TitleY          = UI_Gadgets(x).TitleY-YDiff
+				UI_Gadgets(x).MouseoverTitleX = UI_Gadgets(x).MouseoverTitleX-XDiff
+				UI_Gadgets(x).MouseoverTitleY = UI_Gadgets(x).MouseoverTitleY-YDiff
 			Endif
 		Next x
 	UI_RestoreDebugPosition()
 Endif
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
 Function UI_PositionGadget(gadgetidname$,posx,posy)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1369,39 +1425,37 @@ Function UI_PositionGadget(gadgetidname$,posx,posy)
 //*     the gadget in pixels.                                                           *
 //*                                                                                     *
 //***************************************************************************************
-If UI_GuiInitialized=UI_True
 local offsetX as integer
 local offsetY as integer
-local xdiff as integer
-local ydiff as integer
+local xdiff   as integer
+local ydiff   as integer
 
-
+If UI_GuiInitialized = UI_True
 	UI_SetDebugPosition("UI_PositionGadget()","module_ui.dba")
 		UI_CheckDxSprites()
 		For x=1 to UI_Gadgetnumbers
-			If UI_Gadgets(x).Gadgetname=gadgetidname$
-				offsetX=posx
-				OffsetY=posy
-				
-				 xdiff=UI_Gadgets(x).X-OffsetX
-				 ydiff=UI_Gadgets(x).Y-OffsetY
-				UI_Gadgets(x).X=offsetX
-				UI_Gadgets(x).Y=offsetY
-
-
-				UI_Gadgets(x).TitleX=UI_Gadgets(x).TitleX-XDiff
-				UI_Gadgets(x).TitleY=UI_Gadgets(x).TitleY-YDiff
-				UI_Gadgets(x).MouseoverTitleX=UI_Gadgets(x).MouseoverTitleX-XDiff
-				UI_Gadgets(x).MouseoverTitleY=UI_Gadgets(x).MouseoverTitleY-YDiff
+			If UI_Gadgets(x).Gadgetname = gadgetidname$
+				offsetX                       = posx
+				OffsetY                       = posy
+				xdiff                         = UI_Gadgets(x).X-OffsetX
+				ydiff                         = UI_Gadgets(x).Y-OffsetY
+				UI_Gadgets(x).X               = offsetX
+				UI_Gadgets(x).Y               = offsetY
+				UI_Gadgets(x).TitleX          = UI_Gadgets(x).TitleX-XDiff
+				UI_Gadgets(x).TitleY          = UI_Gadgets(x).TitleY-YDiff
+				UI_Gadgets(x).MouseoverTitleX = UI_Gadgets(x).MouseoverTitleX-XDiff
+				UI_Gadgets(x).MouseoverTitleY = UI_Gadgets(x).MouseoverTitleY-YDiff
 			Endif
 		Next x
 	UI_RestoreDebugPosition()
 Endif
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
 Function UI_AddCenterGadgetToScreen(gadgetidname$,posx,posy,gadgetimagename$)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1415,24 +1469,24 @@ If UI_GuiInitialized=UI_True
 		For x=1 to UI_GadgetImageNumbers
 			If UI_Gadgetimages(x).Gadgetimagename=gadgetimagename$
 				Array Insert at Bottom UI_Gadgets(1)
-				UI_GadgetNumbers                   =UI_GadgetNumbers+1
-				UI_Gadgets(UI_GadgetNumbers).ID        =UI_Gadgetimages(x).gadgetimagepointer
-				UI_Gadgets(UI_GadgetNumbers).Gadgetname=gadgetIDname$
-				UI_Gadgets(UI_GadgetNumbers).Width     =DXS GET SPRITE TEXTURE WIDTH(UI_Gadgets(UI_GadgetNumbers).ID)
-				UI_Gadgets(UI_GadgetNumbers).Height    =DXS GET SPRITE TEXTURE HEIGHT(UI_Gadgets(UI_GadgetNumbers).ID)
-				UI_Gadgets(UI_GadgetNumbers).X         =posx-(UI_Gadgets(UI_GadgetNumbers).Width/2)
-				UI_Gadgets(UI_GadgetNumbers).Y         =posy-(UI_Gadgets(UI_GadgetNumbers).Height/2)
-			
+				UI_GadgetNumbers                        = UI_GadgetNumbers+1
+				UI_Gadgets(UI_GadgetNumbers).ID         = UI_Gadgetimages(x).gadgetimagepointer
+				UI_Gadgets(UI_GadgetNumbers).Gadgetname = gadgetIDname$
+				UI_Gadgets(UI_GadgetNumbers).Width      = DXS GET SPRITE TEXTURE WIDTH(UI_Gadgets(UI_GadgetNumbers).ID)
+				UI_Gadgets(UI_GadgetNumbers).Height     = DXS GET SPRITE TEXTURE HEIGHT(UI_Gadgets(UI_GadgetNumbers).ID)
+				UI_Gadgets(UI_GadgetNumbers).X          = posx-(UI_Gadgets(UI_GadgetNumbers).Width/2)
+				UI_Gadgets(UI_GadgetNumbers).Y          = posy-(UI_Gadgets(UI_GadgetNumbers).Height/2)
 			Endif
 		Next x
 	UI_RestoreDebugPosition()
 Endif
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
 Function UI_AddGadgetToScreen(gadgetidname$,posx,posy,gadgetimagename$)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1444,26 +1498,26 @@ If UI_GuiInitialized=UI_True
 	UI_SetDebugPosition("UI_AddGadgetToScreen()","module_ui.dba")
 		UI_CheckDxSprites()
 		For x=1 to UI_GadgetImageNumbers
-			If UI_Gadgetimages(x).Gadgetimagename=gadgetimagename$
+			If UI_Gadgetimages(x).Gadgetimagename = gadgetimagename$
 				Array Insert at Bottom UI_Gadgets(1)
-				UI_GadgetNumbers                   =UI_GadgetNumbers+1
-				UI_Gadgets(UI_GadgetNumbers).ID        =UI_Gadgetimages(x).gadgetimagepointer
-				UI_Gadgets(UI_GadgetNumbers).Gadgetname=gadgetIDname$
-				UI_Gadgets(UI_GadgetNumbers).x         =posx
-				UI_Gadgets(UI_GadgetNumbers).y         =posy
-				UI_Gadgets(UI_GadgetNumbers).width     =DXS GET SPRITE TEXTURE WIDTH(UI_Gadgets(UI_GadgetNumbers).ID)
-				UI_Gadgets(UI_GadgetNumbers).height    =DXS GET SPRITE TEXTURE HEIGHT(UI_Gadgets(UI_GadgetNumbers).ID)
+				UI_GadgetNumbers                        = UI_GadgetNumbers+1
+				UI_Gadgets(UI_GadgetNumbers).ID         = UI_Gadgetimages(x).gadgetimagepointer
+				UI_Gadgets(UI_GadgetNumbers).Gadgetname = gadgetIDname$
+				UI_Gadgets(UI_GadgetNumbers).x          = posx
+				UI_Gadgets(UI_GadgetNumbers).y          = posy
+				UI_Gadgets(UI_GadgetNumbers).width      = DXS GET SPRITE TEXTURE WIDTH(UI_Gadgets(UI_GadgetNumbers).ID)
+				UI_Gadgets(UI_GadgetNumbers).height     = DXS GET SPRITE TEXTURE HEIGHT(UI_Gadgets(UI_GadgetNumbers).ID)
 			Endif
 		Next x
 	UI_RestoreDebugPosition()
 Endif
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
 Function UI_AddBarGadgetToScreen(gadgetidname$,posx,posy,gadgetimagename$,maxvalue)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1477,7 +1531,7 @@ If UI_GuiInitialized=UI_True
 		For x=1 to UI_GadgetImageNumbers
 			If UI_Gadgetimages(x).Gadgetimagename=gadgetimagename$
 				Array Insert at Bottom UI_Gadgets(1)
-				UI_GadgetNumbers                      =  UI_GadgetNumbers+1
+				UI_GadgetNumbers                          =  UI_GadgetNumbers+1
 				UI_Gadgets(UI_GadgetNumbers).ID           =  UI_Gadgetimages(x).gadgetimagepointer
 				UI_Gadgets(UI_GadgetNumbers).Gadgetname   =  gadgetIDname$
 				UI_Gadgets(UI_GadgetNumbers).x            =  posx
@@ -1493,13 +1547,12 @@ If UI_GuiInitialized=UI_True
 	UI_RestoreDebugPosition()
 Endif
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
 
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
 Function UI_SetGadgetValue(gadgetID$,value)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1509,14 +1562,16 @@ Function UI_SetGadgetValue(gadgetID$,value)
 //***************************************************************************************
 If UI_GuiInitialized=UI_True
 		For y=1 to UI_GadgetNumbers
-			If UI_Gadgets(y).Gadgetname=gadgetID$ Then UI_Gadgets(y).value=value
+			If UI_Gadgets(y).Gadgetname = gadgetID$ Then UI_Gadgets(y).value = value
 		Next y
 Endif
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
 Function UI_GetGadgetValue(gadgetID$)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1525,15 +1580,17 @@ Function UI_GetGadgetValue(gadgetID$)
 //*                                                                                     *
 //***************************************************************************************
 local valuereturner as integer
-If UI_GuiInitialized=UI_True
+If UI_GuiInitialized = UI_True
 		For y=1 to UI_GadgetNumbers
-			If UI_Gadgets(y).Gadgetname=gadgetID$ Then valuereturner=UI_Gadgets(y).value
+			If UI_Gadgets(y).Gadgetname = gadgetID$ Then valuereturner = UI_Gadgets(y).value
 		Next y
 Endif
 Endfunction valuereturner
-`--------------------------------------------------------------------------------------------------------------------
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
 Function UI_GetGadgetSelection(gadgetID$)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1542,16 +1599,17 @@ Function UI_GetGadgetSelection(gadgetID$)
 //*                                                                                     *
 //***************************************************************************************
 local valuereturner as integer
-If UI_GuiInitialized=UI_True
+If UI_GuiInitialized = UI_True
 		For y=1 to UI_GadgetNumbers
-			If UI_Gadgets(y).Gadgetname=gadgetID$ Then valuereturner=UI_Gadgets(y).Selected
+			If UI_Gadgets(y).Gadgetname = gadgetID$ Then valuereturner = UI_Gadgets(y).Selected
 		Next y
 Endif
 Endfunction valuereturner
-`--------------------------------------------------------------------------------------------------------------------
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
 Function UI_CountNewValue(gadgetID$)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1559,33 +1617,33 @@ Function UI_CountNewValue(gadgetID$)
 //*                                                                                     *
 //*                                                                                     *
 //***************************************************************************************
-If UI_GuiInitialized=UI_True
 local minimumx as integer
 local maximumx as integer
 local Barwidth as integer
 local mouse_x  as integer
 local mouse_y  as integer
 local newvalue as integer
+
+If UI_GuiInitialized = UI_True
 	For y=1 to UI_GadgetNumbers
-		If UI_Gadgets(y).Gadgetname=gadgetID$ 
-			minimumx=UI_Gadgets(y).x
-			barwidth=UI_Gadgets(y).barwidth
-			mouse_x=UI_Mouse.x
-			mouse_y=UI_Mouse.y
-			newvalue=(mouse_x-minimumx)/barwidth
-			if newvalue<0 then newvalue=0
-			if newvalue>UI_Gadgets(y).maxvalue then newvalue=UI_Gadgets(y).maxvalue
-			UI_Gadgets(y).value=newvalue-1
+		If UI_Gadgets(y).Gadgetname = gadgetID$ 
+			minimumx                    = UI_Gadgets(y).x
+			barwidth                    = UI_Gadgets(y).barwidth
+			mouse_x                     = UI_Mouse.x
+			mouse_y                     = UI_Mouse.y
+			newvalue                    = (mouse_x-minimumx)/barwidth
+			if newvalue<0 then newvalue = 0
+			if newvalue>UI_Gadgets(y).maxvalue then newvalue = UI_Gadgets(y).maxvalue
+			UI_Gadgets(y).value = newvalue-1
 		Endif
 	Next y
 Endif
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
 Function UI_AddMOuseOverImageToGadget(gadgetID$,gadgetimagename$)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1609,12 +1667,12 @@ If UI_GuiInitialized=UI_True
 	UI_RestoreDebugPosition()
 Endif
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
 Function UI_AddSelectedImageToGadget(gadgetID$,gadgetimagename$)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1631,7 +1689,7 @@ If UI_GuiInitialized=UI_True
 		for x=1 to UI_GadgetImageNumbers
 			If UI_Gadgetimages(x).Gadgetimagename=gadgetimagename$
 					For y=1 to UI_GadgetNumbers
-						If UI_Gadgets(y).Gadgetname=gadgetID$ Then UI_Gadgets(y).selectedid=UI_Gadgetimages(x).Gadgetimagepointer
+						If UI_Gadgets(y).Gadgetname = gadgetID$ Then UI_Gadgets(y).selectedid = UI_Gadgetimages(x).Gadgetimagepointer
 					Next y
 			Endif
 			
@@ -1639,11 +1697,10 @@ If UI_GuiInitialized=UI_True
 	UI_RestoreDebugPosition()
 Endif
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
 Function UI_AddTitleToGadget(GadgetID$,FontID,Xx,Yy,stringtext$)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1669,9 +1726,176 @@ If UI_GuiInitialized=UI_True
 Endif
 
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+Function UI_DeleteGadget(GadgetID$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Deletes a single    gadget. Tested, but still there could be bugs.              *
+//*        Please report if finds any.                                                  *
+//*                                                                                     *
+//***************************************************************************************
+Local x as Integer   : `cycle variable
+Local y as Integer   : `cycle variable
+Local LDA as Integer : `cycle variable
+Local LDX as Integer : `cycle variable
+Local LDY as Boolean : `True if we made a delete
+
+
+If UI_GuiInitialized=UI_True
+	UI_SetDebugPosition("UI_DeleteGadget()","module_ui.dba")
+		UI_CheckDxSprites()    
+					For y=1 to UI_GadgetNumbers
+						If UI_Gadgets(y).Gadgetname    =  GadgetID$
+							If UI_GadgetNumbers=1
+								Undim UI_Gadgets()
+								Dim UI_Gadgets(0) as myguitype
+								UI_GadgetNumbers=0
+								LDY=UI_True :` We made a delete
+								ExitFunction
+							Else
+								Dim UI_temparray(0) as myguitype
+								LDX=0
+								For LDA=1 to UI_GadgetNumbers
+									If LDA<>y
+										LDX=LDX+1
+										Array Insert at Bottom UI_Temparray()
+										UI_temparray(LDX).ID                   = UI_Gadgets(LDA).ID
+										UI_temparray(LDX).MouseoverID          = UI_Gadgets(LDA).MouseOverID
+										UI_temparray(LDX).GadgetName           = UI_Gadgets(LDA).GadgetName
+										UI_temparray(LDX).GadgetType           = UI_Gadgets(LDA).GadgetType
+										UI_temparray(LDX).X                    = UI_Gadgets(LDA).X
+										UI_temparray(LDX).Y                    = UI_Gadgets(LDA).Y
+										UI_temparray(LDX).Width                = UI_Gadgets(LDA).Width
+										UI_temparray(LDX).Height               = UI_Gadgets(LDA).Height
+										UI_temparray(LDX).Barwidth             = UI_Gadgets(LDA).Barwidth
+										UI_temparray(LDX).BarHeight            = UI_Gadgets(LDA).BarHeight
+										UI_temparray(LDX).TitleFontID          = UI_Gadgets(LDA).TitleFontID
+										UI_temparray(LDX).TitleX               = UI_Gadgets(LDA).TitleX
+										UI_temparray(LDX).TitleY               = UI_Gadgets(LDA).TitleY
+										UI_temparray(LDX).Title                = UI_Gadgets(LDA).Title
+										UI_temparray(LDX).MouseoverTitleFontID = UI_Gadgets(LDA).MouseOverTitleFontID
+										UI_temparray(LDX).MouseovertitleX      = UI_Gadgets(LDA).MouseOverTitleX
+										UI_temparray(LDX).MouseoverTitleY      = UI_Gadgets(LDA).MouseoverTitleY
+										UI_temparray(LDX).MOuseoverTitle       = UI_Gadgets(LDA).MouseoverTitle
+										UI_temparray(LDX).Selected             = UI_Gadgets(LDA).Selected
+										UI_temparray(LDX).SelectedID           = UI_Gadgets(LDA).SelectedID
+										UI_temparray(LDX).Faded                = UI_Gadgets(LDA).Faded
+										UI_temparray(LDX).Value                = UI_Gadgets(LDA).Value
+										UI_temparray(LDX).MaxValue             = UI_Gadgets(LDA).MaxValue
+										UI_temparray(LDX).MouseInfoExist       = UI_Gadgets(LDA).MouseInfoExist
+										UI_temparray(LDX).MouseInfoText        = UI_Gadgets(LDA).MouseInfoText
+										UI_temparray(LDX).MouseInfoOrientation = UI_Gadgets(LDA).MouseInfoOrientation
+									Endif
+								Next LDA
+								
+								Undim UI_Gadgets()
+								Dim UI_Gadgets(0) as myguitype
+								
+								For LDA=1 to UI_GadgetNumbers-1
+										Array Insert at Bottom UI_Gadgets()
+										UI_Gadgets(LDA).ID                   = UI_Temparray(LDA).ID
+										UI_Gadgets(LDA).MouseoverID          = UI_Temparray(LDA).MouseOverID
+										UI_Gadgets(LDA).GadgetName           = UI_Temparray(LDA).GadgetName
+										UI_Gadgets(LDA).GadgetType           = UI_Temparray(LDA).GadgetType
+										UI_Gadgets(LDA).X                    = UI_Temparray(LDA).X
+										UI_Gadgets(LDA).Y                    = UI_Temparray(LDA).Y
+										UI_Gadgets(LDA).Width                = UI_Temparray(LDA).Width
+										UI_Gadgets(LDA).Height               = UI_Temparray(LDA).Height
+										UI_Gadgets(LDA).Barwidth             = UI_Temparray(LDA).Barwidth
+										UI_Gadgets(LDA).BarHeight            = UI_Temparray(LDA).BarHeight
+										UI_Gadgets(LDA).TitleFontID          = UI_Temparray(LDA).TitleFontID
+										UI_Gadgets(LDA).TitleX               = UI_Temparray(LDA).TitleX
+										UI_Gadgets(LDA).TitleY               = UI_Temparray(LDA).TitleY
+										UI_Gadgets(LDA).Title                = UI_Temparray(LDA).Title
+										UI_Gadgets(LDA).MouseoverTitleFontID = UI_Temparray(LDA).MouseOverTitleFontID
+										UI_Gadgets(LDA).MouseovertitleX      = UI_Temparray(LDA).MouseOverTitleX
+										UI_Gadgets(LDA).MouseoverTitleY      = UI_Temparray(LDA).MouseoverTitleY
+										UI_Gadgets(LDA).MouseoverTitle       = UI_Temparray(LDA).MouseoverTitle
+										UI_Gadgets(LDA).Selected             = UI_Temparray(LDA).Selected
+										UI_Gadgets(LDA).SelectedID           = UI_Temparray(LDA).SelectedID
+										UI_Gadgets(LDA).Faded                = UI_Temparray(LDA).Faded
+										UI_Gadgets(LDA).Value                = UI_Temparray(LDA).Value
+										UI_Gadgets(LDA).MaxValue             = UI_Temparray(LDA).MaxValue
+										UI_Gadgets(LDA).MouseInfoExist       = UI_Temparray(LDA).MouseInfoExist
+										UI_Gadgets(LDA).MouseInfoText        = UI_Temparray(LDA).MouseInfoText
+										UI_Gadgets(LDA).MouseInfoOrientation = UI_Temparray(LDA).MouseInfoOrientation
+								Next LDA
+								Undim UI_Temparray()
+								LDY=UI_True :` We made a delete
+							Endif
+							IF LDY=UI_True 
+								UI_GadgetNumbers=UI_GadgetNumbers-1
+								ExitFunction
+							Endif
+						Endif
+					Next y
+	
+	UI_RestoreDebugPosition()
+Endif
+EndFunction
+
+
+Function DeleteGuiImage(gadgetimagenameID$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Deletes a single Gui Image.  (Untested)                                         *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+Local x as Integer   : `cycle variable
+Local y as Integer   : `cycle variable
+Local LDA as Integer : `cycle variable
+Local LDX as Integer : `cycle variable
+Local LDY as Integer : `True if we find a matching image
+
+If UI_GuiInitialized=UI_True
+	UI_SetDebugPosition("UI_DeleteGuiImage()","module_ui.dba"):UI_CheckDxSprites()    
+				For y=1 to UI_GadgetImageNumbers
+					If UI_GadgetImages(y).GadgetImageName = gadgetimagenameID$
+						If UI_GadgetimageNumbers = 1
+							DXS DELETE SPRITE UI_GadgetImages(y).GadgetImagePointer
+							Undim UI_GadgetImages()
+							Dim UI_GadgetImages(0) as myguiimagetype
+							UI_GadgetImageNumbers = 0
+							ExitFunction
+						Else
+							Dim UI_temparray2(0) as MyGuiImagetype
+							LDX=0
+							For LDA=1 to UI_GadgetImageNumbers
+								LDX=LDX+1
+								If LDA<>y
+									Array Insert at Bottom UI_Temparray(0)
+									UI_temparray2(LDX).GadgetImagePointer = UI_GadgetImages(LDA).GadgetImagePointer
+									UI_temparray2(LDX).GadgetImageName    = UI_GadgetImages(LDA).GadgetImageName
+								Else
+									DXS Delete Sprite UI_GadgetImages(LDA).GadgetImagePointer
+								Endif
+							Next LDA
+								
+							Undim UI_GadgetImages(0)
+							Dim UI_GadgetImages(0) as myguiImagetype
+							
+							For LDA=1 to UI_GadgetImageNumbers-1
+									Array Insert at Bottom UI_GadgetImages(0)
+									UI_GadgetImages(LDA).GadgetImagePointer = UI_temparray2(LDA).GadgetImagePointer
+									UI_GadgetImages(LDA).GadgetImageName    = UI_temparray2(LDA).GadgetImageName
+							Next LDA
+
+							Undim UI_temparray2(0)
+							UI_Gadgetimagenumbers = UI_Gadgetimagenumbers-1
+							Exitfunction
+						Endif
+					Endif
+				Next y
+	 UI_RestoreDebugPosition()
+ Endif
+EndFunction
+
+
+
+
 Function UI_ChangeGadgetTitle(gadgetimagename$,stringtext$)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1692,12 +1916,13 @@ If UI_GuiInitialized=UI_True
 					Next y
 	UI_RestoreDebugPosition()
 Endif
-
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
 Function UI_ChangeGadgetMouseoverTitle(gadgetimagename$,stringtext$)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1720,10 +1945,10 @@ If UI_GuiInitialized=UI_True
 Endif
 
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
 Function UI_SelectGadget(gadgetname$)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1736,18 +1961,19 @@ If UI_GuiInitialized=UI_True
 		UI_CheckDxSprites()
 		
 					For y=1 to UI_GadgetNumbers
-							If UI_Gadgets(y).Gadgetname=gadgetname$
-								UI_Gadgets(y).Selected =1
+							If UI_Gadgets(y).Gadgetname = gadgetname$
+								UI_Gadgets(y).Selected  = UI_True
 							Endif
 					Next y
 		
 	UI_RestoreDebugPosition()
 Endif
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
 Function UI_DeSelectGadget(gadgetimagename$)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1760,17 +1986,19 @@ If UI_GuiInitialized=UI_True
 		UI_CheckDxSprites()
 		
 					For y=1 to UI_GadgetNumbers
-							If UI_Gadgets(y).Gadgetname=gadgetimagename$
-								UI_Gadgets(y).Selected=0
+							If UI_Gadgets(y).Gadgetname = gadgetimagename$
+								UI_Gadgets(y).Selected = UI_False
 							Endif
 					Next y
 		
 	UI_RestoreDebugPosition()
 Endif
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
+
 Function UI_ToggleGadget(param_gadgetname$ as String )
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1783,23 +2011,24 @@ local return_value as Boolean
 		UI_SetDebugPosition("UI_ToggleGadget()","module_ui.dba")
 			UI_CheckDxSprites()
 					For y=1 to UI_GadgetNumbers
-						If UI_Gadgets(y).Gadgetname=param_gadgetname$
-							If UI_Gadgets(y).Selected =1
-								UI_Gadgets(y).Selected=0:return_value=0
+						If UI_Gadgets(y).Gadgetname = param_gadgetname$
+							If UI_Gadgets(y).Selected = 1
+								UI_Gadgets(y).Selected = UI_False :return_value = UI_False
 							Else
-								UI_Gadgets(y).Selected=1:return_value=1
+								UI_Gadgets(y).Selected = UI_True  :return_value = UI_True
 							Endif
 						Endif
 					Next y
 		UI_RestoreDebugPosition()
 	Endif
 Endfunction return_value
-`--------------------------------------------------------------------------------------------------------------------
 
 
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
+
+
 Function UI_AddMouseoverTitleToGadget(gadgetimagename$,FontID,Xx,Yy,stringtext$)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1821,13 +2050,12 @@ If UI_GuiInitialized=UI_True
 	UI_RestoreDebugPosition()
 Endif
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
 
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
 Function UI_AddInfoToGadget(gadgetimagename$,FontID,stringtext$,param_orientation)
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1849,12 +2077,11 @@ If UI_GuiInitialized=UI_True
 	UI_RestoreDebugPosition()
 Endif
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
 
 
 
 
-`--------------------------------------------------------------------------------------------------------------------
+
 Function UI_HandleGadgets()
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -1873,47 +2100,46 @@ If UI_GuiInitialized=UI_True
 				for x=1 to UI_GadgetNumbers
 			
 						if UI_Gadgets(x).mouseoveriD>0 and UI_Mouse.hidden=0
-if UI_Mouse.X>UI_Gadgets(x).x and UI_Mouse.X<UI_Gadgets(x).x+UI_Gadgets(x).width and UI_Mouse.Y>UI_Gadgets(x).y and UI_Mouse.Y<UI_Gadgets(x).y+UI_Gadgets(x).height
-	If UI_Gadgets(x).gadgettype="bar"
-	dxs begin sprite render UI_Gadgets(x).MouseoverID
-		for ax=0 to UI_Gadgets(x).value
-		dxs draw sprite UI_Gadgets(x).MOuseoverID,UI_Gadgets(x).x+ax*UI_Gadgets(x).barwidth,UI_Gadgets(x).y	
-		next ax
-	Dxs End Sprite render UI_Gadgets(x).MouseoverID
-	else
-    	dxs begin sprite render UI_Gadgets(x).MouseoverID
-		dxs draw sprite UI_Gadgets(x).MOuseoverID,UI_Gadgets(x).x,UI_Gadgets(x).y	
+If UI_Mouse.X>UI_Gadgets(x).x and UI_Mouse.X<UI_Gadgets(x).x+UI_Gadgets(x).width and UI_Mouse.Y>UI_Gadgets(x).y and UI_Mouse.Y<UI_Gadgets(x).y+UI_Gadgets(x).height
+	If UI_Gadgets(x).gadgettype = "bar"
+		Dxs Begin Sprite Render UI_Gadgets(x).MouseoverID
+			For ax=0 to UI_Gadgets(x).value
+				Dxs Draw Sprite UI_Gadgets(x).MOuseoverID,UI_Gadgets(x).x+ax*UI_Gadgets(x).barwidth,UI_Gadgets(x).y	
+			Next ax
+		Dxs End Sprite Render UI_Gadgets(x).MouseoverID
+	Else
+    	Dxs Begin Sprite Render UI_Gadgets(x).MouseoverID
+			Dxs Draw Sprite UI_Gadgets(x).MOuseoverID,UI_Gadgets(x).x,UI_Gadgets(x).y	
 		Dxs End Sprite render UI_Gadgets(x).MouseoverID
-	endif
+	Endif
 
-	UI_MouseOveredGadget$=UI_Gadgets(x).GadgetName
-	If UI_Mouseclicked=1 then UI_OldMouseOveredGadget$=UI_MouseOveredGadget$
-
+	UI_MouseOveredGadget$ = UI_Gadgets(x).GadgetName
+	If UI_Mouseclicked = 1 then UI_OldMouseOveredGadget$ = UI_MouseOveredGadget$
 
 Else
 
 						  If UI_Gadgets(x).selected=1
 						  	If UI_Gadgets(x).gadgettype="bar"
 						  		Dxs Begin Sprite render UI_Gadgets(x).SelectedID
-						  		for ax=0 to UI_Gadgets(x).value
-						  		Dxs Draw Sprite UI_Gadgets(x).SelectedID,UI_Gadgets(x).x+ax*UI_Gadgets(x).barwidth,UI_Gadgets(x).y	
-						  		next ax
+						  			For ax=0 to UI_Gadgets(x).value
+						  				Dxs Draw Sprite UI_Gadgets(x).SelectedID,UI_Gadgets(x).x+ax*UI_Gadgets(x).barwidth,UI_Gadgets(x).y	
+						  			Next ax
 						  		Dxs End Sprite render UI_Gadgets(x).SelectedID
-						  	else
+						  	Else
 						  		Dxs Begin Sprite render UI_Gadgets(x).SelectedID
-						  		Dxs Draw Sprite UI_Gadgets(x).SelectedID,UI_Gadgets(x).x,UI_Gadgets(x).y	
+						  			Dxs Draw Sprite UI_Gadgets(x).SelectedID,UI_Gadgets(x).x,UI_Gadgets(x).y	
 						  		Dxs End Sprite render UI_Gadgets(x).SelectedID
-						  	endif
+						  	Endif
 						  Else
 							If UI_Gadgets(x).gadgettype="bar"
 								Dxs Begin Sprite render UI_Gadgets(x).ID
-								for ax=0 to UI_Gadgets(x).value
-						  		Dxs Draw Sprite UI_Gadgets(x).ID,UI_Gadgets(x).x+UI_Gadgets(x).barwidth*ax,UI_Gadgets(x).y	
-						  		next ax
+									For ax=0 to UI_Gadgets(x).value
+						  				Dxs Draw Sprite UI_Gadgets(x).ID,UI_Gadgets(x).x+UI_Gadgets(x).barwidth*ax,UI_Gadgets(x).y	
+						  			Next ax
 						  		Dxs End Sprite render UI_Gadgets(x).ID
 							Else
 						  		Dxs Begin Sprite render UI_Gadgets(x).ID
-						  		Dxs Draw Sprite UI_Gadgets(x).ID,UI_Gadgets(x).x,UI_Gadgets(x).y	
+						  			Dxs Draw Sprite UI_Gadgets(x).ID,UI_Gadgets(x).x,UI_Gadgets(x).y	
 						  		Dxs End Sprite render UI_Gadgets(x).ID
 						    Endif
 						  Endif
@@ -1938,13 +2164,13 @@ Endif
 						  
 						  	If UI_Gadgets(x).Gadgettype="bar"
 						  		Dxs Begin Sprite render UI_Gadgets(x).ID
-						  		for ax=0 to UI_Gadgets(x).value
-						  		Dxs Draw Sprite UI_Gadgets(x).ID,UI_Gadgets(x).x+UI_Gadgets(x).barwidth*ax,UI_Gadgets(x).y	
-						  		next ax
+						  			For ax=0 to UI_Gadgets(x).value
+						  				Dxs Draw Sprite UI_Gadgets(x).ID,UI_Gadgets(x).x+UI_Gadgets(x).barwidth*ax,UI_Gadgets(x).y	
+						  			Next ax
 						  		Dxs End Sprite render UI_Gadgets(x).ID
 						  	Else
 						  		Dxs Begin Sprite render UI_Gadgets(x).ID
-						  		Dxs Draw Sprite UI_Gadgets(x).ID,UI_Gadgets(x).x,UI_Gadgets(x).y	
+						  			Dxs Draw Sprite UI_Gadgets(x).ID,UI_Gadgets(x).x,UI_Gadgets(x).y	
 						  		Dxs End Sprite render UI_Gadgets(x).ID
 						  	Endif
 						  Endif
@@ -1952,13 +2178,11 @@ Endif
 
 If UI_Gadgets(x).titlefontid>0 
 	If UI_Mouse.X>UI_Gadgets(x).x and UI_Mouse.X<UI_Gadgets(x).x+UI_Gadgets(x).width and UI_Mouse.Y>UI_Gadgets(x).y and UI_Mouse.Y<UI_Gadgets(x).y+UI_Gadgets(x).height and UI_Mouse.hidden=0
-
 		If UI_Gadgets(x).mouseovertitlefontid>0 
 			UI_CenterText(UI_Gadgets(x).MouseovertitlefontID,UI_Gadgets(x).mouseovertitlex,UI_Gadgets(x).mouseovertitley,UI_Gadgets(x).mouseovertitle)
 		Else
 			UI_CenterText(UI_Gadgets(x).titlefontID,UI_Gadgets(x).titlex,UI_Gadgets(x).titley,UI_Gadgets(x).title)
 		Endif
-		
 	Else
 		UI_CenterText(UI_Gadgets(x).titlefontID,UI_Gadgets(x).titlex,UI_Gadgets(x).titley,UI_Gadgets(x).title)
 	Endif
@@ -1967,13 +2191,13 @@ Endif
 
 // mouseoverinfo check          
 If UI_Gadgets(x).mouseinfoexist>0 
-	if UI_Mouse.X>UI_Gadgets(x).x and UI_Mouse.X<UI_Gadgets(x).x+UI_Gadgets(x).width and UI_Mouse.Y>UI_Gadgets(x).y and UI_Mouse.Y<UI_Gadgets(x).y+UI_Gadgets(x).height and UI_Mouse.hidden=0
+	If UI_Mouse.X>UI_Gadgets(x).x and UI_Mouse.X<UI_Gadgets(x).x+UI_Gadgets(x).width and UI_Mouse.Y>UI_Gadgets(x).y and UI_Mouse.Y<UI_Gadgets(x).y+UI_Gadgets(x).height and UI_Mouse.hidden=0
 		stringhossz    = len(UI_Gadgets(x).mouseinfotext)
 		ID             = UI_Gadgets(x).mouseinfoexist
 		karaktereltolas= UI_stringmap(ID,258).ascii
 		bitmapeltolas  = karaktereltolas*stringhossz
 		
-		if UI_Gadgets(x).mouseinfoorientation=1  then UI_Text(UI_Gadgets(x).mouseinfoexist,UI_Mouse.x+25,UI_Mouse.Y+25,UI_Gadgets(x).mouseinfotext)
+		if UI_Gadgets(x).mouseinfoorientation=1 then UI_Text(UI_Gadgets(x).mouseinfoexist,UI_Mouse.x+25,UI_Mouse.Y+25,UI_Gadgets(x).mouseinfotext)
 		if UI_Gadgets(x).mouseinfoorientation=2 then UI_CenterText(UI_Gadgets(x).mouseinfoexist,UI_Mouse.x,UI_Mouse.Y+25,UI_Gadgets(x).mouseinfotext)
 		if UI_Gadgets(x).mouseinfoorientation=3 then UI_Text(UI_Gadgets(x).mouseinfoexist,UI_Mouse.x+25-bitmapeltolas,UI_Mouse.Y+25,UI_Gadgets(x).mouseinfotext)
 		
@@ -1982,15 +2206,15 @@ Endif
 
 
 Next x
-Endif   :
+Endif
 
 
 if UI_mouseoveredgadget$<>UI_OldMouseOveredGadget$ 
 	If UI_mouseoveredgadget$<>" "
-		If sound exist(UI_MouseOverSND)=1 and UI_mouseclicked=0 then play Sound UI_MouseoverSND
-		UI_OldMouseOveredGadget$=UI_MouseOveredGadget$
+		If sound exist(UI_MouseOverSND) = UI_True and UI_mouseclicked = UI_False then Play Sound UI_MouseoverSND
+		UI_OldMouseOveredGadget$        = UI_MouseOveredGadget$
 	Endif
-	UI_OldMouseOveredGadget$=UI_MouseOveredGadget$
+	UI_OldMouseOveredGadget$ = UI_MouseOveredGadget$
 Endif
 	UI_RestoreDebugPosition()
 Endif
@@ -1998,22 +2222,15 @@ Endif
 
 // Check the independent texts
 If UI_TextLines>0
-	for y=1 to UI_TextLines
+	For y=1 to UI_TextLines
 		UI_CenterText(UI_Textoutputlines(y).ID,UI_Textoutputlines(y).X+UI_TextLinesXOffset,UI_Textoutputlines(y).Y+UI_TextLinesYOffset,UI_Textoutputlines(y).Title)
 	Next y
 Endif
 
 
-If UI_MouseClicked=1 and Mouseclick()=0 then UI_Mouseclicked=0
+If UI_MouseClicked = UI_True and Mouseclick()=UI_False then UI_Mouseclicked=UI_False
 
 Endfunction
-`--------------------------------------------------------------------------------------------------------------------
-
-
-
-
-
-
 
 
 
@@ -2027,7 +2244,7 @@ Function UI_CreateMouseFaderTicker()
 //*     Dont call manually. Mouse commands may call it intenrally, they destroy it      *
 //*     when not needed.                                                                *
 //***************************************************************************************
-	UI_MouseFaderTimer=FIND FREE TICKER()
+	UI_MouseFaderTimer = FIND FREE TICKER()
 	MAKE TICKER UI_MouseFaderTimer,1
 Endfunction
 
@@ -2043,7 +2260,7 @@ Function UI_AskMouseFaderTicker()
 //*                                                                                     *
 //***************************************************************************************
 	Local tickresult as Integer
-	tickresult=TICKER(UI_Mousefadertimer,1)
+	tickresult = TICKER(UI_Mousefadertimer,1)
 Endfunction tickresult
 
 
@@ -2057,7 +2274,7 @@ Function UI_DestroyMouseFaderTicker()
 //*                                                                                     *
 //***************************************************************************************
 	DELETE TICKER UI_MouseFaderTimer
-	UI_mousefadertimer=0
+	UI_mousefadertimer = 0
 Endfunction
 
 
@@ -2067,7 +2284,7 @@ Function UI_CreateTextScrollTicker()
 //*     Internal timer command for textscrolls. Auto creates and destroys when needed.  *
 //*                                                                                     *
 //***************************************************************************************
-	UI_Textscrolltimer=FIND FREE TICKER()
+	UI_Textscrolltimer = FIND FREE TICKER()
 	MAKE TICKER UI_TextscrollTimer,60
 Endfunction
 
@@ -2080,11 +2297,12 @@ Function UI_AskTextScrollTicker()
 //*                                                                                     *
 //***************************************************************************************
 	Local tickresult as Integer
-	tickresult=TICKER(UI_textscrolltimer,1)
+	tickresult = TICKER(UI_textscrolltimer,1)
 Endfunction tickresult
-`----------------------------------------------------------------------------------------------------------------
 
-`----------------------------------------------------------------------------------------------------------------
+
+
+
 Function UI_DestroyTextScrollTicker()
 //***************************************************************************************
 //*   Miso                                                                              *
@@ -2092,12 +2310,8 @@ Function UI_DestroyTextScrollTicker()
 //*                                                                                     *
 //***************************************************************************************
 	DELETE TICKER UI_textscrollTimer
-	UI_textscrolltimer=0
+	UI_textscrolltimer = 0
 Endfunction
-`----------------------------------------------------------------------------------------------------------------
-
-
-
 
 
 
