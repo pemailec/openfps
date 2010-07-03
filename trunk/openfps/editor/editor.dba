@@ -94,8 +94,6 @@ set camera fov CameraSide,1.0
 ctopzoom=5
 `make object plain 3,10000,10000
 
-startblue 
-
 do 
 	`setgadgettext mouse,str$(mousex())+","+str$(mousey())
 	`setgadgettext Fps,str$(screen fps())
