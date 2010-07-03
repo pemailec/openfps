@@ -1,0 +1,36 @@
+Rem ***** Included Source File *****
+/////////////////////////
+//
+// OpenFPS MULTIPLAYER Module         
+//
+// Created by thenerd, miso
+//                           
+//
+/////////////////////////////////////////////////////
+remstart
+***** Included Source File *****
+
+----- Changelog:
+(07/03/10) - thenerd     - Created
+
+----- To-Do:
+This module is a blank template with the functions we need for multiplayer.
+It will be filled in as we code those aspects.
+* Needed Functions:
+
+----- Purpose:
+Handle multiplayer interactions between clients and the game & master servers.
+
+----- Dependancies and Conflicts (IMPORTANT STUFF):
+*NONE*
+
+----- Conflicts
+*NONE*
+
+----- Other Notes:
+*NONE*
+
+----- Function List:
+*NONE*
+
+remend
