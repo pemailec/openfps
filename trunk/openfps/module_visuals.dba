@@ -1,1 +1,36 @@
 Rem ***** Included Source File *****
+/////////////////////////
+//
+// OpenFPS VISUALS Module         
+//
+// Created by thenerd, miso
+//                           
+//
+/////////////////////////////////////////////////////
+remstart
+***** Included Source File *****
+
+----- Changelog:
+(07/03/10) - thenerd     - Created
+
+----- To-Do:
+This module is a blank template with the functions we need for visuals.
+It will be filled in as we code those aspects.
+* Needed Functions:
+
+----- Purpose:
+Handle visual data such as shaders, particles, bloom, ex.
+
+----- Dependancies and Conflicts (IMPORTANT STUFF):
+*NONE*
+
+----- Conflicts
+*NONE*
+
+----- Other Notes:
+*NONE*
+
+----- Function List:
+*NONE*
+
+remend

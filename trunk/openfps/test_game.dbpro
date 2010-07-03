@@ -25,6 +25,7 @@ LineInclude8=2539
 include9=module_ui_console.dba
 LineInclude9=0
 include10=module_multiplayer.dba
+include11=module_visuals.dba
 final source=_Temp.dbsource
 
 ; **** Executable Information  ***
