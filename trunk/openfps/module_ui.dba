@@ -35,6 +35,8 @@ remstart
                       - Added new command to delete a single gadget if exists. Nothing happens if theres no 
                         such gadget.
                       - Added new command to delete a single image. Will crash game if image is in use.
+(07/03/10) - miso     - Linked the the information window to the console bar.
+
 
 ----- To-Do:
 Comment the rest, create a tutorial how to build a menu system using these commands.
@@ -308,6 +310,7 @@ Function UI_Init()
 	UI_Display.MiddleWidth          = UI_Display.Width/2 
 	UI_Display.MiddleHeight         = UI_Display.Height/2 
 	UI_Display.Dxspriteinitialized  = UI_True
+	UI_EVENT_ConsoleOffset=-48
 // Init Advanced Sprite
 	Dxs Initialize
 // creates 8 blank ascii font
@@ -556,11 +559,24 @@ Function UI_HandleConsole()
   If UI_Event_ConsoleState = 1
   	UI_EVENT_ConsoleOffset = UI_EVENT_ConsoleOffset+4
   	UI_CMDInput(3,0,8+UI_EVENT_ConsoleOffset,"CMD>",30)
+  	//Reposition The Bars
+  	UI_CenterPositionGadget("UI_staminabarholder",140,145+UI_EVENT_ConsoleOffset)
+  	UI_CenterPositionGadget("UI_stamina",140,145+UI_EVENT_ConsoleOffset)
+  	UI_CenterPositionGadget("UI_fatiguebarholder",140,185+UI_EVENT_ConsoleOffset)
+  	UI_CenterPositionGadget("UI_fatigue",140,185+UI_EVENT_ConsoleOffset)
+ 
+ 
   Endif
  
   If UI_Event_ConsoleState = 2
  	UI_EVENT_ConsoleOffset = UI_EVENT_ConsoleOffset-4
  	UI_CMDInput(3,0,8+UI_EVENT_ConsoleOffset,"CMD>",30)
+	//Reposition the bars
+	UI_CenterPositionGadget("UI_staminabarholder",140,145+UI_EVENT_ConsoleOffset)
+  	UI_CenterPositionGadget("UI_stamina",140,145+UI_EVENT_ConsoleOffset)
+  	UI_CenterPositionGadget("UI_fatiguebarholder",140,185+UI_EVENT_ConsoleOffset)
+  	UI_CenterPositionGadget("UI_fatigue",140,185+UI_EVENT_ConsoleOffset)
+ 
   Endif
    
   If UI_EVENT_ConsoleOffset = -48 then UI_Event_ConsoleState = 0
@@ -577,9 +593,14 @@ Function UI_HandleConsole()
   
  // Checks the possible results and apply the commands
  If UI_Input.alive        = 3
+ 	UI_EVENT_ConsoleOffset = -48
 	UI_EVENT_ConsoleInput = 0
 	UI_SUB_CheckConsoleCommand()
- Endif
+	UI_CenterPositionGadget("UI_staminabarholder",140,145+UI_EVENT_ConsoleOffset)
+  	UI_CenterPositionGadget("UI_stamina",140,145+UI_EVENT_ConsoleOffset)
+  	UI_CenterPositionGadget("UI_fatiguebarholder",140,185+UI_EVENT_ConsoleOffset)
+ 	UI_CenterPositionGadget("UI_fatigue",140,185+UI_EVENT_ConsoleOffset)
+  Endif
 
 Endfunction
 
@@ -2086,7 +2107,7 @@ Function UI_HandleGadgets()
 //***************************************************************************************
 //*   Miso                                                                              *
 //*     Auto handles all gadget event. Sets values and draws gadgets.                   *
-//*                                                                                     *
+//*     It's a mess, but works. :)                                                      *
 //*                                                                                     *
 //*                                                                                     *
 //***************************************************************************************

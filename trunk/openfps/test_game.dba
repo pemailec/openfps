@@ -84,7 +84,7 @@ timer_starttime = timer()
 do
 
 //draws a window
-UI_putwindow(0,48,17,9)
+UI_putwindow(0,48+UI_EVENT_ConsoleOffset,17,9)
 
 `Timerbased
 elapsedtime=(timer()-timer_starttime)/1000.0
@@ -98,7 +98,7 @@ updateAI()
 //displays some info
 `UI_Text(1,10,55,str$(screen fps()))
 `UI_Text(1,10,70,"Stamina: "+str$(PLR_curstam))
-UI_Text(2,10,80,"Open FPS Engine")
+UI_Text(2,10,80+UI_EVENT_ConsoleOffset,"Open FPS Engine")
 `UI_Centertext(3,UI_display.middlewidth,UI_display.height-40,"<Center Text Showcase, delete this line>")
 
 position mouse screen width()/2,screen height()/2
@@ -109,8 +109,8 @@ position mouse screen width()/2,screen height()/2
 if DebugScreen=1:
 	UI_Text(2,screen width()-50,screen height()-40,str$(screen fps())) 
 	UI_Centertext(3,UI_display.middlewidth,UI_display.height-40,"<Center Text Showcase, delete this line>")
-	UI_Text(1,10,70,"Stamina: "+str$(PLR_curstam))
-	UI_Text(1,10,55,str$(screen fps()))
+	UI_Text(1,10,70+UI_EVENT_ConsoleOffset,"Stamina: "+str$(PLR_curstam))
+	UI_Text(1,10,55+UI_EVENT_ConsoleOffset,str$(screen fps()))
 endif
 
 //Test delete gadget function

@@ -167,7 +167,7 @@ do
 					//--Hide graphic mouse
 						UI_HideMouse():`Hide mouse before entering game mode
 					//--add a stamina bar before run game part
-						aa=140:bb=145		
+						aa=140:bb=97		
 						UI_AddCenterGadgetToScreen("UI_staminabarholder",0+aa,0+bb,"UI_barholderimage")
 					//--add the BAR for STAMINA
 						UI_AddbarGadgetToScreen("UI_stamina",3+aa,3+bb,"UI_redbar",50)
@@ -175,7 +175,7 @@ do
 						UI_addtitletogadget("UI_stamina",3,aa-8,bb-14,"STAMINA")
 
 					//--add a FATIGUE bar before run game part (reverse of the stamina bar)
-						aa=140:bb=185		
+						aa=140:bb=137		
 						UI_AddCenterGadgetToScreen("UI_fatiguebarholder",0+aa,0+bb,"UI_barholderimage")
 					//--add the BAR for STAMINA
 						UI_AddbarGadgetToScreen("UI_fatigue",3+aa,3+bb,"UI_orangebar",50)
