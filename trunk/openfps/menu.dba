@@ -312,3 +312,46 @@ function in_box2d(x1,y1,x2,y2):
 	endif
 
 endfunction result 
+
+
+`````````````````````````````````````````````
+`SPLASH SCREEN (old code)
+remstart
+sync on
+sync rate 60
+backdrop on
+color backdrop 0
+load image "media\menu\logo.png",1
+load image "media\menu\splash_bg.png",2
+load sound "media\audio\logo.wav",1
+spr_max=4
+for x=1 to spr_max:
+	sprite x,(screen width()/2)-(image width(1)/2),(screen height()/2)-(image height(1)/2),1
+next x
+timer1=0
+range=300
+wait 2000
+do
+	paste image 2,0,0
+	timer1=timer1+1
+	range=range-1
+	set cursor 0,0
+	print screen fps()
+	print timer1
+	if timer1>50 then alp=alp+1
+	if timer1>60 and timer1<200 and sound playing(1)=0 then play sound 1
+	if sound playing(1)=0 and trigger_done=1 then alp=alp-2
+	if alp<0 then alp=0 
+	if alp>255 then alp=255:trigger_done=1	
+	for x=1 to spr_max:
+		if range>2:
+			rndx=rnd(range)-range/2
+			rndy=rnd(range)-range/2
+		endif
+		if range<2 then rndx=0:rndy=0
+		sprite x,(screen width()/2)-(image width(1)/2)+rndx,(screen height()/2)-(image height(1)/2)+rndy,1
+		set sprite alpha x,alp 
+	next x		
+	sync
+loop
+remend
