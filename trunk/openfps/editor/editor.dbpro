@@ -28,7 +28,7 @@ CLI=NO
 CommandLineArguments=
 
 ; **** display mode information ****
-app title=xEdit version 1.0a - Experiment Six Subversion
+app title=xEdit version 1.2 - OpenFPS Subversion
 
 ; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
 graphics mode=window
@@ -41,7 +41,7 @@ window resolution=1024x768
 
 ; **** Media ****
 ; Example entries: media1=graphics\*.jpg
-media root path=F:\Experiment Six\xTools\editor\
+media root path=F:\openfps\editor\
 
 ; **** Icons ****
 
