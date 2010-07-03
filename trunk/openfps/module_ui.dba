@@ -36,8 +36,9 @@ remstart
                         such gadget.
                       - Added new command to delete a single image. Will crash game if image is in use.
 (07/03/10) - miso     - Linked the the information window to the console bar.
-
-
+                      - Updeted the function list
+Remend
+Remstart
 ----- To-Do:
 Comment the rest, create a tutorial how to build a menu system using these commands.
 
@@ -66,20 +67,24 @@ Usage (IMPORTANT***):
 This module loads graphic fonts, can be used in any of the other modules. It does not load the usual media type
 like Db images, it handles its own resources. Variables here are hidden, no need to modify or watch them.
 
------ Function List:
 
+----- Function List:
+Remend
+Remstart
 ----------MAIN  COMMANDS
 UI_Init()     - no parameters, start all gui functions
 UI_Handle()   - no parameters, handle all gui functions, must be before sync
 UI_Terminate()- no parameters, unload all gui media, free used arrays
 TerminateUI() - no params, just the same as before, made this one just to be similar to the other terminate functions
-
+Remend
+Remstart
 ----------TEXT  COMMANDS
 UI_LoadStringMap(ID,name$,spacing) - loads a font file to ID(integer 1-8),name$ will be the route and name.
                                      Font will be a monospace font with space value spacing (integer) 
 UI_Text(ID,x,y,sstring$)           - draws a text(sstring$) with the choosen font ID to screen x,y.
 UI_Centertext(ID,x,y,sstring$)     - same as before, just centered
-
+Remend
+Remstart
 ----------MOUSE COMMANDS
 UI_InitMouse(string$)        - loads a mousecursor image from HDD (route and filename=string$). Sets the basic mouse variables.
 UI_HandleMouse()             - no parameters, handle the mouse. 
@@ -93,12 +98,19 @@ UI_SetMousePosition(x,y)     - set the graphic mouse cursor position to screen x
 UI_MouseX()                  - returns the graphic mouse position X in pixels
 UI_MouseY()                  - returns the graphic mouse position Y in pixels
 UI_AskMouseHidden()          - returns 1 if graphic mouse is hidden           
-
+UI_DisableNonGuiMouse()      - mouse movements that are non gui related wont be affected
+UI_EnableNonGuiMouse()       - mouse movements that are non gui related will be affected
+Remend
+Remstart
 ----------TIMER COMMANDS
 UI_CreateMouseFaderTicker()  - Timer command for internal use, dont bother with it
 UI_AskMouseFaderTicker()     - Timer command for internal use, dont bother with it
 UI_DestroyMouseFaderTicker() - Timer command for internal use, dont bother with it
-
+UI_CreateTextScrollTicker()  - Timer command for internal use, dont bother with it
+UI_AskTextScrollTicker()     - Timer command for internal use, dont bother with it
+UI_DestroyTextScrollTicker() - Timer command for internal use, dont bother with it
+Remend
+Remstart
 ----------DEBUG COMMANDS     :for internal use, we wont call them in the final build
 UI_StartDebugMode()                    - No parameters
 UI_StopDebugMode()                     - No parameters
@@ -106,21 +118,64 @@ UI_SetDebugPosition(function$,source$) - Tells the debugger wich function we use
 UI_RestoreDebugPosition()              - Tells the debugger, that we finished our function
 UI_CheckDXSprites()                    - No parameters, checks if advanced sprites initialized, stops running of does not
 UI_CheckFile(filename$)                - Checks if file is on HDD in given route and with given name, halt if does not exists
-
+Remend
+Remstart
 ----------WINDOW COMMANDS    :will fit as a background for console commands
 UI_InitAndLoadWindow(filename$)        - loads a window image for use. only 1 window implemented for the console
 UI_PutWindow(X,Y,width,heigth)         - Draws a window to screen with preloaded gui to x y. Can be called multiple times.
-
+Remend
+Remstart
 ----------INPUT COMMANDS     :basic input commands, later it will be enhanced.       
 UI_InitInput()                         - as for now, its unused... yet.
 UI_CMDInput(fontID,X,Y,fixstring$,maxcharacter) -begins an input event with font ID at x,y
 UI_CheckInput()                        - called by UI_handle, no need to bother
 UI_Inputready()                        - returns 1 if an input procedure is ongoing
 UI_DestroyInput()                      - finishes the ongoing input event. (happens when user hits enter)
+
+Remend
+Remstart
+----------GUI AND GADGET COMMANDS     :basic Gadget commands, it can be expanded.       
+UI_InitGuiGraphics()                     - Initiate the gadget system by creating the needed arrays.
+UI_HandleGadgets()                       - Autohandles all the gadgets mouseover and display drawings
+UI_LoadGuiGraphics(ImageFile$,ImageID$)  - Loads an image for gadgetcreation from file$, with IDname$
+UI_AddGadgetToScreen(id$,x,y,img$)       - Creates a gadget with ID$ to x,y with img$ image noncentered
+UI_AddCenterGadgetToScreen(id$,x,y,img$) - Creates a gadget with ID$ to x,y, with img$ pixelcentered
+UI_AddBarGadgetToScreen(id$,x,y,img$,max)- Creates a bar gadget with id$ to x,y using image img$.
+                                           You must set the maximum value of the gadget, it determines the
+                                           longitude of the bar too. (auto counted)
+UI_SetGadgetValue(gadgetID$,value)       - Sets the value of the gadget, will have an effect on bars.
+UI_GetGadgetValue(gadgetID$)             - returns with the value of the specified gadget
+UI_GetGadgetSelection(gadgetID$)         - returns 1 if specified gadget is set to be selected
+UI_CountNewValue(gadgetID$)              - sets the gadget value using mouse positions and gagdet positions (vertical sliders)
+UI_AddMOuseOverImageToGadget(ID$,img$)   - adds a mouseover image to gadget
+UI_AddMouseoverTitleToGadget(iD$,FontID,X,Y,text$) - adds a title to gadget for mouseover
+UI_AddSelectedImageToGadget(ID$,img$)    - adds an image to gadget, will be displayed if gadget is selected
+UI_AddTitleToGadget(ID$,FontID,X,Y,text$)- adds a title to the gadget with the choosed font
+UI_DeleteGadget(GadgetID$)               - Deletes a specified gadget if exists, nothing happens if not
+UI_DeleteGuiImage(gadgetimagenameID$)    - Deletes a loaded image if exists. Crashes the game if image is in use
+UI_ChangeGadgetTitle(ID$,text$)          - Changes the Gadget title
+UI_ChangeGadgetMouseoverTitle(ID$,text$) - Changes the Gadget title set for mouseover event
+UI_SelectGadget(gadgetname$)             - Sets the gadget selected status to 1
+UI_DeSelectGadget(gadgetname$)           - sets the gadget selected status to 0
+UI_ToggleGadget(gadgetname$)             - revert the gadget selected status
+UI_AddInfoToGadget(ID$,FontID,text$,orientation) - adds an info text to the gadget displayed near the mouse if overed
+UI_GadgetExist(gadgetidname$)            - Returns 1 if specified gadgetID exists
+UI_GadgetImageExist(gadgetimagename$)    - Returns 1 if specified gadgetimage exists
+UI_CenterPercentPositionGadget(id$,x,y)  - position gadget centered to screen percentage x,y (0%-100%)
+UI_CenterPositionGadget(id$,posx,posy)   - position a gadget centered to x,y pixelposition
+UI_PositionGadget(id$,posx,posy)         - positions a gadget, x,y will be the top left point of the gadget
+UI_AddTextLine(FontID,Xx,Yy,stringtext$) - adds a text to the queque to be shown (for credits text scrolls)
+UI_ScrollTextLine(Xoffset,Yoffset)       - scrolls the quequed textline gadgets with value Xoffset and Yoffset
+UI_ResetTextLineOffset()                 - Set the current text gadget offset values to zero
+UI_SetTextLineOffset(x,y)                - Set the current text gadget offset positions to x y
+UI_Fadeoutallguis()                      - Fades out all gadgets, not so handy, just didnt removed yet
+UI_Fadeinallguis()                       - Fades in all gadgets
+UI_ClearAllGuis()                        - Clears all created gadgets
+UI_LoadAndSetMouseOverSND(snd$)          - Loads a sound for gadget mouseover event.
+UI_LoadAndSetMouseClickSND(snd$)         - Loads a sound for gadget mouseclick event.
+UI_PlayMouseClickSND()                   - Plays mouseclick sound, and set some variables to disable 
+                                           multiple clicks if we change gadgets on the background.
 remend
-
-
-
 `=========Constants=========`
 #Constant UI_False     = 0          :` mania
 #Constant UI_True      = 1          :` mania
@@ -1858,7 +1913,7 @@ Endif
 EndFunction
 
 
-Function DeleteGuiImage(gadgetimagenameID$)
+Function UI_DeleteGuiImage(gadgetimagenameID$)
 //***************************************************************************************
 //*   Miso                                                                              *
 //*     Deletes a single Gui Image.  (Untested)                                         *
