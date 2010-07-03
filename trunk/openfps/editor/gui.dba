@@ -15,6 +15,12 @@ global Toolbar_panel
 global Toolbar_offset
 global DivCenter
 global camera3dtext
+global DebugWindow
+global DebugFrame
+global DebugBar
+global Fps
+global mouse
+
 Toolbar_offset=28
 `Menu Gloals
 `-----------
@@ -59,7 +65,15 @@ function createUI()
     
     setGadgetAlign SideMenuMain,ALIGN_RIGHT
     doGadgetalign SideMenuMain
-	
+	remstart
+	DebugWindow=createWindow(100,210,203,320,"Debug",WINDOW_FIXED,WINDOW_TOOLWINDOW,0,0)    
+    DebugFrame=createFrame(8,9,178,122,"Debug Stats",DebugWindow)
+    mouse=createLabel(16,55,50,20,"Label",DebugFrame)
+    DebugBar=createStatusBar(DebugWindow)
+    Fps=createLabel(13,24,145,20,"Label",0)
+    setGadgetAlpha DebugWindow,200
+	setgadgetvisible DebugWindow,1
+	remend
 endfunction
 
 `Create Main Menu
