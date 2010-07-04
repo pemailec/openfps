@@ -5,7 +5,7 @@ project name=OpenFPS
 
 ; **** source file information ****
 main=test_game.dba
-LineMain=70
+LineMain=6
 include1=module_movement.dba
 LineInclude1=0
 include2=module_resource.dba
@@ -27,7 +27,7 @@ LineInclude9=0
 include10=module_multiplayer.dba
 LineInclude10=0
 include11=module_visuals.dba
-LineInclude11=45
+LineInclude11=126
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone

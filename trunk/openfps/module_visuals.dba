@@ -124,7 +124,7 @@ Function VS_AddSkyToScene(param_object$,param_texture$)
 	 	Texture Object VS_Sky.ObjID,VS_Sky.TextureID
 	 	Set Object Fog VS_Sky.ObjID,0
 	 	Set Object Light VS_Sky.ObjID,0
-	 	Set Alpha Mapping On VS_Sky.ObjID,100
+	 	rem Set Alpha Mapping On VS_Sky.ObjID,100
 	 	Disable Object Zwrite VS_Sky.ObjID
 	 Endif
   UI_RestoreDebugPosition()
