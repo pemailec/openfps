@@ -1,15 +1,15 @@
 ; **** Dark BASIC Professional Project File ****
-; **** Written by DarkBASIC Professional Editor ****
+; **** Written by Synergy Editor ****
 version=DBP1.00
 project name=OpenFPS
 
 ; **** source file information ****
 main=test_game.dba
-LineMain=0
+LineMain=70
 include1=module_movement.dba
 LineInclude1=0
 include2=module_resource.dba
-LineInclude2=99
+LineInclude2=0
 include3=menu.dba
 LineInclude3=170
 include4=module_network.dba
@@ -21,12 +21,13 @@ LineInclude6=338
 include7=module_terrain.dba
 LineInclude7=0
 include8=module_ui.dba
-LineInclude8=2539
+LineInclude8=2389
 include9=module_ui_console.dba
 LineInclude9=0
 include10=module_multiplayer.dba
+LineInclude10=0
 include11=module_visuals.dba
-final source=_Temp.dbsource
+LineInclude11=45
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
@@ -59,7 +60,7 @@ window resolution=1024x768
 
 ; **** Media ****
 ; Example entries: media1=graphics\*.jpg
-media root path=F:\openfps\
+media root path=C:\==Darkbasic Pro==\Dark Basic Professional\Projects\=Realwork=\openfps\
 
 ; **** Icons ****
 
@@ -80,3 +81,10 @@ VerProductNumber=v1.0
 ; **** To Do ****
 
 ; **** Comments ****
+comments1=
+
+; **** Advanced (setup.ini) configuration ****
+RemoveSafetyCode=NO
+SafeArrays=YES
+LocalTempFolder=NO
+ExternaliseDLLS=NO

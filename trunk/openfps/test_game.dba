@@ -59,6 +59,7 @@ runMenu()
 
 `Init other modules here
 initTerrain()
+initVisuals()
 `Temporary
 LoadTerrainFromFile("media/BlitzTerrain/Terrain.blitz","media/BlitzTerrain/texture.jpg","media/BlitzTerrain/detail.tga")
 
@@ -67,7 +68,7 @@ initShooting()
 initAI()
 
 //Setup camera
-set camera range 10,10000
+set camera range 10,10000000000
 hide mouse
 
 /////////////////////////////////////////////////////////
@@ -115,9 +116,12 @@ endif
 
 //Test delete gadget function
 If Inkey$()="P" then UI_DeleteGadget("UI_staminabarholder")
-
+//Updates sky
+updateVisuals()
+//Updates user interface
 UI_Handle()
 
+//Syncronize backbuffers
 sync
 loop
 

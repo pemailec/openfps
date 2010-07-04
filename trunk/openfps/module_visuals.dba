@@ -12,6 +12,8 @@ remstart
 
 ----- Changelog:
 (07/03/10) - thenerd     - Created
+(07/04/10) - miso        - Added basic sky
+
 
 ----- To-Do:
 This module is a blank template with the functions we need for visuals.
@@ -31,6 +33,199 @@ Handle visual data such as shaders, particles, bloom, ex.
 *NONE*
 
 ----- Function List:
-*NONE*
+`initvisuals()                 - initiate the main visual module
+`Updatevisuals()               - updates visual effects if necessary
+`terminatevisuals()            - terminate the module
 
 remend
+
+`=========Constants=========`
+#Constant VS_False  =0
+#Constant VS_True   =0
+`===========================`
+
+`==========Globals==========`
+Global VS_Sky             as Myskytype   :`basic data for sky
+Global VS_Clouds          as Mycloudtype :`basic data for clouds
+Global VS_SkyScrollTicker as Integer     :`timer variable for internal
+`===========================`
+
+`===========Types===========`
+Type MyskyType
+	Initialized      as Boolean:`1 if initialized
+	ObjID            as Integer:`ID of the object
+	TextureID        as Integer:`ID of the texture
+	ScrollEnabled    as Boolean:`set to 1 if you want to scroll the texture
+	ScrollSpeedX     as Float  :`velocity of scrolling in X axis
+	ScrollSpeedY     as Float  :`velocity of scrolling in Y axis
+EndType
+
+Type MycloudType
+	Initialized      as Boolean:`1 if initialized
+	ObjID            as Integer:`ID of the object
+	TextureID        as Integer:`ID of the texture
+	ScrollEnabled    as Boolean:`set to 1 if you want to scroll the texture
+	ScrollSpeedX     as Float  :`velocity of scrolling in X axis
+	ScrollSpeedY     as Float  :`velocity of scrolling in Y axis
+EndType
+`===========================`
+
+
+`=========Functions=========`
+
+
+//------ MAIN COMMANDS
+Function initvisuals()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function initiate the visual features.                                     *
+//*                                                                                     *
+//*                                                                                     *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+  //--load sky and clouds
+	VS_AddSkyToScene("media\visuals\vs_skydome.x","media\visuals\vs_basicsky.jpg")
+	rem VS_AddCloudsToScene("media\visuals\vs_Skydome.x","media\visuals\vs_basicclouds.png")
+  //--set variables
+	VS_Sky.Scrollenabled=VS_True
+	VS_Sky.ScrollSpeedX=0.00005:VS_Sky.ScrollSpeedY=0.00001
+	rem VS_Clouds.Scrollenabled=VS_True
+	rem VS_Clouds.ScrollSpeedX=0.00004:VS_Clouds.ScrollSpeedY=-0.00002
+  //--create timer
+	VS_CreateSkyScrollTicker()
+Endfunction
+
+Function updatevisuals()
+	VS_UpdateSkyandClouds()
+Endfunction
+
+Function terminatevisuals()
+Endfunction
+
+//------ SKY COMMANDS
+Function VS_AddSkyToScene(param_object$,param_texture$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function loads the sky model and textures it.                              *
+//*                                                                                     *
+//*                                                                                     *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+  UI_SetDebugPosition("VS_AddskytoScene()","module_visuals.dba")
+     If VS_Sky.initialized=VS_False
+        UI_CheckFile(param_object$):UI_CheckFile(param_texture$)
+	    VS_Sky.ObjID     = grabresource(res_object)
+	    VS_Sky.TextureID = grabresource(res_image)
+	 	Load Object param_object$,VS_Sky.ObjID
+	 	Load Image param_texture$,VS_Sky.TextureID,1
+	 	Scale Object VS_Sky.ObjID,1000000,1000000,1000000
+	 	Texture Object VS_Sky.ObjID,VS_Sky.TextureID
+	 	Set Object Fog VS_Sky.ObjID,0
+	 	Set Object Light VS_Sky.ObjID,0
+	 	Set Alpha Mapping On VS_Sky.ObjID,100
+	 	Disable Object Zwrite VS_Sky.ObjID
+	 Endif
+  UI_RestoreDebugPosition()
+Endfunction
+
+
+
+Function VS_UpdateSkyandClouds()
+local var_scrolled as boolean
+// scrolls sky
+	If VS_Sky.Initialized=VS_True
+		Position Object VS_Sky.ObjID,PLR_HeadPos.x,PLR_HeadPos.y-15000,PLR_HeadPos.z
+		If VS_Sky.ScrollEnabled=VS_True 
+			If VS_AskSkyScrollTicker()=1 
+				Scroll Object Texture VS_Sky.ObjID,VS_Sky.ScrollSpeedX,VS_Sky.ScrollSpeedY
+				var_scrolled=VS_True
+			Endif
+		Endif
+	Endif
+
+// scrolls clouds
+remstart
+	If VS_Clouds.Initialized=VS_True
+		Position Object VS_Clouds.ObjID,PLR_HeadPos.x,PLR_HeadPos.y-15000,PLR_HeadPos.z
+		If VS_Clouds.ScrollEnabled=VS_True 
+			If var_scrolled=Vs_True 
+				Scroll Object Texture VS_Clouds.ObjID,VS_Clouds.ScrollSpeedX,VS_Clouds.ScrollSpeedY
+			Endif
+		Endif
+	Endif
+remend
+Endfunction
+
+Function VS_DeleteSky()
+Endfunction
+
+Function VS_AddCloudsToScene(param_object$,param_texture$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function loads the second sky model and textures it for a second layer.    *
+//*                                                                                     *
+//*                                                                                     *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+  UI_SetDebugPosition("VS_AddCloudsToScene()","module_visuals.dba")
+     If VS_Clouds.initialized=VS_False
+        UI_CheckFile(param_object$):UI_CheckFile(param_texture$)
+	    VS_Clouds.ObjID     = grabresource(res_object)
+	    VS_Clouds.TextureID = grabresource(res_image)
+	 	
+	 	// IF sky loaded, then we just clone it
+	 	IF VS_Sky.Initialized=VS_True
+	 		Clone Object VS_Clouds.ObjID,VS_Sky.ObjID
+	 	Else
+	 		Load Object param_object$,VS_Clouds.ObjID
+	 	Endif
+	 	
+	 	Load Image param_texture$,VS_Clouds.TextureID,1
+	 	Scale Object VS_Clouds.ObjID,900000,900000,900000
+	 	Texture Object VS_Clouds.ObjID,VS_Clouds.TextureID
+	 	Set Object Fog VS_Clouds.ObjID,0
+	 	Set Object Light VS_Clouds.ObjID,0
+	 	Set Alpha Mapping On VS_Clouds.ObjID,100
+	 	Disable Object Zwrite VS_Clouds.ObjID
+		Scale Object Texture VS_Clouds.ObjID,5,5
+	 Endif
+  UI_RestoreDebugPosition()
+
+Endfunction
+
+
+Function VS_DeleteClouds()
+Endfunction
+
+Function VS_AddSunToScene()
+Endfunction
+
+Function VS_UpdateSun()
+Endfunction
+
+Function VS_DeleteSun()
+Endfunction
+
+
+//Timer commands
+Function VS_CreateSkyScrollTicker()
+	If VS_SkyScrollTicker=0
+		VS_Skyscrollticker = FIND FREE TICKER()
+		MAKE TICKER VS_SkyScrollTicker,30
+	Endif
+Endfunction
+
+Function VS_AskSkyScrollTicker()
+Local tickresult as Integer
+		tickresult = TICKER(VS_SkyScrollTicker,1)
+EndFunction tickresult
+
+Function VS_DeleteSkyScrollTicker()
+IF VS_SkyScrollTicker=0
+	DELETE TICKER VS_SkyScrollTicker
+	VS_SkyScrollTicker = 0
+Endif
+Endfunction
