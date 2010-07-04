@@ -189,6 +189,9 @@ remend
 #Constant UI_Right     = 3          :` right oriented texts
 #Constant UI_LogOFF    = 0
 #Constant UI_LogON     = 1
+#Constant UI_RED       = 3          :` debug message importance
+#Constant UI_YELLOW    = 2          :` debug message importance
+#Constant UI_GREEN     = 1          :` debug message importance
 `===========================`
 
 `==========Globals==========`
@@ -366,7 +369,8 @@ Function UI_Init()
 //***************************************************************************************
 
 // Start Debugmode
-	UI_StartDebugmode(UI_LogOFF)    :`change parameter to UI_Logon to do logfile
+	UI_StartDebugmode(UI_LogON)    :`change parameter to UI_Logon to do logfile
+	UI_WriteLog(UI_Green,"=== Starting to initiate User Interface module.")
 // Setup basic data
 	UI_Display.Width                = Screen Width()
 	UI_Display.Height               = Screen Height()
@@ -375,7 +379,9 @@ Function UI_Init()
 	UI_Display.Dxspriteinitialized  = UI_True
 	UI_EVENT_ConsoleOffset=-48
 // Init Advanced Sprite
+	
 	Dxs Initialize
+	
 // creates 8 blank ascii font
     Global Dim UI_Stringmap(8,258)  as Mystringmaptype
     Global Dim UI_chain(512)        as Mychartype
@@ -384,16 +390,13 @@ Function UI_Init()
 	UI_loadStringmap(2,"media\fonts\lcdred.dat",16)
 	UI_loadStringmap(3,"media\fonts\newfont.dat",16)
 	UI_loadStringmap(4,"media\fonts\System_w_8x8.dat",8)
-
 // load test window
 	UI_InitandloadWindow("media\windows\windowuntitled2.dat")
-	
 // load and init graphic mouse
 	UI_InitMouse("media\cursors\testcursor.dds")	
 // load sound for mouse events
 	UI_LoadandSetMouseoverSND("media\cursors\Hit tree.wav")
 	UI_LoadandSetMouseClickSND("media\cursors\Hit tree.wav")
-
 // Init Gui functions
 	UI_InitGuiGraphics()	
 	
@@ -401,12 +404,11 @@ Function UI_Init()
 	UI_LoadGuiGraphics("media\bars\barholder.png","UI_barholderimage")
 	UI_LoadGuiGraphics("media\bars\redbar.png","UI_redbar")
 	UI_LoadGuiGraphics("media\bars\orangebar.png","UI_orangebar")
-	
 		
 
 // Disable escapekey
 	Disable Escapekey
-
+	UI_WriteLog(UI_Green,"=== User Interface module succesfully initialized")
 Endfunction
 
 
@@ -451,7 +453,7 @@ Function UI_Terminate()
 //*                                                                                     *
 //***************************************************************************************
 Local x as Integer
-
+UI_WriteLog(UI_Green,"=== Starting to terminate User Interface module")
 	If UI_Display.DxSpriteInitialized = UI_True
 		//--Destroy font images if loaded
 			For x=1 to UI_MaxFonts
@@ -478,7 +480,9 @@ Local x as Integer
 					DXS Delete Sprite UI_Gadgetimages(x).gadgetimagepointer
 				Next X
 			Endif
-		
+			UI_WriteLog(UI_Green,"=== User Interface module succesfully terminated")
+	Else
+			UI_WriteLog(UI_RED,"=== User Interface module was not initialized")	
 	Endif
 Endfunction
 
@@ -511,6 +515,7 @@ Local a$ as String:Local b$ as String:Local c$ as String
 	// check if advanced sprites initialized
 	UI_CheckDXSprites()
 	// check if fontfile exist
+	UI_WriteLog(UI_Green,"loading font : " + name$ + " with ID "+str$(ID))
 	UI_CheckFile(name$)
 		UI_TempFileID=grabresource(res_file)
 		Open To Read UI_tempfileID,name$
@@ -541,6 +546,7 @@ Local a$ as String:Local b$ as String:Local c$ as String
 					 UI_stringmap(ID,x).bitmapID = Val(c$)
 				Next x
 		Close File UI_tempfileID:freeresource(UI_tempfileID,res_file)
+	UI_WriteLog(UI_Green,"font succesfully loaded")
 	UI_RestoreDebugPosition()
 Endfunction
 
@@ -777,6 +783,7 @@ Function UI_InitAndLoadWindow(name$)
 Local a$ as String:Local b$ as String:Local c$ as String
 	UI_SetDebugPosition("UI_InitAndLoadWindow()","module_ui.dba")
 		UI_CheckDXSprites():UI_Checkfile(name$)	
+		UI_WriteLog(UI_Green,"loading window gui image : "+name$+".")
 		UI_tempfileID=grabresource(res_file)
 		Open to Read UI_tempfileID,name$
 				`read the windowname and load
@@ -789,6 +796,7 @@ Local a$ as String:Local b$ as String:Local c$ as String
 				UI_mywindow.yrow    = Val(c$)
 				DXS SET SPRITE TILE SIZE UI_mywindow.ID,UI_mywindow.xwidth,UI_mywindow.yrow    ` Cut the sprites into x * y pixels tiles.
 		Close File UI_tempfileID:freeresource(UI_tempfileID,res_file)
+		UI_WriteLog(UI_Green,"window gui image succesfully loaded.")
 	UI_RestoreDebugPosition()
 Endfunction
 
@@ -836,12 +844,14 @@ Function UI_InitMouse(param_cursorimage$ as String)
 	UI_SetDebugPosition("UI_InitMouse()","module_ui.dba")      :` Tells the debugger where we are               
  		UI_CheckDxSprites()                                    :` Checks adv spr
  		UI_Checkfile(param_cursorimage$)                       :` Checks if mouse image exist in HD                        
+		UI_WriteLog(UI_Green,"loading mouse cursor image: " + param_cursorimage$ + ".")
 		UI_Mouse.ID          = DXS CREATE SPRITE(param_cursorimage$)
 		UI_Mouse.Initialized = UI_True
 		UI_Mouse.Hidden      = UI_False
 		UI_Mouse.x           = MouseX()
 		UI_Mouse.Y           = MouseY()
 		UI_Mouse.FadeValue   = 255
+		UI_WriteLog(UI_Green,"Succesfully loaded mouse cursor image.")
 	UI_RestoreDebugPosition()                                  :` Restore debugger position                              
 Endfunction
 
@@ -1276,9 +1286,11 @@ Function UI_LoadAndSetMouseOverSND(snd$)
 //*                                                                                     *
 //***************************************************************************************
 	UI_SetDebugPosition("UI_SetMouseOverSND()","module_ui.dba")
+		UI_WriteLog(UI_Green,"loading mouseover sound : " + snd$ + ".")
 		UI_CheckFile(snd$)
 		UI_MouseOverSND = GrabResource(res_Sound)
 		Load Sound snd$,UI_MouseOverSND
+		UI_WriteLog(UI_Green,"sound succesfully loaded")
 	UI_RestoreDebugPosition()
 Endfunction
 
@@ -1297,8 +1309,10 @@ Function UI_LoadAndSetMouseClickSND(snd$)
 //***************************************************************************************
 	UI_SetDebugPosition("UI_SetMouseClickSND()","module_ui.dba")
 		UI_CheckFile(snd$)
+		UI_WriteLog(UI_Green,"loading mouse click sound : " + snd$ + ".")
 		UI_MouseClickSND = GrabResource(res_Sound)
 		load sound snd$,UI_MouseClickSND
+		UI_WriteLog(UI_Green,"sound succesfully loaded.")
 	UI_RestoreDebugPosition()      :
 Endfunction
 
@@ -1357,14 +1371,14 @@ Function UI_LoadGuiGraphics(ImageFile$,ImageID$)
 //*                                                                                     *
 //***************************************************************************************
 	UI_SetDebugPosition("UI_LoadGuiGraphics(menugombimage$)","module_ui.dba")
-	
+		UI_WriteLog(UI_Green,"Loading gui image : " + imagefile$ + " with ID "+ImageID$+"."	)
 		UI_CheckDxSprites():UI_CheckFile(ImageFile$)
 		Array Insert at Bottom UI_Gadgetimages()
 		
 		UI_GadgetImageNumbers                                     = UI_GadgetImageNumbers+1
 		UI_Gadgetimages(UI_GadgetImageNumbers).GadgetImagePointer = DXS CREATE SPRITE(ImageFile$)
 		UI_Gadgetimages(UI_GadgetImageNumbers).GadgetImageName    = ImageID$
-		
+		UI_WriteLog(UI_Green,"loaded image succsessfully.")
 	UI_RestoreDebugPosition()      
 Endfunction
 
@@ -2435,7 +2449,8 @@ var_seconds$ = right$(var_time$,2)
 var_time$="openfps "+var_year$+"."+var_month$+"."+var_day$
 var_time$=var_time$+"_"+var_hour$+"h "+var_minutes$+"m "+var_seconds$+" s.log"
 
-
+// we need 1 logfile at the moment, so we disable naming depended on time
+		var_time$="openfps.log"
   		If File Exist(var_time$) = UI_True Then Delete File var_time$
   		Open to Write UI_LogFileID,var_time$
   	else
@@ -2444,7 +2459,35 @@ var_time$=var_time$+"_"+var_hour$+"h "+var_minutes$+"m "+var_seconds$+" s.log"
   	UI_SetDebugPosition("main program","test_game.dba")
 Endfunction
 
+Function UI_WriteLog(param_importance,param_log$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Write a log message to logfile if enabled. Nothing happens if not.              *
+//*                                                                                     *
+//***************************************************************************************
+local var_time$       as String
+local var_hour$       as string
+local var_minutes$    as string
+local var_Seconds$    as string
+Local var_logstring$  as string
+Local var_importance$ as string
 
+	If UI_Logmode = UI_Logon
+		Select param_importance
+			Case UI_Red    : var_importance$="RED: "    : EndCase
+			Case UI_YELLOW : var_importance$="YELLOW: " : EndCase
+			Case UI_GREEN  : var_importance$="GREEN: "  : EndCase
+		Endselect
+		If File Open(UI_LogFileID)=1
+			var_time$=Get Time$()
+			var_hour$ = left$(var_time$,2)
+			var_minutes$ = mid$(var_time$,4) + mid$(var_time$,5)
+			var_seconds$ = right$(var_time$,2)
+			var_logstring$=var_importance$+" - "+var_hour$+":"+var_minutes$+":"+var_seconds$+" - " + param_log$
+			Write String UI_LogFileID,var_logstring$
+		Endif
+	Endif
+EndFunction
 
 
 Function UI_StopDebugMode()
@@ -2457,7 +2500,7 @@ Function UI_StopDebugMode()
 	If UI_Logmode = UI_Logon
   		UI_LogMode   = UI_Logoff
   		
-  			Close File UI_LogFileID
+  			Close File UI_LogFileID:freeresource(UI_LogfileID,res_file)
   		
    		
   	Endif

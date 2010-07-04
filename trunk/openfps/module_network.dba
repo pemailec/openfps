@@ -10,6 +10,7 @@ remstart
 
 ----- Changelog:
 (2/8/10) - BMacZero - Created
+(2/8/10) - miso     - just placed logger commands
 
 DO NOT MODIFY THIS MODULE YET.  Its structure will be heavily
 reliant on how the others shape up.
@@ -41,8 +42,9 @@ remend
 
 
 function initNetwork()
+UI_WriteLog(UI_Green,"=== Starting Network module")
 
-
+UI_WriteLog(UI_Green,"=== Network module started")
 endfunction
 
 
@@ -59,6 +61,7 @@ endfunction
 
 
 function terminateNetwork()
+UI_WriteLog(UI_Green,"=== Terminating module")
 
-
+UI_WriteLog(UI_Green,"=== Network module terminated")
 endfunction

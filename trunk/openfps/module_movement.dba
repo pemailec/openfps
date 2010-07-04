@@ -22,10 +22,10 @@ remstart
 (3/7/10)   - BMacZero - Worked on player collision.
 (3/16/10)  - BMacZero - Reworking Sparky's system.
 (6/25/10)  - Miso     - Replaced every mousemovex() calls with SyS_MouseMoveX variable
-(6/25/10)  - Miso     - Replaced every mousemovey() calls with SyS_MouseMoveY variable
                       - Calling the above commands clears the mouse movement buffers, and other modules
                         can't get proper results. Using these variables in all modules solves this problem.
 						User interface module refreshes the values of both variable with every loop.
+(7/4/10)   - miso     - placed four log commands when initiate and terminate module
 
 ----- To-Do:
 Apply different speeds and jump heights for different classes.
@@ -110,7 +110,7 @@ endtype
 
 
 function initMovement()
-
+UI_WriteLog(UI_Green,"=== Starting Movement module")
 `Initiate controls
 if KEY_sprint   = 0
     global KEY_sprint   as integer
@@ -232,7 +232,7 @@ null = Make Vector3( mov_Vec6 ) // lY
 null = Make Vector3( mov_Vec7 ) // lZ
 
 global mov_synctime as float
-
+UI_WriteLog(UI_Green,"=== Movement module started")
 endfunction
 
 
@@ -400,7 +400,7 @@ endfunction
 
 
 function terminateMovement()
-
+UI_WriteLog(UI_Green,"=== Terminating Movement module")
 UNDIM PLR_speeds(0)
 UNDIM PLR_heights(0)
 
@@ -419,5 +419,5 @@ freeResource(mov_Mat4,res_Matrix4)
 freeResource(mov_Vec5,res_Vector)
 freeResource(mov_Vec6,res_Vector)
 freeResource(mov_Vec7,res_Vector)
-
+UI_WriteLog(UI_Green,"=== Movement module terminated")
 endfunction

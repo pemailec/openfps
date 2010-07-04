@@ -15,6 +15,7 @@ Rem ***** Included Source File *****
 (2/7/10)   - BMacZero - Fixed more general bugs.
 (2/11/10)  - Kaedroho - Made all math resource types the same type to avoid conflicts
 (2/12/10)  - BMacZero - Combined Vector values into one.
+(2/12/10)  - miso     - Added log commands.
 
 
 ----- To-Do:
@@ -74,11 +75,11 @@ endtype
 
 
 function initResource()
-
+UI_WriteLog(UI_Green,"=== Starting Resource module") : `will be showned only if we create a debug module initialized first
 global DIM ResourceCounters(res_Count)   as integer
 global DIM FreeResourcesIndex(res_Count) as res_Type
 global DIM FreeResources(0)              as integer
-
+UI_WriteLog(UI_Green,"=== Resource module started")
 endfunction
 
 
@@ -193,9 +194,10 @@ endfunction
 
 
 function terminateResource()
-
+UI_WriteLog(UI_Green,"=== Terminating Resource module")
 UNDIM ResourceCounters(0)
 UNDIM FreeResourcesIndex(0)
 UNDIM FreeResources(0)
+UI_WriteLog(UI_Green,"=== Resource module terminated")
 
 endfunction

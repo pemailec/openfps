@@ -9,11 +9,12 @@ remstart
 /////////////////////////////////////////////////////
 
 ----- Changelog:
-(2/8/10) - BMacZero - Created
+(2/8/10)  - BMacZero - Created
 (2/24/10) - BMacZero - Integrated kaedroho's Shooting Engine
-(3/7/10) - BMacZero - Added DISABLE OBJECT ZDEPTH
+(3/7/10)  - BMacZero - Added DISABLE OBJECT ZDEPTH
 (4/26/10) - Balrog_Bob - Added texture loading code for the gun model
 (4/26/10) - Balrog_Bob - Oops, forgot to free my resource. fixed.
+(7/4/10)  - miso       - added log commands
 
 
 ----- To-Do:
@@ -122,7 +123,7 @@ endtype
 
 
 function initShooting()
-
+UI_WriteLog(UI_Green,"=== Starting Shooting module")
 global SE_Main as SE_Main
 global dim SE_Projectile(0) as SE_Projectile
 global dim SE_ProjectileType(0) as SE_ProjectileType
@@ -167,7 +168,7 @@ SE_SetGunTypeMuzzlePosition(shoot_guntype,0,11,-25)
 
 `TEMPORARY Make a gun and position it
 shoot_TestGun=SE_MakeGun(shoot_guntype)
-
+UI_WriteLog(UI_Green,"=== Shooting module started")
 endfunction
 
 
@@ -489,6 +490,7 @@ endfunction returnval
 
 
 function terminateShooting()
+UI_WriteLog(UI_Green,"=== Terminating Shooting module")
 
 undim SE_Projectile(0)
 undim SE_ProjectileType(0)
@@ -499,4 +501,5 @@ undim SE_Collision(0)
 freeResource(SE_Main.checkobj,res_Object)
 freeResource(SE_Main.checkimg,res_Image)
 
+UI_WriteLog(UI_Green,"=== Shooting module terminated")
 endfunction

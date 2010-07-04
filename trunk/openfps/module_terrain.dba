@@ -16,7 +16,7 @@ remstart
 ----- Changelog:
 (2/28/10) - BMacZero - Created
 (3/01/10) - Kaedroho - Converted SetTerrainCollision() into the same programming standard as the rest of the file (looks neater)
-
+(7/4/10)  - miso     - placed log commands
 ----- To-Do:
 
 
@@ -77,13 +77,14 @@ endtype
 
 
 function initTerrain()
-
+UI_WriteLog(UI_Green,"=== Starting Terrain module")
 global g_Terrain_Main as sTerrain_Main
 
 //Setup BT
    BT SetBuildStep 8       //Build 8 sectors at a time
    BT EnableAutoRecovery 1 //Enable auto recovery
-	
+
+UI_WriteLog(UI_Green,"=== Terrain module started")
 endfunction
 
 
@@ -277,6 +278,7 @@ endfunction
 
 
 function terminateTerrain()
+UI_WriteLog(UI_Green,"=== Terminating Terrain module")
 
 //Delete the terrain
    if g_Terrain_Main.dwTerrainID
@@ -285,4 +287,5 @@ function terminateTerrain()
    
    UNDIM terrainSectors(0)
 
+UI_WriteLog(UI_Green,"=== Terrain module terminated")
 endfunction

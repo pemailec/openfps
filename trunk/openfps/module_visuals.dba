@@ -14,7 +14,7 @@ remstart
 (07/03/10) - thenerd     - Created
 (07/04/10) - miso        - Added basic sky
 (07/04/10) - miso        - Removed cloud commands for now, maybe we dont need the second layer at all
-
+(7/4/10)   - miso        - placed log commands
 
 
 ----- To-Do:
@@ -83,12 +83,14 @@ Function initvisuals()
 //*                                                                                     *
 //*                                                                                     *
 //***************************************************************************************
+UI_WriteLog(UI_Green,"=== Starting Visuals module")
   //--load sky and clouds
 	VS_AddSkyToScene("media\visuals\vs_skydome.x","media\visuals\vs_basicsky.jpg")
   //--set variables
 	VS_Sky.Scrollenabled=VS_True : VS_Sky.ScrollSpeedX=0.00005 : VS_Sky.ScrollSpeedY=0.00001
   //--create timer
 	VS_CreateSkyScrollTicker()
+UI_WriteLog(UI_Green,"=== Visual module started")
 Endfunction
 
 Function updatevisuals()
@@ -96,7 +98,9 @@ Function updatevisuals()
 Endfunction
 
 Function terminatevisuals()
+UI_WriteLog(UI_Green,"=== Terminating Visuals module")
 	VS_DeleteSky()
+UI_WriteLog(UI_Green,"=== Visuals module terminated")
 Endfunction
 
 //------ SKY COMMANDS

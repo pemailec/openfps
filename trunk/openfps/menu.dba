@@ -51,6 +51,7 @@ remend
 /////////////////////////////////////////////////////////
 
 function initMenu()
+UI_WriteLog(UI_Green,"=== Starting Menu module")
 `loading sprite
 global menu_loadingimage
 global menu_loadingsprite
@@ -90,6 +91,7 @@ global menu_music
 menu_music  = grabResource(res_Music)
 load music "media\audio\The Awakening.mp3",menu_music
 play music menu_music
+UI_WriteLog(UI_Green,"=== Menu module started")
 endfunction
 
 
