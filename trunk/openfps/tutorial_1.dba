@@ -1,7 +1,7 @@
 Remstart
 /////////////////////////////////////////////////////
 //
-// OpenFPS Gadgets Tutorial 1 Panels and basic buttons
+// OpenFPS Gadgets Tutorial 2 Radiobuttons and checkboxes
 //
 // Created by miso    
 //                           
@@ -74,22 +74,21 @@ Global BackGroundCube as Integer
 Gadgetcreator:
 //-----Creating a simple panel at 0,10 with id "firstpanel" using image "miso_panel"
 		UI_AddGadgetToScreen("firstpanel",0,10,"miso_panel")
+		UI_AddTitleToGadget("firstpanel",3,100,30,"Radiobuttons")
+		
 
 //-----Creating a second panel and add a title to it
 		UI_AddGadgetToScreen("secondpanel",215,10,"miso_panel")
-		UI_AddTitleToGadget("secondpanel",3,315,30,"Test")
-
-//-----Creating a third panel with title affected by mouseover
-		UI_AddGadgetToScreen("thirdpanel",430,10,"miso_panel")
-		UI_AddTitleToGadget("thirdpanel",3,530,30,"Test")
-		UI_AddMouseoverTitleToGadget("thirdpanel",3,530,30,"-Test-")
+		UI_AddTitleToGadget("secondpanel",3,315,30,"CheckBoxes")
 
 
-//------Creating a button (mouseover sound will be played if mouseovered gadget has mouseover image)
-		UI_AddCenterGadgetToScreen("button1",320,300,"miso_button")
-		UI_AddTitleToGadget("button1",3,320-8,300-14,"test")
-		UI_AddmouseoverImageToGadget("button1","miso_buttonhover")
-		UI_AddMouseoverTitleToGadget("button1",3,320-8,300-14,"-TEST-")
+
+
+
+
+
+
+
 
 //------Adding a quitbutton
 		UI_AddCenterGadgetToScreen("quitbutton",320,380,"miso_button")

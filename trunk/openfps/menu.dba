@@ -11,15 +11,16 @@ remstart
 ----- Changelog:
 
 (11/19/09) - BMacZero - Adapted to existing code.
-(2/7/10) - BMacZero - Fixed issue with buttons highlighting incorrectly
-(2/7/10) - thenerd - Updating and changing menu system, adding gui functions
-(2/8/10) - BMacZero - Polished RenderWindow function, prefixed global vars with "menu"
-(2/9/10) - thenerd - Finished RenderWindow function with fill
+(2/7/10) - BMacZero   - Fixed issue with buttons highlighting incorrectly
+(2/7/10) - thenerd    - Updating and changing menu system, adding gui functions
+(2/8/10) - BMacZero   - Polished RenderWindow function, prefixed global vars with "menu"
+(2/9/10) - thenerd    - Finished RenderWindow function with fill
 (6/27/10)  - thenerd  - Added some effects to the menu background.
-(6/27/10)  - miso  - Changed 2 mouseX() mouseY() commands to UI_MouseX() and UI_MouseY()
+(6/27/10)  - miso     - Changed 2 mouseX() mouseY() commands to UI_MouseX() and UI_MouseY()
 (6/27/10)  - thenerd  - Added color parameter to button function
-(7/01/10)  - miso  - Hides ui_mouse before entering game mode
-                     Creates a stamina bar, before jumping to game mode (won't crash the game if we delete this part)
+(7/01/10)  - miso     - Hides ui_mouse before entering game mode
+                        Creates a stamina bar, before jumping to game mode (won't crash the game if we delete this part)
+(07/04/10) - miso     - Changed an end command to SyS_Event_Terminate=1
 
 ----- To-Do:
 - Make buttons functional. DONE
@@ -157,6 +158,8 @@ load image "media\menu\button-clicked.png",menu_button3
 freeResource(menu_mainsprite,res_Sprite)
 
 do
+
+
 	`bg
 	paste image menu_mainimage,0,0,1
 	scroll object texture menu_bgfx1,0.001,0
@@ -194,7 +197,10 @@ do
 	button("Help",78,339,rgb(255,255,255))
 	button("Options",78,399,rgb(255,255,255))
 	button("Credits",78,459,rgb(255,255,255))
-	if button("Quit",78,519,rgb(255,255,255))=1 then end
+	If Button("Quit",78,519,rgb(255,255,255))=1 
+		SyS_Event_Terminate=1
+		Exit
+	Endif
 	
 	if mouseclick()=0 then menu_clickstate=0
 	

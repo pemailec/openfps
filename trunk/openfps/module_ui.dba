@@ -36,7 +36,8 @@ remstart
                         such gadget.
                       - Added new command to delete a single image. Will crash game if image is in use.
 (07/03/10) - miso     - Linked the the information window to the console bar.
-                      - Updeted the function list
+                      - Updated the function list
+                      - fixed a serious possible bug source. (correctly using grabbing resource for res_file now)
 Remend
 Remstart
 ----- To-Do:
@@ -57,9 +58,12 @@ http://forum.thegamecreators.com/?m=forum_view&t=85209&b=18
 
 
 ----- Conflicts
+
+SOLVED-
 Conflicts with the movement module, because mouse commands and movement module both use
 the mousemovex() and mousemovey() commands, and calling it clears the mousemove puffers.
 Need a Global variable, that knows who may control these commands first.
+-------
 
 ----- Other Notes:
 Usage (IMPORTANT***):
@@ -112,7 +116,7 @@ UI_DestroyTextScrollTicker() - Timer command for internal use, dont bother with 
 Remend
 Remstart
 ----------DEBUG COMMANDS     :for internal use, we wont call them in the final build
-UI_StartDebugMode()                    - No parameters
+UI_StartDebugMode(logmode)             - if logmode=1 then logfile will be made
 UI_StopDebugMode()                     - No parameters
 UI_SetDebugPosition(function$,source$) - Tells the debugger wich function we use at the moment
 UI_RestoreDebugPosition()              - Tells the debugger, that we finished our function
@@ -183,9 +187,12 @@ remend
 #Constant UI_Left      = 1          :` left oriented texts used when you add mouseinfo for a gdget
 #Constant UI_Middle    = 2          :` middle oriented texts
 #Constant UI_Right     = 3          :` right oriented texts
+#Constant UI_LogOFF    = 0
+#Constant UI_LogON     = 1
 `===========================`
 
 `==========Globals==========`
+Global UI_TempFileID            as Integer      : `for file resource
 //-----Display Globals
 Global UI_Display               as MyScreenType : `for basic display data
 
@@ -200,6 +207,8 @@ Global SyS_MouseMoveY           as Integer      : `replacement of mousemovey()
 
 //-----Debug Globals
 Global UI_DebugMode             as Boolean      : `internal debug variables, no need to worry about them
+Global UI_LogMode               as Boolean      : `internal, if logmode is true, then debug will create logfile
+Global UI_LogFileID             as Integer      : `internal, if logmode is true, then debug will create logfile
 Global UI_FunctionName$         as String       : `internal debug variables, no need to worry about them
 Global UI_IncludedFileName$     as String       : `internal debug variables, no need to worry about them
 Global UI_OldFunctionName$      as String       : `internal debug variables, no need to worry about them
@@ -357,8 +366,7 @@ Function UI_Init()
 //***************************************************************************************
 
 // Start Debugmode
-	UI_StartDebugmode()
-
+	UI_StartDebugmode(UI_LogOFF)    :`change parameter to UI_Logon to do logfile
 // Setup basic data
 	UI_Display.Width                = Screen Width()
 	UI_Display.Height               = Screen Height()
@@ -430,7 +438,7 @@ Function UI_Handle()
 
 
 //- If pressed esc then quit
-	If Keystate(1)=1 then End
+	If Keystate(1)=1 then SyS_Event_Terminate=1
 
 Endfunction
 
@@ -504,20 +512,21 @@ Local a$ as String:Local b$ as String:Local c$ as String
 	UI_CheckDXSprites()
 	// check if fontfile exist
 	UI_CheckFile(name$)
-		Open To Read 1,name$
+		UI_TempFileID=grabresource(res_file)
+		Open To Read UI_tempfileID,name$
 				//read the bitmapfontname and load
-				Read String 1,a$:b$ = First Token$(a$,"="):c$=Next Token$("=")
+				Read String UI_tempfileID,a$:b$ = First Token$(a$,"="):c$=Next Token$("=")
 				//Check if bitmapfont image exist
 				 UI_CheckFile(c$)
 				 UI_stringmap(ID,258).bitmapID = DXS CREATE SPRITE(c$)
 				DXS SET SPRITE CENTER  UI_stringmap(ID,258).bitmapID,0,0
     
 			    //read the bitmap font width
-			    Read String 1,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
+			    Read String UI_tempfileID,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
 			    UI_stringmap(ID,257).ascii = Val(c$)
 		
 				//read the bitmap font height
-				Read String 1,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
+				Read String UI_tempfileID,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
 				UI_stringmap(ID,257).bitmapID = val(c$)
 				DXS SET SPRITE TILE SIZE  UI_stringmap(ID,258).bitmapID, UI_stringmap(ID,257).ascii, UI_stringmap(ID,257).bitmapID    ` Cut the sprites into 32x32 pixels tiles.
 				DXS SET SPRITE SCALE  UI_stringmap(ID,258).bitmapID,100,100
@@ -525,13 +534,13 @@ Local a$ as String:Local b$ as String:Local c$ as String
 		
 				//load the ascii codetable
 				For x=1 to 256
-					 Read String 1,a$
+					 Read String UI_tempfileID,a$
 					 b$ = First Token$(a$,"=")
 					 c$ = Next Token$("=")
 					 UI_stringmap(ID,x).ascii    = Val(b$)
 					 UI_stringmap(ID,x).bitmapID = Val(c$)
 				Next x
-		Close File 1
+		Close File UI_tempfileID:freeresource(UI_tempfileID,res_file)
 	UI_RestoreDebugPosition()
 Endfunction
 
@@ -768,17 +777,18 @@ Function UI_InitAndLoadWindow(name$)
 Local a$ as String:Local b$ as String:Local c$ as String
 	UI_SetDebugPosition("UI_InitAndLoadWindow()","module_ui.dba")
 		UI_CheckDXSprites():UI_Checkfile(name$)	
-		Open to Read 1,name$
+		UI_tempfileID=grabresource(res_file)
+		Open to Read UI_tempfileID,name$
 				`read the windowname and load
-				Read String 1,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
+				Read String UI_tempfileID,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
 				UI_mywindow.ID      = DXS CREATE SPRITE(c$)
-				Read String 1,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
+				Read String UI_tempfileID,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
 				UI_mywindow.xwidth  = Val(c$)
 				`read the window height
-				Read String 1,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
+				Read String UI_tempfileID,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
 				UI_mywindow.yrow    = Val(c$)
 				DXS SET SPRITE TILE SIZE UI_mywindow.ID,UI_mywindow.xwidth,UI_mywindow.yrow    ` Cut the sprites into x * y pixels tiles.
-		Close File 1
+		Close File UI_tempfileID:freeresource(UI_tempfileID,res_file)
 	UI_RestoreDebugPosition()
 Endfunction
 
@@ -2395,14 +2405,43 @@ Endfunction
 /////////////////////////////////////////////////////
 //DEBUG   COMMANDS
 /////////////////////////////////////////////////////
-Function UI_StartDebugMode()
+Function UI_StartDebugMode( param_logmode as Boolean )
 //***************************************************************************************
 //*   Miso                                                                              *
 //*     Starts the debug mode.                                                          *
 //*                                                                                     *
 //***************************************************************************************
-  UI_DebugMode = UI_True
-  UI_SetDebugPosition("main program","test_game.dba")
+local var_time$ as String
+local var_month$ as String
+local var_day$ as string
+local var_year$ as string
+local var_hour$ as string
+local var_minutes as string
+local var_Seconds as string
+  	UI_DebugMode = UI_True
+  	If param_logmode = UI_True
+  		UI_LogMode   = UI_True
+  		UI_LogFileID = grabresource(res_file)
+var_time$=Get Date$()
+var_month$ = left$(var_time$,2)
+var_day$ = mid$(var_time$,4) + mid$(var_time$,5)
+var_year$ = "20" + right$(var_time$,2)
+
+var_time$=Get Time$()
+var_hour$ = left$(var_time$,2)
+var_minutes$ = mid$(var_time$,4) + mid$(var_time$,5)
+var_seconds$ = right$(var_time$,2)
+
+var_time$="openfps "+var_year$+"."+var_month$+"."+var_day$
+var_time$=var_time$+"_"+var_hour$+"h "+var_minutes$+"m "+var_seconds$+" s.log"
+
+
+  		If File Exist(var_time$) = UI_True Then Delete File var_time$
+  		Open to Write UI_LogFileID,var_time$
+  	else
+  		UI_Logmode   = UI_False
+  	Endif
+  	UI_SetDebugPosition("main program","test_game.dba")
 Endfunction
 
 
@@ -2415,6 +2454,14 @@ Function UI_StopDebugMode()
 //*                                                                                     *
 //***************************************************************************************
   UI_DebugMode = UI_False
+	If UI_Logmode = UI_Logon
+  		UI_LogMode   = UI_Logoff
+  		
+  			Close File UI_LogFileID
+  		
+   		
+  	Endif
+
 Endfunction
 
 

@@ -10,6 +10,7 @@ Remstart
 `***** Included Source File *****
 `----- Changelog:
 `(06/27/10) - miso     - Created
+`(07/04/10) - miso     - Changed an end command to SyS_Event_Terminate=1
 
 `----- To-Do:
 
@@ -57,7 +58,7 @@ Function UI_SUB_CheckConsoleCommand()
 //***************************************************************************************
 	If Upper$(UI_Input.result)="HIDE MOUSE" then UI_FadeOutMouse()
 	If Upper$(UI_Input.result)="SHOW MOUSE" then UI_FadeInMouse()
-	If Upper$(UI_Input.result)="EXIT" then end
+	If Upper$(UI_Input.result)="EXIT" then SyS_Event_Terminate=1
 	If Upper$(UI_Input.result)="DEBUG" then DebugScreen=1
 Endfunction
 

@@ -22,6 +22,13 @@ remstart
 (6/27/10)  - thenerd  - Added some effects to the menu background.
 (6/27/10)  - thenerd  - Added some effects to the menu background.
 (6/27/10)  - miso     - Repositioned the texts to give space for the appearing console
+(6/27/10)  - miso     - Added variable SyS_Event_Terminate, to properly jump to the
+                        terminate functions part. Set this to 1 of you want to terminate
+                        instead of an "end" command. I put it here, because I dont know which
+                        module would fit best to contain it. Reposition it if you have a better idea,
+                        or I suggest to create a module_core or module_System, 
+                        so I should put my debug commands there too.
+                       -Added label _terminate:
 
 
 ----- To-Do
@@ -32,6 +39,11 @@ Important note for all modules: don't use mousemovex() and mousemovey() commands
                                 they get their value every loop. (miso.)
 
 remend
+
+`==========Globals==========`
+Global SyS_Event_Terminate as Boolean : `set this variable to 1 to force the main module
+                                      : `to run the terminate functions. 
+                                      : `(I need it to close my logfile)
 
 /////////////////////////////////////////////////////////
 // INIT                                                //
@@ -123,12 +135,20 @@ UI_Handle()
 
 //Syncronize backbuffers
 sync
+//checks if any module triggered a quit event
+If SyS_Event_Terminate=1 then goto _terminate
+
+
+
+//-----------------main loop end
 loop
 
-terminateMovement()
-terminateShooting()
-terminateAI()
-terminateResource()
-terminateTerrain()
-terminateUI()
+//---label _terminate:
+	_terminate:
+		terminateMovement()
+		terminateShooting()
+		terminateAI()
+		terminateResource()
+		terminateTerrain()
+		terminateUI()
 end
