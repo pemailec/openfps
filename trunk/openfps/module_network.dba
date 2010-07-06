@@ -10,11 +10,8 @@ remstart
 
 ----- Changelog:
 (2/8/10) - BMacZero - Created
-(2/8/10) - miso     - just placed logger commands
-
-DO NOT MODIFY THIS MODULE YET.  Its structure will be heavily
-reliant on how the others shape up.
-
+(07/06/10) - miso     - just placed logger commands
+(07/06/10) - thenerd  - added commands
 
 ----- To-Do:
 -None-
@@ -28,10 +25,17 @@ Passes this information to relevant modules to deal with it.
 ----- Dependancies and Conflicts (IMPORTANT STUFF):
 -None-
 
-
 ----- Other Notes:
+-None-
 
+----- Function List:
+-Client:
+initNetwork()		- initializes the networking module
+updateNetwork()     - updates any network data with the server.
+terminateNetwork()  - ends the networking module, and cleans up any used resources.
 
+-Server:
+-NONE-
 
 remend
 
@@ -52,7 +56,9 @@ endfunction
 // CORE                                                //
 /////////////////////////////////////////////////////////
 
+function updateNetwork()
 
+endfunction
 
 
 /////////////////////////////////////////////////////////
