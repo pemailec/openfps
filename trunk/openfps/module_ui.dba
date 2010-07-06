@@ -481,9 +481,11 @@ UI_WriteLog(UI_Green,"=== Starting to terminate User Interface module")
 				Next X
 			Endif
 			UI_WriteLog(UI_Green,"=== User Interface module succesfully terminated")
+			
 	Else
 			UI_WriteLog(UI_RED,"=== User Interface module was not initialized")	
 	Endif
+			
 Endfunction
 
 
@@ -1378,7 +1380,7 @@ Function UI_LoadGuiGraphics(ImageFile$,ImageID$)
 		UI_GadgetImageNumbers                                     = UI_GadgetImageNumbers+1
 		UI_Gadgetimages(UI_GadgetImageNumbers).GadgetImagePointer = DXS CREATE SPRITE(ImageFile$)
 		UI_Gadgetimages(UI_GadgetImageNumbers).GadgetImageName    = ImageID$
-		UI_WriteLog(UI_Green,"loaded image succsessfully.")
+		UI_WriteLog(UI_Green,"loaded image successfully.")
 	UI_RestoreDebugPosition()      
 Endfunction
 
@@ -2450,9 +2452,12 @@ var_time$="openfps "+var_year$+"."+var_month$+"."+var_day$
 var_time$=var_time$+"_"+var_hour$+"h "+var_minutes$+"m "+var_seconds$+" s.log"
 
 // we need 1 logfile at the moment, so we disable naming depended on time
-		var_time$="openfps.log"
+		var_time$="openfps_log.html"
   		If File Exist(var_time$) = UI_True Then Delete File var_time$
   		Open to Write UI_LogFileID,var_time$
+		Write String UI_LogfileID,"<html><body>"
+		Write String UI_LogfileID,"OpenFps Logfile<br>"
+		Write String UI_LogFileID,"<br>"
   	else
   		UI_Logmode   = UI_False
   	Endif
@@ -2471,19 +2476,20 @@ local var_minutes$    as string
 local var_Seconds$    as string
 Local var_logstring$  as string
 Local var_importance$ as string
+Local var_colorizer$  as string
 
 	If UI_Logmode = UI_Logon
 		Select param_importance
-			Case UI_Red    : var_importance$="RED: "    : EndCase
-			Case UI_YELLOW : var_importance$="YELLOW: " : EndCase
-			Case UI_GREEN  : var_importance$="GREEN: "  : EndCase
+			Case UI_Red    : var_importance$="RED: "    :var_colorizer$="<font color=#440000>": EndCase
+			Case UI_YELLOW : var_importance$="YELLOW: " :var_colorizer$="<font color=#444400>": EndCase
+			Case UI_GREEN  : var_importance$="GREEN: "  :var_colorizer$="<font color=#004400>": EndCase
 		Endselect
 		If File Open(UI_LogFileID)=1
 			var_time$=Get Time$()
 			var_hour$ = left$(var_time$,2)
 			var_minutes$ = mid$(var_time$,4) + mid$(var_time$,5)
 			var_seconds$ = right$(var_time$,2)
-			var_logstring$=var_importance$+" - "+var_hour$+":"+var_minutes$+":"+var_seconds$+" - " + param_log$
+			var_logstring$=var_colorizer$+var_importance$+" - "+var_hour$+":"+var_minutes$+":"+var_seconds$+" - " + param_log$+"</font><br>"
 			Write String UI_LogFileID,var_logstring$
 		Endif
 	Endif
@@ -2498,12 +2504,13 @@ Function UI_StopDebugMode()
 //***************************************************************************************
   UI_DebugMode = UI_False
 	If UI_Logmode = UI_Logon
-  		UI_LogMode   = UI_Logoff
   		
-  			Close File UI_LogFileID:freeresource(UI_LogfileID,res_file)
-  		
-   		
-  	Endif
+  			UI_WriteLog(UI_Yellow,"Just testing yellow importance.")
+  			UI_WriteLog(UI_RED,"Closing Logfile.")
+ 			Write String UI_LogfileID,"</body></html>"
+ 			UI_LogMode   = UI_Logoff
+  			Close File UI_LogFileID:rem freeresource(UI_LogfileID,res_file)
+   	Endif
 
 Endfunction
 

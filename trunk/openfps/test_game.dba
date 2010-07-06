@@ -151,4 +151,5 @@ loop
 		terminateResource()
 		terminateTerrain()
 		terminateUI()
+		UI_Stopdebugmode()
 end

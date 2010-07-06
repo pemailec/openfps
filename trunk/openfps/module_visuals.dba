@@ -56,6 +56,7 @@ remend
 `==========Globals==========`
 Global VS_Sky             as Myskytype   :`basic data for sky
 Global VS_SkyScrollTicker as Integer     :`timer variable for internal use
+Global VS_Sun             as MySunType
 `===========================`
 
 `===========Types===========`
@@ -67,6 +68,23 @@ Type MyskyType
 	ScrollSpeedX     as Float  :`velocity of scrolling in X axis
 	ScrollSpeedY     as Float  :`velocity of scrolling in Y axis
 EndType
+
+Type MySunType
+	Initialized      as Boolean:`1 if initialized
+	Bloomenabled     as Boolean:`1 if bloom is enabled
+	ObjID            as Integer:`ID of the sun plane object
+	BloomObjID       as Integer:`ID od the sun false bloom/glow plane object
+	TextureID        as Integer:`ID of the texture
+	BloomTextureID   as Integer:`ID of the false bloom/glow texture
+	Size             as Integer:`size in dbro units
+	Distance         as Integer:`fixed distance	 from camera
+	Angle            as Integer:`angle
+	X                as Float  :`auto counted
+	Y                as Float  :`auto counted
+	Z                as Float  :`auto counted
+EndType
+
+
 `===========================`
 
 
@@ -90,6 +108,7 @@ UI_WriteLog(UI_Green,"=== Starting Visuals module")
 	VS_Sky.Scrollenabled=VS_True : VS_Sky.ScrollSpeedX=0.00005 : VS_Sky.ScrollSpeedY=0.00001
   //--create timer
 	VS_CreateSkyScrollTicker()
+	VS_AddSunToScene("media\visuals\vs_basicsun.jpg",100000,50000,100000,46000)
 UI_WriteLog(UI_Green,"=== Visual module started")
 Endfunction
 
@@ -108,9 +127,6 @@ Function VS_AddSkyToScene(param_object$,param_texture$)
 //***************************************************************************************
 //*   Miso                                                                              *
 //*     This function loads the sky model and textures it.                              *
-//*                                                                                     *
-//*                                                                                     *
-//*                                                                                     *
 //*                                                                                     *
 //***************************************************************************************
   UI_SetDebugPosition("VS_AddskytoScene()","module_visuals.dba")
@@ -131,6 +147,11 @@ Endfunction
 
 
 Function VS_UpdateSky()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Scroll sky texture if needed at loop.                                           *
+//*                                                                                     *
+//***************************************************************************************
 // scrolls sky
 	If VS_Sky.Initialized=VS_True
 		Position Object VS_Sky.ObjID,PLR_HeadPos.x,PLR_HeadPos.y-15000,PLR_HeadPos.z
@@ -143,6 +164,11 @@ Function VS_UpdateSky()
 Endfunction
 
 Function VS_DeleteSky()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Delete Sky, won't crash the game.                                                *
+//*                                                                                     *
+//***************************************************************************************
 	If VS_Sky.Initialized=VS_True
 		If Object Exist(VS_Sky.ObjID)=VS_True then Delete Object VS_Sky.ObjID
 		IF Image Exist(VS_Sky.TextureID)=VS_True then Delete Image VS_Sky.TExtureID
@@ -152,7 +178,46 @@ Function VS_DeleteSky()
 Endfunction
 
 
-Function VS_AddSunToScene()
+Function VS_AddSunToScene(param_img$,x,y,z,size)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Loads sun texture and initialize sun object.                                    *
+//*                                                                                     *
+//***************************************************************************************
+UI_SetDebugPosition("VS_AddsSunToScene()","module_visuals.dba")
+	If VS_Sun.Initialized=VS_False
+		VS_Sun.ObjID=grabresource(res_object) 
+		VS_Sun.TextureID=grabresource(res_image)
+		
+		//--Checks if image file exists
+		UI_Checkfile(param_img$)
+		
+		//--Load image for sun
+		Load Image param_img$,VS_Sun.TextureID
+		
+		//--Make sun object plain
+		Make object plain VS_Sun.ObjID,size,size
+		VS_Sun.Size=size
+		rem VS_Sun.Angle=angle
+		rem VS_Sun.Distance=p_distance
+		rem VS_Sun.X = VS_Sun.Distance*cos(VS_Sun.Angle)-VS_Sun.Distance*sin(VS_Sun.Angle)
+		rem VS_Sun.Y = VS_Sun.Distance*cos(VS_Sun.Angle)+VS_Sun.Distance*sin(VS_Sun.Angle)
+		rem VS_Sun.Z = 0
+		
+		VS_Sun.X = x
+		VS_Sun.Y = y
+		VS_Sun.Z = z
+			
+		
+		Position Object VS_Sun.ObjID,VS_Sun.x,VS_Sun.y,VS_Sun.z
+		Texture Object VS_Sun.Objid,VS_Sun.TextureID
+		Point Object VS_Sun.ObjID,0,0,0
+		Set Object Light VS_Sun.ObjID,0
+		Set Object Fog VS_Sun.ObjID,0
+		Disable Object Zwrite VS_Sun.ObjID
+		Ghost Object On VS_Sun.ObjID
+	Endif
+UI_RestoreDebugPosition()
 Endfunction
 
 Function VS_UpdateSun()
