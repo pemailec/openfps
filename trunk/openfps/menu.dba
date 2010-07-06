@@ -196,7 +196,7 @@ do
 
 
 	button("Versus Mode",78,279,rgb(255,255,255))
-	button("Help",78,339,rgb(255,255,255))
+	button("Character Setup",78,339,rgb(255,255,255))
 	button("Options",78,399,rgb(255,255,255))
 	button("Credits",78,459,rgb(255,255,255))
 	If Button("Quit",78,519,rgb(255,255,255))=1 
