@@ -38,6 +38,7 @@ remstart
 (07/03/10) - miso     - Linked the the information window to the console bar.
                       - Updated the function list
                       - fixed a serious possible bug source. (correctly using grabbing resource for res_file now)
+(7/6/10)   - miso     - changed log commands to write .html format log
 Remend
 Remstart
 ----- To-Do:
@@ -376,11 +377,10 @@ Function UI_Init()
 	UI_Display.Height               = Screen Height()
 	UI_Display.MiddleWidth          = UI_Display.Width/2 
 	UI_Display.MiddleHeight         = UI_Display.Height/2 
-	UI_Display.Dxspriteinitialized  = UI_True
 	UI_EVENT_ConsoleOffset=-48
 // Init Advanced Sprite
 	
-	Dxs Initialize
+	Dxs Initialize:UI_Display.Dxspriteinitialized  = UI_True
 	
 // creates 8 blank ascii font
     Global Dim UI_Stringmap(8,258)  as Mystringmaptype
@@ -405,6 +405,10 @@ Function UI_Init()
 	UI_LoadGuiGraphics("media\bars\redbar.png","UI_redbar")
 	UI_LoadGuiGraphics("media\bars\orangebar.png","UI_orangebar")
 		
+	UI_LoadGuiGraphics("media\buttons\button-normal.png","UI_button")
+	UI_LoadGuiGraphics("media\buttons\button-hover.png","UI_buttonhover")
+		
+
 
 // Disable escapekey
 	Disable Escapekey
@@ -845,8 +849,9 @@ Function UI_InitMouse(param_cursorimage$ as String)
 
 	UI_SetDebugPosition("UI_InitMouse()","module_ui.dba")      :` Tells the debugger where we are               
  		UI_CheckDxSprites()                                    :` Checks adv spr
- 		UI_Checkfile(param_cursorimage$)                       :` Checks if mouse image exist in HD                        
 		UI_WriteLog(UI_Green,"loading mouse cursor image: " + param_cursorimage$ + ".")
+ 		UI_Checkfile(param_cursorimage$)                       :` Checks if mouse image exist in HD                        
+
 		UI_Mouse.ID          = DXS CREATE SPRITE(param_cursorimage$)
 		UI_Mouse.Initialized = UI_True
 		UI_Mouse.Hidden      = UI_False
@@ -1310,8 +1315,8 @@ Function UI_LoadAndSetMouseClickSND(snd$)
 //*                                                                                     *
 //***************************************************************************************
 	UI_SetDebugPosition("UI_SetMouseClickSND()","module_ui.dba")
-		UI_CheckFile(snd$)
 		UI_WriteLog(UI_Green,"loading mouse click sound : " + snd$ + ".")
+		UI_CheckFile(snd$)
 		UI_MouseClickSND = GrabResource(res_Sound)
 		load sound snd$,UI_MouseClickSND
 		UI_WriteLog(UI_Green,"sound succesfully loaded.")
@@ -2564,6 +2569,11 @@ Function UI_Checkdxsprites()
 		If UI_display.dxspriteinitialized=1 
 				exitfunction
 			else
+				UI_WriteLog(UI_Red,"Advanced Sprites Not Initialized ")+filename$
+				UI_WriteLog(UI_Red,"Initializing Advanced Sprites")
+				DXS INITIALIZE : UI_Display.Dxspriteinitialized  = UI_True
+				UI_WriteLog(UI_Yellow,"Advanced Sprites Initialized, but there may be errors.")+filename$
+								
 				repeat
 					cls:set cursor 1,1
 					print " "
@@ -2574,8 +2584,8 @@ Function UI_Checkdxsprites()
 					Print "********************************"
 					Print " "
 					Print "ERROR: Advanced Sprites not Initialized."
-					Print " "
-					Print " "
+					Print "Advanced sprites forced to initiate, errors may occours."
+					Print "Press Enter to continue."
 					Print " "
 					Print "__________________________________________________________________________________________________________________________"
 					print "The "+UI_FunctionName$+" in "+UI_IncludedFilename$+" tries to use"
@@ -2583,10 +2593,10 @@ Function UI_Checkdxsprites()
 			    	Print "__________________________________________________________________________________________________________________________"
 					Print " "
 				    print " "
-			    	Print "Press Enter to Halt."
+			    	Print "Press Enter to Continue."
 			    	sync
 				until returnkey()=1
-			End
+			exitfunction
 		Endif
 	Endif
 Endfunction
@@ -2607,6 +2617,9 @@ Function UI_CheckFile(filename$ as string )
 		If file exist(filename$) = 1
 				exitfunction
 			else
+				UI_WriteLog(UI_Red,"Missing File: ")+filename$
+				UI_WriteLog(UI_Red,"Exiting instantly ")
+				UI_Stopdebugmode()
 				repeat
 					cls:set cursor 1,1
 					print " "
