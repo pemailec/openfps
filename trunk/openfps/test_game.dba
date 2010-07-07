@@ -54,6 +54,7 @@ set display mode 1024,768,screen depth(),1
 autocam off
 randomize timer()
 hide mouse
+disable escapekey
 
 `/ INITIATE CORE MODULES
 initResource()
@@ -150,6 +151,8 @@ loop
 		terminateAI()
 		terminateResource()
 		terminateTerrain()
+	_terminate_via_menu:
 		terminateUI()
 		UI_Stopdebugmode()
+		UI_WriteLog(UI_Red,"Program Ended.")
 end

@@ -4,7 +4,7 @@ remstart
 // OpenFPS MENU Module
 //
 // Created by thenerd
-// Maintained by thenerd
+// Maintained by thenerd, miso
 //
 /////////////////////////////////////////////////////
 
@@ -21,7 +21,8 @@ remstart
 (7/01/10)  - miso           - Hides ui_mouse before entering game mode
                               Creates a stamina bar, before jumping to game mode (won't crash the game if we delete this part)
 (07/04/10) - miso           - Changed an end command to SyS_Event_Terminate=1
-(07/07/10) - thenerd - miso - Started to rewrote with user interface commands
+(07/06/10) - thenerd, miso  - Started to rewrote with user interface commands
+(07/07/10) - thenerd        - Recoding menu, working on chat lobby and server list.
 
 ----- To-Do:
 
@@ -43,9 +44,10 @@ remend
 /////////////////////////////////////////////////////////
 
 function initMenu()
-UI_WriteLog(UI_Green,"=== Starting Menu module")
+	UI_WriteLog(UI_Green,"=== Starting Menu module")
 	menu_initbackdrop()
 	menu_CreateMain()
+	global CurrentWindow$
 endfunction
 /////////////////////////////////////////////////////////
 // CORE                                                //
@@ -55,29 +57,39 @@ function runMenu()
 do
 	//---update menu and UI
 	menu_updatebackdrop()
+	
+	//--------------------------------------
+	//----render button-specific windows
+	select CurrentWindow$
+		case "button_quit"
+			ui_putwindow(UI_Display.Middlewidth-280,UI_Display.Middleheight-10,35,15)
+		endcase
+	endselect
+	
 	UI_handle()
 
 	//----check buttonclicks
 	If mouseclick()=1 and UI_Mouseclicked=0
 		Select UI_MouseOveredGadget$
-
 			Case "button_campaign"
 				UI_ClearAllGuis()          :`Clears all existing gadgets
 				UI_HideMouse()             :`Hide mouse before entering game mode
 				UI_AddTextLine(3,UI_Display.middlewidth,350,"...LOADING...")
 				menu_UpdateBackdrop():UI_Handle():Sync
-				menu_UpdateBackdrop():UI_Handle():Sync
 				UI_ClearAllGuis()          :`Clears all existing gadgets
 				MENU_AddOPENFPSStaminaBar():`Add staminabar
 				MENU_AddOPENFPSFatigueBar():`Add fatiguebar
 				UI_PlayMouseClickSND()     :`Plays mouseclick sound
+				Menu_DeleteBackdrop()
 				Exit                       :`Jumps to Campaign Mode
+				CurrentWindow$="button_campaign"
 			EndCase
 		
 			Case "button_quit"
 				UI_ClearAllGuis()
 				UI_PlayMouseClickSND()
 				Menu_CreateQuitQuestion()
+				CurrentWindow$="button_quit"
 			EndCase
 		
 			Case "button_yesquit"
@@ -89,17 +101,25 @@ do
 				UI_ClearAllGuis()
 				UI_PlayMouseClickSND()
 				Menu_Createmain()
+				CurrentWindow$="main"
 			EndCase
-		
-		
 		Endselect
 	Endif
+	
 
-//---Sync
-Sync
-
-if escapekey()=1 then end
+	
+	//---Sync
+	Sync
 loop
+//checks if any module triggered a quit event
+UI_WriteLog(UI_Red,"=== Menu Loop Terminated")
+If SyS_Event_Terminate=1:
+	Menu_DeleteBackdrop()
+	UI_WriteLog(UI_Yellow,"=== GOTO Terminate Script.")
+	goto _terminate_via_menu
+endif
+UI_WriteLog(UI_Green,"=== Switching To Game Engine...")
+
 endfunction
 /////////////////////////////////////////////////////////
 // SUPPORT                                             //
@@ -113,36 +133,37 @@ x=168:y=240
 	UI_AddtitleToGadget("button_campaign",3,x-8,y-14,"Campaign")
 	
 
-x=168:y=y+80
+x=168:y=y+60
 	UI_AddCenterGadgettoScreen("button_versus",x,y,"UI_button")
 	UI_AddMouseoverImageToGadget("button_versus","UI_buttonhover")
 	UI_AddtitleToGadget("button_versus",3,x-8,y-14,"Versus")
 
-x=168:y=y+80
+x=168:y=y+60
 	UI_AddCenterGadgettoScreen("button_charactersetup",x,y,"UI_button")
 	UI_AddMouseoverImageToGadget("button_charactersetup","UI_buttonhover")
 	UI_AddtitleToGadget("button_charactersetup",3,x-8,y-14,"Character")
 
-x=168:y=y+80
+x=168:y=y+60
 	UI_AddCenterGadgettoScreen("button_options",x,y,"UI_button")
 	UI_AddMouseoverImageToGadget("button_options","UI_buttonhover")
 	UI_AddtitleToGadget("button_options",3,x-8,y-14,"Options")
 
-x=168:y=y+80
+x=168:y=y+60
 	UI_AddCenterGadgettoScreen("button_credits",x,y,"UI_button")
 	UI_AddMouseoverImageToGadget("button_credits","UI_buttonhover")
 	UI_AddtitleToGadget("button_credits",3,x-8,y-14,"Credits")
 
 
-x=168:y=y+80
+x=168:y=y+60
 	UI_AddCenterGadgettoScreen("button_quit",x,y,"UI_button")
 	UI_AddMouseoverImageToGadget("button_quit","UI_buttonhover")
 	UI_AddtitleToGadget("button_quit",3,x-8,y-14,"Quit")
 EndFunction
 
 Function Menu_CreateQuitQuestion()
-	X=UI_Display.Middlewidth:Y=550
-	UI_AddTextLine(3,x,y,"Are you sure to quit?")
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight+50
+	
+	UI_AddTextLine(3,x,y,"Are you sure you want to quit?")
 	
 	X=x-150 : Y=Y+100
 	UI_AddCenterGadgettoScreen("button_yesquit",x,y,"UI_button")
@@ -159,8 +180,8 @@ EndFunction
 
 
 Function Menu_CreateIngameQuitQuestion()
-	X=UI_Display.Middlewidth:Y=550
-	UI_AddTextLine(3,x,y,"Are you sure to quit?")
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight+50
+	UI_AddTextLine(3,x,y,"Are you sure you want to quit?")
 	
 	X=x-150 : Y=Y+100
 	UI_AddCenterGadgettoScreen("button_yesquit",x,y,"UI_button")
@@ -178,7 +199,6 @@ EndFunction
 function Menu_InitBackdrop():
 	UI_WriteLog(UI_Green,"=== Creating Menu Backdrop")
 	global menu_mainimage
-	global menu_mainsprite
 	menu_mainimage  = grabResource(res_Image)
 	load image "media\menu\main.png",menu_mainimage
 	
@@ -188,6 +208,7 @@ function Menu_InitBackdrop():
 	sync rate 60
 	
 	global menu_bgfx1
+	global menu_bgfx1img
 	menu_bgfx1  = grabResource(res_Object)
 	menu_bgfx1img  = grabResource(res_Image)
 	load image "media\menu\menu_bgfx1img.png",menu_bgfx1img
@@ -210,10 +231,7 @@ function Menu_UpdateBackdrop():
 endfunction
 
 function Menu_DeleteBackdrop():
-	delete object menu_bgfx1
-	stop music menu_music
-	delete image menu_mainimage
-	delete image menu_bgfx1img
+	UI_WriteLog(UI_Green,"=== Deleting Menu...")
 	freeResource(menu_bgfx1        ,res_Object)
 	freeResource(menu_mainimage    ,res_Image )
 	freeResource(menu_bgfx1img     ,res_Image )
