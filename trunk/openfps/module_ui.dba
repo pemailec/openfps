@@ -228,6 +228,9 @@ Global UI_EVENT_ConsoleChanged      as Boolean  : `true if user just hitted tab
 Global UI_EVENT_ConsoleOffset       as Integer  : `Y offset for command line
 Global UI_EVENT_ConsoleState        as Integer  : `1 if console is appearing 2 if disappearing, 0 if nothing to do
 
+
+
+
 //-----Gadget Globals
 Global MainMenuElementImage 		as Integer  :` 0, yet unused
 Global UI_GuiStatus            	    as Boolean  :` UI_True if some gui and mouse is present
@@ -399,7 +402,8 @@ Function UI_Init()
 	UI_LoadandSetMouseClickSND("media\cursors\Hit tree.wav")
 // Init Gui functions
 	UI_InitGuiGraphics()	
-	
+	UI_SUB_InitChatBox("media\panels\ui_chatbox.png",770,500)
+
 // Load internal Gui Images
 	UI_LoadGuiGraphics("media\bars\barholder.png","UI_barholderimage")
 	UI_LoadGuiGraphics("media\bars\redbar.png","UI_redbar")
@@ -425,12 +429,15 @@ Function UI_Handle()
 
 //Add value to the mouse variables
 	SyS_MouseMoveX = MouseMoveX():SyS_MouseMoveY = MouseMoveY()
-//-Checks input events
-	UI_CheckInput()
-//-Handle all the gadgets
-	UI_HandleGadgets()
 //-Handle all the console
 	UI_HandleConsole()
+
+//-Handle all the gadgets
+	UI_HandleGadgets()
+//-Checks input events
+	UI_CheckInput()
+//-Handle Chatbox input events
+	UI_Sub_HandleChatBox()
 //-Handle all the mouse
 	UI_HandleMouse()
 //-Check if we disabled non gui mouse movements
@@ -1413,6 +1420,33 @@ local x as Integer
 Endfunction return_param
 
 
+Function UI_MoveGadget(gadgetidname$,param_x,param_y)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Offset Gadget position with param_x and param_y.                                *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+
+local x as Integer
+	If UI_GuiInitialized = UI_True
+		If UI_GadgetNumbers>UI_False
+			For x=1 to UI_GadgetNumbers
+				If UI_Gadgets(x).Gadgetname = gadgetIDname$ 
+					UI_gadgets(x).x=UI_gadgets(x).x+param_x
+					UI_gadgets(x).y=UI_gadgets(x).y+param_y
+					UI_gadgets(x).titlex=UI_gadgets(x).titlex+param_x
+					UI_gadgets(x).titley=UI_gadgets(x).titley+param_y
+					
+					rem if 	UI_gadgets(x).x>(UI_Display.width-UI_gadgets(x).width) then UI_gadgets(x).x=(UI_Display.width-UI_gadgets(x).width)
+						
+					
+					
+				Endif
+			Next x
+		Endif
+	Endif
+Endfunction
 
 
 

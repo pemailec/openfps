@@ -1,0 +1,228 @@
+Rem ***** Included Source File *****
+Rem ***** Included Source File *****
+Remstart
+/////////////////////////////////////////////////////
+//
+// OpenFPS USER INTERFACE SUBMODULE            
+//
+// Created by miso    
+//
+/////////////////////////////////////////////////////
+`***** Included Source File *****
+`----- Changelog:
+`(07/07/10) - miso     - Created
+
+`----- To-Do:
+
+`----- Purpose:
+`Handles the chatbox for the client
+
+`----- Dependancies and Conflicts (IMPORTANT STUFF):
+`Uses the main user interface module. (module_ui.dba)
+
+`----- Conflicts
+
+`----- Other Notes:
+`Usage (IMPORTANT***):
+
+`Just put your own console command here, as the examles shows.
+
+`----- Function List:
+
+`----------MAIN  COMMANDS
+
+
+Remend
+/////////////////////////////////////////////////////
+//MAIN COMMANDS
+/////////////////////////////////////////////////////
+
+`=========Constants=========`
+`===========================`
+`==========Globals==========`
+Global UI_chatboxInput                 as myinputtype  : `basic input data will be stored here
+//-----Console Globals
+Global UI_EVENT_ChatboxInput        as Boolean  : `true, if the console is shown
+Global UI_EVENT_ChatboxChanged      as Boolean  : `true if user just hitted tab
+Global UI_EVENT_ChatboxOffset       as Integer  : `Y offset for command line
+Global UI_EVENT_ChatboxState        as Integer  : `1 if console is appearing 2 if disappearing, 0 if nothing to do
+Global RRR as integer
+Global Chatpanel                    as mychatboxtype
+`===========================`
+
+`===========Types===========`
+
+Type mychatboxtype
+x as integer
+y as integer
+acive as boolean
+endtype
+`===========================`
+
+
+`=========Functions=========`
+Function UI_SUB_InitChatBox(param_chatpanelimage$,param_x,param_y)
+//***************************************************************************************
+//*   Miso   : Initiate the chatbox gui.                                                *
+//*                                                                                     *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+rrr=620
+	UI_SetDebugPosition("UI_Sub_InitChatBox()","module_ui_chatbox.dba")
+		Dim Chatlines$(26):chatlines$(1)="miso: testing"
+		If UI_gadgetImageExist("UI_chatpanel")=0 
+		Chatpanel.x=param_x:chatpanel.y=param_y
+			UI_LoadGuiGraphics(param_chatpanelimage$,"UI_chatboximage")
+			UI_AddCenterGadgetToScreen("UI_chatbox",param_x,param_y,"UI_chatboximage")			
+			UI_Addmouseoverimagetogadget("UI_chatbox","UI_chatboximage")
+			UI_AddTitleToGadget("UI_chatbox",3,param_x-8,param_y-180,"CHATBOX")
+			UI_WriteLog(UI_Green,"Chatbox has been initialized.")
+	
+			
+	a=147
+			UI_SUB_Chatboxinput(1,chatpanel.x-177,chatpanel.y+a,"> ",29)
+		Else
+
+			UI_WriteLog(UI_RED,"Tries to double init chatbox")
+
+		Endif
+	UI_CheckChatboxInput()
+	UI_restoreDebugPosition()
+Endfunction
+
+Function UI_Addtexttochatbox(param_text$)
+	
+	For X=1 to 25
+	
+	chatlines$(26-x)=chatlines$(25-x)
+	Next x
+	
+	chatlines$(1)=param_text$
+	
+endfunction
+
+
+Function UI_SUB_HandleChatBox()
+	UI_checkchatboxinput()
+	If UI_Chatboxinput.alive=3
+		If UI_Chatboxinput.result <> ""
+			rrr=rrr-10
+			a=147
+			UI_Addtexttochatbox("Client: "+UI_ChatboxInput.Result)
+			UI_Chatboxinput.alive=0
+			UI_Chatboxinput.current=""
+			UI_SUB_Chatboxinput(1,chatpanel.x-177,chatpanel.y+a,"> ",29)
+		Else
+			a=147
+			UI_Chatboxinput.alive=0
+			UI_Chatboxinput.current=""
+			UI_SUB_Chatboxinput(1,chatpanel.x-177,chatpanel.y+a,"> ",29)
+		Endif
+		Endif
+//Display chatbox lines
+		for x=1 to 25
+			UI_text(1,chatpanel.x-160,chatpanel.y+130-(x*10),Chatlines$(x))
+		next x
+If mouseclick()=1 and UI_mouseoveredgadget$="UI_chatbox"
+	UI_MoveGadget("UI_chatbox",SyS_MouseMoveX,SyS_MouseMoveY)
+	chatpanel.x=chatpanel.x+SyS_MouseMoveX
+	chatpanel.y=chatpanel.y+SyS_MouseMoveY
+	a=147
+	UI_SUB_Chatboxinput(1,chatpanel.x-177,chatpanel.y+a,"> ",29)
+Endif
+Endfunction
+
+
+
+
+
+Function UI_DestroyCheckbox()
+	Undim chatlines$(0)
+	
+Endfunction
+
+//Chatboxinputcommands
+
+
+Function UI_CheckchatboxInput()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function handles input event, if theres one.                               *
+//*                                                                                     *
+//*     If Enter pressed, then it saves the result sring in UI_Input.result variable,   *
+//*     and changes the UI_Input.alive variable to 3.                                   *
+//*                                                                                     *
+//***************************************************************************************
+If UI_chatboxinput.alive = UI_True
+
+      If Returnkey() = UI_True
+         Clear Entry Buffer
+         UI_chatboxInput.result = UI_chatboxInput.current
+         UI_chatboxInput.alive  = 3
+      Endif
+
+      UI_chatboxInput.current=UI_chatboxInput.current+Entry$() : Clear Entry Buffer
+      If Scancode() = 14
+      	If Scancode() = 14 Then UI_chatboxinput.current = Left$(UI_chatboxInput.current,Len(UI_chatboxInput.current)-1)
+      	Clear Entry Buffer
+      Endif
+
+      rem Entry Line
+      If Len(UI_chatboxInput.current)>UI_chatboxInput.maxcharacter then UI_ChatboxInput.current = Left$(UI_chatboxInput.current,UI_chatboxInput.maxcharacter)
+      
+      UI_Text(UI_chatboxInput.id,UI_chatboxInput.posx,UI_chatboxInput.posy,UI_Chatboxinput.fixstring+(UI_chatboxInput.current)+"*")
+
+Endif
+Endfunction
+
+
+
+Function UI_SUB_ChatboxInput(FontID,x,y,fixstring$,maxcharacter)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function start an input event.                                             *
+//*     For the text, it will use FontID, starting to draw the text at x,y.             *
+//*     Fixstring$ will always shown before the user input text.                        *
+//*     Maxcharacter vill be the maximum character the user may type in.                *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+	Clear Entry Buffer:Clear Entry Buffer
+	rem freestring myinput(1)(1).result
+	UI_ChatBoxInput.ID = FontID
+	UI_ChatBoxInput.fixstring = fixstring$
+	UI_ChatBoxInput.posx      = x
+	UI_ChatBoxInput.posy      = y
+	UI_ChatBoxInput.alive     = UI_True
+	UI_ChatBoxInput.center    = UI_False
+	UI_ChatBoxInput.maxcharacter = maxcharacter
+Endfunction
+
+
+
+
+Function UI_DestroyCHTBXInput()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function closes input event, if theres any.                                *
+//*                                                                                     *
+//***************************************************************************************
+	UI_chatboxInput.alive = 0
+Endfunction
+
+
+
+Function UI_CHTBXInputReady()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function returns 0 if an theres no ongoing input event.                    *
+//*                   returns 1 if an theres an ongoing input event.                    *
+//*                   returns 3 if theres a result.                                     *
+//*                                                                                     *
+//***************************************************************************************
+Local a as Integer
+	a = UI_chatboxInput.alive
+Endfunction a
+
+
