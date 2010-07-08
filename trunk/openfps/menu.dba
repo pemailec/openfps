@@ -81,11 +81,13 @@ do
 				MENU_AddOPENFPSFatigueBar():`Add fatiguebar
 				UI_PlayMouseClickSND()     :`Plays mouseclick sound
 				Menu_DeleteBackdrop()
+				UI_HideChatbox()
 				Exit                       :`Jumps to Campaign Mode
 				CurrentWindow$="button_campaign"
 			EndCase
 		
 			Case "button_quit"
+				UI_HideChatBox()
 				UI_ClearAllGuis()
 				UI_PlayMouseClickSND()
 				Menu_CreateQuitQuestion()
@@ -102,6 +104,10 @@ do
 				UI_PlayMouseClickSND()
 				Menu_Createmain()
 				CurrentWindow$="main"
+				//Reinit chatbox when back to main
+				 
+				UI_Reinitchatbox()
+				
 			EndCase
 		Endselect
 	Endif
