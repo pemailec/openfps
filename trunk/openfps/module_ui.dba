@@ -1398,6 +1398,43 @@ Endfunction
 
 
 
+Function UI_GetGadgetwidth(gadgetidname$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Returns width of the gadget                                                     *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+local return_param as integer
+local x as Integer
+	If UI_GuiInitialized = UI_True
+		If UI_GadgetNumbers>UI_False
+			For x=1 to UI_GadgetNumbers
+				If UI_Gadgets(x).Gadgetname = gadgetIDname$ then return_param = UI_Gadgets(x).width
+			Next x
+		Endif
+	Endif
+Endfunction return_param
+
+
+Function UI_GetGadgetheight(gadgetidname$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Returns height of the gadget.                                                   *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+local return_param as integer
+local x as Integer
+	If UI_GuiInitialized = UI_True
+		If UI_GadgetNumbers>UI_False
+			For x=1 to UI_GadgetNumbers
+				If UI_Gadgets(x).Gadgetname = gadgetIDname$ then return_param = UI_Gadgets(x).height
+			Next x
+		Endif
+	Endif
+Endfunction return_param
+
 
 
 
