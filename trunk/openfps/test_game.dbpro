@@ -1,5 +1,5 @@
 ; **** Dark BASIC Professional Project File ****
-; **** Written by Synergy Editor ****
+; **** Written by DarkBASIC Professional Editor ****
 version=DBP1.00
 project name=OpenFPS
 
@@ -28,6 +28,8 @@ include10=module_visuals.dba
 LineInclude10=110
 include11=module_ui_chatbox.dba
 LineInclude11=0
+include12=menu_windows.dba
+final source=_Temp.dbsource
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
@@ -60,7 +62,7 @@ window resolution=1024x768
 
 ; **** Media ****
 ; Example entries: media1=graphics\*.jpg
-media root path=C:\==Darkbasic Pro==\Dark Basic Professional\Projects\=Realwork=\openfps\
+media root path=F:\openfps\
 
 ; **** Icons ****
 
@@ -81,10 +83,3 @@ VerProductNumber=v1.0
 ; **** To Do ****
 
 ; **** Comments ****
-comments1=
-
-; **** Advanced (setup.ini) configuration ****
-RemoveSafetyCode=NO
-SafeArrays=YES
-LocalTempFolder=NO
-ExternaliseDLLS=NO

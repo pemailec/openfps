@@ -1,0 +1,132 @@
+Rem ***** Included Source File *****
+Remstart
+/////////////////////////////////////////////////////
+//
+// OpenFPS MENU INTERFACE SUBMODULE            
+//
+// Created by thenerd
+//
+/////////////////////////////////////////////////////
+`***** Included Source File *****
+`----- Changelog:
+`(07/08/10) - thenerd     - Created
+
+`----- To-Do:
+
+`----- Purpose:
+`Handles the various windows for the menu
+
+`----- Dependancies and Conflicts (IMPORTANT STUFF):
+`Uses the main user interface module. (module_ui.dba)
+
+`----- Conflicts
+*NONE*
+
+`----- Other Notes:
+*NONE*
+
+`----- Function List:
+
+`----------MAIN  COMMANDS
+InitMenuWindows()        `Sets up the menu windows system
+MakeMultiplayerWindow()	 `creates the multiplayer & chat window
+MakeCharSetupWindow()	 `creates the character setup window
+MakeOptionsWindow()		 `creates the options window
+MakeCreditsWindow()		 `creates the credits window
+UpdateMenuWindows()		 `updates the window system, called before every sync
+ResetMenuWindows()		 `deletes all the windows
+Remend
+/////////////////////////////////////////////////////
+//MAIN COMMANDS
+/////////////////////////////////////////////////////
+
+`===========TYPES===========`
+Type menu_window
+	x as integer
+	y as integer
+	active as boolean
+	created as boolean
+	bitmap as string
+	name as string
+	drag_start_x as integer
+	drag_start_y as integer
+endtype
+`===========================`
+
+`=========GLOBALS===========`
+`Global MENU_multi as menu_window
+`Global MENU_char as menu_window
+`Global MENU_options as menu_window
+Global MENU_credits as menu_window
+Global _MENU_current as menu_window
+`===========================`
+
+
+`=========FUNCTIONS=========`
+function InitMenuWindows():
+	MENU_credits.active=0:MENU_credits.created=0
+	MENU_credits.bitmap="MENU_creditsimage":MENU_credits.name="MENU_credits"
+	UI_LoadGuiGraphics("media\menu\credits.png",MENU_credits.bitmap)
+	MENU_credits.x=361:MENU_credits.y=323
+endfunction
+
+function UpdateMenuWindows():
+	_MENU_Update_Current(MENU_credits.x,MENU_credits.y,MENU_credits.active,MENU_credits.created,MENU_credits.bitmap,MENU_credits.name,MENU_credits.drag_start_x,MENU_credits.drag_start_y)
+	MENU_credits.x=_MENU_current.x
+	MENU_credits.y=_MENU_current.y
+	MENU_credits.active=_MENU_current.active
+	MENU_credits.created=_MENU_current.created
+	MENU_credits.drag_start_x=_MENU_current.drag_start_x
+	MENU_credits.drag_start_y=_MENU_current.drag_start_y
+endfunction
+
+function _MENU_Update_Current(x,y,active,created,bitmap$,name$,drag_start_x,drag_start_y): `internal function
+	_MENU_current.x=x
+	_MENU_current.y=y
+	_MENU_current.active=active
+	_MENU_current.created=created
+	_MENU_current.bitmap=bitmap$
+	_MENU_current.name=name$
+	_MENU_current.drag_start_x=drag_start_x
+	_MENU_current.drag_start_y=drag_start_y
+	
+	if _MENU_current.active=1:
+		if _MENU_current.created=0:
+			UI_AddGadgetToScreen(_MENU_current.name,_MENU_current.x,_MENU_current.y,_MENU_current.bitmap)
+			UI_AddMOuseOverImageToGadget(_MENU_current.name,_MENU_current.bitmap)
+			_MENU_current.created=1
+		endif
+		if _MENU_current.created=1:
+			if UI_mouseoveredgadget$=_MENU_current.name:
+				If mouseclick()=1:
+					_MENU_current.x=_MENU_current.x+SyS_MouseMoveX
+					_MENU_current.y=_MENU_current.y+SyS_MouseMoveY
+					if _MENU_current.x<-1 then _MENU_current.x=-1
+					if _MENU_current.y<-1 then _MENU_current.y=-1
+					if _MENU_current.x>UI_Display.Width-UI_GetGadgetWidth(_MENU_current.name):
+						 _MENU_current.x=UI_Display.Width-UI_GetGadgetWidth(_MENU_current.name)
+						 UI_SetMousePosition(_MENU_current.drag_start_x,UI_MouseY())
+					else:
+						_MENU_current.drag_start_x=UI_MouseX()
+					endif
+					if _MENU_current.y>UI_Display.Height-UI_GetGadgetHeight(_MENU_current.name):
+						_MENU_current.y=UI_Display.Height-UI_GetGadgetHeight(_MENU_current.name)
+						UI_SetMousePosition(UI_MouseX(),_MENU_current.drag_start_y)
+					else:
+						_MENU_current.drag_start_y=UI_MouseY()
+					endif
+					UI_PositionGadget(_MENU_current.name,_MENU_current.x,_MENU_current.y)
+				Endif
+			endif
+		endif
+	endif
+	if _MENU_current.active=0 then UI_DeleteGadget(_MENU_current.name)
+endfunction
+
+function ResetMenuWindows():
+	MENU_credits.created=0:MENU_credits.active=0
+endfunction
+
+`===========================`
+
+/////////////////////////////////////////////////////

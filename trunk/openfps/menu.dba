@@ -23,6 +23,7 @@ remstart
 (07/04/10) - miso           - Changed an end command to SyS_Event_Terminate=1
 (07/06/10) - thenerd, miso  - Started to rewrote with user interface commands
 (07/07/10) - thenerd        - Recoding menu, working on chat lobby and server list.
+(07/08/10) - thenerd        - Added windows to go along with each button.
 
 ----- To-Do:
 
@@ -36,6 +37,10 @@ Runs the menu.
 ----- Other Notes:
 -None-
 
+case "button_credits"
+	ui_putwindow(UI_Display.Middlewidth-195,UI_Display.Middleheight-80,38,24)
+endcase
+
 
 remend
 
@@ -47,6 +52,9 @@ function initMenu()
 	UI_WriteLog(UI_Green,"=== Starting Menu module")
 	menu_initbackdrop()
 	menu_CreateMain()
+	UI_WriteLog(UI_Yellow,"=== Starting Menu Windows sub-module")
+	InitMenuWindows()
+	UI_WriteLog(UI_Green,"=== Menu Windows sub-module started")
 	global CurrentWindow$
 endfunction
 /////////////////////////////////////////////////////////
@@ -55,8 +63,10 @@ endfunction
 
 function runMenu()
 do
+	
 	//---update menu and UI
 	menu_updatebackdrop()
+	UpdateMenuWindows()
 	
 	//--------------------------------------
 	//----render button-specific windows
@@ -71,8 +81,9 @@ do
 	//----check buttonclicks
 	If mouseclick()=1 and UI_Mouseclicked=0
 		Select UI_MouseOveredGadget$
+			remstart
 			Case "button_campaign"
-				UI_ClearAllGuis()          :`Clears all existing gadgets
+				UI_ClearAllGuis()      :`Clears all existing gadgets
 				UI_HideMouse()             :`Hide mouse before entering game mode
 				UI_AddTextLine(3,UI_Display.middlewidth,350,"...LOADING...")
 				menu_UpdateBackdrop():UI_Handle():Sync
@@ -85,6 +96,7 @@ do
 				Exit                       :`Jumps to Campaign Mode
 				CurrentWindow$="button_campaign"
 			EndCase
+			remend
 		
 			Case "button_quit"
 				UI_HideChatBox()
@@ -109,6 +121,11 @@ do
 				UI_Reinitchatbox()
 				
 			EndCase
+			
+			Case "button_credits"
+				MENU_credits.active=1
+			endcase
+			
 		Endselect
 	Endif
 	
