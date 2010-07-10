@@ -102,30 +102,42 @@ function _MENU_Update_Current(x,y,active,created,bitmap$,name$,drag_start_x,drag
 		endif
 		if _MENU_current.created=1:
 			if UI_mouseoveredgadget$=_MENU_current.name:
+				
+				
 				if mouseclick()=0:
-					UI_FadeInMouse()
+					rem UI_FadeInMouse()
 				endif
 				If mouseclick()=1:
-					UI_FadeOutMouse()
+				//bring gadget to top by recreating it at the last gadget position
+							UI_DeleteGadget(_MENU_current.name)
+							UI_AddGadgetToScreen(_MENU_current.name,_MENU_current.x,_MENU_current.y,_MENU_current.bitmap)
+							UI_AddMouseOverImageToGadget(_MENU_current.name,_MENU_current.bitmap)
+
+				
+					rem UI_FadeOutMouse()
 					_MENU_current.x=_MENU_current.x+SyS_MouseMoveX
 					_MENU_current.y=_MENU_current.y+SyS_MouseMoveY
 					if _MENU_current.x<-1:
 						_MENU_current.x=-1
+						UI_ResetXMouseMove()
 					else:
 					endif
 					if _MENU_current.y<-1:
 						_MENU_current.y=-1
+						UI_ResetYMouseMove()
 					else:
 					endif
 					if _MENU_current.x>UI_Display.Width-UI_GetGadgetWidth(_MENU_current.name):
 						 _MENU_current.x=UI_Display.Width-UI_GetGadgetWidth(_MENU_current.name)
+						 UI_ResetxMousemove()
 						 UI_SetMousePosition(_MENU_current.drag_start_x,UI_MouseY())
 					else:
 						_MENU_current.drag_start_x=UI_MouseX()
 					endif
 					if _MENU_current.y>UI_Display.Height-UI_GetGadgetHeight(_MENU_current.name):
 						_MENU_current.y=UI_Display.Height-UI_GetGadgetHeight(_MENU_current.name)
-						 UI_SetMousePosition(UI_MouseX(),_MENU_current.drag_start_y)
+						 rem UI_SetMousePosition(UI_MouseX(),_MENU_current.drag_start_y)
+						 UI_ResetYMousemove()
 					else:
 						_MENU_current.drag_start_y=UI_MouseY()
 					endif

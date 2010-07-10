@@ -50,7 +50,8 @@ Global UI_EVENT_ChatboxOffset       as Integer       : `Y offset for command lin
 Global UI_EVENT_ChatboxState        as Integer       : `1 if console is appearing 2 if disappearing, 0 if nothing to do
 Global UI_Chatboxtextoffset         as Integer       : `x position offset variable for chatbox texts
 Global UI_Chatpanel                 as mychatboxtype : `Chatbox
-
+Global UI_TriggerChatboxInput$      as string        : `name a gadget, that is the chatbox
+                                                       
 `===========================`
 
 `===========Types===========`
@@ -83,11 +84,11 @@ UI_Chatboxtextoffset=620
 			UI_Addmouseoverimagetogadget("UI_chatbox","UI_chatboximage")
 			UI_AddTitleToGadget("UI_chatbox",3,param_x-8,param_y-180,"CHATBOX")
 			UI_WriteLog(UI_Green,"Chatbox has been initialized.")
-	
+			UI_TriggerChatboxInput$="UI_chatbox"
 			//offset
 			a=147
 			//add an input line to chatbox
-			UI_SUB_Chatboxinput(1,UI_chatpanel.x-177,UI_chatpanel.y+a,"> ",29)
+			UI_SUB_Chatboxinput(1,UI_chatpanel.x-170,UI_chatpanel.y+a,"> ",29)
 		Else
 			//creates basic chatbox gadget, sets it variables
 			If UI_chatpanel.hidden=0
@@ -99,7 +100,7 @@ UI_Chatboxtextoffset=620
 					//offset
 					a=147
 					//add an input line to chatbox
-					UI_SUB_Chatboxinput(1,UI_chatpanel.x-177,UI_chatpanel.y+a,"> ",29)
+					UI_SUB_Chatboxinput(1,UI_chatpanel.x-170,UI_chatpanel.y+a,"> ",29)
 				endif
 			Endif
 		Endif
@@ -121,12 +122,31 @@ Function UI_Addtexttochatbox(param_text$)
 endfunction
 
 
-Function UI_SUB_HandleChatBox()
+Function UI_SUB_HandleChatBoxDrag()
 //***************************************************************************************
 //*   Miso   : Handles the chastbox.                                                    *
 //*                                                                                     *
 //***************************************************************************************
 
+	//Gadget is moveable
+	If mouseclick()=1 and UI_mouseoveredgadget$="UI_chatbox"
+		//bring gadget to top
+		UI_ReinitChatbox()
+		//moves
+		UI_MoveGadget("UI_chatbox",SyS_MouseMoveX,SyS_MouseMoveY)
+		UI_chatpanel.x=UI_chatpanel.x+SyS_MouseMoveX
+		UI_chatpanel.y=UI_chatpanel.y+SyS_MouseMoveY
+		a=147
+		UI_SUB_Chatboxinput(1,UI_chatpanel.x-170,UI_chatpanel.y+a,"> ",29)
+	Endif
+
+Endfunction
+
+Function UI_SUB_HandleChatBox()
+//***************************************************************************************
+//*   Miso   : Handles the chastbox.                                                    *
+//*                                                                                     *
+//***************************************************************************************
 // test
 If inkey$()="6" then UI_hideChatbox()
 If inkey$()="7" then UI_showChatbox()
@@ -149,24 +169,15 @@ If UI_chatpanel.Hidden  = 0
 			a=147
 			UI_Chatboxinput.alive=0
 			UI_Chatboxinput.current=""
-			UI_SUB_Chatboxinput(1,UI_chatpanel.x-170,UI_chatpanel.y+a,"> ",29)
+			 UI_SUB_Chatboxinput(1,UI_chatpanel.x-170,UI_chatpanel.y+a,"> ",29)
 		Endif
 	Endif
 		//Display chatbox lines
 		for x=1 to 25
 			UI_text(1,UI_chatpanel.x-170,UI_chatpanel.y+130-(x*10),Chatlines$(x))
 		next x
-	//Gadget is moveable
-	If mouseclick()=1 and UI_mouseoveredgadget$="UI_chatbox"
-		UI_MoveGadget("UI_chatbox",SyS_MouseMoveX,SyS_MouseMoveY)
-		UI_chatpanel.x=UI_chatpanel.x+SyS_MouseMoveX
-		UI_chatpanel.y=UI_chatpanel.y+SyS_MouseMoveY
-		a=147
-		UI_SUB_Chatboxinput(1,UI_chatpanel.x-170,UI_chatpanel.y+a,"> ",29)
-	Endif
 Endif
 Endfunction
-
 
 Function UI_DestroyCheckbox()
 //Deleting the array. Gui images will be destroyed by the main UI module

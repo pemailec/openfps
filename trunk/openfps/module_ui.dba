@@ -39,6 +39,8 @@ remstart
                       - Updated the function list
                       - fixed a serious possible bug source. (correctly using grabbing resource for res_file now)
 (7/6/10)   - miso     - changed log commands to write .html format log
+(7/10/10)  - miso     - added 3 new mouse commands to solve gadget dragging artifacts.
+                        Dragging now works well using Chris's code.
 Remend
 Remstart
 ----- To-Do:
@@ -285,6 +287,8 @@ Type MouseType
 	Fadevalue     as  Integer          : `current alpha value, dont change manually
 	Fadingout     as  Boolean          : `1 if mouse cursor is currently fading out                  
 	Fadingin      as  Boolean          : `1 if mouse cursor is currently fading in                      
+	ReposXOffset  as  Integer          : `new variables for gadget dragging bugfix
+	ReposYOffset  as  Integer
 Endtype
 
 //--will hold basic data for the input commands
@@ -437,7 +441,7 @@ Function UI_Handle()
 //-Checks input events
 	UI_CheckInput()
 //-Handle Chatbox input events
-	UI_Sub_HandleChatBox()
+	UI_Sub_HandleChatBoxDrag()
 //-Handle all the mouse
 	UI_HandleMouse()
 //-Check if we disabled non gui mouse movements
@@ -870,8 +874,39 @@ Function UI_InitMouse(param_cursorimage$ as String)
 Endfunction
 
 
+Function UI_ResetALLMouseMove()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Stops all mousemoves for the next loop.                                         *
+//*                                                                                     *
+//***************************************************************************************
+If UI_Mouse.Initialized = UI_True 
+	UI_Mouse.ReposXoffset =UI_True
+	UI_Mouse.ReposYoffset =UI_True
+Endif
+Endfunction
 
+Function UI_ResetXMouseMove()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Stops all mousemove x for the next loop.                                        *
+//*                                                                                     *
+//***************************************************************************************
+If UI_Mouse.Initialized = UI_True 
+	UI_Mouse.ReposXoffset =UI_True
+Endif
+Endfunction
 
+Function UI_ResetYMouseMove()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     stops all mousemove y for the next loop.                                        *
+//*                                                                                     *
+//***************************************************************************************
+If UI_Mouse.Initialized = UI_True 
+	UI_Mouse.ReposYoffset =UI_True
+Endif
+Endfunction
 
 
 Function UI_HandleMouse()
@@ -884,8 +919,18 @@ If UI_Mouse.Initialized = UI_True
 	`If UI_Mouse.hidden=UI_False or UI_Mouse.FadingOut=UI_True
 	
 			If  UI_Mouse.smooth              = UI_False
-				UI_Mouse.x                   = UI_Mouse.X+SyS_MouseMoveX
-				UI_Mouse.Y                   = UI_Mouse.Y+SyS_MouseMoveY
+				If UI_Mouse.reposXoffset= UI_False 
+					UI_Mouse.x                   = UI_Mouse.X+SyS_MouseMoveX
+				Else
+					UI_Mouse.reposXOffset = UI_False
+				Endif
+				
+				If UI_Mouse.reposYoffset= UI_False 
+					UI_Mouse.y                   = UI_Mouse.Y+SyS_MouseMoveY
+				Else
+					UI_Mouse.reposYOffset = UI_False
+				Endif
+				
 			Else
 				UI_Mouse.XMoveBuffer         = UI_Mouse.XMoveBuffer+SyS_MouseMoveX
 				UI_Mouse.YMoveBuffer         = UI_Mouse.YMoveBuffer+SyS_MouseMoveY
@@ -1074,6 +1119,7 @@ Function UI_SetMousePosition(param_mx,param_my)
 	If UI_Mouse.Initialized = UI_True 
 		UI_Mouse.X = param_mx
 		UI_Mouse.Y = param_my
+		
 	Endif
 Endfunction
 
@@ -2379,10 +2425,17 @@ If UI_Gadgets(x).mouseinfoexist>0
 		if UI_Gadgets(x).mouseinfoorientation=1 then UI_Text(UI_Gadgets(x).mouseinfoexist,UI_Mouse.x+25,UI_Mouse.Y+25,UI_Gadgets(x).mouseinfotext)
 		if UI_Gadgets(x).mouseinfoorientation=2 then UI_CenterText(UI_Gadgets(x).mouseinfoexist,UI_Mouse.x,UI_Mouse.Y+25,UI_Gadgets(x).mouseinfotext)
 		if UI_Gadgets(x).mouseinfoorientation=3 then UI_Text(UI_Gadgets(x).mouseinfoexist,UI_Mouse.x+25-bitmapeltolas,UI_Mouse.Y+25,UI_Gadgets(x).mouseinfotext)
-		
+				
 	Endif
 Endif
 
+Select UI_Gadgets(x).gadgetname
+	Case "UI_chatbox"
+	UI_Sub_HandleChatbox()
+	rem UI_SUB_Chatboxinput(1,UI_chatpanel.x-177,UI_chatpanel.y+a,"> ",29)
+	
+	Endcase
+Endselect
 
 Next x
 Endif
