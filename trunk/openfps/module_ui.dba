@@ -402,7 +402,7 @@ Function UI_Init()
 	UI_LoadandSetMouseClickSND("media\cursors\Hit tree.wav")
 // Init Gui functions
 	UI_InitGuiGraphics()	
-	`UI_SUB_InitChatBox("media\panels\ui_chatbox.png",770,500)
+	UI_SUB_InitChatBox("media\panels\ui_chatbox.png",770,500)
 
 // Load internal Gui Images
 	UI_LoadGuiGraphics("media\bars\barholder.png","UI_barholderimage")
@@ -437,13 +437,13 @@ Function UI_Handle()
 //-Checks input events
 	UI_CheckInput()
 //-Handle Chatbox input events
-	`UI_Sub_HandleChatBox()
+	UI_Sub_HandleChatBox()
 //-Handle all the mouse
 	UI_HandleMouse()
 //-Check if we disabled non gui mouse movements
-	If UI_NonguiMouseDisabled = UI_True
-		SyS_MouseMoveX = 0:SyS_MouseMoveY = 0
-	Endif 
+	`If UI_NonguiMouseDisabled = UI_True
+	`	SyS_MouseMoveX = 0:SyS_MouseMoveY = 0
+	`Endif 
 
 // Update staminabar
 	UI_SetGadgetValue("UI_stamina",Floor(PLR_Curstam/2.0)-1)
@@ -881,7 +881,7 @@ Function UI_HandleMouse()
 //*                                                                                     *
 //***************************************************************************************
 If UI_Mouse.Initialized = UI_True 
-	If UI_Mouse.hidden=UI_False or UI_Mouse.FadingOut=UI_True
+	`If UI_Mouse.hidden=UI_False or UI_Mouse.FadingOut=UI_True
 	
 			If  UI_Mouse.smooth              = UI_False
 				UI_Mouse.x                   = UI_Mouse.X+SyS_MouseMoveX
@@ -889,7 +889,7 @@ If UI_Mouse.Initialized = UI_True
 			Else
 				UI_Mouse.XMoveBuffer         = UI_Mouse.XMoveBuffer+SyS_MouseMoveX
 				UI_Mouse.YMoveBuffer         = UI_Mouse.YMoveBuffer+SyS_MouseMoveY
-				
+					
 				If UI_Mouse.xmovebuffer>4
 					UI_Mouse.X               = UI_Mouse.X+UI_Mouse.Xmovebuffer/UI_Mouse.Smoothvalue
 					UI_Mouse.XMoveBuffer     =(UI_Mouse.XMoveBuffer/UI_Mouse.SmoothValue)*(UI_Mouse.SmoothValue-1)
@@ -925,7 +925,7 @@ If UI_Mouse.Initialized = UI_True
 				DXS END SPRITE RENDER   UI_Mouse.ID
 			Endif
 
-	Endif
+	`Endif
 
 	
 	rem ====Fade handle  ====

@@ -50,6 +50,8 @@ Type menu_window
 	name as string
 	drag_start_x as integer
 	drag_start_y as integer
+	mouse_offset_x as integer
+	mouse_offset_y as integer
 endtype
 `===========================`
 
@@ -59,6 +61,7 @@ endtype
 `Global MENU_options as menu_window
 Global MENU_credits as menu_window
 Global _MENU_current as menu_window
+Global _MENU_current_mouse_dragging as integer
 `===========================`
 
 
@@ -89,20 +92,31 @@ function _MENU_Update_Current(x,y,active,created,bitmap$,name$,drag_start_x,drag
 	_MENU_current.name=name$
 	_MENU_current.drag_start_x=drag_start_x
 	_MENU_current.drag_start_y=drag_start_y
+	_MENU_current_mouse_dragging=0
 	
 	if _MENU_current.active=1:
 		if _MENU_current.created=0:
 			UI_AddGadgetToScreen(_MENU_current.name,_MENU_current.x,_MENU_current.y,_MENU_current.bitmap)
-			UI_AddMOuseOverImageToGadget(_MENU_current.name,_MENU_current.bitmap)
+			UI_AddMouseOverImageToGadget(_MENU_current.name,_MENU_current.bitmap)
 			_MENU_current.created=1
 		endif
 		if _MENU_current.created=1:
 			if UI_mouseoveredgadget$=_MENU_current.name:
+				if mouseclick()=0:
+					UI_FadeInMouse()
+				endif
 				If mouseclick()=1:
+					UI_FadeOutMouse()
 					_MENU_current.x=_MENU_current.x+SyS_MouseMoveX
 					_MENU_current.y=_MENU_current.y+SyS_MouseMoveY
-					if _MENU_current.x<-1 then _MENU_current.x=-1
-					if _MENU_current.y<-1 then _MENU_current.y=-1
+					if _MENU_current.x<-1:
+						_MENU_current.x=-1
+					else:
+					endif
+					if _MENU_current.y<-1:
+						_MENU_current.y=-1
+					else:
+					endif
 					if _MENU_current.x>UI_Display.Width-UI_GetGadgetWidth(_MENU_current.name):
 						 _MENU_current.x=UI_Display.Width-UI_GetGadgetWidth(_MENU_current.name)
 						 UI_SetMousePosition(_MENU_current.drag_start_x,UI_MouseY())
@@ -111,7 +125,7 @@ function _MENU_Update_Current(x,y,active,created,bitmap$,name$,drag_start_x,drag
 					endif
 					if _MENU_current.y>UI_Display.Height-UI_GetGadgetHeight(_MENU_current.name):
 						_MENU_current.y=UI_Display.Height-UI_GetGadgetHeight(_MENU_current.name)
-						UI_SetMousePosition(UI_MouseX(),_MENU_current.drag_start_y)
+						 UI_SetMousePosition(UI_MouseX(),_MENU_current.drag_start_y)
 					else:
 						_MENU_current.drag_start_y=UI_MouseY()
 					endif

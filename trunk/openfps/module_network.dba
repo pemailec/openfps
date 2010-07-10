@@ -30,15 +30,20 @@ Passes this information to relevant modules to deal with it.
 
 ----- Function List:
 -Client:
-initNetwork()		- initializes the networking module
-updateNetwork()     - updates any network data with the server.
-terminateNetwork()  - ends the networking module, and cleans up any used resources.
-
+initNetwork()			  - initializes the networking module
+updateNetwork()     	  - updates any network data with the server.
+terminateNetwork()  	  - ends the networking module, and cleans up any used resources.
+getChatMessage()		  - gets the latest chat message.
+sendChatMessage(string$)  -	sends a chat message.
 -Server:
 -NONE-
 
 remend
 
+`-------GLOBALS----------
+#constant SERVER_HOST "96.233.35.41"
+#constant SERVER_PORT 27013
+Global channel as DWORD
 
 /////////////////////////////////////////////////////////
 // INIT                                                //
@@ -47,8 +52,17 @@ remend
 
 function initNetwork()
 UI_WriteLog(UI_Green,"=== Starting Network module")
-
+winsock make
+if (winsock error())
+   `an error has occurred, output the error message to the log and quit.
+   UI_WriteLog(UI_RED,winsock error msg$())
+   winsock clean up
+   end
+endif
+channel = winsock connect(SERVER_HOST, SERVER_PORT)
+check_for_error(channel)
 UI_WriteLog(UI_Green,"=== Network module started")
+UI_Addtexttochatbox("Welcome to Biostorm: Chemical Warfare!")
 endfunction
 
 
@@ -57,7 +71,30 @@ endfunction
 /////////////////////////////////////////////////////////
 
 function updateNetwork()
+   winsock refresh channel channel
+   check_for_error(channel)
+endfunction
 
+function getChatMessage():
+   if (winsock channel data waiting(channel))
+      check_for_error(channel)
+      message$ = winsock recv string(channel)
+      if (message$ = "")
+         `this client has been disconnected remotely by the server.
+         if (winsock channel error(channel))
+            UI_Addtexttochatbox("You have been forcefully disconnected by the server!")
+         else
+            UI_Addtexttochatbox("You have been gracefully disconnected by the server!")
+         endif
+      else
+		UI_Addtexttochatbox(message$)
+      endif
+   endif
+endfunction
+
+function sendChatMessage(string$):
+	winsock send string channel, string$
+	check_for_error(channel)
 endfunction
 
 
@@ -68,6 +105,20 @@ endfunction
 
 function terminateNetwork()
 UI_WriteLog(UI_Green,"=== Terminating module")
-
+winsock clean up
 UI_WriteLog(UI_Green,"=== Network module terminated")
+endfunction
+
+/////////////////////////////////////////////////////////
+// DEBUG                                               //
+/////////////////////////////////////////////////////////
+
+function check_for_error(a_channel as DWORD)
+`check for an error on a channel.
+   if (winsock channel error(a_channel))
+      `an error has occurred, output the error message to the log and quit.
+      UI_WriteLog(UI_RED,winsock channel error msg$(a_channel))
+      winsock clean up
+      end
+   endif
 endfunction

@@ -56,6 +56,7 @@ function initMenu()
 	InitMenuWindows()
 	UI_WriteLog(UI_Green,"=== Menu Windows sub-module started")
 	global CurrentWindow$
+	initNetwork()
 endfunction
 /////////////////////////////////////////////////////////
 // CORE                                                //
@@ -63,7 +64,7 @@ endfunction
 
 function runMenu()
 do
-	
+	updateNetwork()
 	//---update menu and UI
 	menu_updatebackdrop()
 	UpdateMenuWindows()
@@ -136,6 +137,7 @@ do
 loop
 //checks if any module triggered a quit event
 UI_WriteLog(UI_Red,"=== Menu Loop Terminated")
+terminateNetwork()
 If SyS_Event_Terminate=1:
 	Menu_DeleteBackdrop()
 	UI_WriteLog(UI_Yellow,"=== GOTO Terminate Script.")

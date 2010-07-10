@@ -50,6 +50,7 @@ Global UI_EVENT_ChatboxOffset       as Integer       : `Y offset for command lin
 Global UI_EVENT_ChatboxState        as Integer       : `1 if console is appearing 2 if disappearing, 0 if nothing to do
 Global UI_Chatboxtextoffset         as Integer       : `x position offset variable for chatbox texts
 Global UI_Chatpanel                 as mychatboxtype : `Chatbox
+
 `===========================`
 
 `===========Types===========`
@@ -68,6 +69,7 @@ Function UI_SUB_InitChatBox(param_chatpanelimage$,param_x,param_y)
 //*   Miso   : Initiate the chatbox gui.                                                *
 //*                                                                                     *
 //***************************************************************************************
+
 UI_Chatboxtextoffset=620
 	UI_SetDebugPosition("UI_Sub_InitChatBox()","module_ui_chatbox.dba")
 		//Creates an array for chat messages, they will be displayed in chatbox
@@ -130,6 +132,7 @@ If inkey$()="6" then UI_hideChatbox()
 If inkey$()="7" then UI_showChatbox()
 
 
+
 UI_checkchatboxinput()
 If UI_chatpanel.Hidden  = 0
 	If UI_Chatboxinput.alive=3
@@ -137,19 +140,21 @@ If UI_chatpanel.Hidden  = 0
 			UI_Chatboxtextoffset=UI_Chatboxtextoffset-10
 			a=147
 			UI_Addtexttochatbox("Client: "+UI_ChatboxInput.Result)
+			msg$=UI_ChatboxInput.Result
+			sendChatMessage(msg$)
 			UI_Chatboxinput.alive=0
 			UI_Chatboxinput.current=""
-			UI_SUB_Chatboxinput(1,UI_chatpanel.x-177,UI_chatpanel.y+a,"> ",29)
+			UI_SUB_Chatboxinput(1,UI_chatpanel.x-170,UI_chatpanel.y+a,"> ",29)
 		Else
 			a=147
 			UI_Chatboxinput.alive=0
 			UI_Chatboxinput.current=""
-			UI_SUB_Chatboxinput(1,UI_chatpanel.x-177,UI_chatpanel.y+a,"> ",29)
+			UI_SUB_Chatboxinput(1,UI_chatpanel.x-170,UI_chatpanel.y+a,"> ",29)
 		Endif
 	Endif
 		//Display chatbox lines
 		for x=1 to 25
-			UI_text(1,UI_chatpanel.x-160,UI_chatpanel.y+130-(x*10),Chatlines$(x))
+			UI_text(1,UI_chatpanel.x-170,UI_chatpanel.y+130-(x*10),Chatlines$(x))
 		next x
 	//Gadget is moveable
 	If mouseclick()=1 and UI_mouseoveredgadget$="UI_chatbox"
@@ -157,7 +162,7 @@ If UI_chatpanel.Hidden  = 0
 		UI_chatpanel.x=UI_chatpanel.x+SyS_MouseMoveX
 		UI_chatpanel.y=UI_chatpanel.y+SyS_MouseMoveY
 		a=147
-		UI_SUB_Chatboxinput(1,UI_chatpanel.x-177,UI_chatpanel.y+a,"> ",29)
+		UI_SUB_Chatboxinput(1,UI_chatpanel.x-170,UI_chatpanel.y+a,"> ",29)
 	Endif
 Endif
 Endfunction
@@ -243,7 +248,7 @@ Function UI_ShowChatBox()
 			a=147
 			//add an input line to chatbox
 			UI_SUB_Initchatbox("media\panels\ui_chatbox.png",UI_chatpanel.x,UI_Chatpanel.y)
-			UI_SUB_Chatboxinput(1,UI_chatpanel.x-177,UI_chatpanel.y+a,"> ",29)
+			UI_SUB_Chatboxinput(1,UI_chatpanel.x-170,UI_chatpanel.y+a,"> ",29)
 Endfunction
 
 

@@ -65,9 +65,9 @@ Endtype
 
 
 	//----------LOAD AND SET THE FONT YOU WANT
-		Set Text Font "arial"
-		Set Text Size 32         :`-----Size may be 8-32
-		Set Text to Bold
+		Set Text Font "courier new"
+		Set Text Size 14         :`-----Size may be 8-32
+		`Set Text to Bold
 	//----------Change INK color	
 		Ink RGB(Textcolor.rr,Textcolor.gg,Textcolor.bb),RGB(0,0,0)
 
@@ -77,7 +77,7 @@ Endtype
 		Repeat
 			For x=0 to 15
 				For y=0 to 15
-					a  =  x*32+16
+					a  =  (x*32+16)-82
 					b  =  y*32+16
 					a$ =  CHR$(x*16+y+1)
 					Center Text b,a,a$:Center Text b,a,a$
