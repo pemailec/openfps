@@ -58,11 +58,17 @@ if (winsock error())
    UI_WriteLog(UI_RED,winsock error msg$())
    winsock clean up
    end
+else
+	UI_WRiteLog(UI_Green,"Connected to the master server "+SERVER_HOST+":"+STR$(SERVER_PORT))
 endif
 channel = winsock connect(SERVER_HOST, SERVER_PORT)
 check_for_error(channel)
+
 UI_WriteLog(UI_Green,"=== Network module started")
+
 UI_Addtexttochatbox("Welcome to Biostorm: Chemical Warfare!")
+UI_Addtexttochatbox("Master server is online.")
+
 endfunction
 
 
@@ -73,6 +79,7 @@ endfunction
 function updateNetwork()
    winsock refresh channel channel
    check_for_error(channel)
+   getChatMessage()
 endfunction
 
 function getChatMessage():

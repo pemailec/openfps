@@ -136,6 +136,36 @@ Function UI_SUB_HandleChatBoxDrag()
 		UI_MoveGadget("UI_chatbox",SyS_MouseMoveX,SyS_MouseMoveY)
 		UI_chatpanel.x=UI_chatpanel.x+SyS_MouseMoveX
 		UI_chatpanel.y=UI_chatpanel.y+SyS_MouseMoveY
+		
+		If UI_chatpanel.x > UI_Display.width-(UI_getgadgetwidth("UI_chatbox")/2)
+			UI_chatpanel.x=UI_Display.width-(UI_getgadgetwidth("UI_chatbox")/2)
+			UI_centerpositiongadget("UI_chatbox",UI_chatpanel.x,UI_Chatpanel.y)
+			UI_ResetXmousemove()
+		endif
+		
+		
+		If UI_chatpanel.x < (UI_getgadgetwidth("UI_chatbox")/2)
+			UI_chatpanel.x=(UI_getgadgetwidth("UI_chatbox")/2)
+			UI_centerpositiongadget("UI_chatbox",UI_chatpanel.x,UI_Chatpanel.y)
+			UI_ResetXmousemove()
+		endif
+		
+		
+		If UI_chatpanel.Y > UI_Display.height-(UI_getgadgetheight("UI_chatbox")/2)
+			UI_chatpanel.Y=UI_Display.height-(UI_getgadgetheight("UI_chatbox")/2)
+			UI_centerpositiongadget("UI_chatbox",UI_chatpanel.x,UI_Chatpanel.y)
+			UI_ResetYmousemove()
+		endif
+		
+		
+		If UI_chatpanel.Y < (UI_getgadgetheight("UI_chatbox")/2)
+			UI_chatpanel.Y=(UI_getgadgetheight("UI_chatbox")/2)
+			UI_centerpositiongadget("UI_chatbox",UI_chatpanel.x,UI_Chatpanel.y)
+			UI_ResetYmousemove()
+		endif
+		
+		
+		
 		a=147
 		UI_SUB_Chatboxinput(1,UI_chatpanel.x-170,UI_chatpanel.y+a,"> ",29)
 	Endif
@@ -159,7 +189,7 @@ If UI_chatpanel.Hidden  = 0
 		If UI_Chatboxinput.result <> ""
 			UI_Chatboxtextoffset=UI_Chatboxtextoffset-10
 			a=147
-			UI_Addtexttochatbox("Client: "+UI_ChatboxInput.Result)
+			rem UI_Addtexttochatbox("Client: "+UI_ChatboxInput.Result)
 			msg$=UI_ChatboxInput.Result
 			sendChatMessage(msg$)
 			UI_Chatboxinput.alive=0

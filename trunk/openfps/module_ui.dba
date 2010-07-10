@@ -1813,6 +1813,36 @@ Endif
 Endfunction valuereturner
 
 
+Function UI_GetGadgetX(gadgetID$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Returns the x psoition of upper left points X coord.                            *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+local valuereturner as integer
+If UI_GuiInitialized = UI_True
+		For y=1 to UI_GadgetNumbers
+			If UI_Gadgets(y).Gadgetname = gadgetID$ Then valuereturner = UI_Gadgets(y).X
+		Next y
+Endif
+Endfunction valuereturner
+
+Function UI_GetGadgetY(gadgetID$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Returns the Y position of upper left points coord.                              *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+local valuereturner as integer
+If UI_GuiInitialized = UI_True
+		For y=1 to UI_GadgetNumbers
+			If UI_Gadgets(y).Gadgetname = gadgetID$ Then valuereturner = UI_Gadgets(y).X
+		Next y
+Endif
+Endfunction valuereturner
+
 
 
 

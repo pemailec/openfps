@@ -52,9 +52,9 @@ function initMenu()
 	UI_WriteLog(UI_Green,"=== Starting Menu module")
 	menu_initbackdrop()
 	menu_CreateMain()
-	UI_WriteLog(UI_Yellow,"=== Starting Menu Windows sub-module")
+	UI_WriteLog(UI_Green,"Starting Menu Windows sub-module")
 	InitMenuWindows()
-	UI_WriteLog(UI_Green,"=== Menu Windows sub-module started")
+	UI_WriteLog(UI_Green,"Menu Windows sub-module started")
 	global CurrentWindow$
 	initNetwork()
 endfunction
@@ -140,10 +140,10 @@ UI_WriteLog(UI_Red,"=== Menu Loop Terminated")
 terminateNetwork()
 If SyS_Event_Terminate=1:
 	Menu_DeleteBackdrop()
-	UI_WriteLog(UI_Yellow,"=== GOTO Terminate Script.")
+	UI_WriteLog(UI_Yellow,"GOTO Terminate Script.")
 	goto _terminate_via_menu
 endif
-UI_WriteLog(UI_Green,"=== Switching To Game Engine...")
+UI_WriteLog(UI_Green,"Switching To Game Engine...")
 
 endfunction
 /////////////////////////////////////////////////////////
@@ -222,7 +222,7 @@ EndFunction
 
 
 function Menu_InitBackdrop():
-	UI_WriteLog(UI_Green,"=== Creating Menu Backdrop")
+	UI_WriteLog(UI_Green,"Creating Menu Backdrop")
 	global menu_mainimage
 	menu_mainimage  = grabResource(res_Image)
 	load image "media\menu\main.png",menu_mainimage
@@ -247,7 +247,7 @@ function Menu_InitBackdrop():
 	menu_music  = grabResource(res_Music)
 	load music "media\audio\The Awakening.mp3",menu_music
 	play music menu_music
-	UI_WriteLog(UI_Green,"=== Menu Backdrop Created")
+	UI_WriteLog(UI_Green,"Menu Backdrop Created")
 endfunction
 
 function Menu_UpdateBackdrop():
@@ -256,12 +256,12 @@ function Menu_UpdateBackdrop():
 endfunction
 
 function Menu_DeleteBackdrop():
-	UI_WriteLog(UI_Green,"=== Deleting Menu...")
+	UI_WriteLog(UI_Green,"Deleting Menu...")
 	freeResource(menu_bgfx1        ,res_Object)
 	freeResource(menu_mainimage    ,res_Image )
 	freeResource(menu_bgfx1img     ,res_Image )
 	freeResource(menu_music        ,res_Music )
-	UI_WriteLog(UI_Red,"=== Menu Shutdown Successful")
+	UI_WriteLog(UI_Red,"Menu Shutdown Successful")
 endfunction
 
 

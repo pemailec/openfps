@@ -5,15 +5,15 @@ project name=OpenFPS
 
 ; **** source file information ****
 main=test_game.dba
-LineMain=34
+LineMain=0
 include1=module_movement.dba
 LineInclude1=423
 include2=module_resource.dba
 LineInclude2=173
 include3=menu.dba
-LineInclude3=87
+LineInclude3=56
 include4=module_network.dba
-LineInclude4=12
+LineInclude4=81
 include5=module_shooting.dba
 LineInclude5=16
 include6=module_ai.dba
@@ -21,15 +21,15 @@ LineInclude6=327
 include7=module_terrain.dba
 LineInclude7=18
 include8=module_ui.dba
-LineInclude8=2433
+LineInclude8=1833
 include9=module_ui_console.dba
 LineInclude9=0
 include10=module_visuals.dba
 LineInclude10=110
 include11=module_ui_chatbox.dba
-LineInclude11=90
+LineInclude11=191
 include12=menu_windows.dba
-LineInclude12=0
+LineInclude12=140
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
