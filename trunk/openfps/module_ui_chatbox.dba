@@ -60,6 +60,7 @@ Type mychatboxtype
 	X      as Integer : `X Position
 	Y      as Integer : `Y Position
 	Hidden as Boolean : `UI_True if gadget must be hidden
+	Offset as Integer : `text offset
 endtype
 `===========================`
 
@@ -79,16 +80,17 @@ UI_Chatboxtextoffset=620
 		If UI_gadgetImageExist("UI_chatboximage")=0 
 			//creates basic chatbox gadget, sets it variables
 			UI_Chatpanel.x=param_x:UI_chatpanel.y=param_y
+			UI_chatpanel.Offset=300
 			UI_LoadGuiGraphics(param_chatpanelimage$,"UI_chatboximage")
 			UI_AddCenterGadgetToScreen("UI_chatbox",param_x,param_y,"UI_chatboximage")			
 			UI_Addmouseoverimagetogadget("UI_chatbox","UI_chatboximage")
-			UI_AddTitleToGadget("UI_chatbox",3,param_x-8,param_y-180,"CHATBOX")
+			
 			UI_WriteLog(UI_Green,"Chatbox has been initialized.")
 			UI_TriggerChatboxInput$="UI_chatbox"
 			//offset
-			a=147
+			a=180
 			//add an input line to chatbox
-			UI_SUB_Chatboxinput(1,UI_chatpanel.x-170,UI_chatpanel.y+a,"> ",29)
+			UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
 		Else
 			//creates basic chatbox gadget, sets it variables
 			If UI_chatpanel.hidden=0
@@ -96,11 +98,10 @@ UI_Chatboxtextoffset=620
 					UI_Chatpanel.x=param_x:UI_chatpanel.y=param_y
 					UI_AddCenterGadgetToScreen("UI_chatbox",param_x,param_y,"UI_chatboximage")			
 					UI_Addmouseoverimagetogadget("UI_chatbox","UI_chatboximage")
-					UI_AddTitleToGadget("UI_chatbox",3,param_x-8,param_y-180,"CHATBOX")
 					//offset
-					a=147
+					a=180
 					//add an input line to chatbox
-					UI_SUB_Chatboxinput(1,UI_chatpanel.x-170,UI_chatpanel.y+a,"> ",29)
+					UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
 				endif
 			Endif
 		Endif
@@ -114,8 +115,8 @@ Function UI_Addtexttochatbox(param_text$)
 //*                                                                                     *
 //***************************************************************************************
 	//Scrolls upwards all the texts already exists
-	For X=1 to 25
-		chatlines$(26-x)=chatlines$(25-x)
+	For X=1 to 9
+		chatlines$(10-x)=chatlines$(9-x)
 	Next x
 	//Add the new message to the first array (shown at the very bottom)
 	chatlines$(1)=param_text$
@@ -166,8 +167,8 @@ Function UI_SUB_HandleChatBoxDrag()
 		
 		
 		
-		a=147
-		UI_SUB_Chatboxinput(1,UI_chatpanel.x-170,UI_chatpanel.y+a,"> ",29)
+		a=180
+		UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
 	Endif
 
 Endfunction
@@ -188,23 +189,23 @@ If UI_chatpanel.Hidden  = 0
 	If UI_Chatboxinput.alive=3
 		If UI_Chatboxinput.result <> ""
 			UI_Chatboxtextoffset=UI_Chatboxtextoffset-10
-			a=147
+			a=180
 			rem UI_Addtexttochatbox("Client: "+UI_ChatboxInput.Result)
 			msg$=UI_ChatboxInput.Result
 			sendChatMessage(msg$)
 			UI_Chatboxinput.alive=0
 			UI_Chatboxinput.current=""
-			UI_SUB_Chatboxinput(1,UI_chatpanel.x-170,UI_chatpanel.y+a,"> ",29)
+			UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
 		Else
-			a=147
+			a=180
 			UI_Chatboxinput.alive=0
 			UI_Chatboxinput.current=""
-			 UI_SUB_Chatboxinput(1,UI_chatpanel.x-170,UI_chatpanel.y+a,"> ",29)
+			 UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
 		Endif
 	Endif
 		//Display chatbox lines
-		for x=1 to 25
-			UI_text(1,UI_chatpanel.x-170,UI_chatpanel.y+130-(x*10),Chatlines$(x))
+		for x=1 to 9
+			UI_text(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+170-(x*10),Chatlines$(x))
 		next x
 Endif
 Endfunction
@@ -286,10 +287,10 @@ Function UI_ShowChatBox()
 //*                                                                                     *
 //***************************************************************************************
 	UI_chatpanel.Hidden  = 0
-			a=147
+			a=180
 			//add an input line to chatbox
 			UI_SUB_Initchatbox("media\panels\ui_chatbox.png",UI_chatpanel.x,UI_Chatpanel.y)
-			UI_SUB_Chatboxinput(1,UI_chatpanel.x-170,UI_chatpanel.y+a,"> ",29)
+			UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
 Endfunction
 
 

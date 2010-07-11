@@ -406,7 +406,7 @@ Function UI_Init()
 	UI_LoadandSetMouseClickSND("media\cursors\Hit tree.wav")
 // Init Gui functions
 	UI_InitGuiGraphics()	
-	UI_SUB_InitChatBox("media\panels\ui_chatbox.png",770,500)
+	UI_SUB_InitChatBox("media\panels\ui_chatbox.png",570,500)
 
 // Load internal Gui Images
 	UI_LoadGuiGraphics("media\bars\barholder.png","UI_barholderimage")

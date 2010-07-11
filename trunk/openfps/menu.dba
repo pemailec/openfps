@@ -83,7 +83,7 @@ do
 	If mouseclick()=1 and UI_Mouseclicked=0
 		Select UI_MouseOveredGadget$
 			remstart
-			Case "button_campaign"
+			Case "button_lobby"
 				UI_ClearAllGuis()      :`Clears all existing gadgets
 				UI_HideMouse()             :`Hide mouse before entering game mode
 				UI_AddTextLine(3,UI_Display.middlewidth,350,"...LOADING...")
@@ -153,15 +153,16 @@ endfunction
 Function menu_CreateMain()
 local x as integer: local y as integer
 x=168:y=240
-	UI_AddCenterGadgettoScreen("button_campaign",x,y,"UI_button")
-	UI_AddMouseoverImageToGadget("button_campaign","UI_buttonhover")
-	UI_AddtitleToGadget("button_campaign",3,x-8,y-14,"Campaign")
+	UI_AddCenterGadgettoScreen("button_lobby",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_lobby","UI_buttonhover")
+	UI_AddtitleToGadget("button_lobby",3,x-8,y-14,"Lobby")
 	
-
+remstart
 x=168:y=y+60
 	UI_AddCenterGadgettoScreen("button_versus",x,y,"UI_button")
 	UI_AddMouseoverImageToGadget("button_versus","UI_buttonhover")
 	UI_AddtitleToGadget("button_versus",3,x-8,y-14,"Versus")
+remend
 
 x=168:y=y+60
 	UI_AddCenterGadgettoScreen("button_charactersetup",x,y,"UI_button")

@@ -9,6 +9,8 @@ sync rate 0
 backdrop on
 color backdrop 0
 
+startblue "DD6","583d7a"
+
 d3d_init
 
 createUI()
@@ -57,7 +59,7 @@ set camera view CameraSide,0,0,0,0
 backdrop on CameraSide
 color backdrop CameraSide,rgb(40,40,40)
 
-`make object cube 1,10
+make object cube 1,10
 remstart
 load object "skydome.x",1
 set object light 1,0
@@ -92,8 +94,10 @@ set camera fov CameraFront,1.0
 set camera aspect CameraSide,aspect#
 set camera fov CameraSide,1.0
 ctopzoom=5
-`make object plain 3,10000,10000
-
+make object plain 3,10000,10000
+hide object 3
+xrotate object 3,90
+ctopzoom=-100
 do 
 	`setgadgettext mouse,str$(mousex())+","+str$(mousey())
 	`setgadgettext Fps,str$(screen fps())
@@ -110,13 +114,13 @@ do
 	next sq
 	
 	`3d cursor
-	remstart
+
 	SET CURRENT CAMERA CameraTop
-	pick screen mousex(),mousey(),ctopy*10
-	position object 1,get pick vector x(),0,get pick vector z()
+	ctopdist#=intersect object(3,0,ctopy,0,0,-0.1,0)
+	pick screen mousex(),mousey(),ctopdist#
+	position object 1,get pick vector x()*,0,get pick vector z()
 	
-	1121,266
-	remend
+	`1121,266
 	
 	Width#=Get Window Client Width()
 	Height#=Get Window Client Height()

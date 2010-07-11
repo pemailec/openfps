@@ -43,7 +43,7 @@ do
 	set cursor 0,0
 	print "OpenFPS Master Server List v1.1"
 	print "-------------------------------------------"
-	print "Master Server: ONLINE"
+	print "(",get time$(),") - ","Master Server: ONLINE"
 	print "MOTD_Debug: ",MOTD_Debug$
 	print "Uptime: ",Uptime$," ms"
 	print "Ip_local=192.168.1.6;Ip_global=",ip$
@@ -70,13 +70,13 @@ do
          new_client = array count(clients(0))
          clients(new_client).channel = winsock accept(listen_channel)
          clients(new_client).id = new_client;
-         if (not winsock channel error(clients(new_client).channel))
+         if (not winsock channel error(clients(new_client).channel)) 
             inc clients_connected
             `send a message to all clients that a new client has connected.
             for i=1 to clients_connected
-               winsock send string clients(i).channel, "Client_" + str$(clients(new_client).id) + " has connected!"
+               winsock send string clients(i).channel,"Client_" + str$(clients(new_client).id) + " has connected!"
             next i
-            AddToChatDisplay("Client_" + str$(clients(new_client).id) + " has connected!")
+            AddToChatDisplay("("+get time$()+") - "+"Client_" + str$(clients(new_client).id) + " has connected!")
          else
             AddToChatDisplay(winsock channel error msg$(clients(new_client).channel))
             winsock delete channel clients(array count(clients(0))).channel
@@ -84,7 +84,7 @@ do
          endif
       else
          `max clients reached.
-         AddToChatDisplay("connection request rejected because max amount of clients are already connected.")
+         AddToChatDisplay("("+get time$()+") - "+"connection request rejected because max amount of clients are already connected.")
       endif
    endif
    `check for incoming chat messages
@@ -92,7 +92,7 @@ do
       if (winsock channel data waiting(clients(i).channel))
          message$ = winsock recv string(clients(i).channel)
          if (message$ = "")
-            AddToChatDisplay("Client_" + str$(clients(i).id) + " has disconnected.")
+            AddToChatDisplay("("+get time$()+") - "+"Client_" + str$(clients(i).id) + " has disconnected.")
             `send a message to all clients that client has disconnected.
             for j=1 to clients_connected
                if (j <> i)
@@ -106,7 +106,7 @@ do
          else
             `forward messsage to all other clients (including the sender).
             message$ = "Client_" + str$(clients(i).id) + ":  " + message$
-            AddToChatDisplay(message$)
+            AddToChatDisplay("("+get time$()+") - "+message$)
             for j=1 to clients_connected
                winsock send string clients(j).channel, message$
             next j
@@ -124,7 +124,7 @@ do
 	print "CONSOLE PROMPT >>>",chat_msg$,"_"
 	if returnkey()=1 and len(chat_msg$)>2:
 		clear entry buffer
-		AddToChatDisplay("Console: "+chat_msg$)
+		AddToChatDisplay("("+get time$()+") - "+"Console: "+chat_msg$)
 		for j=1 to clients_connected
 			winsock send string clients(j).channel,"Console: "+chat_msg$
 		next j
