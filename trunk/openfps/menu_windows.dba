@@ -10,6 +10,7 @@ Remstart
 `***** Included Source File *****
 `----- Changelog:
 `(07/08/10) - thenerd     - Created
+`(7/15/10)  - thenerd     - Changed module to use a UDT for window dragging
 
 `----- To-Do:
 
@@ -93,7 +94,6 @@ function _MENU_Update_Current(x,y,active,created,bitmap$,name$,drag_start_x,drag
 	_MENU_current.drag_start_x=drag_start_x
 	_MENU_current.drag_start_y=drag_start_y
 	_MENU_current_mouse_dragging=0
-	
 	if _MENU_current.active=1:
 		if _MENU_current.created=0:
 			UI_AddGadgetToScreen(_MENU_current.name,_MENU_current.x,_MENU_current.y,_MENU_current.bitmap)
@@ -101,9 +101,7 @@ function _MENU_Update_Current(x,y,active,created,bitmap$,name$,drag_start_x,drag
 			_MENU_current.created=1
 		endif
 		if _MENU_current.created=1:
-			if UI_mouseoveredgadget$=_MENU_current.name:
-				
-				
+			if UI_mouseoveredgadget$=_MENU_current.name:	
 				if mouseclick()=0:
 					rem UI_FadeInMouse()
 				endif
@@ -112,8 +110,6 @@ function _MENU_Update_Current(x,y,active,created,bitmap$,name$,drag_start_x,drag
 							UI_DeleteGadget(_MENU_current.name)
 							UI_AddGadgetToScreen(_MENU_current.name,_MENU_current.x,_MENU_current.y,_MENU_current.bitmap)
 							UI_AddMouseOverImageToGadget(_MENU_current.name,_MENU_current.bitmap)
-
-				
 					rem UI_FadeOutMouse()
 					_MENU_current.x=_MENU_current.x+SyS_MouseMoveX
 					_MENU_current.y=_MENU_current.y+SyS_MouseMoveY

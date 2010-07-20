@@ -12,7 +12,7 @@ Remstart
 `----- Changelog:
 `(07/07/10) - miso     - Created
 `(07/08/10) - miso     - Removed most of the artifact, finalising later, its now good for testings
-
+`(7/20/10)  - thenerd  - Added code for lobby window.
 
 `----- To-Do:
 
@@ -82,7 +82,10 @@ UI_Chatboxtextoffset=620
 			UI_Chatpanel.x=param_x:UI_chatpanel.y=param_y
 			UI_chatpanel.Offset=300
 			UI_LoadGuiGraphics(param_chatpanelimage$,"UI_chatboximage")
-			UI_AddCenterGadgetToScreen("UI_chatbox",param_x,param_y,"UI_chatboximage")			
+			UI_AddCenterGadgetToScreen("UI_chatbox",param_x,param_y,"UI_chatboximage")		
+
+			
+			
 			UI_Addmouseoverimagetogadget("UI_chatbox","UI_chatboximage")
 			
 			UI_WriteLog(UI_Green,"Chatbox has been initialized.")
@@ -137,6 +140,7 @@ Function UI_SUB_HandleChatBoxDrag()
 		UI_MoveGadget("UI_chatbox",SyS_MouseMoveX,SyS_MouseMoveY)
 		UI_chatpanel.x=UI_chatpanel.x+SyS_MouseMoveX
 		UI_chatpanel.y=UI_chatpanel.y+SyS_MouseMoveY
+
 		
 		If UI_chatpanel.x > UI_Display.width-(UI_getgadgetwidth("UI_chatbox")/2)
 			UI_chatpanel.x=UI_Display.width-(UI_getgadgetwidth("UI_chatbox")/2)
@@ -165,10 +169,11 @@ Function UI_SUB_HandleChatBoxDrag()
 			UI_ResetYmousemove()
 		endif
 		
-		
-		
+
 		a=180
 		UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
+
+		
 	Endif
 
 Endfunction
@@ -179,8 +184,8 @@ Function UI_SUB_HandleChatBox()
 //*                                                                                     *
 //***************************************************************************************
 // test
-If inkey$()="6" then UI_hideChatbox()
-If inkey$()="7" then UI_showChatbox()
+`If inkey$()="6" then UI_hideChatbox()
+`If inkey$()="7" then UI_showChatbox()
 
 
 
@@ -207,7 +212,9 @@ If UI_chatpanel.Hidden  = 0
 		for x=1 to 9
 			UI_text(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+170-(x*10),Chatlines$(x))
 		next x
+
 Endif
+
 Endfunction
 
 Function UI_DestroyCheckbox()
@@ -278,6 +285,9 @@ Function UI_HideChatBox()
 	UI_ChatboxInput.Alive   = 0
 	UI_ChatboxInput.Current = ""
 	UI_DeleteGadget("UI_chatbox")
+	UI_DeleteGadget("button_lobby_campaign")
+	UI_DeleteGadget("button_lobby_versus")
+	UI_DeleteGadget("chatpanel_tab_campaign")
 Endfunction
 
 Function UI_ShowChatBox()
@@ -291,9 +301,31 @@ Function UI_ShowChatBox()
 			//add an input line to chatbox
 			UI_SUB_Initchatbox("media\panels\ui_chatbox.png",UI_chatpanel.x,UI_Chatpanel.y)
 			UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
+	if UI_GadgetExist("button_lobby_campaign")=0:
+		x=UI_Chatpanel.x-285
+		y=UI_Chatpanel.y-148
+		UI_AddCenterGadgettoScreen("button_lobby_campaign",x,y,"UI_button_small")
+		UI_AddMouseoverImageToGadget("button_lobby_campaign","UI_button_small_hover")
+		UI_AddMouseoverTitleToGadget("button_lobby_campaign",1,x-12,y-6,"-Campaign-")
+		UI_AddtitleToGadget("button_lobby_campaign",1,x-12,y-6,"Campaign")
+	endif
+	if UI_GadgetExist("button_lobby_versus")=0:
+		x=UI_Chatpanel.x-285
+		y=UI_Chatpanel.y-98
+		UI_AddCenterGadgettoScreen("button_lobby_versus",x,y,"UI_button_small")
+		UI_AddMouseoverImageToGadget("button_lobby_versus","UI_button_small_hover")
+		UI_AddMouseoverTitleToGadget("button_lobby_versus",1,x-12,y-6,"-Versus-")
+		UI_AddtitleToGadget("button_lobby_versus",1,x-12,y-6,"Versus")
+	endif
+	if UI_GadgetExist("chatpanel_tab_campaign")=0:
+		x=UI_Chatpanel.x-307
+		y=UI_Chatpanel.y-214
+		UI_AddCenterGadgettoScreen("chatpanel_tab_campaign",x,y,"UI_chatpanel_tab_campaign")
+		`UI_AddMouseoverImageToGadget("chatpanel_tab_campaign","UI_chatpanel_tab_versus")
+	endif
 Endfunction
 
-
+ 
 Function UI_DestroyCHTBXInput()
 //***************************************************************************************
 //*   Miso                                                                              *

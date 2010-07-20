@@ -24,6 +24,7 @@ remstart
 (07/06/10) - thenerd, miso  - Started to rewrote with user interface commands
 (07/07/10) - thenerd        - Recoding menu, working on chat lobby and server list.
 (07/08/10) - thenerd        - Added windows to go along with each button.
+(7/20/10)  - thenerd        - Added Lobby window.
 
 ----- To-Do:
 
@@ -63,6 +64,7 @@ endfunction
 /////////////////////////////////////////////////////////
 
 function runMenu()
+UI_HideChatBox()
 do
 	updateNetwork()
 	//---update menu and UI
@@ -71,9 +73,40 @@ do
 	
 	//--------------------------------------
 	//----render button-specific windows
+	
 	select CurrentWindow$
 		case "button_quit"
 			ui_putwindow(UI_Display.Middlewidth-280,UI_Display.Middleheight-10,35,15)
+		endcase
+		case "button_lobby"
+			`UI_Reinitchatbox()
+			if UI_GadgetExist("button_lobby_campaign")=1:
+				x=UI_Chatpanel.x-285
+				y=UI_Chatpanel.y-148
+				UI_PositionGadget("button_lobby_campaign",x,y)
+				x=UI_Chatpanel.x-285
+				y=UI_Chatpanel.y-98
+				UI_PositionGadget("button_lobby_versus",x,y)
+				x=UI_Chatpanel.x-307
+				y=UI_Chatpanel.y-214
+				UI_PositionGadget("chatpanel_tab_campaign",x,y)
+			endif
+			if UI_MouseOveredGadget$="button_lobby_campaign" and mouseclick()=1:
+				`campaign button
+				UI_DeleteGadget("chatpanel_tab_campaign")
+				x=UI_Chatpanel.x-307
+				y=UI_Chatpanel.y-214
+				UI_AddCenterGadgettoScreen("chatpanel_tab_campaign",x,y,"UI_chatpanel_tab_campaign")
+				UI_PositionGadget("chatpanel_tab_campaign",x,y)
+			endif
+			if UI_MouseOveredGadget$="button_lobby_versus" and mouseclick()=1:
+				`versus button
+				UI_DeleteGadget("chatpanel_tab_campaign")
+				x=UI_Chatpanel.x-307
+				y=UI_Chatpanel.y-214
+				UI_AddCenterGadgettoScreen("chatpanel_tab_campaign",x,y,"UI_chatpanel_tab_versus")
+				UI_PositionGadget("chatpanel_tab_campaign",x,y)
+			endif
 		endcase
 	endselect
 	
@@ -82,22 +115,11 @@ do
 	//----check buttonclicks
 	If mouseclick()=1 and UI_Mouseclicked=0
 		Select UI_MouseOveredGadget$
-			remstart
+
 			Case "button_lobby"
-				UI_ClearAllGuis()      :`Clears all existing gadgets
-				UI_HideMouse()             :`Hide mouse before entering game mode
-				UI_AddTextLine(3,UI_Display.middlewidth,350,"...LOADING...")
-				menu_UpdateBackdrop():UI_Handle():Sync
-				UI_ClearAllGuis()          :`Clears all existing gadgets
-				MENU_AddOPENFPSStaminaBar():`Add staminabar
-				MENU_AddOPENFPSFatigueBar():`Add fatiguebar
-				UI_PlayMouseClickSND()     :`Plays mouseclick sound
-				Menu_DeleteBackdrop()
-				UI_HideChatbox()
-				Exit                       :`Jumps to Campaign Mode
-				CurrentWindow$="button_campaign"
+				UI_Reinitchatbox()
+				CurrentWindow$="button_lobby"
 			EndCase
-			remend
 		
 			Case "button_quit"
 				UI_HideChatBox()
@@ -118,19 +140,29 @@ do
 				Menu_Createmain()
 				CurrentWindow$="main"
 				//Reinit chatbox when back to main
-				 
-				UI_Reinitchatbox()
+				if UI_GadgetExist("button_lobby_campaign")=1:
+					UI_DeleteGadget("button_lobby_campaign")
+				endif
+				if UI_GadgetExist("button_lobby_versus")=1:
+					UI_DeleteGadget("button_lobby_versus")
+				endif
+				if UI_GadgetExist("chatpanel_tab_campaign")=1:
+					UI_DeleteGadget("chatpanel_tab_campaign")
+				endif
+					
+				`UI_Reinitchatbox()
 				
 			EndCase
 			
 			Case "button_credits"
-				MENU_credits.active=1
+				MENU_credits.active=0 `1 for credits window active, 0 for now
 			endcase
 			
 		Endselect
 	Endif
 	
-
+	`UI_text(1,0,15,str$(UI_MouseX()-UI_Chatpanel.x))
+	`UI_text(1,0,30,str$(UI_MouseY()-UI_Chatpanel.y))
 	
 	//---Sync
 	Sync
@@ -184,6 +216,26 @@ x=168:y=y+60
 	UI_AddCenterGadgettoScreen("button_quit",x,y,"UI_button")
 	UI_AddMouseoverImageToGadget("button_quit","UI_buttonhover")
 	UI_AddtitleToGadget("button_quit",3,x-8,y-14,"Quit")
+	
+	x=UI_Chatpanel.x-285
+	y=UI_Chatpanel.y-148
+	UI_AddCenterGadgettoScreen("button_lobby_campaign",x,y,"UI_button_small")
+	UI_AddMouseoverImageToGadget("button_lobby_campaign","UI_button_small_hover")
+	UI_AddMouseoverTitleToGadget("button_lobby_campaign",1,x-12,y-6,"-Campaign-")
+	UI_AddtitleToGadget("button_lobby_campaign",1,x-8,y-6,"Campaign")
+	
+	x=UI_Chatpanel.x-285
+	y=UI_Chatpanel.y-98
+	UI_AddCenterGadgettoScreen("button_lobby_versus",x,y,"UI_button_small")
+	UI_AddMouseoverImageToGadget("button_lobby_versus","UI_button_small_hover")
+	UI_AddMouseoverTitleToGadget("button_lobby_versus",1,x-12,y-6,"-Versus-")
+	UI_AddtitleToGadget("button_lobby_versus",1,x-12,y-6,"Versus")
+	
+	x=UI_Chatpanel.x-307
+	y=UI_Chatpanel.y-214
+	UI_AddCenterGadgettoScreen("chatpanel_tab_campaign",x,y,"UI_chatpanel_tab_campaign")
+	`UI_AddMouseoverImageToGadget("chatpanel_tab_campaign","UI_chatpanel_tab_versus")
+
 EndFunction
 
 Function Menu_CreateQuitQuestion()

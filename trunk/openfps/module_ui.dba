@@ -41,6 +41,8 @@ remstart
 (7/6/10)   - miso     - changed log commands to write .html format log
 (7/10/10)  - miso     - added 3 new mouse commands to solve gadget dragging artifacts.
                         Dragging now works well using Chris's code.
+(7/20/10)  - thenerd  - Added sprites for lobby window, changed debug HTMl file layout
+
 Remend
 Remstart
 ----- To-Do:
@@ -416,7 +418,11 @@ Function UI_Init()
 	UI_LoadGuiGraphics("media\buttons\button-normal.png","UI_button")
 	UI_LoadGuiGraphics("media\buttons\button-hover.png","UI_buttonhover")
 		
-
+	UI_LoadGuiGraphics("media\buttons\small_button-normal.png","UI_button_small")
+	UI_LoadGuiGraphics("media\buttons\small_button-hover.png","UI_button_small_hover")
+	
+	UI_LoadGuiGraphics("media\panels\tab_campaign.png","UI_chatpanel_tab_campaign")
+	UI_LoadGuiGraphics("media\panels\tab_versus.png","UI_chatpanel_tab_versus")
 
 // Disable escapekey
 	Disable Escapekey
@@ -2615,8 +2621,9 @@ var_time$=var_time$+"_"+var_hour$+"h "+var_minutes$+"m "+var_seconds$+" s.log"
 		var_time$="openfps_log.html"
   		If File Exist(var_time$) = UI_True Then Delete File var_time$
   		Open to Write UI_LogFileID,var_time$
-		Write String UI_LogfileID,"<html><body>"
-		Write String UI_LogfileID,"OpenFps Logfile<br>"
+		Write String UI_LogfileID,"<html><body background="+chr$(34)+"media\images\camo.jpg"+chr$(34)+">"
+		Write String UI_LogfileID,"<img src="+chr$(34)+"media\menu\logo.png"+chr$(34)+"alt="+chr$(34)+"OpenFPS"+chr$(34)+"><br><br>"
+		Write String UI_LogfileID,"<u>OpenFps Logfile</u><br>"
 		Write String UI_LogFileID,"<br>"
   	else
   		UI_Logmode   = UI_False
