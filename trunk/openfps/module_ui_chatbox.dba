@@ -320,7 +320,7 @@ Function UI_ShowChatBox()
 	if UI_GadgetExist("chatpanel_tab_campaign")=0:
 		x=UI_Chatpanel.x-307
 		y=UI_Chatpanel.y-214
-		UI_AddCenterGadgettoScreen("chatpanel_tab_campaign",x,y,"UI_chatpanel_tab_campaign")
+		UI_AddCenterGadgettoScreen("chatpanel_tab_campaign",x,y,Lobby_current_tab$)
 		`UI_AddMouseoverImageToGadget("chatpanel_tab_campaign","UI_chatpanel_tab_versus")
 	endif
 Endfunction

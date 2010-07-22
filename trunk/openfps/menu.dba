@@ -57,6 +57,8 @@ function initMenu()
 	InitMenuWindows()
 	UI_WriteLog(UI_Green,"Menu Windows sub-module started")
 	global CurrentWindow$
+	global Lobby_current_tab$
+	Lobby_current_tab$="UI_chatpanel_tab_campaign"
 	initNetwork()
 endfunction
 /////////////////////////////////////////////////////////
@@ -98,6 +100,7 @@ do
 				y=UI_Chatpanel.y-214
 				UI_AddCenterGadgettoScreen("chatpanel_tab_campaign",x,y,"UI_chatpanel_tab_campaign")
 				UI_PositionGadget("chatpanel_tab_campaign",x,y)
+				Lobby_current_tab$="UI_chatpanel_tab_campaign"
 			endif
 			if UI_MouseOveredGadget$="button_lobby_versus" and mouseclick()=1:
 				`versus button
@@ -106,7 +109,10 @@ do
 				y=UI_Chatpanel.y-214
 				UI_AddCenterGadgettoScreen("chatpanel_tab_campaign",x,y,"UI_chatpanel_tab_versus")
 				UI_PositionGadget("chatpanel_tab_campaign",x,y)
+				Lobby_current_tab$="UI_chatpanel_tab_versus"
 			endif
+		endcase
+		case "button_credits"
 		endcase
 	endselect
 	
@@ -120,7 +126,12 @@ do
 				UI_Reinitchatbox()
 				CurrentWindow$="button_lobby"
 			EndCase
-		
+			
+			Case "button_credits"
+				UI_HideChatBox()
+				CurrentWindow$="button_credits"
+			EndCase
+					
 			Case "button_quit"
 				UI_HideChatBox()
 				UI_ClearAllGuis()
