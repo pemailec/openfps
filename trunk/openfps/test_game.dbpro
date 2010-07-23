@@ -11,7 +11,7 @@ LineInclude1=423
 include2=module_resource.dba
 LineInclude2=173
 include3=menu.dba
-LineInclude3=56
+LineInclude3=139
 include4=module_network.dba
 LineInclude4=81
 include5=module_shooting.dba
@@ -21,15 +21,17 @@ LineInclude6=327
 include7=module_terrain.dba
 LineInclude7=18
 include8=module_ui.dba
-LineInclude8=1833
+LineInclude8=449
 include9=module_ui_console.dba
 LineInclude9=0
 include10=module_visuals.dba
 LineInclude10=110
 include11=module_ui_chatbox.dba
-LineInclude11=191
+LineInclude11=240
 include12=menu_windows.dba
 LineInclude12=140
+include13=module_ui_character.dba
+LineInclude13=152
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
@@ -62,7 +64,7 @@ window resolution=1024x768
 
 ; **** Media ****
 ; Example entries: media1=graphics\*.jpg
-media root path=C:\==Darkbasic Pro==\Dark Basic Professional\Projects\=Realwork=\openfps\
+media root path=C:\==Darkbasic Pro==\Dark Basic Professional\Projects\=Realwork=\=OpenFPS=\
 
 ; **** Icons ****
 

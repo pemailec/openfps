@@ -171,12 +171,55 @@ Function UI_SUB_HandleChatBoxDrag()
 		
 
 		a=180
-		UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
+		rem UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
 
 		
 	Endif
 
 Endfunction
+
+Function UI_sub_CheckChatboxScreenedges()
+//***************************************************************************************
+//*   Miso   : Checks if the  gadget is out of screen.                                  *
+//*                                                                                     *
+//***************************************************************************************
+		
+		If UI_chatpanel.x > UI_Display.width-(UI_getgadgetwidth("UI_chatbox")/2)
+			UI_chatpanel.x=UI_Display.width-(UI_getgadgetwidth("UI_chatbox")/2)
+			UI_centerpositiongadget("UI_chatbox",UI_chatpanel.x,UI_Chatpanel.y)
+			UI_ResetXmousemove()
+		endif
+		
+		
+		If UI_chatpanel.x < (UI_getgadgetwidth("UI_chatbox")/2)
+			UI_chatpanel.x=(UI_getgadgetwidth("UI_chatbox")/2)
+			UI_centerpositiongadget("UI_chatbox",UI_chatpanel.x,UI_Chatpanel.y)
+			UI_ResetXmousemove()
+		endif
+		
+		
+		If UI_chatpanel.Y > UI_Display.height-(UI_getgadgetheight("UI_chatbox")/2)
+			UI_chatpanel.Y=UI_Display.height-(UI_getgadgetheight("UI_chatbox")/2)
+			UI_centerpositiongadget("UI_chatbox",UI_chatpanel.x,UI_Chatpanel.y)
+			UI_ResetYmousemove()
+		endif
+		
+		
+		If UI_chatpanel.Y < (UI_getgadgetheight("UI_chatbox")/2)
+			UI_chatpanel.Y=(UI_getgadgetheight("UI_chatbox")/2)
+			UI_centerpositiongadget("UI_chatbox",UI_chatpanel.x,UI_Chatpanel.y)
+			UI_ResetYmousemove()
+		endif
+		
+
+		a=180
+		UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
+	
+Endfunction
+
+
+
+
 
 Function UI_SUB_HandleChatBox()
 //***************************************************************************************
@@ -352,6 +395,7 @@ Endfunction a
 
 Function UI_ReinitChatbox()
 	UI_HideChatBox()
-	UI_ShowChatBox()
-	UI_ShowChatBox()
+	UI_showchatbox()
+	UI_showchatbox()
+	
 Endfunction

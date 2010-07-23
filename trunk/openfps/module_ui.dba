@@ -444,10 +444,15 @@ Function UI_Handle()
 
 //-Handle all the gadgets
 	UI_HandleGadgets()
+
 //-Checks input events
 	UI_CheckInput()
+
 //-Handle Chatbox input events
 	UI_Sub_HandleChatBoxDrag()
+	UI_SUB_HandlecharsetupDrag()
+
+	
 //-Handle all the mouse
 	UI_HandleMouse()
 //-Check if we disabled non gui mouse movements

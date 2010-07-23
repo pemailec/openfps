@@ -1,0 +1,186 @@
+Rem ***** Included Source File *****
+/////////////////////////
+//
+// OpenFPS USER INTERFACE SUBMODULE            
+//
+// Created by miso    
+//
+/////////////////////////////////////////////////////
+`***** Included Source File *****
+`----- Changelog:
+`(07/23/10) - miso     - Created
+
+`----- To-Do:
+
+`----- Purpose:
+`Handles the character setup screen
+
+`----- Dependancies and Conflicts (IMPORTANT STUFF):
+`Uses the main user interface module. (module_ui.dba)
+
+`----- Conflicts
+
+`----- Other Notes:
+`Usage (IMPORTANT***):
+
+`----- Function List:
+`----------MAIN  COMMANDS
+
+/////////////////////////////////////////////////////
+//MAIN COMMANDS
+/////////////////////////////////////////////////////
+
+`=========Constants=========`
+`===========================`
+`==========Globals==========`
+                                                       
+`===========================`
+
+`===========Types===========`
+`===========================`
+
+
+`=========Functions=========`
+Function UI_SUB_Initcharsetup(param_chatpanelimage$,param_x,param_y)
+//***************************************************************************************
+//*   Miso   : Initiate the charsetup gui.                                                *
+//*                                                                                     *
+//***************************************************************************************
+
+UI_charsetuptextoffset=620
+	UI_SetDebugPosition("UI_Sub_Initcharsetup()","module_ui_character.dba")
+		//Creates an array for chat messages, they will be displayed in charsetup
+		
+		//Check if we loaded charsetup image
+		If UI_gadgetImageExist("UI_charsetupimage")=0 
+			//creates basic charsetup gadget, sets it variables
+			UI_Chatpanel.x=param_x:UI_chatpanel.y=param_y
+			UI_chatpanel.Offset=300
+			UI_LoadGuiGraphics(param_chatpanelimage$,"UI_charsetupimage")
+			UI_AddCenterGadgetToScreen("UI_charsetup",param_x,param_y,"UI_charsetupimage")		
+			
+			UI_Addmouseoverimagetogadget("UI_charsetup","UI_charsetupimage")
+			
+			UI_WriteLog(UI_Green,"charsetup has been initialized.")
+			UI_Triggerchatboxinput$="UI_charsetup"
+			
+		Else
+			//creates basic charsetup gadget, sets it variables
+			If UI_chatpanel.hidden=0
+				If UI_GadgetExist("UI_charsetup")=0
+					UI_Chatpanel.x=param_x:UI_chatpanel.y=param_y
+					UI_AddCenterGadgetToScreen("UI_charsetup",param_x,param_y,"UI_charsetupimage")			
+					UI_Addmouseoverimagetogadget("UI_charsetup","UI_charsetupimage")
+					//offset
+					a=180
+					//add an input line to charsetup
+			
+				endif
+			Endif
+		Endif
+
+	UI_restoreDebugPosition()
+Endfunction
+
+Function UI_Addtexttocharsetup(param_text$)
+//***************************************************************************************
+//*   Miso   : Adds a new message to the charsetup gadget.                                *
+//*                                                                                     *
+//***************************************************************************************
+endfunction
+
+
+Function UI_SUB_HandlecharsetupDrag()
+//***************************************************************************************
+//*   Miso   : Handles the chastbox.                                                    *
+//*                                                                                     *
+//***************************************************************************************
+
+	//Gadget is moveable
+	If mouseclick()=1 and UI_mouseoveredgadget$="UI_charsetup"
+		//bring gadget to top
+		UI_Reinitcharsetup()
+		//moves
+		UI_MoveGadget("UI_charsetup",SyS_MouseMoveX,SyS_MouseMoveY)
+		UI_chatpanel.x=UI_chatpanel.x+SyS_MouseMoveX
+		UI_chatpanel.y=UI_chatpanel.y+SyS_MouseMoveY
+
+		
+		If UI_chatpanel.x > UI_Display.width-(UI_getgadgetwidth("UI_charsetup")/2)
+			UI_chatpanel.x=UI_Display.width-(UI_getgadgetwidth("UI_charsetup")/2)
+			UI_centerpositiongadget("UI_charsetup",UI_chatpanel.x,UI_Chatpanel.y)
+			UI_ResetXmousemove()
+		endif
+		
+		
+		If UI_chatpanel.x < (UI_getgadgetwidth("UI_charsetup")/2)
+			UI_chatpanel.x=(UI_getgadgetwidth("UI_charsetup")/2)
+			UI_centerpositiongadget("UI_charsetup",UI_chatpanel.x,UI_Chatpanel.y)
+			UI_ResetXmousemove()
+		endif
+		
+		
+		If UI_chatpanel.Y > UI_Display.height-(UI_getgadgetheight("UI_charsetup")/2)
+			UI_chatpanel.Y=UI_Display.height-(UI_getgadgetheight("UI_charsetup")/2)
+			UI_centerpositiongadget("UI_charsetup",UI_chatpanel.x,UI_Chatpanel.y)
+			UI_ResetYmousemove()
+		endif
+		
+		
+		If UI_chatpanel.Y < (UI_getgadgetheight("UI_charsetup")/2)
+			UI_chatpanel.Y=(UI_getgadgetheight("UI_charsetup")/2)
+			UI_centerpositiongadget("UI_charsetup",UI_chatpanel.x,UI_Chatpanel.y)
+			UI_ResetYmousemove()
+		endif
+		
+		
+		
+	Endif
+
+Endfunction
+
+Function UI_SUB_Handlecharsetup()
+//***************************************************************************************
+//*   Miso   : Handles the chastbox.                                                    *
+//*                                                                                     *
+//***************************************************************************************
+
+
+
+
+Endfunction
+
+
+
+
+
+Function UI_Hidecharsetup()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function Hides the checkbox                                                *
+//*                                                                                     *
+//***************************************************************************************
+UI_chatpanel.Hidden  = 1	
+	UI_DeleteGadget("UI_charsetup")
+Endfunction
+
+Function UI_Showcharsetup()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function shows charsetup.                                                    *
+//*                                                                                     *
+//***************************************************************************************
+UI_chatpanel.Hidden  = 0
+			a=180
+			//add an input line to charsetup
+			UI_SUB_Initcharsetup("media\panels\ui_charsetup.png",UI_chatpanel.x,UI_Chatpanel.y)
+
+Endfunction
+
+
+
+Function UI_Reinitcharsetup()
+	UI_Hidecharsetup()
+	UI_Showcharsetup()
+	UI_Showcharsetup()
+Endfunction

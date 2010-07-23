@@ -123,12 +123,21 @@ do
 		Select UI_MouseOveredGadget$
 
 			Case "button_lobby"
+				UI_Hidecharsetup()
 				UI_Reinitchatbox()
+				UI_sub_CheckChatboxScreenedges()
 				CurrentWindow$="button_lobby"
+			EndCase
+			
+			Case "button_charactersetup"
+				UI_hidechatbox()
+				UI_showcharsetup()
+				CurrentWindow$="button_charactersetup"
 			EndCase
 			
 			Case "button_credits"
 				UI_HideChatBox()
+				UI_Hidecharsetup()
 				CurrentWindow$="button_credits"
 			EndCase
 					
