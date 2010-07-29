@@ -30,7 +30,7 @@ include11=module_ui_chatbox.dba
 LineInclude11=240
 include12=menu_windows.dba
 LineInclude12=140
-include13=module_ui_character.dba
+include13=module_ui_options.dba
 LineInclude13=152
 
 ; **** Executable Information  ***

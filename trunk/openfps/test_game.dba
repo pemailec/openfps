@@ -29,7 +29,7 @@ remstart
                         or I suggest to create a module_core or module_System, 
                         so I should put my debug commands there too.
                       - Added label _terminate:
-
+(7/29/10)  		      - Added to game engine.
 
 ----- To-Do
 Modules should be init between initMenu() and runMenu().
@@ -65,10 +65,11 @@ UI_init():`best to init before initMenu(), it may use UI commands later.
 `/ START LOADING
 initMenu()
 
-
 `/ RUN MENU
 runMenu()
 
+`clear gui
+UI_ClearAllGuis()
 
 `Init other modules here
 initTerrain()

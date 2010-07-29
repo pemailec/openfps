@@ -12,6 +12,7 @@ remstart
 (2/8/10) - BMacZero - Created
 (07/06/10) - miso     - just placed logger commands
 (07/06/10) - thenerd  - added commands
+(07/28/10) - thenerd  - added PlayerData.cfg for player name & other info
 
 ----- To-Do:
 -None-
@@ -26,7 +27,11 @@ Passes this information to relevant modules to deal with it.
 -None-
 
 ----- Other Notes:
--None-
+Chat Message Tags
+&name=name           - Changes your name and displays a message.
+&name_silent=name    - Changes your name without displaying a message.
+&color="r,g,b"		 - Changes your chat color (WORK IN PROGRESS)
+&blarg	             - :D
 
 ----- Function List:
 -Client:
@@ -44,14 +49,14 @@ remend
 #constant SERVER_HOST "96.233.35.41"
 #constant SERVER_PORT 27013
 Global channel as DWORD
-
+Global PlayerName$ as string
 /////////////////////////////////////////////////////////
 // INIT                                                //
 /////////////////////////////////////////////////////////
 
 
 function initNetwork()
-UI_WriteLog(UI_Green,"=== Starting Network module")
+UI_WriteLog(UI_Yellow,"=== Starting Network module")
 winsock make
 if (winsock error())
    `an error has occurred, output the error message to the log and quit.
@@ -59,16 +64,26 @@ if (winsock error())
    winsock clean up
    end
 else
-	UI_WRiteLog(UI_Green,"Connected to the master server "+SERVER_HOST+":"+STR$(SERVER_PORT))
+	UI_WriteLog(UI_Green,"Connected to the master server "+SERVER_HOST+":"+STR$(SERVER_PORT))
 endif
 channel = winsock connect(SERVER_HOST, SERVER_PORT)
 check_for_error(channel)
 
 UI_WriteLog(UI_Green,"=== Network module started")
 
-UI_Addtexttochatbox("Welcome to Biostorm: Chemical Warfare!")
-UI_Addtexttochatbox("Master server is online.")
+UI_WriteLog(UI_Yellow,"=== Loading Player Data")
+temp_plr_data=grabResource(res_File)
+OPEN TO READ temp_plr_data,"PlayerData.cfg"
+READ STRING temp_plr_data,PlayerName$
+PlayerName$=right$(PlayerName$,(len(PlayerName$)-11))
+close file temp_plr_data
+freeResource(temp_plr_data,res_File)
+UI_WriteLog(UI_Green,"=== Player Data Loaded")
 
+
+UI_Addtexttochatbox("Welcome to Biostorm: Chemical Warfare!")
+`UI_Addtexttochatbox("Master server is online.")
+sendPlayerName(PlayerName$,0)
 endfunction
 
 
@@ -80,6 +95,7 @@ function updateNetwork()
    winsock refresh channel channel
    check_for_error(channel)
    getChatMessage()
+   `sendPlayerName("&name="+PlayerName$)
 endfunction
 
 function getChatMessage():
@@ -97,6 +113,14 @@ function getChatMessage():
 		UI_Addtexttochatbox(message$)
       endif
    endif
+endfunction
+
+function sendPlayerName(string$,mode):
+	//0=silent
+	//1=normal
+	if mode=0 then winsock send string channel, "&name_silent="+string$
+	if mode=1 then winsock send string channel, "&name="+string$
+	check_for_error(channel)
 endfunction
 
 function sendChatMessage(string$):

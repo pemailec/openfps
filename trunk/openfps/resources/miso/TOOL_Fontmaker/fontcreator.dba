@@ -65,7 +65,7 @@ Endtype
 
 
 	//----------LOAD AND SET THE FONT YOU WANT
-		Set Text Font "courier new"
+		Set Text Font "Arial"
 		Set Text Size 14         :`-----Size may be 8-32
 		`Set Text to Bold
 	//----------Change INK color	

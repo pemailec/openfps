@@ -25,6 +25,7 @@ remstart
 (07/07/10) - thenerd        - Recoding menu, working on chat lobby and server list.
 (07/08/10) - thenerd        - Added windows to go along with each button.
 (7/20/10)  - thenerd        - Added Lobby window.
+(7/29/10)  - thenerd        - New menu layout, loading screen for game engine.
 
 ----- To-Do:
 
@@ -36,11 +37,7 @@ Runs the menu.
 -None-
 
 ----- Other Notes:
--None-
-
-case "button_credits"
-	ui_putwindow(UI_Display.Middlewidth-195,UI_Display.Middleheight-80,38,24)
-endcase
+* For now, to access the game engine part of the project, click on the training button and start training.
 
 
 remend
@@ -57,8 +54,48 @@ function initMenu()
 	InitMenuWindows()
 	UI_WriteLog(UI_Green,"Menu Windows sub-module started")
 	global CurrentWindow$
+	
+	global ui_mouse_wait
+	ui_mouse_wait = grabResource(res_Image)
+	load image "media\cursors\waitcursor.dds",ui_mouse_wait
+	
 	global Lobby_current_tab$
-	Lobby_current_tab$="UI_chatpanel_tab_campaign"
+	Lobby_current_tab$="UI_chatpanel_tab_game"
+	
+	remstart	
+	global menu_lobby_cam
+	global menu_lobby_cam_img
+	menu_lobby_cam  = grabResource(res_Camera)
+	menu_lobby_cam_img = grabResource(res_Image)
+	make camera menu_lobby_cam
+	set camera to image menu_lobby_cam,menu_lobby_cam_img,140,165
+	position camera menu_lobby_cam,0,-1000,0
+	backdrop on menu_lobby_cam
+	set camera aspect menu_lobby_cam,140.0/165.0
+	`color backdrop menu_lobby_cam,rgb(29,29,29)
+	color backdrop menu_lobby_cam,rgb(0,0,255)
+	autocam off
+
+	global icon_blank
+	global icon_blank_obj_test
+	icon_blank = grabResource(res_Image)
+	icon_blank_obj_test = grabResource(res_Object)
+	load image "media\menu\icon_blank.png",icon_blank
+	load object "media\models\menu_slide.x",icon_blank_obj_test
+	texture object icon_blank_obj_test,icon_blank
+	set object transparency icon_blank_obj_test,1
+	position object icon_blank_obj_test,0,-1000,3
+	set object cull icon_blank_obj_test,0
+	set object light icon_blank_obj_test,0
+	yrotate object icon_blank_obj_test,180
+	set object speed icon_blank_obj_test,50
+	`xrotate object icon_blank_obj_test,90
+	remend
+	
+	global menu_lobby_no_servers
+	menu_lobby_no_servers = grabResource(res_Image)
+	load image "media\menu\menu_lobby_no_servers.png",menu_lobby_no_servers
+	
 	initNetwork()
 endfunction
 /////////////////////////////////////////////////////////
@@ -68,6 +105,7 @@ endfunction
 function runMenu()
 UI_HideChatBox()
 do
+	`if mouseclick()=1 then play object icon_blank_obj_test,0
 	updateNetwork()
 	//---update menu and UI
 	menu_updatebackdrop()
@@ -80,36 +118,39 @@ do
 		case "button_quit"
 			ui_putwindow(UI_Display.Middlewidth-280,UI_Display.Middleheight-10,35,15)
 		endcase
+		case "button_training"
+			ui_putwindow(UI_Display.Middlewidth-280,UI_Display.Middleheight-10,35,15)
+		endcase
 		case "button_lobby"
 			`UI_Reinitchatbox()
-			if UI_GadgetExist("button_lobby_campaign")=1:
+			if UI_GadgetExist("button_lobby_game")=1:
 				x=UI_Chatpanel.x-285
 				y=UI_Chatpanel.y-148
-				UI_PositionGadget("button_lobby_campaign",x,y)
+				UI_PositionGadget("button_lobby_game",x,y)
 				x=UI_Chatpanel.x-285
 				y=UI_Chatpanel.y-98
-				UI_PositionGadget("button_lobby_versus",x,y)
+				UI_PositionGadget("button_lobby_chat",x,y)
 				x=UI_Chatpanel.x-307
 				y=UI_Chatpanel.y-214
-				UI_PositionGadget("chatpanel_tab_campaign",x,y)
+				UI_PositionGadget("chatpanel_tab_game",x,y)
 			endif
-			if UI_MouseOveredGadget$="button_lobby_campaign" and mouseclick()=1:
+			if UI_MouseOveredGadget$="button_lobby_game" and mouseclick()=1:
 				`campaign button
-				UI_DeleteGadget("chatpanel_tab_campaign")
+				UI_DeleteGadget("chatpanel_tab_game")
 				x=UI_Chatpanel.x-307
 				y=UI_Chatpanel.y-214
-				UI_AddCenterGadgettoScreen("chatpanel_tab_campaign",x,y,"UI_chatpanel_tab_campaign")
-				UI_PositionGadget("chatpanel_tab_campaign",x,y)
-				Lobby_current_tab$="UI_chatpanel_tab_campaign"
+				UI_AddCenterGadgettoScreen("chatpanel_tab_game",x,y,"UI_lobby_tab_game")
+				UI_PositionGadget("chatpanel_tab_game",x,y)
+				Lobby_current_tab$="UI_lobby_tab_game"
 			endif
-			if UI_MouseOveredGadget$="button_lobby_versus" and mouseclick()=1:
+			if UI_MouseOveredGadget$="button_lobby_chat" and mouseclick()=1:
 				`versus button
-				UI_DeleteGadget("chatpanel_tab_campaign")
+				UI_DeleteGadget("chatpanel_tab_game")
 				x=UI_Chatpanel.x-307
 				y=UI_Chatpanel.y-214
-				UI_AddCenterGadgettoScreen("chatpanel_tab_campaign",x,y,"UI_chatpanel_tab_versus")
-				UI_PositionGadget("chatpanel_tab_campaign",x,y)
-				Lobby_current_tab$="UI_chatpanel_tab_versus"
+				UI_AddCenterGadgettoScreen("chatpanel_tab_game",x,y,"UI_lobby_tab_chat")
+				UI_PositionGadget("chatpanel_tab_game",x,y)
+				Lobby_current_tab$="UI_lobby_tab_chat"
 			endif
 		endcase
 		case "button_credits"
@@ -118,31 +159,42 @@ do
 	
 	UI_handle()
 
+
 	//----check buttonclicks
 	If mouseclick()=1 and UI_Mouseclicked=0
 		Select UI_MouseOveredGadget$
 
 			Case "button_lobby"
-				UI_Hidecharsetup()
+				UI_HideOptions()
 				UI_Reinitchatbox()
 				UI_sub_CheckChatboxScreenedges()
 				CurrentWindow$="button_lobby"
 			EndCase
 			
-			Case "button_charactersetup"
+			Case "button_training"
 				UI_hidechatbox()
-				UI_showcharsetup()
-				CurrentWindow$="button_charactersetup"
+				UI_HideOptions()
+				UI_ClearAllGuis()
+				Menu_EnterTrainingQuestion()
+				CurrentWindow$="button_training"
 			EndCase
 			
 			Case "button_credits"
 				UI_HideChatBox()
-				UI_Hidecharsetup()
+				UI_HideOptions()
 				CurrentWindow$="button_credits"
 			EndCase
+			
+			Case "button_options"
+				UI_HideChatBox()
+				UI_showOptions()
+				CurrentWindow$="button_options"
+			EndCase
+						
 					
 			Case "button_quit"
 				UI_HideChatBox()
+				UI_HideOptions()
 				UI_ClearAllGuis()
 				UI_PlayMouseClickSND()
 				Menu_CreateQuitQuestion()
@@ -154,20 +206,25 @@ do
 				Exit
 			EndCase
 			
+			Case "button_yestrain"
+				sync
+				Exit
+			EndCase	
+					
 			Case "button_backtomain"
 				UI_ClearAllGuis()
 				UI_PlayMouseClickSND()
 				Menu_Createmain()
 				CurrentWindow$="main"
 				//Reinit chatbox when back to main
-				if UI_GadgetExist("button_lobby_campaign")=1:
-					UI_DeleteGadget("button_lobby_campaign")
+				if UI_GadgetExist("button_lobby_game")=1:
+					UI_DeleteGadget("button_lobby_game")
 				endif
-				if UI_GadgetExist("button_lobby_versus")=1:
-					UI_DeleteGadget("button_lobby_versus")
+				if UI_GadgetExist("button_lobby_chat")=1:
+					UI_DeleteGadget("button_lobby_chat")
 				endif
-				if UI_GadgetExist("chatpanel_tab_campaign")=1:
-					UI_DeleteGadget("chatpanel_tab_campaign")
+				if UI_GadgetExist("chatpanel_tab_game")=1:
+					UI_DeleteGadget("chatpanel_tab_game")
 				endif
 					
 				`UI_Reinitchatbox()
@@ -195,6 +252,19 @@ If SyS_Event_Terminate=1:
 	UI_WriteLog(UI_Yellow,"GOTO Terminate Script.")
 	goto _terminate_via_menu
 endif
+UI_HideChatBox()
+UI_HideOptions()
+UI_ClearAllGuis()
+UI_PlayMouseClickSND()
+menu_updatebackdrop()
+ui_putwindow(UI_Display.Middlewidth-280,UI_Display.Middleheight-10,35,15)
+X=UI_Display.Middlewidth:Y=UI_Display.Middleheight+50
+UI_AddTextLine(3,x,y,"Loading...")
+UI_HideMouse()
+
+UI_handle()
+paste image ui_mouse_wait,UI_MouseX(),UI_MouseY(),1
+sync
 UI_WriteLog(UI_Green,"Switching To Game Engine...")
 
 endfunction
@@ -217,9 +287,9 @@ x=168:y=y+60
 remend
 
 x=168:y=y+60
-	UI_AddCenterGadgettoScreen("button_charactersetup",x,y,"UI_button")
-	UI_AddMouseoverImageToGadget("button_charactersetup","UI_buttonhover")
-	UI_AddtitleToGadget("button_charactersetup",3,x-8,y-14,"Character")
+	UI_AddCenterGadgettoScreen("button_training",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_training","UI_buttonhover")
+	UI_AddtitleToGadget("button_training",3,x-8,y-14,"Training")
 
 x=168:y=y+60
 	UI_AddCenterGadgettoScreen("button_options",x,y,"UI_button")
@@ -239,22 +309,23 @@ x=168:y=y+60
 	
 	x=UI_Chatpanel.x-285
 	y=UI_Chatpanel.y-148
-	UI_AddCenterGadgettoScreen("button_lobby_campaign",x,y,"UI_button_small")
-	UI_AddMouseoverImageToGadget("button_lobby_campaign","UI_button_small_hover")
-	UI_AddMouseoverTitleToGadget("button_lobby_campaign",1,x-12,y-6,"-Campaign-")
-	UI_AddtitleToGadget("button_lobby_campaign",1,x-8,y-6,"Campaign")
+	UI_AddCenterGadgettoScreen("button_lobby_game",x,y,"UI_button_small")
+	UI_AddMouseoverImageToGadget("button_lobby_game","UI_button_small_hover")
+	UI_AddMouseoverTitleToGadget("button_lobby_game",1,x-12,y-6,"-Servers-")
+	UI_AddtitleToGadget("button_lobby_game",1,x-8,y-6,"Servers")
 	
 	x=UI_Chatpanel.x-285
 	y=UI_Chatpanel.y-98
-	UI_AddCenterGadgettoScreen("button_lobby_versus",x,y,"UI_button_small")
-	UI_AddMouseoverImageToGadget("button_lobby_versus","UI_button_small_hover")
-	UI_AddMouseoverTitleToGadget("button_lobby_versus",1,x-12,y-6,"-Versus-")
-	UI_AddtitleToGadget("button_lobby_versus",1,x-12,y-6,"Versus")
+	UI_AddCenterGadgettoScreen("button_lobby_chat",x,y,"UI_button_small")
+	UI_AddMouseoverImageToGadget("button_lobby_chat","UI_button_small_hover")
+	UI_AddMouseoverTitleToGadget("button_lobby_chat",1,x-12,y-6,"-Chat-")
+	UI_AddtitleToGadget("button_lobby_chat",1,x-12,y-6,"Chat")
 	
 	x=UI_Chatpanel.x-307
 	y=UI_Chatpanel.y-214
-	UI_AddCenterGadgettoScreen("chatpanel_tab_campaign",x,y,"UI_chatpanel_tab_campaign")
+	UI_AddCenterGadgettoScreen("chatpanel_tab_game",x,y,"UI_lobby_tab_game")
 	`UI_AddMouseoverImageToGadget("chatpanel_tab_campaign","UI_chatpanel_tab_versus")
+
 
 EndFunction
 
@@ -272,6 +343,26 @@ Function Menu_CreateQuitQuestion()
 	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
 	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
 	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"No")	
+
+	
+EndFunction
+
+Function Menu_EnterTrainingQuestion()
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight+50
+	
+	UI_AddTextLine(3,x,y-20,"Begin Training?")
+	UI_AddTextLine(1,x,y+20,"Training allows you to familiarize yourself with the controls")
+	UI_AddTextLine(1,x,y+34,"and techniques of the game before entering the field.")
+	
+	X=x-150 : Y=Y+100
+	UI_AddCenterGadgettoScreen("button_yestrain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_yestrain","UI_buttonhover")
+	UI_AddtitleToGadget("button_yestrain",3,x-8,y-14,"Start")	
+
+	X=x+300
+	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Cancel")	
 
 	
 EndFunction
@@ -299,6 +390,7 @@ function Menu_InitBackdrop():
 	global menu_mainimage
 	menu_mainimage  = grabResource(res_Image)
 	load image "media\menu\main.png",menu_mainimage
+
 	
 	backdrop on
 	color backdrop rgb(0,0,0)

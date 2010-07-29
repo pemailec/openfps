@@ -328,9 +328,9 @@ Function UI_HideChatBox()
 	UI_ChatboxInput.Alive   = 0
 	UI_ChatboxInput.Current = ""
 	UI_DeleteGadget("UI_chatbox")
-	UI_DeleteGadget("button_lobby_campaign")
-	UI_DeleteGadget("button_lobby_versus")
-	UI_DeleteGadget("chatpanel_tab_campaign")
+	UI_DeleteGadget("button_lobby_game")
+	UI_DeleteGadget("button_lobby_chat")
+	UI_DeleteGadget("chatpanel_tab_game")
 Endfunction
 
 Function UI_ShowChatBox()
@@ -344,27 +344,26 @@ Function UI_ShowChatBox()
 			//add an input line to chatbox
 			UI_SUB_Initchatbox("media\panels\ui_chatbox.png",UI_chatpanel.x,UI_Chatpanel.y)
 			UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
-	if UI_GadgetExist("button_lobby_campaign")=0:
+	if UI_GadgetExist("button_lobby_game")=0:
 		x=UI_Chatpanel.x-285
 		y=UI_Chatpanel.y-148
-		UI_AddCenterGadgettoScreen("button_lobby_campaign",x,y,"UI_button_small")
-		UI_AddMouseoverImageToGadget("button_lobby_campaign","UI_button_small_hover")
-		UI_AddMouseoverTitleToGadget("button_lobby_campaign",1,x-12,y-6,"-Campaign-")
-		UI_AddtitleToGadget("button_lobby_campaign",1,x-12,y-6,"Campaign")
+		UI_AddCenterGadgettoScreen("button_lobby_game",x,y,"UI_button_small")
+		UI_AddMouseoverImageToGadget("button_lobby_game","UI_button_small_hover")
+		UI_AddMouseoverTitleToGadget("button_lobby_game",1,x-12,y-6,"-Servers-")
+		UI_AddtitleToGadget("button_lobby_game",1,x-12,y-6,"Servers")
 	endif
-	if UI_GadgetExist("button_lobby_versus")=0:
+	if UI_GadgetExist("button_lobby_chat")=0:
 		x=UI_Chatpanel.x-285
 		y=UI_Chatpanel.y-98
-		UI_AddCenterGadgettoScreen("button_lobby_versus",x,y,"UI_button_small")
-		UI_AddMouseoverImageToGadget("button_lobby_versus","UI_button_small_hover")
-		UI_AddMouseoverTitleToGadget("button_lobby_versus",1,x-12,y-6,"-Versus-")
-		UI_AddtitleToGadget("button_lobby_versus",1,x-12,y-6,"Versus")
+		UI_AddCenterGadgettoScreen("button_lobby_chat",x,y,"UI_button_small")
+		UI_AddMouseoverImageToGadget("button_lobby_chat","UI_button_small_hover")
+		UI_AddMouseoverTitleToGadget("button_lobby_chat",1,x-12,y-6,"-Chat-")
+		UI_AddtitleToGadget("button_lobby_chat",1,x-12,y-6,"Chat")
 	endif
-	if UI_GadgetExist("chatpanel_tab_campaign")=0:
+	if UI_GadgetExist("chatpanel_tab_game")=0:
 		x=UI_Chatpanel.x-307
 		y=UI_Chatpanel.y-214
-		UI_AddCenterGadgettoScreen("chatpanel_tab_campaign",x,y,Lobby_current_tab$)
-		`UI_AddMouseoverImageToGadget("chatpanel_tab_campaign","UI_chatpanel_tab_versus")
+		UI_AddCenterGadgettoScreen("chatpanel_tab_game",x,y,Lobby_current_tab$)
 	endif
 Endfunction
 

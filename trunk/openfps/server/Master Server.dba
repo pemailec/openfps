@@ -16,6 +16,7 @@ global online_servers
 type CLIENT
    id as integer
    channel as DWORD
+   name as string
 endtype
 
 dim clients(0) as CLIENT
@@ -70,6 +71,7 @@ do
          new_client = array count(clients(0))
          clients(new_client).channel = winsock accept(listen_channel)
          clients(new_client).id = new_client;
+         clients(new_client).name = "Client_" + str$(clients(new_client).id)
          if (not winsock channel error(clients(new_client).channel)) 
             inc clients_connected
             `send a message to all clients that a new client has connected.
@@ -90,13 +92,45 @@ do
    `check for incoming chat messages
    for i=1 to clients_connected
       if (winsock channel data waiting(clients(i).channel))
-         message$ = winsock recv string(clients(i).channel)
+         message$ = winsock recv string(clients(i).channel) 
+         
+         /////////////////////////////////////////////////
+         /////////////////////////////////////////////////
+         /////////////////////////////////////////////////
+         // SPECIAL MESSAGES
+         if (left$(message$,6)="&name=")
+            AddToChatDisplay("("+get time$()+") - "+"Client_" + str$(clients(i).id) + " has changed their name to "+right$(message$,len(message$)-6))
+            `send a message to all clients that client has changed names.
+            for j=1 to clients_connected
+                  winsock send string clients(j).channel, clients(new_client).name + " has changed their name to " + right$(message$,len(message$)-6)
+            next j
+            clients(new_client).name = right$(message$,len(message$)-6)
+            goto skip1
+         endif
+         /////////////////////////////////////////////////
+         if (left$(message$,13)="&name_silent=")
+            AddToChatDisplay("("+get time$()+") - "+"Client_" + str$(clients(i).id) + " has changed their name to "+right$(message$,len(message$)-13))
+            clients(new_client).name = right$(message$,len(message$)-13)
+            goto skip1
+         endif
+         /////////////////////////////////////////////////
+         if (left$(message$,6)="&blarg")
+            AddToChatDisplay("("+get time$()+") - "+clients(new_client).name+" has exploded.")
+            `send a message to all clients that client has exploded.
+            for j=1 to clients_connected
+                  winsock send string clients(j).channel, clients(new_client).name + " HAZ ESPLODED!!!!!!!!!!!!11"
+            next j
+            goto skip1
+         endif
+         /////////////////////////////////////////////////
+         /////////////////////////////////////////////////
+         /////////////////////////////////////////////////\
          if (message$ = "")
-            AddToChatDisplay("("+get time$()+") - "+"Client_" + str$(clients(i).id) + " has disconnected.")
+            AddToChatDisplay("("+get time$()+") - "+clients(new_client).name + " has disconnected.")
             `send a message to all clients that client has disconnected.
             for j=1 to clients_connected
                if (j <> i)
-                  winsock send string clients(j).channel, "Client_" + str$(clients(i).id) + " has disconnected."
+                  winsock send string clients(j).channel, clients(new_client).name + " has disconnected."
                endif
             next j
             dec clients_connected
@@ -105,12 +139,13 @@ do
             dec i    `need to do this because the next array element is now at the current position.
          else
             `forward messsage to all other clients (including the sender).
-            message$ = "Client_" + str$(clients(i).id) + ":  " + message$
+            message$ = clients(i).name + ":  " + message$
             AddToChatDisplay("("+get time$()+") - "+message$)
             for j=1 to clients_connected
                winsock send string clients(j).channel, message$
             next j
          endif
+         skip1:
       endif
    next i
 	

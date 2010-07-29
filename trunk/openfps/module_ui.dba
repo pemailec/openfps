@@ -42,7 +42,7 @@ remstart
 (7/10/10)  - miso     - added 3 new mouse commands to solve gadget dragging artifacts.
                         Dragging now works well using Chris's code.
 (7/20/10)  - thenerd  - Added sprites for lobby window, changed debug HTMl file layout
-
+(7/29/10)  - thenerd  - Removed unneeded menu  code in UI_Handle(), fixed chat text layering
 Remend
 Remstart
 ----- To-Do:
@@ -399,6 +399,8 @@ Function UI_Init()
 	UI_loadStringmap(2,"media\fonts\lcdred.dat",16)
 	UI_loadStringmap(3,"media\fonts\newfont.dat",16)
 	UI_loadStringmap(4,"media\fonts\System_w_8x8.dat",8)
+	`UI_loadStringmap(5,"media\fonts\arial.dat",16)
+	
 // load test window
 	UI_InitandloadWindow("media\windows\windowuntitled2.dat")
 // load and init graphic mouse
@@ -421,9 +423,13 @@ Function UI_Init()
 	UI_LoadGuiGraphics("media\buttons\small_button-normal.png","UI_button_small")
 	UI_LoadGuiGraphics("media\buttons\small_button-hover.png","UI_button_small_hover")
 	
-	UI_LoadGuiGraphics("media\panels\tab_campaign.png","UI_chatpanel_tab_campaign")
-	UI_LoadGuiGraphics("media\panels\tab_versus.png","UI_chatpanel_tab_versus")
-
+	UI_LoadGuiGraphics("media\panels\tab_game.png","UI_lobby_tab_game")
+	UI_LoadGuiGraphics("media\panels\tab_chat.png","UI_lobby_tab_chat")
+	
+	UI_LoadGuiGraphics("media\menu\menu_lobby_mask.png","	lobby_drag_mask")
+	
+	
+	
 // Disable escapekey
 	Disable Escapekey
 	UI_WriteLog(UI_Green,"=== User Interface module succesfully initialized")
@@ -450,9 +456,10 @@ Function UI_Handle()
 
 //-Handle Chatbox input events
 	UI_Sub_HandleChatBoxDrag()
-	UI_SUB_HandlecharsetupDrag()
-
 	
+//-Handle Charbox input events
+	UI_SUB_HandleoptionsDrag()
+
 //-Handle all the mouse
 	UI_HandleMouse()
 //-Check if we disabled non gui mouse movements
@@ -2470,17 +2477,18 @@ If UI_Gadgets(x).mouseinfoexist>0
 	Endif
 Endif
 
-Select UI_Gadgets(x).gadgetname
-	Case "UI_chatbox"
-	UI_Sub_HandleChatbox()
-	rem UI_SUB_Chatboxinput(1,UI_chatpanel.x-177,UI_chatpanel.y+a,"> ",29)
+`Select UI_Gadgets(x).gadgetname
+`	Case "UI_chatbox"
+`	UI_Sub_HandleChatbox()
+`	rem UI_SUB_Chatboxinput(1,UI_chatpanel.x-177,UI_chatpanel.y+a,"> ",29)
 	
-	Endcase
-Endselect
+`	Endcase
+`Endselect
 
 Next x
 Endif
 
+UI_Sub_HandleChatbox()
 
 if UI_mouseoveredgadget$<>UI_OldMouseOveredGadget$ 
 	If UI_mouseoveredgadget$<>" "

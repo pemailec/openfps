@@ -47,8 +47,7 @@ Global BackGroundCube as Integer
 			UI_Init()
 				
 	//------- Create a tutorial spinning cube as a dynamic background
-			BackGroundCube=grabresource(res_Object)
-			Make Object Box BackGroundCube,100,100,100
+
 			
 	//-------First part, we load images for gui using [UI_LoadGuiGraphics("route\image.png","GuiImageID")]
 		
@@ -73,13 +72,13 @@ Global BackGroundCube as Integer
 
 Gadgetcreator:
 //-----Creating a simple panel at 0,10 with id "firstpanel" using image "miso_panel"
-		UI_AddGadgetToScreen("firstpanel",0,10,"miso_panel")
-		UI_AddTitleToGadget("firstpanel",3,100,30,"Radiobuttons")
+		`UI_AddGadgetToScreen("firstpanel",0,10,"miso_panel")
+		`UI_AddTitleToGadget("firstpanel",3,100,30,"Radiobuttons")
 		
 
 //-----Creating a second panel and add a title to it
-		UI_AddGadgetToScreen("secondpanel",215,10,"miso_panel")
-		UI_AddTitleToGadget("secondpanel",3,315,30,"CheckBoxes")
+		`UI_AddGadgetToScreen("secondpanel",215,10,"miso_panel")
+		`UI_AddTitleToGadget("secondpanel",3,315,30,"CheckBoxes")
 
 
 
@@ -91,16 +90,16 @@ Gadgetcreator:
 
 
 //------Adding a quitbutton
-		UI_AddCenterGadgetToScreen("quitbutton",320,380,"miso_button")
-		UI_AddTitleToGadget("quitbutton",3,320-8,380-14,"quit")
-		UI_AddmouseoverImageToGadget("quitbutton","miso_buttonhover")
-		UI_AddMouseoverTitleToGadget("quitbutton",3,320-8,380-14,"-QUIT-")
+		`UI_AddCenterGadgetToScreen("quitbutton",320,380,"miso_button")
+		`UI_AddTitleToGadget("quitbutton",3,320-8,380-14,"quit")
+		`UI_AddmouseoverImageToGadget("quitbutton","miso_buttonhover")
+		`UI_AddMouseoverTitleToGadget("quitbutton",3,320-8,380-14,"-QUIT-")
 
 //------Adding a clearguibutton
-		UI_AddCenterGadgetToScreen("clearbutton",320,460,"miso_button")
-		UI_AddTitleToGadget("clearbutton",3,320-8,460-14,"clear")
-		UI_AddmouseoverImageToGadget("clearbutton","miso_buttonhover")
-		UI_AddMouseoverTitleToGadget("clearbutton",3,320-8,460-14,"-CLEAR-")
+		`UI_AddCenterGadgetToScreen("clearbutton",320,460,"miso_button")
+		`UI_AddTitleToGadget("clearbutton",3,320-8,460-14,"clear")
+		`UI_AddmouseoverImageToGadget("clearbutton","miso_buttonhover")
+		`UI_AddMouseoverTitleToGadget("clearbutton",3,320-8,460-14,"-CLEAR-")
 
 
 //-----Main Loop	
@@ -108,45 +107,10 @@ Do
 
 	//UI_Mouseoveredgadget$ has the IDname of the currently mouseovered gadget. Only gets value form gadgets
 	//that has mouseover image
-		UI_Centertext(1,320,0,UI_Mouseoveredgadget$)
+		`UI_Centertext(1,320,0,UI_Mouseoveredgadget$)
 
+	UI_Putwindow(0,0,614/48,428/48)
 
-
-
-				//-----Check mouseclick event
-					If MouseClick()=1 and UI_mouseclicked=0
-						
-						//--- play sound for testbutton
-						If UI_Mouseoveredgadget$="button1" then UI_PlaymouseClickSND()
-						
-						//---If pressed gadget is quitbutton, then quit
-						If UI_Mouseoveredgadget$="quitbutton" then end
-						
-						//---UI_ClearAllGuis() will destroy all gadgets,  and creates a resetbutton
-						If UI_Mouseoveredgadget$="clearbutton" 
-							UI_PlayMouseClickSND()
-							UI_ClearAllGuis()
-							UI_AddCenterGadgetToScreen("resetbutton",320,460,"miso_button")
-							UI_AddTitleToGadget("resetbutton",3,320-8,460-14,"reset")
-							UI_AddmouseoverImageToGadget("resetbutton","miso_buttonhover")
-							UI_AddMouseoverTitleToGadget("resetbutton",3,320-8,460-14,"-RESET-")
-						Endif
-						
-						//---Reset the gadgets, recreating them
-						If UI_Mouseoveredgadget$="resetbutton" 
-							UI_PlayMouseClickSND()
-							UI_ClearAllGuis()
-							Goto Gadgetcreator
-						Endif
-					Endif
-
-
-
-
-
-	//--rotate the spinning cube
-		Turn Object Left BackGroundCube,0.08
-	
 	//--UI_Handle and Sync	
 		UI_Handle()	:Sync
 Loop
