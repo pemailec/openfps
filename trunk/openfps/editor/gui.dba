@@ -5,16 +5,14 @@
 
 `Global Variable Declarations for Gadgets
 `----------------------------------------
-global DivHorizontal
-global DivVertical
+
 global Toolbar
 global StatusBar
 global SideMenuMain
 global SideMenuSub
 global Toolbar_panel
 global Toolbar_offset
-global DivCenter
-global camera3dtext
+global cameratext
 global DebugWindow
 global DebugFrame
 global DebugBar
@@ -38,7 +36,7 @@ function createUI()
     If Not GUI_CONSTANTS Then errorMessage "GUI Constants not defined.  Please include gui.dba when you compile" : end
 
     StatusBar=createStatusBar(0)
-    camera3dtext=createlabel(0,26,480,15,"null",0)
+    cameratext=createlabel(0,26,480,15,"null",0)
     Toolbar_panel=createPanel(0,0,280000,27,0)
     Toolbar=createToolbar(Toolbar_panel)
     addStandardToolbarButtons Toolbar
@@ -49,11 +47,6 @@ function createUI()
 	addToolbarButton Toolbar,TOOLBAR_CUT,0
     addToolbarButton Toolbar,TOOLBAR_COPY,0
     addToolbarButton Toolbar,TOOLBAR_PASTE,0
-    DivHorizontal=createPanel(0,0,2400,4,0)
-    setPanelBorderStyle DivHorizontal,BORDER_3D
-    DivVertical=createPanel(0,0,4,2400,0)
-    setPanelBorderStyle DivVertical,BORDER_3D
-    DivCenter=createPanel(0,0,6,3,0)  
      
     SideMenuMain=createPanel(0,0,170,4280,0)
     SideMenuSub=createPanel(2,28,166,4280,SideMenuMain)
@@ -61,7 +54,6 @@ function createUI()
     bringtofront SideMenuMain
     bringtofront StatusBar
     bringtofront Toolbar_panel
-    bringtofront DivCenter
     
     setGadgetAlign SideMenuMain,ALIGN_RIGHT
     doGadgetalign SideMenuMain

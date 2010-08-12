@@ -375,7 +375,7 @@ for i = 0 to goodNpcs
         goodNpc(i).Distance2 = sqrt((goodNpc(i).X-badNpc(j).X)^2+(goodNpc(i).Z-badNpc(j).Z)^2)
     next j
     
-    UI_text(1,10,110+UI_EVENT_ConsoleOffset,"Distance:"+str$(goodNpc(i).Distance))
+    `UI_text(1,10,110+UI_EVENT_ConsoleOffset,"Distance:"+str$(goodNpc(i).Distance))
     
     `Find new target if have none
     if goodNpc(i).Target.X=0

@@ -105,6 +105,7 @@ endfunction
 function runMenu()
 UI_HideChatBox()
 do
+	if KEYSTATE(19)=1 then goto _reset_menu
 	`if mouseclick()=1 then play object icon_blank_obj_test,0
 	updateNetwork()
 	//---update menu and UI
@@ -133,6 +134,10 @@ do
 				x=UI_Chatpanel.x-307
 				y=UI_Chatpanel.y-214
 				UI_PositionGadget("chatpanel_tab_game",x,y)
+				x=UI_Chatpanel.x+188
+				y=UI_Chatpanel.y-205
+				UI_PositionGadget("button_close_window",x,y)
+				
 			endif
 			if UI_MouseOveredGadget$="button_lobby_game" and mouseclick()=1:
 				`campaign button
@@ -152,6 +157,11 @@ do
 				UI_PositionGadget("chatpanel_tab_game",x,y)
 				Lobby_current_tab$="UI_lobby_tab_chat"
 			endif
+			if UI_MouseOveredGadget$="button_close_window" and mouseclick()=1:
+				goto _reset_menu
+				
+			endif
+				
 		endcase
 		case "button_credits"
 		endcase
@@ -165,6 +175,7 @@ do
 		Select UI_MouseOveredGadget$
 
 			Case "button_lobby"
+				UI_ClearAllGuis()
 				UI_HideOptions()
 				UI_Reinitchatbox()
 				UI_sub_CheckChatboxScreenedges()
@@ -212,6 +223,9 @@ do
 			EndCase	
 					
 			Case "button_backtomain"
+				_reset_menu:
+				UI_HideChatBox()
+				UI_HideOptions()
 				UI_ClearAllGuis()
 				UI_PlayMouseClickSND()
 				Menu_Createmain()

@@ -15,6 +15,7 @@ remstart
 (07/04/10) - miso        - Added basic sky
 (07/04/10) - miso        - Removed cloud commands for now, maybe we dont need the second layer at all
 (7/4/10)   - miso        - placed log commands
+(7/30/10)   - miso       - Added various effects.
 
 
 ----- To-Do:
@@ -46,6 +47,8 @@ Handle visual data such as shaders, particles, bloom, ex.
   `VS_AddSkyToScene(obj$,img$)  - Loads skydome model (obj$) and texture (img$)
   `VS_UpdateSky()               - Reposition sky to headpos if sky exists.
   `VS_DeleteSky()               - Deletes sky modell and texture if exists.
+--FX COMMANDS
+  `vis_game_end()               - End-game effect
 remend
 
 `=========Constants=========`
@@ -60,6 +63,18 @@ Global VS_Sun             as MySunType
 `===========================`
 
 `===========Types===========`
+Type ScreenClip
+	Initialized      as Boolean:`1 if initialized
+	S_Width  		 as Integer:`screen width
+	S_Height 		 as Integer:`screen height
+	End_Size 		 as Integer:`end size
+	Speed			 as Float  :`resize speed
+	Current			 as Float  :`current y size
+	img 			 as Integer:`bar image name
+	_sprite			 as Integer:`bar sprite
+	_Timer			 as Float  :`timer hold
+EndType
+
 Type MyskyType
 	Initialized      as Boolean:`1 if initialized
 	ObjID            as Integer:`ID of the object
@@ -101,7 +116,7 @@ Function initvisuals()
 //*                                                                                     *
 //*                                                                                     *
 //***************************************************************************************
-UI_WriteLog(UI_Green,"=== Starting Visuals module")
+	UI_WriteLog(UI_Green,"=== Starting Visuals module")
   //--load sky and clouds
 	VS_AddSkyToScene("media\visuals\vs_skydome.x","media\visuals\vs_basicsky.jpg")
   //--set variables
@@ -109,17 +124,49 @@ UI_WriteLog(UI_Green,"=== Starting Visuals module")
   //--create timer
 	VS_CreateSkyScrollTicker()
 	VS_AddSunToScene("media\visuals\vs_basicsun.jpg",100000,50000,100000,46000)
-UI_WriteLog(UI_Green,"=== Visual module started")
+	`screen setup
+	global vis_s_clip as ScreenClip
+	vis_s_clip.Initialized=0
+	vis_s_clip.S_Width=screen width()
+	vis_s_clip.S_Height=screen height()
+	vis_s_clip.End_Size=100
+ 	vis_s_clip.Current=0
+ 	vis_s_clip.Speed=1.0
+ 	vis_s_clip._Timer=0.0
+	vis_s_clip.img = grabResource(res_Image)
+	vis_s_clip._sprite = grabResource(res_Sprite)
+	load image "media\images\widescreen-bar.png",vis_s_clip.img
+	sprite vis_s_clip._sprite,0,0,vis_s_clip.img
+	hide sprite vis_s_clip._sprite
+	
+	UI_WriteLog(UI_Green,"=== Visual module started")
 Endfunction
 
 Function updatevisuals()
 	VS_UpdateSky()
+	`visual clip
+	
+	if vis_s_clip.Initialized>0:
+		vis_s_clip._Timer=vis_s_clip._Timer+1.0
+		if vis_s_clip.Current<vis_s_clip.End_Size:
+			vis_s_clip.Current=vis_s_clip.Current+vis_s_clip.Speed
+		endif
+		paste sprite vis_s_clip._sprite,0,vis_s_clip.Current-200
+		paste sprite vis_s_clip._sprite,0,vis_s_clip.S_Height-(vis_s_clip.Current)
+		UI_Text(3,100,vis_s_clip.S_Height/2,"Game End!")
+	endif
 Endfunction
 
+function vis_game_end()
+	`init visclip
+	UI_ClearAllGuis()
+	vis_s_clip.Initialized=1
+endfunction
+
 Function terminatevisuals()
-UI_WriteLog(UI_Green,"=== Terminating Visuals module")
+	UI_WriteLog(UI_Green,"=== Terminating Visuals module")
 	VS_DeleteSky()
-UI_WriteLog(UI_Green,"=== Visuals module terminated")
+	UI_WriteLog(UI_Green,"=== Visuals module terminated")
 Endfunction
 
 //------ SKY COMMANDS
@@ -129,7 +176,7 @@ Function VS_AddSkyToScene(param_object$,param_texture$)
 //*     This function loads the sky model and textures it.                              *
 //*                                                                                     *
 //***************************************************************************************
-  UI_SetDebugPosition("VS_AddskytoScene()","module_visuals.dba")
+	 UI_SetDebugPosition("VS_AddskytoScene()","module_visuals.dba")
      If VS_Sky.initialized=VS_False
         UI_CheckFile(param_object$):UI_CheckFile(param_texture$)
 	    VS_Sky.ObjID     = grabresource(res_object)
@@ -142,7 +189,7 @@ Function VS_AddSkyToScene(param_object$,param_texture$)
 	 	Set Object Light VS_Sky.ObjID,0
 	 	Disable Object Zwrite VS_Sky.ObjID
 	 Endif
-  UI_RestoreDebugPosition()
+	 UI_RestoreDebugPosition()
 Endfunction
 
 

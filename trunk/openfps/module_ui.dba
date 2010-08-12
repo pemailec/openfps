@@ -423,6 +423,10 @@ Function UI_Init()
 	UI_LoadGuiGraphics("media\buttons\small_button-normal.png","UI_button_small")
 	UI_LoadGuiGraphics("media\buttons\small_button-hover.png","UI_button_small_hover")
 	
+	
+	UI_LoadGuiGraphics("media\buttons\button-close.png","UI_button_close")
+	UI_LoadGuiGraphics("media\buttons\button-close-hover.png","UI_button_close_hover")
+	
 	UI_LoadGuiGraphics("media\panels\tab_game.png","UI_lobby_tab_game")
 	UI_LoadGuiGraphics("media\panels\tab_chat.png","UI_lobby_tab_chat")
 	
