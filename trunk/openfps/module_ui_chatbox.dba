@@ -248,14 +248,17 @@ If UI_chatpanel.Hidden  = 0
 			a=180
 			UI_Chatboxinput.alive=0
 			UI_Chatboxinput.current=""
-			 UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
+			UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
 		Endif
 	Endif
+		
+	if CurrentWindow$="button_lobby" and Lobby_current_tab$="UI_lobby_tab_chat":
 		//Display chatbox lines
 		for x=1 to 9
 			UI_text(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+170-(x*10),Chatlines$(x))
 		next x
-
+	endif
+	
 Endif
 
 Endfunction
@@ -273,6 +276,7 @@ Function UI_CheckchatboxInput()
 //*                                                                                     *
 //***************************************************************************************
 If UI_chatboxinput.alive = UI_True
+	if Lobby_current_tab$="UI_lobby_tab_chat":
       //Checks if user hit enter to add message to chatbox
       If Returnkey() = UI_True
          Clear Entry Buffer
@@ -290,7 +294,7 @@ If UI_chatboxinput.alive = UI_True
       rem Entry Line
       If Len(UI_chatboxInput.current)>UI_chatboxInput.maxcharacter then UI_ChatboxInput.current = Left$(UI_chatboxInput.current,UI_chatboxInput.maxcharacter)
       UI_Text(UI_chatboxInput.id,UI_chatboxInput.posx,UI_chatboxInput.posy,UI_Chatboxinput.fixstring+(UI_chatboxInput.current)+"*")
-
+	endif
 Endif
 Endfunction
 
@@ -306,14 +310,15 @@ Function UI_SUB_ChatboxInput(FontID,x,y,fixstring$,maxcharacter)
 //*                                                                                     *
 //*                                                                                     *
 //***************************************************************************************
-	Clear Entry Buffer:Clear Entry Buffer
-	UI_ChatBoxInput.ID           = FontID
-	UI_ChatBoxInput.fixstring    = fixstring$
-	UI_ChatBoxInput.posx         = x
-	UI_ChatBoxInput.posy         = y
-	UI_ChatBoxInput.alive        = UI_True
-	UI_ChatBoxInput.center       = UI_False
-	UI_ChatBoxInput.maxcharacter = maxcharacter
+
+			Clear Entry Buffer:Clear Entry Buffer
+			UI_ChatBoxInput.ID           = FontID
+			UI_ChatBoxInput.fixstring    = fixstring$
+			UI_ChatBoxInput.posx         = x
+			UI_ChatBoxInput.posy         = y
+			UI_ChatBoxInput.alive        = UI_True
+			UI_ChatBoxInput.center       = UI_False
+			UI_ChatBoxInput.maxcharacter = maxcharacter
 Endfunction
 
 

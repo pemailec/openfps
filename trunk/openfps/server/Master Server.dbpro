@@ -29,11 +29,11 @@ CommandLineArguments=
 app title=OpenFPS Master Server
 
 ; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
-graphics mode=fullscreen
+graphics mode=window
 fullscreen resolution=640x480x32
 
 ; arbitrary sizes are valid for windowed mode
-window resolution=1024x768
+window resolution=640x400
 
 ; **** External Files Information ****
 
