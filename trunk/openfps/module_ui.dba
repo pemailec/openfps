@@ -43,6 +43,8 @@ remstart
                         Dragging now works well using Chris's code.
 (7/20/10)  - thenerd  - Added sprites for lobby window, changed debug HTMl file layout
 (7/29/10)  - thenerd  - Removed unneeded menu  code in UI_Handle(), fixed chat text layering
+`(8/13/10)  - thenerd  - Added close button.
+
 Remend
 Remstart
 ----- To-Do:
@@ -458,11 +460,10 @@ Function UI_Handle()
 //-Checks input events
 	UI_CheckInput()
 
-//-Handle Chatbox input events
+//-Handle drag input events
 	UI_Sub_HandleChatBoxDrag()
-	
-//-Handle Charbox input events
 	UI_SUB_HandleoptionsDrag()
+	UI_SUB_HandlecreditsDrag()
 
 //-Handle all the mouse
 	UI_HandleMouse()

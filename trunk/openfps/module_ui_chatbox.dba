@@ -13,6 +13,7 @@ Remstart
 `(07/07/10) - miso     - Created
 `(07/08/10) - miso     - Removed most of the artifact, finalising later, its now good for testings
 `(7/20/10)  - thenerd  - Added code for lobby window.
+`(8/13/10)  - thenerd  - Added close button.
 
 `----- To-Do:
 
@@ -27,7 +28,6 @@ Remstart
 `----- Other Notes:
 `Usage (IMPORTANT***):
 
-`Just put your own console command here, as the examles shows.
 
 `----- Function List:
 
@@ -75,12 +75,12 @@ Function UI_SUB_InitChatBox(param_chatpanelimage$,param_x,param_y)
 UI_Chatboxtextoffset=620
 	UI_SetDebugPosition("UI_Sub_InitChatBox()","module_ui_chatbox.dba")
 		//Creates an array for chat messages, they will be displayed in chatbox
-		Dim Chatlines$(26)
+		Dim Chatlines$(30)
 		//Check if we loaded chatbox image
 		If UI_gadgetImageExist("UI_chatboximage")=0 
 			//creates basic chatbox gadget, sets it variables
 			UI_Chatpanel.x=param_x:UI_chatpanel.y=param_y
-			UI_chatpanel.Offset=300
+			UI_Chatpanel.Offset=180
 			UI_LoadGuiGraphics(param_chatpanelimage$,"UI_chatboximage")
 			UI_AddCenterGadgetToScreen("UI_chatbox",param_x,param_y,"UI_chatboximage")		
 
@@ -91,7 +91,7 @@ UI_Chatboxtextoffset=620
 			UI_WriteLog(UI_Green,"Chatbox has been initialized.")
 			UI_TriggerChatboxInput$="UI_chatbox"
 			//offset
-			a=180
+			global a=160
 			//add an input line to chatbox
 			UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
 		Else
@@ -101,8 +101,6 @@ UI_Chatboxtextoffset=620
 					UI_Chatpanel.x=param_x:UI_chatpanel.y=param_y
 					UI_AddCenterGadgetToScreen("UI_chatbox",param_x,param_y,"UI_chatboximage")			
 					UI_Addmouseoverimagetogadget("UI_chatbox","UI_chatboximage")
-					//offset
-					a=180
 					//add an input line to chatbox
 					UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
 				endif
@@ -118,8 +116,8 @@ Function UI_Addtexttochatbox(param_text$)
 //*                                                                                     *
 //***************************************************************************************
 	//Scrolls upwards all the texts already exists
-	For X=1 to 9
-		chatlines$(10-x)=chatlines$(9-x)
+	For X=1 to 29
+		chatlines$(30-x)=chatlines$(29-x)
 	Next x
 	//Add the new message to the first array (shown at the very bottom)
 	chatlines$(1)=param_text$
@@ -170,7 +168,6 @@ Function UI_SUB_HandleChatBoxDrag()
 		endif
 		
 
-		a=180
 		rem UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
 
 		
@@ -212,7 +209,6 @@ Function UI_sub_CheckChatboxScreenedges()
 		endif
 		
 
-		a=180
 		UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
 	
 Endfunction
@@ -237,7 +233,7 @@ If UI_chatpanel.Hidden  = 0
 	If UI_Chatboxinput.alive=3
 		If UI_Chatboxinput.result <> ""
 			UI_Chatboxtextoffset=UI_Chatboxtextoffset-10
-			a=180
+
 			rem UI_Addtexttochatbox("Client: "+UI_ChatboxInput.Result)
 			msg$=UI_ChatboxInput.Result
 			sendChatMessage(msg$)
@@ -245,7 +241,6 @@ If UI_chatpanel.Hidden  = 0
 			UI_Chatboxinput.current=""
 			UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
 		Else
-			a=180
 			UI_Chatboxinput.alive=0
 			UI_Chatboxinput.current=""
 			UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
@@ -254,8 +249,8 @@ If UI_chatpanel.Hidden  = 0
 		
 	if CurrentWindow$="button_lobby" and Lobby_current_tab$="UI_lobby_tab_chat":
 		//Display chatbox lines
-		for x=1 to 9
-			UI_text(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+170-(x*10),Chatlines$(x))
+		for x=1 to 30
+			UI_text(1,UI_chatpanel.x-180,UI_chatpanel.y+155-(x*10),Chatlines$(x))
 		next x
 	endif
 	
@@ -346,7 +341,6 @@ Function UI_ShowChatBox()
 //*                                                                                     *
 //***************************************************************************************
 	UI_chatpanel.Hidden  = 0
-			a=180
 			//add an input line to chatbox
 			UI_SUB_Initchatbox("media\panels\ui_chatbox.png",UI_chatpanel.x,UI_Chatpanel.y)
 			UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)

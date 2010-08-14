@@ -26,6 +26,7 @@ remstart
 (07/08/10) - thenerd        - Added windows to go along with each button.
 (7/20/10)  - thenerd        - Added Lobby window.
 (7/29/10)  - thenerd        - New menu layout, loading screen for game engine.
+(8/13/10) - thenerd        - Finished menu.
 
 ----- To-Do:
 
@@ -105,7 +106,7 @@ endfunction
 function runMenu()
 UI_HideChatBox()
 do
-	if KEYSTATE(19)=1 then goto _reset_menu
+	`if KEYSTATE(19)=1 then goto _reset_menu
 	`if mouseclick()=1 then play object icon_blank_obj_test,0
 	updateNetwork()
 	//---update menu and UI
@@ -137,7 +138,6 @@ do
 				x=UI_Chatpanel.x+188
 				y=UI_Chatpanel.y-205
 				UI_PositionGadget("button_close_window",x,y)
-				
 			endif
 			if UI_MouseOveredGadget$="button_lobby_game" and mouseclick()=1:
 				`campaign button
@@ -158,12 +158,24 @@ do
 				Lobby_current_tab$="UI_lobby_tab_chat"
 			endif
 			if UI_MouseOveredGadget$="button_close_window" and mouseclick()=1:
-				goto _reset_menu
-				
+				goto _reset_menu	
 			endif
-				
 		endcase
 		case "button_credits"
+			x=UI_Chatpanel.x+140
+			y=UI_Chatpanel.y-162
+			UI_PositionGadget("button_close_window",x,y)
+			if UI_MouseOveredGadget$="button_close_window" and mouseclick()=1:
+				goto _reset_menu	
+			endif
+		endcase
+		case "button_options"
+			x=UI_Chatpanel.x+140
+			y=UI_Chatpanel.y-142
+			UI_PositionGadget("button_close_window",x,y)
+			if UI_MouseOveredGadget$="button_close_window" and mouseclick()=1:
+				goto _reset_menu	
+			endif
 		endcase
 	endselect
 	
@@ -177,6 +189,7 @@ do
 			Case "button_lobby"
 				UI_ClearAllGuis()
 				UI_HideOptions()
+				UI_hidecredits()
 				UI_Reinitchatbox()
 				UI_sub_CheckChatboxScreenedges()
 				CurrentWindow$="button_lobby"
@@ -185,19 +198,24 @@ do
 			Case "button_training"
 				UI_hidechatbox()
 				UI_HideOptions()
+				UI_hidecredits()
 				UI_ClearAllGuis()
 				Menu_EnterTrainingQuestion()
 				CurrentWindow$="button_training"
 			EndCase
 			
 			Case "button_credits"
+				UI_ClearAllGuis()
 				UI_HideChatBox()
 				UI_HideOptions()
+				UI_Showcredits()
 				CurrentWindow$="button_credits"
 			EndCase
 			
 			Case "button_options"
+				UI_ClearAllGuis()
 				UI_HideChatBox()
+				UI_hidecredits()
 				UI_showOptions()
 				CurrentWindow$="button_options"
 			EndCase
@@ -205,6 +223,7 @@ do
 					
 			Case "button_quit"
 				UI_HideChatBox()
+				UI_hidecredits()
 				UI_HideOptions()
 				UI_ClearAllGuis()
 				UI_PlayMouseClickSND()
@@ -219,12 +238,14 @@ do
 			
 			Case "button_yestrain"
 				sync
+				SyS_Event_Terminate=0
 				Exit
 			EndCase	
 					
 			Case "button_backtomain"
 				_reset_menu:
 				UI_HideChatBox()
+				UI_hidecredits()
 				UI_HideOptions()
 				UI_ClearAllGuis()
 				UI_PlayMouseClickSND()

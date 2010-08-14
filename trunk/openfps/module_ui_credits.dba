@@ -3,19 +3,17 @@ Rem ***** Included Source File *****
 //
 // OpenFPS USER INTERFACE SUBMODULE            
 //
-// Created by miso    
+// Created by thenerd   
 //
 /////////////////////////////////////////////////////
 `***** Included Source File *****
 `----- Changelog:
-`(07/23/10) - miso     - Created
-`(7/28/10)  - thenerd  - Modified for new menu.
-`(8/13/10)  - thenerd  - Added close button.
+`(8/13/10)  - thenerd  - Created.
 
 `----- To-Do:
 
 `----- Purpose:
-`Handles the options screen
+`Handles the credits screen
 
 `----- Dependancies and Conflicts (IMPORTANT STUFF):
 `Uses the main user interface module. (module_ui.dba)
@@ -43,39 +41,39 @@ Rem ***** Included Source File *****
 
 
 `=========Functions=========`
-Function UI_SUB_InitOptions(param_optionsimage$,param_x,param_y)
+Function UI_SUB_InitCredits(param_creditsimage$,param_x,param_y)
 //***************************************************************************************
-//*   Miso   : Initiate the options gui.                                                *
+//*   Miso   : Initiate the credits gui.                                                *
 //*                                                                                     *
 //***************************************************************************************
 
 UI_charsetuptextoffset=620
-	UI_SetDebugPosition("UI_Sub_InitOptions()","module_ui_options.dba")
-		//Creates an array for chat messages, they will be displayed in options
+	UI_SetDebugPosition("UI_Sub_InitCredits()","module_ui_credits.dba")
+		//Creates an array for chat messages, they will be displayed in credits
 		
-		//Check if we loaded options image
-		If UI_gadgetImageExist("UI_optionsimage")=0 
-			//creates basic options gadget, sets it variables
+		//Check if we loaded credits image
+		If UI_gadgetImageExist("UI_creditsimage")=0 
+			//creates basic credits gadget, sets it variables
 			UI_Chatpanel.x=param_x:UI_chatpanel.y=param_y
 			UI_chatpanel.Offset=300
-			UI_LoadGuiGraphics(param_optionsimage$,"UI_optionsimage")
-			UI_AddCenterGadgetToScreen("UI_options",param_x,param_y,"UI_optionsimage")		
+			UI_LoadGuiGraphics(param_creditsimage$,"UI_creditsimage")
+			UI_AddCenterGadgetToScreen("UI_credits",param_x,param_y,"UI_creditsimage")		
 			
-			UI_Addmouseoverimagetogadget("UI_options","UI_optionsimage")
+			UI_Addmouseoverimagetogadget("UI_credits","UI_creditsimage")
 			
-			UI_WriteLog(UI_Green,"options has been initialized.")
-			UI_Triggerchatboxinput$="UI_options"
+			UI_WriteLog(UI_Green,"credits screen has been initialized.")
+			UI_Triggerchatboxinput$="UI_credits"
 			
 		Else
-			//creates basic options gadget, sets it variables
+			//creates basic credits gadget, sets it variables
 			If UI_chatpanel.hidden=0
-				If UI_GadgetExist("UI_options")=0
+				If UI_GadgetExist("UI_credits")=0
 					UI_Chatpanel.x=param_x:UI_chatpanel.y=param_y
-					UI_AddCenterGadgetToScreen("UI_options",param_x,param_y,"UI_optionsimage")			
-					UI_Addmouseoverimagetogadget("UI_options","UI_optionsimage")
+					UI_AddCenterGadgetToScreen("UI_credits",param_x,param_y,"UI_creditsimage")			
+					UI_Addmouseoverimagetogadget("UI_credits","UI_creditsimage")
 					//offset
 					a=180
-					//add an input line to options
+					//add an input line to credits
 			
 				endif
 			Endif
@@ -84,54 +82,54 @@ UI_charsetuptextoffset=620
 	UI_restoreDebugPosition()
 Endfunction
 
-Function UI_Addtexttooptions(param_text$)
+Function UI_Addtexttocredits(param_text$)
 //***************************************************************************************
-//*   Miso   : Adds a new message to the options gadget.                                *
+//*  thenerd  : Adds a new message to the credits gadget.                               *
 //*                                                                                     *
 //***************************************************************************************
 endfunction
 
 
-Function UI_SUB_HandleoptionsDrag()
+Function UI_SUB_HandlecreditsDrag()
 //***************************************************************************************
-//*   Miso   : Handles the chastbox.                                                    *
+//*   thenerd   : Handles the credits drag.                                             *
 //*                                                                                     *
 //***************************************************************************************
 
 	//Gadget is moveable
-	If mouseclick()=1 and UI_mouseoveredgadget$="UI_options"
+	If mouseclick()=1 and UI_mouseoveredgadget$="UI_credits"
 		//bring gadget to top
-		UI_Reinitoptions()
+		UI_Reinitcredits()
 		//moves
-		UI_MoveGadget("UI_options",SyS_MouseMoveX,SyS_MouseMoveY)
+		UI_MoveGadget("UI_credits",SyS_MouseMoveX,SyS_MouseMoveY)
 		UI_chatpanel.x=UI_chatpanel.x+SyS_MouseMoveX
 		UI_chatpanel.y=UI_chatpanel.y+SyS_MouseMoveY
 
 		
-		If UI_chatpanel.x > UI_Display.width-(UI_getgadgetwidth("UI_options")/2)
-			UI_chatpanel.x=UI_Display.width-(UI_getgadgetwidth("UI_options")/2)
-			UI_centerpositiongadget("UI_options",UI_chatpanel.x,UI_Chatpanel.y)
+		If UI_chatpanel.x > UI_Display.width-(UI_getgadgetwidth("UI_credits")/2)
+			UI_chatpanel.x=UI_Display.width-(UI_getgadgetwidth("UI_credits")/2)
+			UI_centerpositiongadget("UI_credits",UI_chatpanel.x,UI_Chatpanel.y)
 			UI_ResetXmousemove()
 		endif
 		
 		
-		If UI_chatpanel.x < (UI_getgadgetwidth("UI_options")/2)
-			UI_chatpanel.x=(UI_getgadgetwidth("UI_options")/2)
-			UI_centerpositiongadget("UI_options",UI_chatpanel.x,UI_Chatpanel.y)
+		If UI_chatpanel.x < (UI_getgadgetwidth("UI_credits")/2)
+			UI_chatpanel.x=(UI_getgadgetwidth("UI_credits")/2)
+			UI_centerpositiongadget("UI_credits",UI_chatpanel.x,UI_Chatpanel.y)
 			UI_ResetXmousemove()
 		endif
 		
 		
-		If UI_chatpanel.Y > UI_Display.height-(UI_getgadgetheight("UI_options")/2)
-			UI_chatpanel.Y=UI_Display.height-(UI_getgadgetheight("UI_options")/2)
-			UI_centerpositiongadget("UI_options",UI_chatpanel.x,UI_Chatpanel.y)
+		If UI_chatpanel.Y > UI_Display.height-(UI_getgadgetheight("UI_credits")/2)
+			UI_chatpanel.Y=UI_Display.height-(UI_getgadgetheight("UI_credits")/2)
+			UI_centerpositiongadget("UI_credits",UI_chatpanel.x,UI_Chatpanel.y)
 			UI_ResetYmousemove()
 		endif
 		
 		
-		If UI_chatpanel.Y < (UI_getgadgetheight("UI_options")/2)
-			UI_chatpanel.Y=(UI_getgadgetheight("UI_options")/2)
-			UI_centerpositiongadget("UI_options",UI_chatpanel.x,UI_Chatpanel.y)
+		If UI_chatpanel.Y < (UI_getgadgetheight("UI_credits")/2)
+			UI_chatpanel.Y=(UI_getgadgetheight("UI_credits")/2)
+			UI_centerpositiongadget("UI_credits",UI_chatpanel.x,UI_Chatpanel.y)
 			UI_ResetYmousemove()
 		endif
 		
@@ -141,9 +139,9 @@ Function UI_SUB_HandleoptionsDrag()
 
 Endfunction
 
-Function UI_SUB_Handleoptions()
+Function UI_SUB_Handlecredits()
 //***************************************************************************************
-//*   Miso   : Handles the chastbox.                                                    *
+//*   Miso   : Handles the credits.                                                     *
 //*                                                                                     *
 //***************************************************************************************
 
@@ -156,18 +154,18 @@ Endfunction
 
 
 
-Function UI_Hideoptions()
+Function UI_Hidecredits()
 //***************************************************************************************
 //*   Miso                                                                              *
 //*     This function Hides the checkbox                                                *
 //*                                                                                     *
 //***************************************************************************************
 UI_chatpanel.Hidden  = 1	
-	UI_DeleteGadget("UI_options")
+	UI_DeleteGadget("UI_credits")
 	UI_DeleteGadget("button_close_window")
 Endfunction
 
-Function UI_Showoptions()
+Function UI_Showcredits()
 //***************************************************************************************
 //*   Miso                                                                              *
 //*     This function shows charsetup.                                                    *
@@ -175,11 +173,10 @@ Function UI_Showoptions()
 //***************************************************************************************
 UI_chatpanel.Hidden  = 0
 			a=180
-			//add an input line to charsetup
-			UI_SUB_Initoptions("media\panels\ui_options.png",UI_chatpanel.x,UI_Chatpanel.y)
+			UI_SUB_Initcredits("media\panels\ui_credits.png",UI_chatpanel.x,UI_Chatpanel.y)
 			if UI_GadgetExist("button_close_window")=0:
 				x=UI_Chatpanel.x+140
-				y=UI_Chatpanel.y-150
+				y=UI_Chatpanel.y-162
 				UI_AddCenterGadgettoScreen("button_close_window",x,y,"UI_button_close")
 				UI_AddMouseoverImageToGadget("button_close_window","UI_button_close_hover")
 			endif
@@ -187,8 +184,8 @@ Endfunction
 
 
 
-Function UI_Reinitoptions()
-	UI_Hideoptions()
-	UI_Showoptions()
-	UI_Showoptions()
+Function UI_Reinitcredits()
+	UI_Hidecredits()
+	UI_Showcredits()
+	UI_Showcredits()
 Endfunction
