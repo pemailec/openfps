@@ -180,9 +180,9 @@ endfunction
 function updateShooting()
 
 `Position gun
-SE_PositionGun(shoot_TestGun,PLR_headpos.x,PLR_headpos.y,PLR_headpos.z)
-SE_RotateGun(shoot_TestGun,wrapvalue(360-PLR_angle.x-10),wrapvalue(PLR_angle.y+180),0)
-SE_OffsetGun(shoot_TestGun,23,0,-2)
+`SE_PositionGun(shoot_TestGun,PLR_headpos.x,PLR_headpos.y,PLR_headpos.z)
+`SE_RotateGun(shoot_TestGun,wrapvalue(360-PLR_angle.x-10),wrapvalue(PLR_angle.y+180),0)
+`SE_OffsetGun(shoot_TestGun,23,0,-2)
 
 local oldx#
 local oldy#
@@ -341,6 +341,7 @@ instance object SE_Gun(n).objnum,SE_GunType(guntype).objnum
 scale object SE_Gun(n).objnum,SE_GunType(guntype).scale,SE_GunType(guntype).scale,SE_GunType(guntype).scale
 ptr=n
 disable object zdepth SE_Gun(n).objnum
+lock object on SE_Gun(n).objnum
 endfunction ptr
 
 function SE_PositionGun(gun,x#,y#,z#)

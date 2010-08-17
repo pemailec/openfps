@@ -57,6 +57,8 @@ Global PlayerName$ as string
 
 function initNetwork()
 UI_WriteLog(UI_Yellow,"=== Starting Network module")
+global net_disable
+net_disable=0
 winsock make
 if (winsock error())
    `an error has occurred, output the error message to the log and quit.
@@ -69,21 +71,28 @@ endif
 channel = winsock connect(SERVER_HOST, SERVER_PORT)
 check_for_error(channel)
 
-UI_WriteLog(UI_Green,"=== Network module started")
+if net_disable<1:
+	UI_WriteLog(UI_Green,"=== Network module started")
 
-UI_WriteLog(UI_Yellow,"=== Loading Player Data")
-temp_plr_data=grabResource(res_File)
-OPEN TO READ temp_plr_data,"PlayerData.cfg"
-READ STRING temp_plr_data,PlayerName$
-PlayerName$=right$(PlayerName$,(len(PlayerName$)-11))
-close file temp_plr_data
-freeResource(temp_plr_data,res_File)
-UI_WriteLog(UI_Green,"=== Player Data Loaded")
+	UI_WriteLog(UI_Yellow,"=== Loading Player Data")
+	temp_plr_data=grabResource(res_File)
+	OPEN TO READ temp_plr_data,"PlayerData.cfg"
+	READ STRING temp_plr_data,PlayerName$
+	PlayerName$=right$(PlayerName$,(len(PlayerName$)-11))
+	close file temp_plr_data
+	freeResource(temp_plr_data,res_File)
+	UI_WriteLog(UI_Green,"=== Player Data Loaded")
 
 
-UI_Addtexttochatbox("Welcome to Biostorm: Chemical Warfare!")
-`UI_Addtexttochatbox("Master server is online.")
-sendPlayerName(PlayerName$,0)
+	UI_Addtexttochatbox("Welcome to Biostorm: Chemical Warfare!")
+	
+	UI_Addtexttochatbox("Master server is online.")
+	sendPlayerName(PlayerName$,0)
+else:
+	UI_Addtexttochatbox("Master server is offline!")
+	UI_Addtexttochatbox("No chat will be available.")
+endif
+
 endfunction
 
 
@@ -92,13 +101,16 @@ endfunction
 /////////////////////////////////////////////////////////
 
 function updateNetwork()
-   winsock refresh channel channel
-   check_for_error(channel)
-   getChatMessage()
-   `sendPlayerName("&name="+PlayerName$)
+   if net_disable<1:
+  	 	winsock refresh channel channel
+   		check_for_error(channel)
+   		getChatMessage()
+   		`sendPlayerName("&name="+PlayerName$)
+   endif
 endfunction
 
 function getChatMessage():
+if net_disable<1:
    if (winsock channel data waiting(channel))
       check_for_error(channel)
       message$ = winsock recv string(channel)
@@ -113,19 +125,24 @@ function getChatMessage():
 		UI_Addtexttochatbox(message$)
       endif
    endif
+endif
 endfunction
 
 function sendPlayerName(string$,mode):
+if net_disable<1:
 	//0=silent
 	//1=normal
 	if mode=0 then winsock send string channel, "&name_silent="+string$
 	if mode=1 then winsock send string channel, "&name="+string$
 	check_for_error(channel)
+endif
 endfunction
 
 function sendChatMessage(string$):
+if net_disable<1:
 	winsock send string channel, string$
 	check_for_error(channel)
+endif
 endfunction
 
 
@@ -135,9 +152,11 @@ endfunction
 
 
 function terminateNetwork()
+
 UI_WriteLog(UI_Green,"=== Terminating module")
 winsock clean up
 UI_WriteLog(UI_Green,"=== Network module terminated")
+
 endfunction
 
 /////////////////////////////////////////////////////////
@@ -147,9 +166,7 @@ endfunction
 function check_for_error(a_channel as DWORD)
 `check for an error on a channel.
    if (winsock channel error(a_channel))
-      `an error has occurred, output the error message to the log and quit.
-      UI_WriteLog(UI_RED,winsock channel error msg$(a_channel))
-      winsock clean up
-      end
+      `an error has occurred, enable the net_disable variable.
+	  net_disable=1
    endif
 endfunction

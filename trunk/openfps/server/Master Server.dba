@@ -71,14 +71,14 @@ do
          new_client = array count(clients(0))
          clients(new_client).channel = winsock accept(listen_channel)
          clients(new_client).id = new_client;
-         clients(new_client).name = "Client_" + str$(clients(new_client).id)
+         clients(new_client).name = "New Player"
          if (not winsock channel error(clients(new_client).channel)) 
             inc clients_connected
             `send a message to all clients that a new client has connected.
             for i=1 to clients_connected
-               winsock send string clients(i).channel,"Client_" + str$(clients(new_client).id) + " has connected!"
+               winsock send string clients(i).channel,clients(new_client).name  + " has connected!"
             next i
-            AddToChatDisplay("("+get time$()+") - "+"Client_" + str$(clients(new_client).id) + " has connected!")
+            AddToChatDisplay("("+get time$()+") - "+ clients(new_client).name  + " has connected!")
          else
             AddToChatDisplay(winsock channel error msg$(clients(new_client).channel))
             winsock delete channel clients(array count(clients(0))).channel

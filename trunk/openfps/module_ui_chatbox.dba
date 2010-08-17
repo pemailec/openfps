@@ -250,7 +250,7 @@ If UI_chatpanel.Hidden  = 0
 	if CurrentWindow$="button_lobby" and Lobby_current_tab$="UI_lobby_tab_chat":
 		//Display chatbox lines
 		for x=1 to 30
-			UI_text(1,UI_chatpanel.x-180,UI_chatpanel.y+155-(x*10),Chatlines$(x))
+			UI_text(1,UI_chatpanel.x-180,UI_chatpanel.y+150-(x*10),Chatlines$(x))
 		next x
 	endif
 	

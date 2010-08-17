@@ -461,6 +461,7 @@ function Menu_DeleteBackdrop():
 	freeResource(menu_mainimage    ,res_Image )
 	freeResource(menu_bgfx1img     ,res_Image )
 	freeResource(menu_music        ,res_Music )
+	if object exist(menu_bgfx1)=1 then hide object menu_bgfx1:delete object menu_bgfx1
 	UI_WriteLog(UI_Red,"Menu Shutdown Successful")
 endfunction
 

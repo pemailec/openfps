@@ -139,6 +139,14 @@ Function initvisuals()
 	sprite vis_s_clip._sprite,0,0,vis_s_clip.img
 	hide sprite vis_s_clip._sprite
 	
+	global crosshair1_img
+	global crosshair1_sprite
+	`DAMMIT BLITZ SPRITE BUG
+	`crosshair1_img=grabResource(res_Image)
+	`crosshair1_sprite=grabResource(res_Sprite)
+	`load image "media\images\crosshair.png",crosshair1_img
+	`sprite crosshair1_sprite,(screen width()/2)-(image width(crosshair1_img)/2),(screen height()/2)-(image height(crosshair1_img)/2),crosshair1_img
+	
 	UI_WriteLog(UI_Green,"=== Visual module started")
 Endfunction
 
