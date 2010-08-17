@@ -9,13 +9,12 @@ sync rate 0
 backdrop on
 color backdrop 0
 
-startblue "DD6","583d7a"
+startblue "XXX","XXXXXX"
 
 d3d_init
 
 `=========Constants=========`
-#Constant VS_False  =0
-#Constant VS_True   =1
+
 `===========================`
 
 
