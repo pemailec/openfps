@@ -13,6 +13,7 @@ remstart
 (07/06/10) - miso     - just placed logger commands
 (07/06/10) - thenerd  - added commands
 (07/28/10) - thenerd  - added PlayerData.cfg for player name & other info
+(08/17/10) - miso     - added a display info when waiting to connect master server, not to see tha black screen
 
 ----- To-Do:
 -None-
@@ -68,6 +69,8 @@ if (winsock error())
 else
 	UI_WriteLog(UI_Green,"Connected to the master server "+SERVER_HOST+":"+STR$(SERVER_PORT))
 endif
+UI_Centertext(2,512,300,"connecting to master server"):sync
+UI_Centertext(2,512,300,"connecting to master server"):Sync
 channel = winsock connect(SERVER_HOST, SERVER_PORT)
 check_for_error(channel)
 
