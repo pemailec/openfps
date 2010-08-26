@@ -9,7 +9,7 @@ sync rate 0
 backdrop on
 color backdrop 0
 
-startblue "XXX","XXXXXX"
+startblue GUIUSER,GUIPASS
 
 d3d_init
 

@@ -37,7 +37,7 @@ Rem ***** Included Source File *****
 `[Advanced Users:  These are the same as the WM_XXX messages used by the Windows API.  For some messages the eventData() and
 `eventDataEx() information may be changed by the DLL to make it more convenient for users]
 
-#constant COMMAND           0x111
+#constant ACOMMAND           0x111
 #constant MOUSE_CLICK       0x202
 #constant LEFTBUTTON_UP     0x202
 #constant RIGHTMOUSE_CLICK  0x205

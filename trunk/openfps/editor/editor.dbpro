@@ -5,13 +5,15 @@ project name=editor
 
 ; **** source file information ****
 main=modules\editor_main.dba
-LineMain=5
+LineMain=4
 include1=modules\SYS_BGUI_USERID.dba
-LineInclude1=1
+LineInclude1=29
 include2=modules\SYS_GUI.dba
 LineInclude2=2
 include3=modules\SYS_INCLUDES.dba
-LineInclude3=0
+LineInclude3=39
+include4=modules\SYS_CONTROLS.dba
+LineInclude4=65
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
