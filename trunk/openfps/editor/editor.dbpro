@@ -1,14 +1,17 @@
 ; **** Dark BASIC Professional Project File ****
-; **** Written by DarkBASIC Professional Editor ****
+; **** Written by Synergy Editor ****
 version=DBP1.00
 project name=editor
 
 ; **** source file information ****
-main=editor.dba
-LineMain=0
-include1=gui.dba
-include2=gui_includes.dba
-final source=_Temp.dbsource
+main=modules\editor_main.dba
+LineMain=5
+include1=modules\SYS_BGUI_USERID.dba
+LineInclude1=1
+include2=modules\SYS_GUI.dba
+LineInclude2=2
+include3=modules\SYS_INCLUDES.dba
+LineInclude3=0
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
@@ -41,7 +44,7 @@ window resolution=1024x768
 
 ; **** Media ****
 ; Example entries: media1=graphics\*.jpg
-media root path=F:\openfps\editor\
+media root path=C:\==Darkbasic Pro==\Dark Basic Professional\Projects\=Realwork=\=OpenFPS=\editor\
 
 ; **** Icons ****
 
@@ -62,3 +65,10 @@ VerProductNumber=v1.0
 ; **** To Do ****
 
 ; **** Comments ****
+comments1=
+
+; **** Advanced (setup.ini) configuration ****
+RemoveSafetyCode=NO
+SafeArrays=YES
+LocalTempFolder=NO
+ExternaliseDLLS=NO
