@@ -1,4 +1,6 @@
 load dll "user32.dll",1
+global Sw
+global Sh
 Sw=call dll(1,"GetSystemMetrics",0)
 Sh=call dll(1,"GetSystemMetrics",1)
 delete dll 1
@@ -56,8 +58,28 @@ do
 	VS_UpdateSky()
 	`setgadgettext mouse,str$(mousex())+","+str$(mousey())
 	`setgadgettext Fps,str$(screen fps())
+	getEvent
 	
-	if level_new=1 then cls 0:goto skip1
+
+	if level_new=1:
+		if eventSource()=startnew and eventType()=MOUSE_CLICK
+			level_new=0
+			setGadgetVisible StartWindow,0
+			message "OpenEd","Startup Menu: New Project"
+		endif
+		if eventSource()=startopen and eventType()=MOUSE_CLICK
+			level_new=0
+			setGadgetVisible StartWindow,0
+			message "OpenEd","Startup Menu: Open Project"
+		endif
+		if eventSource()=startcompile and eventType()=MOUSE_CLICK
+			level_new=0
+			setGadgetVisible StartWindow,0
+			message "OpenEd","Startup Menu: Compile Tools"
+		endif
+		cls 0
+		goto skip1
+	endif
 
 	mclick=mouseclick()
 	if mclick=2:

@@ -21,8 +21,17 @@ global DebugBar
 global Fps
 global mouse
 
+`START MENU vars
+global startlogo
+global startoptions
+global startnew
+global startopen
+global startcompile
+global StartWindow
+global Startimg = 24
+
 Toolbar_offset=28
-`Menu Gloals
+`Menu Globals
 `-----------
     global menu
     #constant MENU_FILE 0
@@ -59,6 +68,20 @@ function createUI()
     
     setGadgetAlign SideMenuMain,ALIGN_RIGHT
     doGadgetalign SideMenuMain
+    
+	`load image "data\logo.bmp",Startimg
+
+    StartWindow=createWindow(Sw/2-300,Sh/2-200,509,361,"OpenEd Startup",WINDOW_TOOLWINDOW,0,0,0)
+    
+    startlogo=createPanel(9,9,472,98,StartWindow)
+    setPanelImage startlogo,"data\logo.bmp"
+    
+    startoptions=createFrame(10,115,470,189,"OpenEd Startup",StartWindow)
+  	
+    startnew=createButton(9,23,450,45,"New Project",0,startoptions)
+    startopen=createButton(9,75,450,45,"Open Project",0,startoptions)
+    startcompile=createButton(9,129,450,45,"Compilation Tools",0,startoptions)
+    
 	remstart
 	DebugWindow=createWindow(100,210,203,320,"Debug",WINDOW_FIXED,WINDOW_TOOLWINDOW,0,0)    
     DebugFrame=createFrame(8,9,178,122,"Debug Stats",DebugWindow)
