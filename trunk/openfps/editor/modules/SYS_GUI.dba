@@ -26,20 +26,40 @@ global startlogo
 global startoptions
 global startnew
 global startopen
-global startcompile
+global startexit
 global StartWindow
 global Startimg = 24
+
+`START MENU OPEN vars
+global OpenProject
+global OpenBar
+global OpenList
+global OpenTitle
+global OpenFile
+global OpenButton
+
 
 Toolbar_offset=28
 `Menu Globals
 `-----------
     global menu
+    global TerrainMenu
+    global HelpMenu
+    global LoadMenu
     #constant MENU_FILE 0
     #constant MENU_EDIT 1
     #constant MENU_VIEW 2
-    #constant MENU_TOOLS 3
-    #constant MENU_HELP 4
-
+    #constant MENU_TERRAIN 3
+    #constant MENU_TOOLS 4
+    #constant MENU_HELP 5
+    #constant MENU_TERRAIN_COMPILE 6
+    #constant MENU_TERRAIN_LOADFILE 7
+    #constant MENU_TERRAIN_LOADIMG 8
+    #constant MENU_TERRAIN_VIEWMODEL 9
+	#constant MENU_TERRAIN_LOADFILE_HMAP 11
+	#constant MENU_TERRAIN_LOADFILE_TEX 12
+	#constant MENU_TERRAIN_LOADFILE_DETAIL 13
+	#constant MENU_TERRAIN_LOADFILE_ENV 14
 `Create User Interface
 `---------------------
 function createUI()
@@ -58,7 +78,9 @@ function createUI()
 	addToolbarButton Toolbar,TOOLBAR_CUT,0
     addToolbarButton Toolbar,TOOLBAR_COPY,0
     addToolbarButton Toolbar,TOOLBAR_PASTE,0
-     
+    addToolbarSplitter Toolbar
+    addToolbarButton Toolbar,"data\play.png",0
+    
     SideMenuMain=createPanel(0,0,170,4280,0)
     SideMenuSub=createPanel(2,28,166,4280,SideMenuMain)
     setPanelBorderStyle SideMenuSub,BORDER_SUNKEN
@@ -71,7 +93,7 @@ function createUI()
     
 	`load image "data\logo.bmp",Startimg
 
-    StartWindow=createWindow(Sw/2-300,Sh/2-200,509,361,"OpenEd Startup",WINDOW_TOOLWINDOW,0,0,0)
+    StartWindow=createWindow(Sw/2-300,Sh/2-200,509,361,"OpenEd Startup",WINDOW_FIXED,WINDOW_TOOLWINDOW,0,0)
     
     startlogo=createPanel(9,9,472,98,StartWindow)
     setPanelImage startlogo,"data\logo.bmp"
@@ -80,8 +102,15 @@ function createUI()
   	
     startnew=createButton(9,23,450,45,"New Project",0,startoptions)
     startopen=createButton(9,75,450,45,"Open Project",0,startoptions)
-    startcompile=createButton(9,129,450,45,"Compilation Tools",0,startoptions)
+    startexit=createButton(9,129,450,45,"Exit OpenEd",0,startoptions)
     
+    OpenProject=createWindow(Sw/2-340,Sh/2-240,569,413,"Open Project",WINDOW_FIXED,WINDOW_TOOLWINDOW,0,0)
+    OpenBar=createStatusBar(OpenProject)
+    OpenList=createListView(10,35,530,276,OpenProject)
+    OpenTitle=createLabel(10,10,310,20,"Select a project to open...",OpenProject)
+    OpenFile=createEdit(13,321,390,20,0,OpenProject)
+    OpenButton=createButton(414,320,119,22,"Open Project",0,OpenProject)
+    setGadgetVisible OpenProject,0
 	remstart
 	DebugWindow=createWindow(100,210,203,320,"Debug",WINDOW_FIXED,WINDOW_TOOLWINDOW,0,0)    
     DebugFrame=createFrame(8,9,178,122,"Debug Stats",DebugWindow)
@@ -93,13 +122,67 @@ function createUI()
 	remend
 endfunction
 
+function updateGui():
+   	if eventType()=MENU_CLICK
+		select eventData()
+			case 9
+				toggle=abs(getMenuItemChecked(TerrainMenu,9)-1)
+				setMenuItemChecked TerrainMenu,9,toggle
+				`BT SetTerrainWireframe g_TerrainID,toggle
+			endcase
+			case 10
+				message "About OpenEd","OpenEd: The OpenFPS Level Editor - Version 3.1 ©2010 The OpenFPS Team.         Use only with permission, email me at chrisdalke@gmail.com for details...               - Chris"
+			endcase
+			case 11
+				img_string$=openDialog("Open Heightmap Image","Bitmap Files (*.bmp)|*.bmp|All Files (*.*)|*.*")
+				HmapIMG$=img_string$
+				LoadTerrain(1)
+			endcase
+			case 12
+				img_string$=openDialog("Open Texture","JPEG Files (*.jpg)|*.jpg|All Files (*.*)|*.*")
+				TexIMG$=img_string$
+				LoadTerrain(1)
+			endcase
+			case 13
+				img_string$=openDialog("Open Detail Map","Targa Files (*.tga)|*.tga|All Files (*.*)|*.*")
+				DetailIMG$=img_string$
+				LoadTerrain(1)
+			endcase
+			case 14
+				img_string$=openDialog("Open Environment Map","Bitmap Files (*.bmp)|*.bmp|All Files (*.*)|*.*")
+				EnvIMG$=img_string$
+				LoadTerrain(1)
+			endcase
+		endselect
+	endif		
+endfunction
+
 `Create Main Menu
 `----------------
 function createMainMenu()
-menu=createMenu(0)
+	menu=createMenu(0)
     addMenuItem menu,"File",0
     addMenuItem menu,"Edit",1
     addMenuItem menu,"View",2
-    addMenuItem menu,"Tools",3
-    addMenuItem menu,"Help",4
+    addMenuItem menu,"Terrain",3
+    addMenuItem menu,"Tools",4
+    addMenuItem menu,"Help",5
+    TerrainMenu=createSubMenu(menu,3)
+    addMenuItem TerrainMenu,"Compile Terrain",6
+	addMenuSplitter TerrainMenu
+	addMenuItem TerrainMenu,"Load Terrain From File...",7
+	addMenuItem TerrainMenu,"Load Images",8
+	addMenuSplitter TerrainMenu
+	addMenuItem TerrainMenu,"Show ViewModel",9
+	setMenuItemChecked TerrainMenu,9,1
+	
+	LoadMenu=createSubMenu(TerrainMenu,8)
+	addMenuItem LoadMenu,"Load Heightmap...",11
+	addMenuItem LoadMenu,"Load Texture...",12
+	addMenuItem LoadMenu,"Load Detail Map...",13
+	addMenuItem LoadMenu,"Load Environment Map...",14
+	
+	HelpMenu=createSubMenu(menu,5)
+	addMenuItem HelpMenu,"About",10
+	
 endfunction

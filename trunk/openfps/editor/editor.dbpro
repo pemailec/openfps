@@ -14,6 +14,7 @@ include3=modules\SYS_INCLUDES.dba
 LineInclude3=39
 include4=modules\SYS_CONTROLS.dba
 LineInclude4=65
+include5=modules\SYS_TERRAIN.dba
 final source=_Temp.dbsource
 
 ; **** Executable Information  ***
@@ -34,7 +35,7 @@ CLI=NO
 CommandLineArguments=
 
 ; **** display mode information ****
-app title=xEdit version 1.2 - OpenFPS Subversion
+app title=xEdit version 3.1 - OpenFPS Subversion
 
 ; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
 graphics mode=window

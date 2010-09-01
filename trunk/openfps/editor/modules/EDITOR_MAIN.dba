@@ -10,7 +10,7 @@ sync on
 sync rate 0
 backdrop on
 color backdrop 0
-
+autocam off
 startblue GUIUSER,GUIPASS
 
 d3d_init
@@ -36,7 +36,7 @@ VS_CreateSky()
 createUI()
 createMainMenu()
 
-make object cube 1,10
+`make object cube 1,10
 remstart
 load object "skydome.x",1
 set object light 1,0
@@ -53,34 +53,49 @@ zrotate object 2,180
 remend
 maximize window
 set camera range 1,1000000000
+position camera 160,71,-50:rotate camera 24,0,0:cx#=24.0:ncx#=24.0
 level_new=1
+
+global HmapIMG$
+global TexIMG$
+global DetailIMG$
+global EnvIMG$
+
+HmapIMG$="data\heightmap.bmp"
+TexIMG$="data\texture.jpg"
+DetailIMG$="data\detail.tga"
+EnvIMG$="data\environment.bmp"
+
 do 
 	VS_UpdateSky()
+	
+	
 	`setgadgettext mouse,str$(mousex())+","+str$(mousey())
 	`setgadgettext Fps,str$(screen fps())
 	getEvent
-	
+	updateGui()
 
 	if level_new=1:
+		
 		if eventSource()=startnew and eventType()=MOUSE_CLICK
 			level_new=0
 			setGadgetVisible StartWindow,0
-			message "OpenEd","Startup Menu: New Project"
+			`message "OpenEd","Startup Menu: New Project"
+			LoadTerrain(0)
 		endif
 		if eventSource()=startopen and eventType()=MOUSE_CLICK
-			level_new=0
 			setGadgetVisible StartWindow,0
-			message "OpenEd","Startup Menu: Open Project"
+			setGadgetVisible OpenProject,1
 		endif
-		if eventSource()=startcompile and eventType()=MOUSE_CLICK
-			level_new=0
-			setGadgetVisible StartWindow,0
-			message "OpenEd","Startup Menu: Compile Tools"
+		if eventSource()=startexit and eventType()=MOUSE_CLICK
+			end
 		endif
 		cls 0
 		goto skip1
 	endif
-
+	
+	if level_new<1 then UpdateTerrain()
+	
 	mclick=mouseclick()
 	if mclick=2:
 		if camera_move=0 and clicking=0 then camera_move=1:clicking=1:goto skip
@@ -125,13 +140,15 @@ do
         move camera ncr#
         rotate camera 0,wrapvalue(ncy#+90),0
         rotate camera ncx#,ncy#,0
+        gheight#=BT GetGroundHeight(g_TerrainID,camera position x(),camera position z())
+		if camera position y()-2<gheight# then position camera camera position x(),gheight#+2,camera position z()
 	endif
 
 	`position object 1,camera position x(Camera3d),camera position y(Camera3d),camera position z(Camera3d)
 	`position object 2,camera position x(Camera3d),camera position y(Camera3d),camera position z(Camera3d)
 	`if spacekey()=1 then debug(str$(camera position x(Camera3d))+","+str$(camera position y(Camera3d))+","+str$(camera position z(Camera3d)))
 	
-	
+	`updateGui()
 	
 	sync
 loop
