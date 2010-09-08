@@ -30,8 +30,8 @@ function LoadTerrain(ReloadFlag):
 	BT SetTerrainDetail g_TerrainID,g_DetailmapImgID
 	
 	//Set some other values
-	BT SetTerrainScale g_TerrainID,1.20
-	BT SetTerrainYScale g_TerrainID,0.2
+	BT SetTerrainScale g_TerrainID,5.20
+	BT SetTerrainYScale g_TerrainID,2.2
 	BT SetTerrainSplit g_TerrainID,8
 	BT SetTerrainDetailTile g_TerrainID,3.0
 	

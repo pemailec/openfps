@@ -1,65 +1,82 @@
 
 
-Rem ***** Included Source File *****
-`==================================
-`Call createUI() to setup the user interface
-`-------------------------------------------
+////////////////////////////////////////
+// ***** Included Source File *****
+//
+// Gui module
+// 
+// Author: Chris
+//
+//////////////////////////////////////////////////////
 
-`Global Variable Declarations for Gadgets
-`----------------------------------------
+`----- Changelog:
+`(2010/09/02) - Chris     - Created
+`----- To-Do:
 
-global Toolbar
-global StatusBar
-global SideMenuMain
-global SideMenuSub
-global Toolbar_panel
-global Toolbar_offset
-global cameratext
-global DebugWindow
-global DebugFrame
-global DebugBar
-global Fps
-global mouse
+`----- Purpose:
 
-`START MENU vars
-global startlogo
-global startoptions
-global startnew
-global startopen
-global startexit
-global StartWindow
-global Startimg = 24
+`----- USES: none
 
-`START MENU OPEN vars
-global OpenProject
-global OpenBar
-global OpenList
-global OpenTitle
-global OpenFile
-global OpenButton
+`----- Function List:
 
+`=========Constants=========`
+#constant MENU_FILE 0
+#constant MENU_EDIT 1
+#constant MENU_VIEW 2
+#constant MENU_TERRAIN 3
+#constant MENU_TOOLS 4
+#constant MENU_HELP 5
+#constant MENU_TERRAIN_COMPILE 6
+#constant MENU_TERRAIN_LOADFILE 7
+#constant MENU_TERRAIN_LOADIMG 8
+#constant MENU_TERRAIN_VIEWMODEL 9
+#constant MENU_TERRAIN_LOADFILE_HMAP 11
+#constant MENU_TERRAIN_LOADFILE_TEX 12
+#constant MENU_TERRAIN_LOADFILE_DETAIL 13
+#constant MENU_TERRAIN_LOADFILE_ENV 14
+`===========================`
 
-Toolbar_offset=28
-`Menu Globals
-`-----------
+`==========Globals==========`
+	global Toolbar
+	global StatusBar
+	global SideMenuMain
+	global SideMenuSub
+	global Toolbar_panel
+	global Toolbar_offset
+	global cameratext
+	global DebugWindow
+	global DebugFrame
+	global DebugBar
+	global Fps
+	global mouse
+//--START MENU vars
+	global startlogo
+	global startoptions
+	global startnew
+	global startopen
+	global startexit
+	global StartWindow
+	global Startimg = 24
+//--START MENU OPEN vars
+	global OpenProject
+	global OpenBar
+	global OpenList
+	global OpenTitle
+	global OpenFile
+	global OpenButton
+	Toolbar_offset=28
+//--Menu Globals
     global menu
     global TerrainMenu
     global HelpMenu
     global LoadMenu
-    #constant MENU_FILE 0
-    #constant MENU_EDIT 1
-    #constant MENU_VIEW 2
-    #constant MENU_TERRAIN 3
-    #constant MENU_TOOLS 4
-    #constant MENU_HELP 5
-    #constant MENU_TERRAIN_COMPILE 6
-    #constant MENU_TERRAIN_LOADFILE 7
-    #constant MENU_TERRAIN_LOADIMG 8
-    #constant MENU_TERRAIN_VIEWMODEL 9
-	#constant MENU_TERRAIN_LOADFILE_HMAP 11
-	#constant MENU_TERRAIN_LOADFILE_TEX 12
-	#constant MENU_TERRAIN_LOADFILE_DETAIL 13
-	#constant MENU_TERRAIN_LOADFILE_ENV 14
+`===========================`
+
+`===========Types===========`
+`===========================`
+
+
+`=========Functions=========`
 `Create User Interface
 `---------------------
 function createUI()
@@ -69,21 +86,23 @@ function createUI()
     StatusBar=createStatusBar(0)
     cameratext=createlabel(0,26,480,15,"null",0)
     Toolbar_panel=createPanel(0,0,280000,27,0)
+    
     Toolbar=createToolbar(Toolbar_panel)
-    addStandardToolbarButtons Toolbar
-	addToolbarButton Toolbar,TOOLBAR_NEW,0
-	addToolbarButton Toolbar,TOOLBAR_OPEN,0
-	addToolbarButton Toolbar,TOOLBAR_SAVE,0
-	addToolbarSplitter Toolbar
-	addToolbarButton Toolbar,TOOLBAR_CUT,0
-    addToolbarButton Toolbar,TOOLBAR_COPY,0
-    addToolbarButton Toolbar,TOOLBAR_PASTE,0
-    addToolbarSplitter Toolbar
-    addToolbarButton Toolbar,"data\play.png",0
+    	addStandardToolbarButtons Toolbar
+		addToolbarButton Toolbar,TOOLBAR_NEW,0
+		addToolbarButton Toolbar,TOOLBAR_OPEN,0
+		addToolbarButton Toolbar,TOOLBAR_SAVE,0
+		addToolbarSplitter Toolbar
+		addToolbarButton Toolbar,TOOLBAR_CUT,0
+    	addToolbarButton Toolbar,TOOLBAR_COPY,0
+    	addToolbarButton Toolbar,TOOLBAR_PASTE,0
+    	addToolbarSplitter Toolbar
+    	addToolbarButton Toolbar,"data\play.png",0
     
     SideMenuMain=createPanel(0,0,170,4280,0)
     SideMenuSub=createPanel(2,28,166,4280,SideMenuMain)
-    setPanelBorderStyle SideMenuSub,BORDER_SUNKEN
+   	setPanelBorderStyle SideMenuSub,BORDER_SUNKEN
+    
     bringtofront SideMenuMain
     bringtofront StatusBar
     bringtofront Toolbar_panel
@@ -161,28 +180,29 @@ endfunction
 `----------------
 function createMainMenu()
 	menu=createMenu(0)
-    addMenuItem menu,"File",0
-    addMenuItem menu,"Edit",1
-    addMenuItem menu,"View",2
-    addMenuItem menu,"Terrain",3
-    addMenuItem menu,"Tools",4
-    addMenuItem menu,"Help",5
+	    addMenuItem menu,"File",0
+	    addMenuItem menu,"Edit",1
+	    addMenuItem menu,"View",2
+	    addMenuItem menu,"Terrain",3
+	    addMenuItem menu,"Tools",4
+	    addMenuItem menu,"Help",5
+
     TerrainMenu=createSubMenu(menu,3)
-    addMenuItem TerrainMenu,"Compile Terrain",6
-	addMenuSplitter TerrainMenu
-	addMenuItem TerrainMenu,"Load Terrain From File...",7
-	addMenuItem TerrainMenu,"Load Images",8
-	addMenuSplitter TerrainMenu
-	addMenuItem TerrainMenu,"Show ViewModel",9
-	setMenuItemChecked TerrainMenu,9,1
+	    addMenuItem TerrainMenu,"Compile Terrain",6
+		addMenuSplitter TerrainMenu
+		addMenuItem TerrainMenu,"Load Terrain From File...",7
+		addMenuItem TerrainMenu,"Load Images",8
+		addMenuSplitter TerrainMenu
+		addMenuItem TerrainMenu,"Show ViewModel",9
+		setMenuItemChecked TerrainMenu,9,1
 	
 	LoadMenu=createSubMenu(TerrainMenu,8)
-	addMenuItem LoadMenu,"Load Heightmap...",11
-	addMenuItem LoadMenu,"Load Texture...",12
-	addMenuItem LoadMenu,"Load Detail Map...",13
-	addMenuItem LoadMenu,"Load Environment Map...",14
+		addMenuItem LoadMenu,"Load Heightmap...",11
+		addMenuItem LoadMenu,"Load Texture...",12
+		addMenuItem LoadMenu,"Load Detail Map...",13
+		addMenuItem LoadMenu,"Load Environment Map...",14
 	
 	HelpMenu=createSubMenu(menu,5)
-	addMenuItem HelpMenu,"About",10
+		addMenuItem HelpMenu,"About",10
 	
 endfunction

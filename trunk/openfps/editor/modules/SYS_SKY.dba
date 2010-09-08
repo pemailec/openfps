@@ -1,0 +1,88 @@
+
+
+/////////////////////////////////
+// ***** Included Source File *****
+//
+// SKY MODULE for the editor
+// 
+// Author: CHRISDALKE, miso
+//
+//////////////////////////////////////////////////////
+
+`----- Changelog:
+
+`----- To-Do:
+
+`----- Purpose:
+
+`----- USES: none
+
+`----- Function List:
+
+`=========Constants=========`
+`===========================`
+
+`==========Globals==========`
+Global VS_Sky     as Myskytype   :`basic data for sky
+`===========================`
+
+`===========Types===========`
+Type MyskyType
+	Initialized      as Boolean:`1 if initialized
+	ObjID            as Integer:`ID of the object
+	TextureID        as Integer:`ID of the texture
+	ScrollEnabled    as Boolean:`set to 1 if you want to scroll the texture
+	ScrollSpeedX     as Float  :`velocity of scrolling in X axis
+	ScrollSpeedY     as Float  :`velocity of scrolling in Y axis
+EndType
+`===========================`
+
+
+`=========Functions=========`
+
+Function VS_CreateSky()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function loads the sky model and textures it.                              *
+//*                                                                                     *
+//***************************************************************************************
+     If VS_Sky.initialized=VS_False
+	    VS_Sky.ObjID     = 1000
+	    VS_Sky.TextureID = 1000
+	 	Load Object "..\media\visuals\vs_skydome.x",VS_Sky.ObjID
+	 	Load Image "..\media\visuals\vs_basicsky.jpg",VS_Sky.TextureID,1
+	 	Scale Object VS_Sky.ObjID,1000000,1000000,1000000
+	 	Texture Object VS_Sky.ObjID,VS_Sky.TextureID
+	 	Set Object Fog VS_Sky.ObjID,0
+	 	Set Object Light VS_Sky.ObjID,0
+	 	Disable Object Zwrite VS_Sky.ObjID
+	 	VS_Sky.initialized=VS_True
+	 Endif
+Endfunction
+
+
+Function VS_UpdateSky()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Scroll sky texture if needed at loop.                                           *
+//*                                                                                     *
+//***************************************************************************************
+// scrolls sky
+	If VS_Sky.Initialized=VS_True
+		Position Object VS_Sky.ObjID,camera position x(),camera position y()-15000,camera position z()
+		Scroll Object Texture VS_Sky.ObjID,VS_Sky.ScrollSpeedX,VS_Sky.ScrollSpeedY
+	endif
+Endfunction
+
+Function VS_DeleteSky()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Delete Sky, won't crash the game.                                                *
+//*                                                                                     *
+//***************************************************************************************
+	If VS_Sky.Initialized=VS_True
+		If Object Exist(VS_Sky.ObjID)=VS_True then Delete Object VS_Sky.ObjID
+		IF Image Exist(VS_Sky.TextureID)=VS_True then Delete Image VS_Sky.TExtureID
+		VS_Sky.Initialized=VS_False
+	Endif
+Endfunction

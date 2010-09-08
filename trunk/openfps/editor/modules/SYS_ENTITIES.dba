@@ -1,15 +1,18 @@
-Rem ***** Included Source File *****
-//////////////////////////////
+
+
+
+
+////////////////////////////////////////
 // ***** Included Source File *****
 //
-// BLUEGUI USER ID AND PASS CONSTANTS
+// Entities module
 // 
 // Author: miso
 //
 //////////////////////////////////////////////////////
 
 `----- Changelog:
-`(2010/07/11) - miso     - Created
+`(2010/09/02) - miso     - Created
 `----- To-Do:
 
 `----- Purpose:
@@ -19,9 +22,6 @@ Rem ***** Included Source File *****
 `----- Function List:
 
 `=========Constants=========`
-//---Don't leave it in revisions!!!
-#Constant GUIUSER = "DW3"
-#Constant GUIPASS = "582E7F"
 `===========================`
 
 `==========Globals==========`

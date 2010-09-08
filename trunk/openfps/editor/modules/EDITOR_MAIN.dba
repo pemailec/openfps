@@ -1,213 +1,140 @@
-load dll "user32.dll",1
-global Sw
-global Sh
-Sw=call dll(1,"GetSystemMetrics",0)
-Sh=call dll(1,"GetSystemMetrics",1)
-delete dll 1
+////////////////////////////////////////
+//
+// EDITOR MAIN PROGRAM
+// 
+// Author: Chris Dalke
+//
+//////////////////////////////////////////////////////
 
-set display mode Sw,Sh,32,1
-sync on
-sync rate 0
-backdrop on
-color backdrop 0
-autocam off
-startblue GUIUSER,GUIPASS
+`----- Changelog:
 
-d3d_init
+`----- To-Do:
+
+`----- Purpose:
+
+`----- USES: none
+
+`----- Function List:
 
 `=========Constants=========`
 
 `===========================`
 
+`==========Globals==========`
+global level_new  as boolean
+global HmapIMG$   as string
+global TexIMG$    as string
+global DetailIMG$ as string
+global EnvIMG$    as string
 
-Type MyskyType
-	Initialized      as Boolean:`1 if initialized
-	ObjID            as Integer:`ID of the object
-	TextureID        as Integer:`ID of the texture
-	ScrollEnabled    as Boolean:`set to 1 if you want to scroll the texture
-	ScrollSpeedX     as Float  :`velocity of scrolling in X axis
-	ScrollSpeedY     as Float  :`velocity of scrolling in Y axis
-EndType
+`===========================`
 
-Global VS_Sky             as Myskytype   :`basic data for sky
+`===========Types===========`
 
-VS_CreateSky()
+`===========================`
+//--Get Desktop parameters
+	Getsystemmetrics()
+//--Start the editor
+	EditorStart()
+//--Create the sky
+	VS_CreateSky()
+//--Create menu
+	createUI()
+	createMainMenu()
 
-createUI()
-createMainMenu()
+//--other
+	maximize window
+	set camera range 1,1000000000
+	position camera 160,71,-50:rotate camera 24,0,0:cx#=24.0:ncx#=24.0
+	level_new=1
 
-`make object cube 1,10
-remstart
-load object "skydome.x",1
-set object light 1,0
-scale object 1,1000,1000,1000
-disable object zwrite 1
-load object "skydome.x",2
-load image "skyflipped.jpg",2
-texture object 2,2
-set object light 2,0
-scale object 2,1000,1000,1000
-disable object zwrite 2
-zrotate object 2,180
-`yrotate object 2,180
-remend
-maximize window
-set camera range 1,1000000000
-position camera 160,71,-50:rotate camera 24,0,0:cx#=24.0:ncx#=24.0
-level_new=1
+	HmapIMG$="data\heightmap2.bmp"
+	TexIMG$="data\texture2.jpg"
+	DetailIMG$="data\detail.tga"
+	EnvIMG$="data\environment.bmp"
 
-global HmapIMG$
-global TexIMG$
-global DetailIMG$
-global EnvIMG$
-
-HmapIMG$="data\heightmap.bmp"
-TexIMG$="data\texture.jpg"
-DetailIMG$="data\detail.tga"
-EnvIMG$="data\environment.bmp"
-
+//--main loop begins
 do 
-	VS_UpdateSky()
+	//--Updates the sky
+		VS_UpdateSky()
 	
-	
-	`setgadgettext mouse,str$(mousex())+","+str$(mousey())
-	`setgadgettext Fps,str$(screen fps())
-	getEvent
-	updateGui()
+	//--Get bluegui events
+		getEvent
+		updateGui()
 
-	if level_new=1:
+		if level_new=1:
 		
-		if eventSource()=startnew and eventType()=MOUSE_CLICK
-			level_new=0
-			setGadgetVisible StartWindow,0
-			`message "OpenEd","Startup Menu: New Project"
-			LoadTerrain(0)
-		endif
-		if eventSource()=startopen and eventType()=MOUSE_CLICK
-			setGadgetVisible StartWindow,0
-			setGadgetVisible OpenProject,1
-		endif
-		if eventSource()=startexit and eventType()=MOUSE_CLICK
-			end
-		endif
-		cls 0
-		goto skip1
-	endif
-	
-	if level_new<1 then UpdateTerrain()
-	
-	mclick=mouseclick()
-	if mclick=2:
-		if camera_move=0 and clicking=0 then camera_move=1:clicking=1:goto skip
-		if camera_move=1 and clicking=0 then camera_move=0:clicking=1:goto skip
-		skip:
-	else:
-		if clicking=1 then clicking=0
-	endif
-	
-	skip1:
-	
-	Width#=Get Window Client Width()
-	Height#=Get Window Client Height()
-	
-	if camera_move=0 then setgadgettext cameratext,"3d Top View (FPS: "+str$(screen fps())+") - Right-click to enter camera mode"
-	if camera_move=1 then setgadgettext cameratext,"3d Camera Mode (FPS: "+str$(screen fps())+") - WASD or arrow keys to move, mouse to look. Right-click to exit Camera Mode."
-	resizegadget cameratext,(Width#),15
-	
-	if camera_move=0:
-		show mouse
-		null=mousemovex()
-		null=mousemovey()
-	endif
-	if camera_move=1:
-		hide mouse
-		position mouse screen width()/2,screen height()/2
-		cr#=0:cf#=0
-        if rightkey()=1 or KEYSTATE(32)=1 then cr#=-0.3
-        if leftkey()=1 or KEYSTATE(30)=1 then cr#=0.3
-        if upkey()=1 or KEYSTATE(17)=1 then cf#=0.3
-        if downkey()=1 or KEYSTATE(31)=1 then cf#=-0.3
-        ncr#=curvevalue(cr#,ncr#,5)
-        ncf#=curvevalue(cf#,ncf#,5)
-        cx#=cx#+mousemovey()*0.2
-        cy#=cy#+mousemovex()*0.2
-        if cx#>80 then cx#=80
-        if cx#<-80  then cx#=-80
-        ncx#=curveangle(cx#,ncx#,2)
-        ncy#=curveangle(cy#,ncy#,2)
-        move camera ncf#
-        rotate camera 0,wrapvalue(ncy#-90),0
-        move camera ncr#
-        rotate camera 0,wrapvalue(ncy#+90),0
-        rotate camera ncx#,ncy#,0
-        gheight#=BT GetGroundHeight(g_TerrainID,camera position x(),camera position z())
-		if camera position y()-2<gheight# then position camera camera position x(),gheight#+2,camera position z()
-	endif
+			if eventSource()=startnew and eventType()=MOUSE_CLICK
+				level_new=0
+				setGadgetVisible StartWindow,0
+				`message "OpenEd","Startup Menu: New Project"
+				LoadTerrain(0)
+			endif
 
-	`position object 1,camera position x(Camera3d),camera position y(Camera3d),camera position z(Camera3d)
-	`position object 2,camera position x(Camera3d),camera position y(Camera3d),camera position z(Camera3d)
-	`if spacekey()=1 then debug(str$(camera position x(Camera3d))+","+str$(camera position y(Camera3d))+","+str$(camera position z(Camera3d)))
+			if eventSource()=startopen and eventType()=MOUSE_CLICK
+				setGadgetVisible StartWindow,0
+				setGadgetVisible OpenProject,1
+			endif
+
+			if eventSource()=startexit and eventType()=MOUSE_CLICK
+				end
+			endif
+			cls 0
+			goto skip1
+		endif
 	
-	`updateGui()
+		if level_new<1 then UpdateTerrain()
 	
+		mclick=mouseclick()
+		if mclick=2:
+			if camera_move=0 and clicking=0 then camera_move=1:clicking=1:goto skip
+			if camera_move=1 and clicking=0 then camera_move=0:clicking=1:goto skip
+			skip:
+		else:
+			if clicking=1 then clicking=0
+		endif
+	
+		skip1:
+	
+		Width#=Get Window Client Width()
+		Height#=Get Window Client Height()
+	
+		if camera_move=0 then setgadgettext cameratext,"3d Top View (FPS: "+str$(screen fps())+") - Right-click to enter camera mode"
+		if camera_move=1 then setgadgettext cameratext,"3d Camera Mode (FPS: "+str$(screen fps())+") - WASD or arrow keys to move, mouse to look. Right-click to exit Camera Mode."
+		resizegadget cameratext,(Width#),15
+	
+		if camera_move=0:
+			show mouse
+			null=mousemovex()
+			null=mousemovey()
+		endif
+		if camera_move=1:
+			hide mouse
+			position mouse screen width()/2,screen height()/2
+			cr#=0:cf#=0
+    	    if rightkey()=1 or KEYSTATE(32)=1 then cr#=-0.3
+    	    if leftkey()=1 or KEYSTATE(30)=1 then cr#=0.3
+    	    if upkey()=1 or KEYSTATE(17)=1 then cf#=0.3
+    	    if downkey()=1 or KEYSTATE(31)=1 then cf#=-0.3
+    	    ncr#=curvevalue(cr#,ncr#,5)
+    	    ncf#=curvevalue(cf#,ncf#,5)
+    	    cx#=cx#+mousemovey()*0.2
+    	    cy#=cy#+mousemovex()*0.2
+    	    if cx#>80 then cx#=80
+    	    if cx#<-80  then cx#=-80
+    	    ncx#=curveangle(cx#,ncx#,2)
+    	    ncy#=curveangle(cy#,ncy#,2)
+    	    move camera ncf#
+    	    rotate camera 0,wrapvalue(ncy#-90),0
+    	    move camera ncr#
+    	    rotate camera 0,wrapvalue(ncy#+90),0
+    	    rotate camera ncx#,ncy#,0
+    	    gheight#=BT GetGroundHeight(g_TerrainID,camera position x(),camera position z())
+			if camera position y()-2<gheight# then position camera camera position x(),gheight#+2,camera position z()
+		endif
+
+	//---syncronize
 	sync
 loop
 
-function debug(printout$):
-	message "debug printout",printout$
-endfunction
-
-function tile(image,xamount,yamount):
-	for y=0 to yamount:
-		for x=0 to xamount:
-			paste image image,x+(x*image width(image)),y+(y*image height(image)),1
-		next x
-	next y
-endfunction
-
-Function VS_CreateSky()
-//***************************************************************************************
-//*   Miso                                                                              *
-//*     This function loads the sky model and textures it.                              *
-//*                                                                                     *
-//***************************************************************************************
-     If VS_Sky.initialized=VS_False
-	    VS_Sky.ObjID     = 1000
-	    VS_Sky.TextureID = 1000
-	 	Load Object "..\media\visuals\vs_skydome.x",VS_Sky.ObjID
-	 	Load Image "..\media\visuals\vs_basicsky.jpg",VS_Sky.TextureID,1
-	 	Scale Object VS_Sky.ObjID,1000000,1000000,1000000
-	 	Texture Object VS_Sky.ObjID,VS_Sky.TextureID
-	 	Set Object Fog VS_Sky.ObjID,0
-	 	Set Object Light VS_Sky.ObjID,0
-	 	Disable Object Zwrite VS_Sky.ObjID
-	 	VS_Sky.initialized=VS_True
-	 Endif
-Endfunction
-
-
-Function VS_UpdateSky()
-//***************************************************************************************
-//*   Miso                                                                              *
-//*     Scroll sky texture if needed at loop.                                           *
-//*                                                                                     *
-//***************************************************************************************
-// scrolls sky
-	If VS_Sky.Initialized=VS_True
-		Position Object VS_Sky.ObjID,camera position x(),camera position y()-15000,camera position z()
-		Scroll Object Texture VS_Sky.ObjID,VS_Sky.ScrollSpeedX,VS_Sky.ScrollSpeedY
-	endif
-Endfunction
-
-Function VS_DeleteSky()
-//***************************************************************************************
-//*   Miso                                                                              *
-//*     Delete Sky, won't crash the game.                                                *
-//*                                                                                     *
-//***************************************************************************************
-	If VS_Sky.Initialized=VS_True
-		If Object Exist(VS_Sky.ObjID)=VS_True then Delete Object VS_Sky.ObjID
-		IF Image Exist(VS_Sky.TextureID)=VS_True then Delete Image VS_Sky.TExtureID
-		VS_Sky.Initialized=VS_False
-	Endif
-Endfunction
+`=========Functions=========`

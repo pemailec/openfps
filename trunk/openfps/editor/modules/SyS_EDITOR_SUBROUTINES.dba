@@ -1,0 +1,68 @@
+
+
+////////////////////////
+// ***** Included Source File *****
+//
+// Subroutines module
+// 
+// Author: chrisdalke
+//
+//////////////////////////////////////////////////////
+
+`----- Changelog:
+`
+`----- To-Do:
+
+`----- Purpose:
+
+`----- USES: none
+
+`----- Function List:
+
+`=========Constants=========`
+`===========================`
+
+`==========Globals==========`
+global Sw         as integer
+global Sh         as integer
+`===========================`
+
+`===========Types===========`
+`===========================`
+
+
+`=========Functions=========`
+function debug(printout$):
+	message "debug printout",printout$
+endfunction
+
+function tile(image,xamount,yamount):
+	for y=0 to yamount:
+		for x=0 to xamount:
+			paste image image,x+(x*image width(image)),y+(y*image height(image)),1
+		next x
+	next y
+endfunction
+
+
+Function Getsystemmetrics()
+//--Get desktop sizes, be sure you declared Sw and Sh to globals
+	load dll "user32.dll",1
+		Sw=call dll(1,"GetSystemMetrics",0)
+		Sh=call dll(1,"GetSystemMetrics",1)
+	delete dll 1
+Endfunction
+
+Function EditorStart()
+//--Setup default values, and initiate needed modules
+	set display mode Sw,Sh,32,1
+	sync on
+	sync rate 0
+	backdrop on
+	color backdrop 0
+	autocam off
+	startblue GUIUSER,GUIPASS
+	d3d_init
+Endfunction
+
+
