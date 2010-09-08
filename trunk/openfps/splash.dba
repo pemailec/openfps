@@ -16,7 +16,7 @@ load image "media\buttons\button-normal.png", menu_button1
 load image "media\buttons\button-hover.png",  menu_button2
 load image "media\buttons\button-clicked.png",menu_button3
 
-website$="https://openfps.googlecode.com/svn/trunk/openfps/"
+website$="https://openfps.googlecode.com/svn/trunk/openfps/media/menu/motd.txt"
 filename$="_motd.temp"
 
 ok=download(website$,filename$)
@@ -26,8 +26,8 @@ read string 1,motd$
 close file 1
 if file exist(filename$) then delete file filename$
 
-motd$=right$(motd$,len(motd$)-19)
-motd$=left$(motd$,len(motd$)-15)
+`motd$=right$(motd$,len(motd$)-19)
+`motd$=left$(motd$,len(motd$)-15)
 
 do
 	paste image 1,0,0

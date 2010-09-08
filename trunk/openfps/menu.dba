@@ -61,7 +61,7 @@ function initMenu()
 	load image "media\cursors\waitcursor.dds",ui_mouse_wait
 	
 	global Lobby_current_tab$
-	Lobby_current_tab$="UI_chatpanel_tab_game"
+	Lobby_current_tab$="UI_lobby_tab_game"
 	
 	remstart	
 	global menu_lobby_cam

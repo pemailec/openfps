@@ -49,6 +49,8 @@ Handle visual data such as shaders, particles, bloom, ex.
   `VS_DeleteSky()               - Deletes sky modell and texture if exists.
 --FX COMMANDS
   `vis_game_end()               - End-game effect
+  `vis_setblack()				- Blackens the screen.
+  `vis_fadetitle()				- Shows the title fade in sequence.
 remend
 
 `=========Constants=========`
@@ -139,6 +141,13 @@ Function initvisuals()
 	sprite vis_s_clip._sprite,0,0,vis_s_clip.img
 	hide sprite vis_s_clip._sprite
 	
+	global TrainingScreen
+	global TrainingScreen_sprite
+	TrainingScreen = grabResource(res_Image)
+	TrainingScreen_sprite = grabResource(res_Sprite)
+	load image "media\menu\training.png",TrainingScreen
+	sprite TrainingScreen_sprite,0,0,TrainingScreen 
+		
 	global crosshair1_img
 	global crosshair1_sprite
 	`DAMMIT BLITZ SPRITE BUG

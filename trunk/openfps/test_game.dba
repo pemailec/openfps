@@ -100,6 +100,7 @@ timer_starttime = timer()
 `player start
 position camera 300,0,300
 
+
 do
 
 `grr bug
@@ -111,7 +112,6 @@ elapsedtime=(timer()-timer_starttime)/1000.0
 timer_starttime = timer()
 
 updateTerrain()
-if vis_s_clip.Initialized<1:
 	`updateMovement()
 
 		Elapsedtime#=(timer()-StartTime)/3000.0+Elapsedtime#*0.7
@@ -144,7 +144,7 @@ if vis_s_clip.Initialized<1:
 		UI_Text(1,10,70+UI_EVENT_ConsoleOffset,"Stamina: "+str$(PLR_curstam))
 		UI_Text(1,10,55+UI_EVENT_ConsoleOffset,str$(screen fps()))
 	endif
-endif
+
 
 position mouse screen width()/2,screen height()/2
 
@@ -152,7 +152,7 @@ position mouse screen width()/2,screen height()/2
 
 
 //Updates sky
-if KEYSTATE(18)=1 then vis_game_end()
+`if KEYSTATE(18)=1 then vis_game_end()
 updateVisuals()
 
 //Updates user interface
