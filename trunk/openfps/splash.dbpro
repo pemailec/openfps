@@ -30,7 +30,7 @@ app title=OpenFPS Launcher
 
 ; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
 graphics mode=window
-fullscreen resolution=640x480x32
+fullscreen resolution=1024x768x32
 
 ; arbitrary sizes are valid for windowed mode
 window resolution=640x480

@@ -106,6 +106,11 @@ endfunction
 function runMenu()
 UI_HideChatBox()
 do
+	if sprite alpha(NetConnectSprite)>10:
+		set sprite alpha NetConnectSprite,sprite alpha(NetConnectSprite)-10
+	else
+		hide sprite NetConnectSprite
+	endif
 	`if KEYSTATE(19)=1 then goto _reset_menu
 	`if mouseclick()=1 then play object icon_blank_obj_test,0
 	updateNetwork()
@@ -300,6 +305,16 @@ UI_HideMouse()
 UI_handle()
 paste image ui_mouse_wait,UI_MouseX(),UI_MouseY(),1
 sync
+	
+`global img_fade
+global img_fadespr
+`img_fade = grabResource(res_Image)
+img_fadespr = dxs create sprite("media\menu\load.bmp")
+`set sprite img_fadeblackspr,1,0
+`set sprite alpha img_fadespr,0
+`set sprite priority img_fadespr,1
+
+
 UI_WriteLog(UI_Green,"Switching To Game Engine...")
 
 endfunction

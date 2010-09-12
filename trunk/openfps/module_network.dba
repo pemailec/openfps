@@ -51,6 +51,7 @@ remend
 #constant SERVER_PORT 27013
 Global channel as DWORD
 Global PlayerName$ as string
+
 /////////////////////////////////////////////////////////
 // INIT                                                //
 /////////////////////////////////////////////////////////
@@ -69,8 +70,11 @@ if (winsock error())
 else
 	UI_WriteLog(UI_Green,"Connected to the master server "+SERVER_HOST+":"+STR$(SERVER_PORT))
 endif
-UI_Centertext(2,512,300,"connecting to master server"):sync
-UI_Centertext(2,512,300,"connecting to master server"):Sync
+
+sync
+`UI_Centertext(2,512,300,"Connecting to Master Server..."):sync
+`UI_Centertext(2,512,300,"Connecting to Master Server..."):Sync
+
 channel = winsock connect(SERVER_HOST, SERVER_PORT)
 check_for_error(channel)
 
@@ -95,7 +99,7 @@ else:
 	UI_Addtexttochatbox("Master server is offline!")
 	UI_Addtexttochatbox("No chat will be available.")
 endif
-
+`delete sprite NetConnectSprite
 endfunction
 
 

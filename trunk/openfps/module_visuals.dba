@@ -141,12 +141,12 @@ Function initvisuals()
 	sprite vis_s_clip._sprite,0,0,vis_s_clip.img
 	hide sprite vis_s_clip._sprite
 	
-	global TrainingScreen
-	global TrainingScreen_sprite
-	TrainingScreen = grabResource(res_Image)
-	TrainingScreen_sprite = grabResource(res_Sprite)
-	load image "media\menu\training.png",TrainingScreen
-	sprite TrainingScreen_sprite,0,0,TrainingScreen 
+	`global TrainingScreen
+	`global TrainingScreen_sprite
+	`TrainingScreen = grabResource(res_Image)
+	`TrainingScreen_sprite = grabResource(res_Sprite)
+	`load image "media\menu\training.png",TrainingScreen
+	`sprite TrainingScreen_sprite,0,0,TrainingScreen 
 		
 	global crosshair1_img
 	global crosshair1_sprite

@@ -50,7 +50,13 @@ Global SyS_Event_Terminate as Boolean : `set this variable to 1 to force the mai
 /////////////////////////////////////////////////////////
 
 sync on : sync rate 60
+`SET NVPERFHUD 1
 set display mode 1024,768,screen depth(),1
+
+Global NetConnectImg
+Global NetConnectSprite
+
+
 autocam off
 randomize timer()
 hide mouse
@@ -59,12 +65,20 @@ disable escapekey
 `/ INITIATE CORE MODULES
 initResource()
 
+NetConnectImg = grabResource(res_Image)
+NetConnectSprite = grabResource(res_Sprite)
+load image "media\menu\loadblur.png",NetConnectImg
+
+for x=0 to 10
+sprite NetConnectSprite,0,0,NetConnectImg
+sync
+next x
+
 `/ INITIATE USER INTERFACE MODULE
 UI_init():`best to init before initMenu(), it may use UI commands later.
 
 `/ START LOADING
 initMenu()
-
 `/ RUN MENU
 runMenu()
 
@@ -100,9 +114,17 @@ timer_starttime = timer()
 `player start
 position camera 300,0,300
 
-
+al=255
 do
 
+dxs begin sprite render img_fadespr
+dxs draw sprite img_fadespr,0,0
+dxs end sprite render img_fadespr
+
+if al>0 then dec al,20
+if al<0 then al=0
+DXS SET SPRITE ALPHA img_fadespr,al
+		
 `grr bug
 if object exist(menu_bgfx1)=1 then hide object menu_bgfx1
 
@@ -134,8 +156,8 @@ updateTerrain()
 	//displays some info
 	`UI_Text(1,10,55,str$(screen fps()))
 	`UI_Text(1,10,70,"Stamina: "+str$(PLR_curstam))
-	UI_putwindow(0,48+UI_EVENT_ConsoleOffset,17,9)
-	UI_Text(2,10,80+UI_EVENT_ConsoleOffset,"Open FPS Engine")
+	`UI_putwindow(0,48+UI_EVENT_ConsoleOffset,17,9)
+	`UI_Text(2,10,80+UI_EVENT_ConsoleOffset,"Open FPS Engine")
 	`UI_Centertext(3,UI_display.middlewidth,UI_display.height-40,"<Center Text Showcase, delete this line>")
 	//handle all Gui functions
 	if DebugScreen=1:

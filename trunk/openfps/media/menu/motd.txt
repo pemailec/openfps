@@ -1,1 +1,1 @@
-motd TEST
+The cake is not a lie.
