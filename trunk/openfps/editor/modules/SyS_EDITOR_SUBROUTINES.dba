@@ -55,7 +55,7 @@ Endfunction
 
 Function EditorStart()
 //--Setup default values, and initiate needed modules
-	set display mode Sw,Sh,32,1
+	set display mode 1024,768,32,1
 	sync on
 	sync rate 0
 	backdrop on

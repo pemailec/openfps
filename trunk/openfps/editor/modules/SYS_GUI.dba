@@ -70,6 +70,8 @@
     global TerrainMenu
     global HelpMenu
     global LoadMenu
+    global popupMenu
+    global popupMenu_Ents
 `===========================`
 
 `===========Types===========`
@@ -99,16 +101,16 @@ function createUI()
     	addToolbarSplitter Toolbar
     	addToolbarButton Toolbar,"data\play.png",0
     
-    SideMenuMain=createPanel(0,0,170,4280,0)
-    SideMenuSub=createPanel(2,28,166,4280,SideMenuMain)
-   	setPanelBorderStyle SideMenuSub,BORDER_SUNKEN
+    `SideMenuMain=createPanel(0,0,170,4280,0)
+    `SideMenuSub=createPanel(2,28,166,4280,SideMenuMain)
+   	`setPanelBorderStyle SideMenuSub,BORDER_SUNKEN
     
-    bringtofront SideMenuMain
+    `bringtofront SideMenuMain
     bringtofront StatusBar
     bringtofront Toolbar_panel
     
-    setGadgetAlign SideMenuMain,ALIGN_RIGHT
-    doGadgetalign SideMenuMain
+    `setGadgetAlign SideMenuMain,ALIGN_RIGHT
+    `doGadgetalign SideMenuMain
     
 	`load image "data\logo.bmp",Startimg
 
@@ -130,6 +132,7 @@ function createUI()
     OpenFile=createEdit(13,321,390,20,0,OpenProject)
     OpenButton=createButton(414,320,119,22,"Open Project",0,OpenProject)
     setGadgetVisible OpenProject,0
+	
 	remstart
 	DebugWindow=createWindow(100,210,203,320,"Debug",WINDOW_FIXED,WINDOW_TOOLWINDOW,0,0)    
     DebugFrame=createFrame(8,9,178,122,"Debug Stats",DebugWindow)
@@ -142,6 +145,10 @@ function createUI()
 endfunction
 
 function updateGui():
+	setMenuItemText popupMenu,15,"("+str$(int(camera position x()))+","+str$(int(camera position y()))+","+str$(int(camera position z()))+")"
+	if spacekey()=1 and camera_move=0:
+		result=showPopupMenu(popupMenu)
+	endif
    	if eventType()=MENU_CLICK
 		select eventData()
 			case 9
@@ -150,27 +157,37 @@ function updateGui():
 				`BT SetTerrainWireframe g_TerrainID,toggle
 			endcase
 			case 10
-				message "About OpenEd","OpenEd: The OpenFPS Level Editor - Version 3.1 ©2010 The OpenFPS Team.         Use only with permission, email me at chrisdalke@gmail.com for details...               - Chris"
+				message "About OpenEd","OpenEd: The OpenFPS Level Editor - Version 3.1 ©2010 The OpenFPS Team. Use only with permission, email me at chrisdalke@gmail.com for details...  - Chris"
 			endcase
 			case 11
-				img_string$=openDialog("Open Heightmap Image","Bitmap Files (*.bmp)|*.bmp|All Files (*.*)|*.*")
-				HmapIMG$=img_string$
-				LoadTerrain(1)
+				img_string_h$=openDialog("Open Heightmap Image","Bitmap Files (*.bmp)|*.bmp|All Files (*.*)|*.*")
+				if file exist(img_string_h$)=1:
+					if image exist(t_Heightmap)=1 then delete image t_Heightmap
+					load image img_string_h$,t_Heightmap
+					InitTerrain(1)
+				endif
 			endcase
 			case 12
-				img_string$=openDialog("Open Texture","JPEG Files (*.jpg)|*.jpg|All Files (*.*)|*.*")
-				TexIMG$=img_string$
-				LoadTerrain(1)
+				img_string_t$=openDialog("Open Texture","JPEG Files (*.jpg)|*.jpg|All Files (*.*)|*.*")
+				if file exist(img_string_t$)=1:
+					if image exist(t_Texture)=1 then delete image t_Texture
+					load image img_string_t$,t_Texture
+					InitTerrain(1)
+				endif
 			endcase
 			case 13
-				img_string$=openDialog("Open Detail Map","Targa Files (*.tga)|*.tga|All Files (*.*)|*.*")
-				DetailIMG$=img_string$
-				LoadTerrain(1)
+				img_string_d$=openDialog("Open Detail Map","Targa Files (*.tga)|*.tga|All Files (*.*)|*.*")
+				if file exist(img_string_d$)=1:
+					if image exist(t_Detail)=1 then delete image t_Detail
+					load image img_string_d$,t_Detail
+					InitTerrain(1)
+				endif
 			endcase
 			case 14
-				img_string$=openDialog("Open Environment Map","Bitmap Files (*.bmp)|*.bmp|All Files (*.*)|*.*")
-				EnvIMG$=img_string$
-				LoadTerrain(1)
+				message "Load Environment","Feature not implemented yet!"
+			endcase
+			case 6
+				InitTerrain(1)
 			endcase
 		endselect
 	endif		
@@ -204,5 +221,14 @@ function createMainMenu()
 	
 	HelpMenu=createSubMenu(menu,5)
 		addMenuItem HelpMenu,"About",10
-	
+	    
+    popupMenu=createPopupMenu()
+	addMenuItem popupMenu,"()",15
+	setMenuItemEnabled popupMenu,15,0
+	addMenuSplitter popupMenu
+	addMenuItem popupMenu,"Create Entity Here",16
+	addMenuItem popupMenu,"Create Static Mesh Here",17
+	popupMenu_Ents=createSubMenu(popupMenu,16)
+	addMenuItem popupMenu_Ents,"Player Start",18
+	addMenuItem popupMenu_Ents,"More...",19
 endfunction

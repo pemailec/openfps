@@ -1,73 +1,43 @@
-Rem ***** Included Source File *****
+// TERRAIN MODULE
 
+// -- GLOBALS --
+function InitTerrain(ReloadFlag)
 
-
-function LoadTerrain(ReloadFlag):
-	`position camera 160,71,-50:rotate camera 24,0,0:cx#=24.0:ncx#=24.0
-//Load media
-	global g_HeightmapImgID : global g_TextureImgID : global g_DetailmapImgID : global g_EnvironmentmapImgID
-	g_HeightmapImgID=41 : g_TextureImgID=42 : g_DetailmapImgID=43 : g_EnvironmentmapImgID=44
-	if image exist(g_HeightmapImgID)=1 then delete image g_HeightmapImgID
-	if image exist(g_TextureImgID)=1 then delete image g_TextureImgID
-	if image exist(g_DetailmapImgID)=1 then delete image g_DetailmapImgID
-	if image exist(g_EnvironmentmapImgID)=1 then delete image g_EnvironmentmapImgID
-
-	load image HmapIMG$,g_HeightmapImgID
-	load image TexIMG$,g_TextureImgID
-	load image DetailIMG$,g_DetailmapImgID
-	load image EnvIMG$,g_EnvironmentmapImgID
-
-//Create terrain
-	//Make the terrain
-	if ReloadFlag=1 then BT DeleteTerrain g_TerrainID
-	global g_TerrainID
+	t_Heightmap = 141
+	t_Texture   = 142
+	t_Detail    = 143
 	
-	g_TerrainID=BT MakeTerrain()
+	if ReloadFlag<1:
+		load image "data\heightmap.bmp",t_Heightmap
+		load image "data\texture.jpg",t_Texture
+		load image "data\detail.tga",t_Detail
+	else:
+		BT DeleteTerrain t_Object
+	endif
 	
-	//Set images
-	BT SetTerrainHeightmap g_TerrainID,g_HeightmapImgID
-	BT SetTerrainTexture g_TerrainID,g_TextureImgID
-	BT SetTerrainDetail g_TerrainID,g_DetailmapImgID
+	t_Object=BT MakeTerrain()
+	t_ObjectDB=1
 	
-	//Set some other values
-	BT SetTerrainScale g_TerrainID,5.20
-	BT SetTerrainYScale g_TerrainID,2.2
-	BT SetTerrainSplit g_TerrainID,8
-	BT SetTerrainDetailTile g_TerrainID,3.0
-	
-	//LOD
-	BT SetTerrainLOD g_TerrainID,3 //3 LOD levels
-	BT SetTerrainLODDistance g_TerrainID,1,1000.0 //LOD Distances start at one and go up to 1 less the LOD level count
-	BT SetTerrainLODDistance g_TerrainID,2,2000.0
-	
-	//Smoothing and Quad Rotation
-	BT SetTerrainSmoothing g_TerrainID,1
-	BT SetTerrainQuadRotation g_TerrainID,1
-	
-	//Build
-	global g_TerrainObjectID
-	g_TerrainObjectID=10
-	
-	//This command processes the heightmap and creates all the internal structures for the terrain
-	BT BuildTerrain g_TerrainID,g_TerrainObjectID
-	
-	//This command sets the number of sectors get created every call to 'BT ContinueBuild'.
-	//As we dont need a loading bar, I set this to 0 which makes it create the whole terrain at once
-	BT SetBuildStep 0
-	
-	repeat
+	BT SetTerrainHeightmap t_Object,t_Heightmap
+	BT SetTerrainTexture t_Object,t_Texture
+	BT SetTerrainDetail t_Object,t_Detail
 		
-		//This command generates the sectors. It returns the percentage of how much of the terrain it has generated.
-		//When it has generated the whole terrain it will return -1
+	//Set some other values
+	BT SetTerrainScale t_Object,1.2
+	BT SetTerrainYScale t_Object,0.2
+	BT SetTerrainSplit t_Object,8
+	BT SetTerrainDetailTile t_Object,3.0
+		
+	BT BuildTerrain t_Object,t_ObjectDB
+	BT SetBuildStep 0	
+	repeat
 		progress=BT ContinueBuild()
 	until progress=-1
+
 endfunction
 
-
-
 function UpdateTerrain()
-	BT SetCurrentCamera 0 //Set current camera to 0 (if the camera has moved/rotated since this command was last called, you must call it again!)
-	BT UpdateTerrainCull g_TerrainID //Update frustum culling
-	BT UpdateTerrainLOD g_TerrainID //Update LOD
-	BT RenderTerrain g_TerrainID //Render the terrain
+		BT SetCurrentCamera 0
+		BT UpdateTerrainCull t_Object
+		BT RenderTerrain t_Object
 endfunction

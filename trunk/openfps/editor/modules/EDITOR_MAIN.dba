@@ -22,11 +22,13 @@
 
 `==========Globals==========`
 global level_new  as boolean
-global HmapIMG$   as string
-global TexIMG$    as string
-global DetailIMG$ as string
-global EnvIMG$    as string
+Global t_Heightmap
+Global t_Texture
+Global t_Detail
+global t_Object
+global t_ObjectDB
 
+global camera_move
 `===========================`
 
 `===========Types===========`
@@ -38,6 +40,10 @@ global EnvIMG$    as string
 	EditorStart()
 //--Create the sky
 	VS_CreateSky()
+	
+//--Create the terrain
+	InitTerrain(0)	
+	
 //--Create menu
 	createUI()
 	createMainMenu()
@@ -48,10 +54,6 @@ global EnvIMG$    as string
 	position camera 160,71,-50:rotate camera 24,0,0:cx#=24.0:ncx#=24.0
 	level_new=1
 
-	HmapIMG$="data\heightmap2.bmp"
-	TexIMG$="data\texture2.jpg"
-	DetailIMG$="data\detail.tga"
-	EnvIMG$="data\environment.bmp"
 
 //--main loop begins
 do 
@@ -68,7 +70,6 @@ do
 				level_new=0
 				setGadgetVisible StartWindow,0
 				`message "OpenEd","Startup Menu: New Project"
-				LoadTerrain(0)
 			endif
 
 			if eventSource()=startopen and eventType()=MOUSE_CLICK
@@ -99,8 +100,8 @@ do
 		Width#=Get Window Client Width()
 		Height#=Get Window Client Height()
 	
-		if camera_move=0 then setgadgettext cameratext,"3d Top View (FPS: "+str$(screen fps())+") - Right-click to enter camera mode"
-		if camera_move=1 then setgadgettext cameratext,"3d Camera Mode (FPS: "+str$(screen fps())+") - WASD or arrow keys to move, mouse to look. Right-click to exit Camera Mode."
+		if camera_move=0 then setgadgettext cameratext,"3d Top View (FPS: "+str$(screen fps())+") - Space key to enter camera mode"
+		if camera_move=1 then setgadgettext cameratext,"3d Camera Mode (FPS: "+str$(screen fps())+") - WASD or arrow keys to move, mouse to look. Space key to exit Camera Mode."
 		resizegadget cameratext,(Width#),15
 	
 		if camera_move=0:
@@ -129,8 +130,6 @@ do
     	    move camera ncr#
     	    rotate camera 0,wrapvalue(ncy#+90),0
     	    rotate camera ncx#,ncy#,0
-    	    gheight#=BT GetGroundHeight(g_TerrainID,camera position x(),camera position z())
-			if camera position y()-2<gheight# then position camera camera position x(),gheight#+2,camera position z()
 		endif
 
 	//---syncronize
