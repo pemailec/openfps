@@ -34,6 +34,7 @@ include13=module_ui_options.dba
 LineInclude13=152
 include14=module_ui_credits.dba
 LineInclude14=0
+include15=module_physics.dba
 final source=_Temp.dbsource
 
 ; **** Executable Information  ***

@@ -22,6 +22,9 @@ function InitTerrain(ReloadFlag)
 	BT SetTerrainTexture t_Object,t_Texture
 	BT SetTerrainDetail t_Object,t_Detail
 		
+	BT SetTerrainSmoothing t_Object,1
+	BT SetTerrainQuadRotation t_Object,1
+	
 	//Set some other values
 	BT SetTerrainScale t_Object,1.2
 	BT SetTerrainYScale t_Object,0.2

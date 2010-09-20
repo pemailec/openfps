@@ -89,12 +89,15 @@ UI_ClearAllGuis()
 initTerrain()
 initVisuals()
 `Temporary
-LoadTerrainFromFile("media/BlitzTerrain/Terrain.blitz","media/BlitzTerrain/texture.jpg","media/BlitzTerrain/detail.tga")
+LoadTerrainFromFile("media/maps/Training/c_training.blitz","media/maps/Training/texture.jpg","media/maps/Training/detail.tga")
 
 
 `initMovement()
 initShooting()
 `initAI()
+
+//Init Physics
+PHY_init(50000.0,1)
 
 //Setup camera
 set camera range 10,10000000000
@@ -179,6 +182,9 @@ updateVisuals()
 
 //Updates user interface
 UI_Handle()
+
+//Update Physics
+PHY_update()
 
 //Syncronize backbuffers
 sync
