@@ -1,0 +1,133 @@
+Rem ***** Included Source File *****
+//////////////////
+// ************** Included Source File **************                             
+// TITAN ENGINE BLANK MODULE
+// 
+// Author: miso
+//
+//////////////////////////////////////////////////////
+
+`----- Changelog:
+`(2010/07/11) - miso     - Created
+`----- To-Do:
+
+`----- Purpose:
+
+`----- USES: none
+
+`----- Function List:
+
+`=========Constants=========`
+`===========================`
+
+`==========Globals==========`
+Global SyS_Input                 as myinputtype  : `basic input data will be stored here
+`===========================`
+
+`===========Types===========`
+//--will hold basic data for the input commands
+ TYPE myinputtype
+   ID           AS INTEGER
+   FixString    AS STRING
+   MaxCharacter AS INTEGER
+   PosX         AS INTEGER
+   PosY         AS INTEGER
+   Alive        AS INTEGER
+   Current      AS STRING
+   Result       AS STRING
+   Center       AS INTEGER
+   Initialized  AS INteger
+ENDTYPE
+`===========================`
+
+
+`=========Functions=========`
+
+Function SyS_InitInput()
+   rem its evaluated
+Endfunction
+
+
+
+
+Function SyS_CheckInput()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function handles input event, if theres one.                               *
+//*                                                                                     *
+//*     If Enter pressed, then it saves the result sring in SyS_Input.result variable,   *
+//*     and changes the SyS_Input.alive variable to 3.                                   *
+//*                                                                                     *
+//***************************************************************************************
+If SyS_Input.alive = SyS_True
+
+      If Returnkey() = SyS_True
+         Clear Entry Buffer
+         SyS_Input.result = SyS_Input.current
+         SyS_Input.alive  = 3
+      Endif
+
+      SyS_Input.current=SyS_Input.current+Entry$() : Clear Entry Buffer
+      If Scancode() = 14
+      	If Scancode() = 14 Then SyS_Input.current = Left$(SyS_Input.current,Len(SyS_Input.current)-1)
+      	Clear Entry Buffer
+      Endif
+
+      rem Entry Line
+      If Len(SyS_Input.current)>SyS_Input.maxcharacter then SyS_Input.current = Left$(SyS_Input.current,SyS_Input.maxcharacter)
+      SyS_Text(SyS_Input.id,SyS_Input.posx,SyS_Input.posy,SyS_Input.fixstring+(SyS_Input.current)+"*")
+
+Endif
+Endfunction
+
+
+
+
+
+Function SyS_CMDInput(FontID,x,y,fixstring$,maxcharacter)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function start an input event.                                             *
+//*     For the text, it will use FontID, starting to draw the text at x,y.             *
+//*     Fixstring$ will always shown before the user input text.                        *
+//*     Maxcharacter vill be the maximum character the user may type in.                *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+	Clear Entry Buffer:Clear Entry Buffer
+	rem freestring myinput(1)(1).result
+	SyS_Input.ID = FontID
+	SyS_Input.fixstring = fixstring$
+	SyS_Input.posx      = x
+	SyS_Input.posy      = y
+	SyS_Input.alive     = SyS_True
+	SyS_Input.center    = SyS_False
+	SyS_Input.maxcharacter = maxcharacter
+Endfunction
+
+
+
+
+Function SyS_DestroyInput()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function closes input event, if theres any.                                *
+//*                                                                                     *
+//***************************************************************************************
+	SyS_Input.alive = 0
+Endfunction
+
+
+
+Function SyS_InputReady()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function returns 0 if an theres no ongoing input event.                    *
+//*                   returns 1 if an theres an ongoing input event.                    *
+//*                   returns 3 if theres a result.                                     *
+//*                                                                                     *
+//***************************************************************************************
+Local a as Integer
+	a = SyS_Input.alive
+Endfunction a
+

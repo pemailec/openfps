@@ -1,0 +1,147 @@
+Rem ***** Included Source File *****
+////////////////////
+// ************** Included Source File **************                             
+// TITAN ENGINE BLANK MODULE
+// 
+// Author: miso
+//
+//////////////////////////////////////////////////////
+
+`----- Changelog:
+`(2010/07/11) - miso     - Created
+`----- To-Do:
+
+`----- Purpose:
+
+`----- USES: none
+
+`----- Function List:
+
+`=========Constants=========`
+#Constant SyS_Maxfonts  = 8          :` maximum fonts, that can be loaded, 8 should be more than enough
+`===========================`
+
+`==========Globals==========`
+Global SyS_TempfileID as integer
+`===========================`
+
+`===========Types===========`
+Type MyStringmapType
+   Ascii  	 as Byte                   : `ascii code table refined to the bitmap font image. Saves memory if remains byte.
+   BitmapID  as Integer                : `pointer ID for the bitmap image
+Endtype
+
+//-------------
+Type MyCharType
+   Character as Integer                :  `basic string data
+Endtype
+
+`===========================`
+
+
+`=========Functions=========`
+Function SyS_InitFonts()
+	Global Dim SyS_Stringmap(8,258)  as Mystringmaptype
+    Global Dim SyS_chain(512)        as Mychartype
+Endfunction
+
+Function SyS_DestroyFonts()
+	UnDim SyS_Stringmap()
+    UnDim SyS_chain()
+Endfunction
+
+
+
+Function SyS_LoadFont(ID,name$,spacing)
+//***************************************************************************************
+//*   miso                                                                              *
+//*     This command will load a bitmap font. ID must be 1-8, name$ must be the route   *
+//*     and name of the font.dat file, spacing will be the space between chars in pixel.*
+//*                                                                                     *
+//***************************************************************************************
+Local a$ as String:Local b$ as String:Local c$ as String
+	SyS_SetDebugPosition("SyS_LoadStringMap()","module_ui.dba")
+	// check if advanced sprites initialized
+	SyS_CheckDXSprites()
+	// check if fontfile exist
+	rem SyS_WriteLog(SyS_Green,"loading font : " + name$ + " with ID "+str$(ID))
+	SyS_CheckFile(name$)
+		SyS_TempFileID=grabresource(res_file)
+		Open To Read SyS_tempfileID,name$
+				//read the bitmapfontname and load
+				Read String SyS_tempfileID,a$:b$ = First Token$(a$,"="):c$=Next Token$("=")
+				//Check if bitmapfont image exist
+				 SyS_CheckFile(c$)
+				 SyS_stringmap(ID,258).bitmapID = DXS CREATE SPRITE(c$)
+				DXS SET SPRITE CENTER  SyS_stringmap(ID,258).bitmapID,0,0
+    
+			    //read the bitmap font width
+			    Read String SyS_tempfileID,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
+			    SyS_stringmap(ID,257).ascii = Val(c$)
+		
+				//read the bitmap font height
+				Read String SyS_tempfileID,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
+				SyS_stringmap(ID,257).bitmapID = val(c$)
+				DXS SET SPRITE TILE SIZE  SyS_stringmap(ID,258).bitmapID, SyS_stringmap(ID,257).ascii, SyS_stringmap(ID,257).bitmapID    ` Cut the sprites into 32x32 pixels tiles.
+				DXS SET SPRITE SCALE  SyS_stringmap(ID,258).bitmapID,100,100
+			    SyS_stringmap(ID,258).ascii = spacing
+		
+				//load the ascii codetable
+				For x=1 to 256
+					 Read String SyS_tempfileID,a$
+					 b$ = First Token$(a$,"=")
+					 c$ = Next Token$("=")
+					 SyS_stringmap(ID,x).ascii    = Val(b$)
+					 SyS_stringmap(ID,x).bitmapID = Val(c$)
+				Next x
+		Close File SyS_tempfileID:freeresource(SyS_tempfileID,res_file)
+	SyS_WriteLog(SyS_Green,"font succesfully loaded")
+	SyS_RestoreDebugPosition()
+Endfunction
+
+
+
+Function SyS_Text(ID,x,y,sstring$)
+//***************************************************************************************
+//*   miso                                                                              *
+//*     This command put a graphic text to the screen with bitmapfont ID,               *
+//*     drawing to screen x,y in pixel, and the text will be sstring$.                  *
+//*     Function was created to work similar to the normal DB Text command.             *
+//*                                                                                     *
+//***************************************************************************************
+  Local SyS_StringWidth as Integer:Local xx as Integer
+
+  SyS_StringWidth = len(sstring$)
+	For xx=1 to SyS_StringWidth:SyS_chain(xx).character = Asc(Mid$(sstring$,xx)):Next xx
+	  DXS BEGIN SPRITE RENDER SyS_stringmap(ID,258).bitmapID
+		  For xx=1 to SyS_StringWidth
+		        DXS DRAW SPRITE TILE SyS_stringmap(ID,258).bitmapID,SyS_stringmap(ID,SyS_chain(xx).character).bitmapID,x+((xx-1)*SyS_stringmap(ID,258).ascii),y
+		  Next xx
+	  DXS END SPRITE RENDER SyS_stringmap(ID,258).bitmapID
+Endfunction
+
+
+
+
+Function SyS_CenterText(ID,x,y,sstring$)
+//***************************************************************************************
+//*   miso                                                                              *
+//*     Center text command.                                                            *
+//*                                                                                     *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+  Local SyS_StringWidth as Integer:Local xx as Integer
+  Local SyS_BitmapWidth as Integer:Local SyS_BitmapOffset as Integer
+
+   SyS_StringWidth  = Len(sstring$)
+   SyS_BitmapOffset = (SyS_stringmap(ID,258).ascii*SyS_StringWidth)/2
+	 For xx=1 to SyS_StringWidth:SyS_chain(xx).character=Asc(Mid$(sstring$,xx)):Next xx
+		DXS BEGIN SPRITE RENDER SyS_stringmap(ID,258).bitmapID
+			For xx=1 to SyS_StringWidth
+					DXS DRAW SPRITE TILE SyS_stringmap(ID,258).bitmapID,SyS_stringmap(ID,SyS_chain(xx).character).bitmapID,x+((xx-2)*SyS_stringmap(ID,258).ascii)-SyS_BitmapOffset,y
+			Next xx
+		DXS END SPRITE RENDER SyS_stringmap(ID,258).bitmapID
+Endfunction
+
+

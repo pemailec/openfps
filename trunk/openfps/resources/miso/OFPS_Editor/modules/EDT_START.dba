@@ -1,0 +1,73 @@
+Rem ***** Included Source File *****
+
+
+//////////////////
+// 
+// World Editor
+// 
+// Author: miso
+//
+//////////////////////////////////////////////////////
+
+`----- Changelog:
+`(2010/07/11) - miso     - Created
+`----- To-Do:
+
+`----- Purpose:
+
+`----- USES: none
+
+`----- Function List:
+
+`=========Constants=========`
+`===========================`
+
+`==========Globals==========`
+Global EDT_Fullscreensprite as Integer :`advanced sprite for a fullscreen bitmap
+Global EDT_Renderfullscreenimage as Boolean :`1 if the fullscreenimage has to be rendered
+Global EDT_NOPROJECT as boolean  :` 1, if currently no loaded or started project
+`===========================`
+
+`===========Types===========`
+`===========================`
+
+
+`=========Functions=========`
+
+Function EDT_Start()
+//****************************************************
+//*   Miso                                            
+//*     Set up the editor startap parameters, display mode, mouse, etc
+//*                                                   
+//****************************************************
+	//--init resource module
+		SyS_InitResource()
+	//--init main window
+		SyS_Initwindow(640,480,32,1,1,0,1,1)
+		maximize window
+	//---Start BlueGui (YOU HAVE TO REPLACE CONSTANTS TO YOUR BLUEGUI USER AND PASS)
+         StartBlue GUIUSER,GUIPASS
+	//--Shows builtin mouse	
+		show mouse
+	//--setup user interface and loads gadgets
+		SyS_InitGuiGraphics()
+	//--init fonts module
+		SyS_Initfonts()
+	//--LOADS SOME FONT
+		SyS_Loadfont(1,"SYSTEM\fonts\smallfont.dat",8)
+		SyS_Loadfont(2,"SYSTEM\fonts\smallgoldfont.dat",8)
+		SyS_Loadfont(3,"SYSTEM\fonts\lcdred.dat",16)
+		SyS_Loadfont(4,"SYSTEM\fonts\newfont.dat",16)
+	//---Init D3D
+		d3d_init
+	//--loads the fullscreenimage
+		EDT_fullscreensprite=dxs create sprite("system\screens\editorfullscreen_2.jpg")
+	//--tells the program, that we currently ain`t got no editable project
+		EDT_Noproject=1
+Endfunction
+
+
+
+
+
+

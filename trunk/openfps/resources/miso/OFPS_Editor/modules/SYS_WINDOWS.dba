@@ -1,0 +1,92 @@
+Rem ***** Included Source File *****
+//////////////////
+// ************** Included Source File ***************                             
+// TITAN ENGINE windows MODULE
+// 
+// Author: miso
+//
+//////////////////////////////////////////////////////
+
+`----- Changelog:
+`(2010/07/11) - miso     - Created
+`----- To-Do:
+
+`----- Purpose:
+
+`----- USES: none
+
+`----- Function List:
+
+`=========Constants=========`
+`===========================`
+
+`==========Globals==========`
+Global SyS_mywindow              as Mywindowtype : `for windows commands, not very useful, gadgets are better     
+`===========================`
+
+`===========Types===========`
+//--will hold basic data for a window gui graph
+Type mywindowtype
+   ID 		as Integer
+   Xwidth 	as Integer
+   Yrow 	as Integer
+Endtype
+`===========================`
+
+
+`=========Functions=========`
+
+Function SyS_InitAndLoadWindow(name$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function loads the image of the window used by putwindow() command         *
+//*                                                                                     *
+//***************************************************************************************
+Local a$ as String:Local b$ as String:Local c$ as String
+	SyS_SetDebugPosition("SyS_InitAndLoadWindow()","module_ui.dba")
+		SyS_CheckDXSprites():SyS_Checkfile(name$)	
+		SyS_WriteLog(SyS_Green,"loading window gui image : "+name$+".")
+		SyS_tempfileID=grabresource(res_file)
+		Open to Read SyS_tempfileID,name$
+				`read the windowname and load
+				Read String SyS_tempfileID,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
+				SyS_mywindow.ID      = DXS CREATE SPRITE(c$)
+				Read String SyS_tempfileID,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
+				SyS_mywindow.xwidth  = Val(c$)
+				`read the window height
+				Read String SyS_tempfileID,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
+				SyS_mywindow.yrow    = Val(c$)
+				DXS SET SPRITE TILE SIZE SyS_mywindow.ID,SyS_mywindow.xwidth,SyS_mywindow.yrow    ` Cut the sprites into x * y pixels tiles.
+		Close File SyS_tempfileID:freeresource(SyS_tempfileID,res_file)
+		SyS_WriteLog(SyS_Green,"window gui image succesfully loaded.")
+	SyS_RestoreDebugPosition()
+Endfunction
+
+
+
+Function SyS_PutWindow(x,y,xwidth,ywidth)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function will draw a window with the preloaded imagetiles to x,y.          *
+//*     The width parameters will be the number of middle tiles.                        *
+//*     You may call it multiple times to draw multiple windows.                        *
+//*                                                                                     *
+//***************************************************************************************
+  Local stringhossz as Integer:Local xx as Integer
+   stringhossz = Len(sstring$)
+	DXS BEGIN SPRITE RENDER SyS_MyWindow.id
+		For xx=0 to xwidth
+		  For yy=0 to ywidth
+			If xx=0 And yy=0 Then DXS DRAW SPRITE TILE SyS_Mywindow.ID,1,x+xx*SyS_mywindow.xwidth,y+yy*SyS_mywindow.yrow
+			If xx=0 And yy>0 And yy<ywidth Then DXS DRAW SPRITE TILE SyS_mywindow.ID,4,x+xx*SyS_mywindow.xwidth,y+yy*SyS_mywindow.yrow
+			If xx=0 And yy=ywidth Then DXS DRAW SPRITE TILE SyS_mywindow.ID,7,x+xx*SyS_mywindow.xwidth,y+yy*SyS_mywindow.yrow
+			If xx>0 And xx<xwidth And yy=0 Then DXS DRAW SPRITE TILE SyS_mywindow.ID,2,x+xx*SyS_mywindow.xwidth,y+yy*SyS_mywindow.yrow
+			If xx>0 And xx<xwidth And yy>0 And yy<ywidth Then DXS DRAW SPRITE TILE SyS_mywindow.ID,5,x+xx*SyS_mywindow.xwidth,y+yy*SyS_mywindow.yrow
+			If xx>0 And xx<xwidth And yy=ywidth Then DXS DRAW SPRITE TILE SyS_mywindow.ID,8,x+xx*SyS_mywindow.xwidth,y+yy*SyS_mywindow.yrow
+			If xx=xwidth And yy=0 Then DXS DRAW SPRITE TILE SyS_mywindow.ID,3,x+xx*SyS_mywindow.xwidth,y+yy*SyS_mywindow.yrow
+			If xx=xwidth And yy>0 And yy<ywidth Then DXS DRAW SPRITE TILE SyS_mywindow.ID,6,x+xx*SyS_mywindow.xwidth,y+yy*SyS_mywindow.yrow
+			If xx=xwidth And yy=ywidth Then DXS DRAW SPRITE TILE SyS_mywindow.ID,9,x+xx*SyS_mywindow.xwidth,y+yy*SyS_mywindow.yrow
+		  Next yy
+		Next xx
+	DXS END SPRITE RENDER SyS_mywindow.ID
+Endfunction

@@ -1,0 +1,294 @@
+Rem ***** Included Source File *****
+//////////////////
+// ************** Included Source File ***************                             
+// TITAN ENGINE MOUSE MODULE
+// 
+// Author: miso
+//
+//////////////////////////////////////////////////////
+
+`----- Changelog:
+`(2010/07/11) - miso     - Created
+`----- USES: none
+`----- Function List:
+
+`=========Constants=========`
+`===========================`
+
+`==========Globals==========`
+Global SyS_Mouse                 as MouseType    : `stores the parameters of the graphic mouse
+Global SyS_Mousefadertimer       as Integer      : `ticker for mousefader commands, no need to handle manually
+
+//-----Mouse movement Globals
+Global SyS_MouseMoveX           as Integer      : `replacement of mousemovex()
+Global SyS_MouseMoveY           as Integer      : `replacement of mousemovey()
+`===========================`
+
+`===========Types===========`
+//--will hold basic data for the graphic mouse
+Type MouseType
+    Initialized   as  Boolean          : `true if initialized         
+	ID            as  Integer          : `mouse cursor image image pointer ID (adv spr)
+	Hidden        as  Boolean          : `true if mouse is hidden     
+	X             as  Integer          : `mouse x coord    
+	Y             as  Integer          : `mouse y coord    
+	Fadevalue     as  Integer          : `current alpha value, dont change manually
+	Fadingout     as  Boolean          : `1 if mouse cursor is currently fading out                  
+	Fadingin      as  Boolean          : `1 if mouse cursor is currently fading in                      
+Endtype
+`===========================`
+
+
+`=========Functions=========`
+
+Function SyS_InitMouse(param_cursorimage$ as String)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     This function initiate the graphic mouse.                                       *
+//*                                                                                     *
+//***************************************************************************************
+    If SyS_Mouse.Initialized = SyS_True Then ExitFunction
+
+	SyS_SetDebugPosition("SyS_InitMouse()","module_ui.dba")      :` Tells the debugger where we are               
+ 		SyS_CheckDxSprites()                                    :` Checks adv spr
+		SyS_WriteLog(SyS_Green,"loading mouse cursor image: " + param_cursorimage$ + ".")
+ 		SyS_Checkfile(param_cursorimage$)                       :` Checks if mouse image exist in HD                        
+		SyS_Mouse.ID          = DXS CREATE SPRITE(param_cursorimage$)
+		SyS_Mouse.Initialized = SyS_True
+		SyS_Mouse.Hidden      = SyS_False
+		SyS_Mouse.x           = MouseX()
+		SyS_Mouse.Y           = MouseY()
+		SyS_Mouse.FadeValue   = 255
+		SyS_WriteLog(SyS_Green,"Succesfully loaded mouse cursor image.")
+	SyS_RestoreDebugPosition()                                  :` Restore debugger position                              
+Endfunction
+
+
+
+
+Function SyS_HandleMouse()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Handles the mouse movements.                                                    *
+//*                                                                                     *
+//***************************************************************************************
+rem SyS_Mousemovex=mousemovex():SyS_MousemoveY=mousemovey()
+If SyS_Mouse.Initialized = SyS_True 
+	`If SyS_Mouse.hidden=SyS_False or SyS_Mouse.FadingOut=SyS_True
+	
+			
+					SyS_Mouse.x                   = MouseX()
+					SyS_Mouse.y                   = MouseY()
+				
+			
+						
+			
+			
+
+			
+	
+			If SyS_Mouse.Hidden=SyS_False
+				DXS BEGIN SPRITE RENDER SyS_Mouse.ID
+		    		DXS DRAW SPRITE         SyS_Mouse.ID,SyS_Mouse.X,SyS_Mouse.Y
+				DXS END SPRITE RENDER   SyS_Mouse.ID
+			Endif
+
+	`Endif
+
+	
+	rem ====Fade handle  ====
+	If SyS_Mouse.fadingout      = SyS_True
+		If  SyS_Mouse.FadeValue = SyS_False
+			SyS_Mouse.Fadingout = SyS_False
+			SyS_Mouse.Hidden    = SyS_True
+			SyS_DestroyMouseFaderTicker()
+		Else
+			If SyS_AskMouseFaderTicker() = SyS_True Then SyS_Mouse.FadeValue=SyS_Mouse.FadeValue-15
+			DXS SET SPRITE ALPHA SyS_Mouse.ID,SyS_Mouse.FadeValue
+		Endif
+	
+	Endif
+	
+	If SyS_Mouse.fadingin      = SyS_True
+		If SyS_mouse.fadevalue = 255
+			SyS_Mouse.fadingin = SyS_False
+			SyS_Mouse.Hidden   = SyS_False
+			SyS_DestroyMousefaderticker()
+		Else
+			If SyS_AskMouseFaderTicker() = SyS_True then SyS_Mouse.FadeValue = SyS_Mouse.FadeValue+15
+			DXS SET SPRITE ALPHA SyS_Mouse.ID,SyS_Mouse.FadeValue
+		Endif
+	Endif
+
+Endif
+Endfunction
+
+
+
+
+
+Function SyS_HideMouse()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Hides graphic mouse.                                                            *
+//*                                                                                     *
+//***************************************************************************************
+	If SyS_Mouse.Initialized = SyS_True and SyS_Mouse.Hidden=SyS_False
+		SyS_Mouse.Hidden     = SyS_True
+		SyS_Mouse.FadeValue  = SyS_False
+		SyS_Mouse.Fadingin   = SyS_False
+		SyS_Mouse.Fadingout  = SyS_False
+		DXS SET SPRITE ALPHA SyS_Mouse.ID,SyS_Mouse.fadevalue
+	Endif
+Endfunction
+
+
+
+
+
+
+
+Function SyS_ShowMouse()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Shows mouse                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+	If SyS_Mouse.Initialized = SyS_True and SyS_Mouse.Hidden=SyS_True
+		SyS_Mouse.hidden     = SyS_False
+		SyS_mouse.fadevalue  = 255
+		SyS_MOuse.fadingin   = SyS_False
+		SyS_MOuse.fadingout  = SyS_False
+		DXS SET SPRITE ALPHA SyS_Mouse.ID,SyS_Mouse.Fadevalue
+	Endif
+Endfunction
+
+
+
+Function SyS_FadeOutMouse()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Fades out the mouse cursor.                                                     *
+//*     (uses ians matrix plugin)                                                       *
+//*                                                                                     *
+//***************************************************************************************
+	If  SyS_Mouse.Initialized  = SyS_True 
+		SyS_Mouse.fadingout    = SyS_True
+		SyS_Mouse.fadingin     = SyS_False
+		If SyS_Mousefadertimer = SyS_False Then SyS_CreateMousefaderTicker()
+	Endif
+Endfunction
+
+
+
+
+
+Function SyS_FadeinMouse()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Fade in the mouse cursor.                                                       *
+//*                                                                                     *
+//***************************************************************************************
+	If  SyS_Mouse.Initialized  = SyS_True 
+		SyS_Mouse.Fadingout    = SyS_False
+		SyS_Mouse.Fadingin     = SyS_True
+		SyS_Mouse.Hidden       = SyS_False
+		If SyS_Mousefadertimer = SyS_False then SyS_CreateMousefaderTicker()
+	Endif
+Endfunction
+
+
+
+
+
+Function SyS_SetMousePosition(param_mx,param_my)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Set the position of the mouse cursor.                                           *
+//*                                                                                     *
+//***************************************************************************************
+	If SyS_Mouse.Initialized = SyS_True 
+		SyS_Mouse.X = param_mx
+		SyS_Mouse.Y = param_my
+		
+	Endif
+Endfunction
+
+
+
+
+
+Function SyS_MouseX()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Returns with the graphic mouse x position in pixels.                            *
+//*                                                                                     *
+//***************************************************************************************
+Local return_mousex as Integer
+	If SyS_Mouse.Initialized = SyS_True then return_mousex = SyS_Mouse.X
+Endfunction return_mousex
+
+
+
+
+
+Function SyS_MouseY()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Returns the graphic mouse y position in pixels.                                 *
+//*                                                                                     *
+//***************************************************************************************
+Local return_mousey as Integer
+	If SyS_Mouse.Initialized = SyS_True then return_mousey = SyS_Mouse.Y
+Endfunction return_mousey
+
+Function SyS_AskMouseHidden()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Returns 1 if mouse is hidden.                                                   *
+//*                                                                                     *
+//***************************************************************************************
+Local return_mousey as Integer
+	If SyS_Mouse.hidden = SyS_True then return_mousey = SyS_True
+Endfunction return_mousey
+
+Function SyS_CreateMouseFaderTicker()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Dont call manually. Mouse commands may call it intenrally, they destroy it      *
+//*     when not needed.                                                                *
+//***************************************************************************************
+	SyS_MouseFaderTimer = FIND FREE TICKER()
+	MAKE TICKER SyS_MouseFaderTimer,1
+Endfunction
+
+
+
+
+
+
+Function SyS_AskMouseFaderTicker()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Dont call manually. Its for internal use.                                       *
+//*                                                                                     *
+//***************************************************************************************
+	Local tickresult as Integer
+	tickresult = TICKER(SyS_Mousefadertimer,1)
+Endfunction tickresult
+
+
+
+
+
+Function SyS_DestroyMouseFaderTicker()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Mouse commands will call it when needed. Dont call manually.                    *
+//*                                                                                     *
+//***************************************************************************************
+	DELETE TICKER SyS_MouseFaderTimer
+	SyS_mousefadertimer = 0
+Endfunction
+
+

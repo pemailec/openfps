@@ -1,0 +1,167 @@
+Rem ***** Included Source File *****
+/////////////////
+// *********** Included Source File ***********                             
+// TITAN ENGINE RESOURCE MANAGEMENT Core Module
+// 
+// Author: BMacZero
+//
+/////////////////////////////////////////////////////
+`----- Changelog:
+`	(11/18/09) - BMacZero - Created
+`	(07/25/10) - Miso     - Modified for Titan Engine
+`
+`----- Purpose:
+`	Assigns and frees resource numbers (ANYTHING that requires an
+`   identification number with DB)
+`-----USES: SyS_Core,
+
+`=========Constants=========`
+#Constant res_Object   0
+#Constant res_Image    1
+#Constant res_Sprite   2
+#Constant res_File     3
+#Constant res_Sound    4
+#Constant res_Music    5
+#Constant res_Memblock 6
+#Constant res_Bitmap   7
+#Constant res_Anim     8
+#Constant res_Light    9
+#Constant res_Camera   10
+#Constant res_Mesh     11
+#Constant res_Matrix   12
+#Constant res_Matrix4  13
+#Constant res_Vector   13
+#Constant res_Particle 14
+#Constant res_DLL      15
+#Constant res_Count    15
+`===========================`
+
+`==========Globals==========`
+Module_SyS_Resource as Boolean  ` 1 if core module initialized
+`===========================`
+
+`===========Types===========`
+Type res_Type
+    start as integer
+    qty as integer
+endtype
+`===========================`
+
+
+`=========Functions=========`
+//---------------------------
+//---Initiate resource module
+//---------------------------
+Function SyS_InitResource()
+    Module_SyS_Resource=SyS_Initialized
+	global DIM ResourceCounters(res_Count)   as integer
+	global DIM FreeResourcesIndex(res_Count) as res_Type
+	global DIM FreeResources(0)              as integer
+Endfunction
+
+//----------------------------------------
+//---Grabs and reserves a free resource ID
+//----------------------------------------
+Function grabResource(restype)
+local result as integer
+
+		If FreeResourcesIndex(restype).qty=0
+		    inc ResourceCounters(restype)
+		    result=ResourceCounters(restype)
+		Else
+		    result=FreeResources(FreeResourcesIndex(restype).start)
+		    array delete element FreeResources(0),FreeResourcesIndex(restype).start
+		    dec FreeResourcesIndex(restype).qty
+		    For d=restype+1 to res_Count:dec FreeResourcesIndex(d).start:Next d
+		Endif    
+
+Endfunction result
+
+//----------------------
+//---frees a resource ID
+//----------------------
+Function FreeResource(number,restype)
+local temp as integer
+
+	Select restype
+		Case res_Object   
+			if object exist(number) then delete object number
+		Endcase
+		Case res_Image    
+			if image exist(number) then delete image number
+		Endcase
+		Case res_Sprite   
+			if sprite exist(number) then delete sprite number
+		Endcase
+		Case res_File     
+			if file open(number) then close file number
+		Endcase
+		Case res_Sound    
+			if sound exist(number) then delete sound number
+		Endcase
+	  	Case res_Music    
+	  		if music exist(number) then delete music number
+	  	Endcase
+	  	Case res_Memblock 
+	  		if memblock exist(number) then delete memblock number
+	  	Endcase
+	  	Case res_Bitmap   
+	  		if bitmap exist(number) then delete bitmap number
+	  	Endcase
+	    Case res_Anim     
+	    	if animation exist(number) then delete animation number
+	    Endcase
+	    Case res_Light    
+	    	if light exist(number) then delete light number
+	    Endcase
+	    Case res_Camera   
+	    	if camera exist(number) then delete camera number
+	    Endcase
+	    Case res_Mesh     
+	    	if mesh exist(number) then delete mesh number
+	    Endcase
+	    Case res_Matrix   
+	    	if matrix exist(number) then delete matrix number
+	    Endcase
+	    Case res_Particle 
+	    	if particles exist(number) then delete particles number
+	    Endcase
+	    
+	    Case res_Matrix4  
+	    Endcase
+	    
+	    Case res_Vector   
+	    Endcase
+		
+		Case res_DLL      
+			if dll exist(number) then delete dll number
+		Endcase
+		Case default      
+			exitfunction
+		Endcase
+	Endselect
+
+	If number=ResourceCounters(restype)
+	    dec ResourceCounters(restype)
+	Else
+	    temp=FreeResourcesIndex(restype).start+FreeResourcesIndex(restype).qty
+	    array insert at element FreeResources(0),temp
+	    FreeResources(temp)=number
+	    inc FreeResourcesIndex(restype).qty
+	    
+	    For d=restype+1 to res_Count
+	        inc FreeResourcesIndex(d).start
+	    Next d
+	Endif
+
+Endfunction
+
+//-------------------
+//---Terminate module
+//-------------------
+Function SyS_DestroyResource()
+	Module_SyS_Resource=SyS_NotInitialized
+	UNDIM ResourceCounters(0)
+	UNDIM FreeResourcesIndex(0)
+	UNDIM FreeResources(0)
+Endfunction
