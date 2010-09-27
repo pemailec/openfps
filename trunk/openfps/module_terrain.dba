@@ -260,7 +260,8 @@ function SetTerrainCollision()
 	        position object terrainSectors(i),BT GetSectorPositionX(g_Terrain_Main.dwTerrainID,LODLevel,i),BT GetSectorPositionY(g_Terrain_Main.dwTerrainID,LODLevel,i),BT GetSectorPositionZ(g_Terrain_Main.dwTerrainID,LODLevel,i)
 			
 		//Set it up for collision
-			sc_setupcomplexobject terrainSectors(i),0,4
+			`sc_setupcomplexobject terrainSectors(i),0,4
+			PHY_AddStaticObject(terrainSectors(i),0)
 			
 		//Exclude it
 	        exclude object on terrainSectors(i)

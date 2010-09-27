@@ -31,6 +31,16 @@ http://forum.thegamecreators.com/?m=forum_view&t=154086&b=5
 All the functions and variables in this module
 use the prefix "PHY_" in their names for clarity.
 
+----- Vehicles:
+Vehicles are a WIP, so they are not guaranteed to work, and
+could crash at times.
+Right now, only one vehicle (the jeep) works, this is just a 
+test. Later vehicles will be added via scripting and external
+files.
+The vehicle system uses an array, so the maximum number of 
+vehicles is 32 at one time. Any more than this will cause the
+game to crash.
+
 ----- Object setup options:
 MaterialTypes:
 * Default (0) - No Settings. (DEFAULT)
@@ -51,7 +61,31 @@ global PHY_WorldSize# as float
 global PHY_time#      as float
 global PHY_Debug      as integer
 global PHY_CLICK	  as integer
-
+`TYPES:
+type PHY_VehicleBase
+   ObjectID as integer
+   TextureID as integer
+   Vis_Camera as integer
+   Vis_Height as float
+   Vis_Distance as float
+   Vis_MouseLook as integer
+   Vis_InitAngle as float
+   Vis_Soundset as integer
+endtype
+type PHY_Controller
+	Initialized as integer
+	Camera as integer
+	Speed as float
+	JumpSpeed as float
+	Height as float
+	Mass as float
+	Col as dword
+	Body as dword
+	UpVector as dword
+	Mat as dword
+	X_Angle as float
+	Y_Angle as float
+endtype
 /////////////////////////////////////////////////////
 // 	FUNCTIONS
 /////////////////////////////////////////////////////
@@ -59,6 +93,9 @@ global PHY_CLICK	  as integer
 function PHY_init(world_size#,Debunk):
 	`Start Newton
 	NDB_NewtonCreate
+	
+	NDB_SetVector 0.0,-800.0,0.0
+	NDB_SetStandardGravity
 	
 	`Set Debug
 	PHY_Debug=Debunk
@@ -72,16 +109,27 @@ function PHY_init(world_size#,Debunk):
 	`Assign Material Types
 	MType_DEFAULT=0
 	
+	`Create character.
+	PHY_AddCharacter()
+	
 	`Reset timer
 	PHY_time# = NDB_GetElapsedTimeInSec()
 endfunction
 
 function PHY_AddTerrain(TerrainID,Collision):
-	`Add BlitzTerrain object.
+	`Add BlitzTerrain object.	
+	`Blank for now (until multiple terrains are implemented)
+	`module_terrain automatically adds the terrain chunks in.
 endfunction
 
 function PHY_AddStaticObject(ObjectID,MaterialType):
 	`Add static object.
+	col = NDB_NewtonCreateTreeCollision(ObjectID,1)
+	body = NDB_NewtonCreateBody( col )
+	NDB_BuildMatrix object angle x(ObjectID),object angle y(ObjectID),object angle z(ObjectID),object position x(ObjectID),object position y(ObjectID),object position z(ObjectID)
+	NDB_NewtonBodySetMatrix body
+	NDB_BodySetDBProData body,1
+	NDB_NewtonBodySetDestructorCallback body
 endfunction
 
 function PHY_AddDynamicObject(ObjectID,MaterialType,Link):
@@ -93,21 +141,134 @@ function PHY_AddDynamicObject(ObjectID,MaterialType,Link):
 	if Link>0 then NDB_NewtonBodySetDestructorCallback Obj
 endfunction
 
+function PHY_AddVehicle():
+	`Add drivable vehicle :D
+endfunction
+
+function PHY_AddCharacter():
+	`Add character controller.
+	Global PHY_Char as PHY_Controller
+	PHY_Char.Initialized = 1
+	PHY_Char.Camera      = 0
+	PHY_Char.Speed       = 200
+	PHY_Char.JumpSpeed   = 500
+	PHY_Char.Height      = 100
+	PHY_Char.Mass        = 100.0
+	PHY_Char.Col         = NDB_NewtonCreateSphere(PHY_Char.Height/2.0,PHY_Char.Height,PHY_Char.Height/2.0)
+	PHY_Char.Body        = NDB_NewtonCreateBody(PHY_Char.Col)
+
+	NDB_BuildMatrix 0.0,0.0,0.0,100,500,100
+	NDB_NewtonBodySetMatrix PHY_Char.Body
+	
+	NDB_SetVector 6.0, 8.0, 6.0
+	NDB_CalculateMIBoxSolid PHY_Char.Mass
+	NDB_NewtonBodySetMassMatrix PHY_Char.Body,PHY_Char.Mass
+	
+	NDB_NewtonBodySetAutoFreeze PHY_Char.Body, 0
+	NDB_BodySetGravity PHY_Char.Body,1
+	NDB_SetVector 0.0, 1.0, 0.0
+	PHY_Char.UpVector = NDB_NewtonConstraintCreateUpVector(PHY_Char.Body)
+
+	Default=NDB_NewtonMaterialGetDefaultGroupID()
+	PHY_Char.Mat=NDB_NewtonMaterialCreateGroupID()
+	NDB_NewtonMaterialSetDefaultFriction Default,PHY_Char.Mat,0.01,0.01
+	NDB_NewtonMaterialSetDefaultElasticity Default,PHY_Char.Mat,0.01
+	NDB_NewtonBodySetMaterialGroupID PHY_Char.Body,PHY_Char.Mat
+endfunction
+
+function PHY_UpdateCharacter():
+	`Update the character.
+	inc PHY_Char.X_Angle,SyS_MouseMoveY*0.25
+	inc PHY_Char.Y_Angle,SyS_MouseMoveX*0.25
+	
+	`put a limit on how much the player can loop up/down.
+	if PHY_Char.X_Angle>80.0 then PHY_Char.X_Angle=80.0
+	if PHY_Char.X_Angle<-80.0 then PHY_Char.X_Angle=-80.0
+
+	`Position camera
+	rotate camera PHY_Char.X_Angle,PHY_Char.Y_Angle,0.0
+	NDB_BodyGetPosition PHY_Char.Body
+	position camera NDB_GetVector_X(), NDB_GetVector_Y(), NDB_GetVector_Z()
+
+	`Detect keys
+	MoveX# = 0.0
+	MoveZ# = 0.0
+	if keystate(17) or keystate(31)
+		dx# = sin(PHY_Char.Y_Angle)
+		dz# = cos(PHY_Char.Y_Angle)
+		inc MoveX#, dx# * (keystate(17)-keystate(31))
+		inc MoveZ#, dz# * (keystate(17)-keystate(31))
+	endif
+	if keystate(30) or keystate(32)
+		dx# = sin(PHY_Char.Y_Angle+90.0)
+		dz# = cos(PHY_Char.Y_Angle+90.0)
+		inc MoveX#, dx# * (keystate(32)-keystate(30))
+		inc MoveZ#, dz# * (keystate(32)-keystate(30))
+	endif
+	length# = sqrt( (MoveX#^2)+(MoveZ#^2) )
+	MoveX# = MoveX# / length#
+	MoveZ# = MoveZ# / length#
+	
+	`Calculate vector
+	NDB_NewtonBodyGetVelocity PHY_Char.Body
+	CurrentVel_X# = NDB_GetVector_X()
+	CurrentVel_Y# = NDB_GetVector_Y()
+	CurrentVel_Z# = NDB_GetVector_Z()
+	GoalVel_X# = MoveX# * (PHY_Char.Speed * ((shiftkey()+1)*2) )
+	GoalVel_Z# = MoveZ# * (PHY_Char.Speed * ((shiftkey()+1)*2) )
+	VecX# = ((GoalVel_X# - CurrentVel_X#) / PHY_time#) ` 
+	VecZ# = ((GoalVel_Z# - CurrentVel_Z#) / PHY_time#) 
+	`if AccelX# > 200.0 then AccelX# = 200.0
+	`if AccelX# < -200.0 then AccelX# = -200.0
+	`if AccelZ# > 200.0 then AccelZ# = 200.0
+	`if AccelZ# < -200.0 then AccelZ# = -200.0
+		
+	`Set vector to PHY_Char.Body
+	NDB_BodyGetPosition PHY_Char.Body
+	NDB_SetVector 2, VecX#, 0.0, VecZ#
+	NDB_BodyAddForceGlobal PHY_Char.Body
+	
+	`jumping
+	AccelY# = 0.0
+	if spacekey() and SPACEPRESSED = 0
+		SPACEPRESSED = 1
+		NDB_BodyGetPosition PHY_Char.Body
+		px# = NDB_GetVector_X() : py# = NDB_GetVector_Y() : pz# = NDB_GetVector_Z()
+		NDB_SetVector 1, px#, py#, pz#
+		NDB_SetVector 2, px#, py# - 6.05, pz#
+		dist# = NDB_NewtonWorldRayCast()
+		if dist# < 1.0
+			AccelY# = ((PHY_Char.JumpSpeed - CurrentVel_Y#) / PHY_time#)
+			NDB_BodyGetPosition PHY_Char.Body
+			NDB_SetVector 2, 0.0, AccelY#, 0.0
+			NDB_BodyAddForceGlobal PHY_Char.Body
+		endif
+	endif
+	if spacekey() = 0 then SPACEPRESSED = 0
+	
+endfunction
+
 function PHY_update():
 	`Debug
 	if PHY_Debug>0:
 		PHY_DebugTest()
+		set cursor 0,0
+		print "Screen FPS:",screen fps()
 	endif
 	
+	`Update Character
+	PHY_UpdateCharacter()
+
 	`Update physics using elapsed time (TBM!)
-	time# = NDB_GetElapsedTimeInSec()
-	NDB_NewtonUpdate time#
+	PHY_time# = NDB_GetElapsedTimeInSec()
+	NDB_NewtonUpdate PHY_time#
 endfunction
 
 function PHY_DebugTest():
 
 	`Tests the physics system.
 	`NDB_DebugDrawNewtonLines
+	if controlkey() then NDB_DebugDrawNewtonLines
 	
 	`Throw spheres
 	if mouseclick()=1 and PHY_CLICK=0

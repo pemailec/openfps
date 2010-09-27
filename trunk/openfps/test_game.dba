@@ -86,18 +86,17 @@ runMenu()
 UI_ClearAllGuis()
 
 `Init other modules here
+PHY_init(10000.0,0)
 initTerrain()
 initVisuals()
 `Temporary
-LoadTerrainFromFile("media/maps/Training/c_training.blitz","media/maps/Training/texture.jpg","media/maps/Training/detail.tga")
+LoadTerrainFromFile("media/maps/e_blank/e_blank.blitz","media/maps/e_blank/texture.jpg","media/maps/e_blank/detail.tga")
 
 
 `initMovement()
 initShooting()
 `initAI()
 
-//Init Physics
-PHY_init(50000.0,1)
 
 //Setup camera
 set camera range 10,10000000000
@@ -115,7 +114,7 @@ global timer_starttime as dword
 timer_starttime = timer()
 
 `player start
-position camera 300,0,300
+position camera 300,200,300
 
 al=255
 do
@@ -138,7 +137,7 @@ timer_starttime = timer()
 
 updateTerrain()
 	`updateMovement()
-
+remstart
 		Elapsedtime#=(timer()-StartTime)/3000.0+Elapsedtime#*0.7
 		StartTime=timer()
 		cx#=camera angle x()+mousemovey()/4.0
@@ -151,9 +150,9 @@ updateTerrain()
 		if rightkey() or KEYSTATE(32) then move camera left -400.0*Elapsedtime#
 		gheight#=BT GetGroundHeight(g_Terrain_Main.dwTerrainID,camera position x(),camera position z())
 		position camera camera position x(),gheight#+60,camera position z()
-
+remend
 		
-	updateShooting()
+	`updateShooting()
 	`updateAI()
 	
 	//displays some info
