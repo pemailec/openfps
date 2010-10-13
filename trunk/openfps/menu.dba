@@ -165,6 +165,22 @@ do
 			if UI_MouseOveredGadget$="button_close_window" and mouseclick()=1:
 				goto _reset_menu	
 			endif
+			
+			if Lobby_current_tab$="UI_lobby_tab_game":
+				x=UI_Chatpanel.x
+				y=UI_Chatpanel.y
+					if UI_GadgetExist("button_lobby_addserver")=0:
+						x=UI_Chatpanel.x
+						y=UI_Chatpanel.y
+						UI_AddCenterGadgettoScreen("button_lobby_addserver",x,y,"UI_button_small")
+						UI_AddMouseoverImageToGadget("button_lobby_addserver","UI_button_small_hover")
+						UI_AddMouseoverTitleToGadget("button_lobby_addserver",1,x-12,y-6,"+")
+						UI_AddtitleToGadget("button_lobby_addserver",1,x-8,y-6,"*+*")
+					endif 
+				UI_PositionGadget("button_lobby_addserver",x,y)
+			else:
+				if UI_GadgetExist("button_lobby_addserver")=1 then UI_DeleteGadget("button_lobby_addserver")
+			endif
 		endcase
 		case "button_credits"
 			x=UI_Chatpanel.x+140
@@ -364,12 +380,22 @@ x=168:y=y+60
 	UI_AddMouseoverTitleToGadget("button_lobby_game",1,x-12,y-6,"-Servers-")
 	UI_AddtitleToGadget("button_lobby_game",1,x-8,y-6,"Servers")
 	
+	x=UI_Chatpanel.x
+	y=UI_Chatpanel.y
+	UI_AddCenterGadgettoScreen("button_lobby_addserver",x,y,"UI_button_small")
+	UI_AddMouseoverImageToGadget("button_lobby_addserver","UI_button_small_hover")
+	UI_AddMouseoverTitleToGadget("button_lobby_addserver",1,x-12,y-6,"-Join Game-")
+	UI_AddtitleToGadget("button_lobby_addserver",1,x-8,y-6,"Join Game")
+		
 	x=UI_Chatpanel.x-285
 	y=UI_Chatpanel.y-98
 	UI_AddCenterGadgettoScreen("button_lobby_chat",x,y,"UI_button_small")
 	UI_AddMouseoverImageToGadget("button_lobby_chat","UI_button_small_hover")
 	UI_AddMouseoverTitleToGadget("button_lobby_chat",1,x-12,y-6,"-Chat-")
 	UI_AddtitleToGadget("button_lobby_chat",1,x-12,y-6,"Chat")
+	
+	
+	
 	
 	x=UI_Chatpanel.x-307
 	y=UI_Chatpanel.y-214

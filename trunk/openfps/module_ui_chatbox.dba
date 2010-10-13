@@ -253,7 +253,17 @@ If UI_chatpanel.Hidden  = 0
 			UI_text(1,UI_chatpanel.x-180,UI_chatpanel.y+150-(x*10),Chatlines$(x))
 		next x
 	endif
-	
+	if UI_GadgetExist("button_lobby_addserver")=1:
+		UI_DeleteGadget("button_lobby_addserver") 
+		x=UI_Chatpanel.x
+		y=UI_Chatpanel.y
+		UI_AddCenterGadgettoScreen("button_lobby_addserver",x,y,"UI_button_small")
+		UI_AddMouseoverImageToGadget("button_lobby_addserver","UI_button_small_hover")
+		UI_AddMouseoverTitleToGadget("button_lobby_addserver",1,x-12,y-6,"-Join Game-")
+		UI_AddtitleToGadget("button_lobby_addserver",1,x-8,y-6,"Join Game")
+	endif
+else:
+if UI_GadgetExist("button_lobby_addserver")=1 then UI_DeleteGadget("button_lobby_addserver") 
 Endif
 
 Endfunction
@@ -330,6 +340,7 @@ Function UI_HideChatBox()
 	UI_DeleteGadget("UI_chatbox")
 	UI_DeleteGadget("button_lobby_game")
 	UI_DeleteGadget("button_lobby_chat")
+	UI_DeleteGadget("button_lobby_addserver")
 	UI_DeleteGadget("chatpanel_tab_game")
 	UI_DeleteGadget("button_close_window")
 Endfunction
@@ -359,6 +370,14 @@ Function UI_ShowChatBox()
 		UI_AddMouseoverImageToGadget("button_lobby_chat","UI_button_small_hover")
 		UI_AddMouseoverTitleToGadget("button_lobby_chat",1,x-12,y-6,"-Chat-")
 		UI_AddtitleToGadget("button_lobby_chat",1,x-12,y-6,"Chat")
+	endif
+	if UI_GadgetExist("button_lobby_addserver")=0 and Lobby_current_tab$="UI_lobby_tab_game":
+		x=UI_Chatpanel.x
+		y=UI_Chatpanel.y
+		UI_AddCenterGadgettoScreen("button_lobby_addserver",x,y,"UI_button_small")
+		UI_AddMouseoverImageToGadget("button_lobby_addserver","UI_button_small_hover")
+		UI_AddMouseoverTitleToGadget("button_lobby_addserver",1,x-12,y-6,"-Join Game-")
+		UI_AddtitleToGadget("button_lobby_addserver",1,x-8,y-6,"Join Game")
 	endif
 	if UI_GadgetExist("chatpanel_tab_game")=0:
 		x=UI_Chatpanel.x-307

@@ -21,7 +21,11 @@ function InitTerrain(ReloadFlag)
 	BT SetTerrainHeightmap t_Object,t_Heightmap
 	BT SetTerrainTexture t_Object,t_Texture
 	BT SetTerrainDetail t_Object,t_Detail
-		
+	
+	BT SetTerrainLOD t_Object,3
+	BT SetTerrainLODDistance t_Object,1,1000.0
+	BT SetTerrainLODDistance t_Object,2,2000.0
+	
 	BT SetTerrainSmoothing t_Object,1
 	BT SetTerrainQuadRotation t_Object,1
 	
@@ -36,11 +40,26 @@ function InitTerrain(ReloadFlag)
 	repeat
 		progress=BT ContinueBuild()
 	until progress=-1
+	SetTerrainCollision()
+endfunction
 
+function SetTerrainCollision()
+	LODLevel=0
+	DIM terrainSectors(BT GetSectorCount(t_Object,LODLevel)-1) as dword
+	for i=0 to BT GetSectorCount(t_Object,LODLevel)-1
+	    if BT GetSectorExcluded(t_Object,LODLevel,i)=0
+	        terrainSectors(i)=find free object(502,262144)
+	        BT MakeSectorObject t_Object,LODLevel,i,terrainSectors(i)
+	        position object terrainSectors(i),BT GetSectorPositionX(t_Object,LODLevel,i),BT GetSectorPositionY(t_Object,LODLevel,i),BT GetSectorPositionZ(t_Object,LODLevel,i)
+			sc_setupcomplexobject terrainSectors(i),0,4
+	        exclude object on terrainSectors(i)
+	    endif
+	next i
 endfunction
 
 function UpdateTerrain()
 		BT SetCurrentCamera 0
 		BT UpdateTerrainCull t_Object
+		BT UpdateTerrainLOD t_Object
 		BT RenderTerrain t_Object
 endfunction

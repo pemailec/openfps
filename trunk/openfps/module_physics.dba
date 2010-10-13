@@ -153,7 +153,7 @@ function PHY_AddCharacter():
 	PHY_Char.Speed       = 200
 	PHY_Char.JumpSpeed   = 500
 	PHY_Char.Height      = 100
-	PHY_Char.Mass        = 100.0
+	PHY_Char.Mass        = 10.0
 	PHY_Char.Col         = NDB_NewtonCreateSphere(PHY_Char.Height/2.0,PHY_Char.Height,PHY_Char.Height/2.0)
 	PHY_Char.Body        = NDB_NewtonCreateBody(PHY_Char.Col)
 
@@ -193,17 +193,20 @@ function PHY_UpdateCharacter():
 	`Detect keys
 	MoveX# = 0.0
 	MoveZ# = 0.0
+	Move=0
 	if keystate(17) or keystate(31)
 		dx# = sin(PHY_Char.Y_Angle)
 		dz# = cos(PHY_Char.Y_Angle)
 		inc MoveX#, dx# * (keystate(17)-keystate(31))
 		inc MoveZ#, dz# * (keystate(17)-keystate(31))
+		Move=1
 	endif
 	if keystate(30) or keystate(32)
 		dx# = sin(PHY_Char.Y_Angle+90.0)
 		dz# = cos(PHY_Char.Y_Angle+90.0)
 		inc MoveX#, dx# * (keystate(32)-keystate(30))
 		inc MoveZ#, dz# * (keystate(32)-keystate(30))
+		Move=1
 	endif
 	length# = sqrt( (MoveX#^2)+(MoveZ#^2) )
 	MoveX# = MoveX# / length#
@@ -214,19 +217,24 @@ function PHY_UpdateCharacter():
 	CurrentVel_X# = NDB_GetVector_X()
 	CurrentVel_Y# = NDB_GetVector_Y()
 	CurrentVel_Z# = NDB_GetVector_Z()
+	
+	
+	`Set vector to PHY_Char.Body
 	GoalVel_X# = MoveX# * (PHY_Char.Speed * ((shiftkey()+1)*2) )
 	GoalVel_Z# = MoveZ# * (PHY_Char.Speed * ((shiftkey()+1)*2) )
-	VecX# = ((GoalVel_X# - CurrentVel_X#) / PHY_time#) ` 
-	VecZ# = ((GoalVel_Z# - CurrentVel_Z#) / PHY_time#) 
-	`if AccelX# > 200.0 then AccelX# = 200.0
-	`if AccelX# < -200.0 then AccelX# = -200.0
-	`if AccelZ# > 200.0 then AccelZ# = 200.0
-	`if AccelZ# < -200.0 then AccelZ# = -200.0
+	VecX# = ((GoalVel_X# + CurrentVel_X# ) / PHY_time#)
+	VecZ# = ((GoalVel_Z# + CurrentVel_Z# ) / PHY_time#)
+	if VecX# > 200.0 then VecX# = 200.0
+	if VecX# < -200.0 then VecX# = -200.0
+	if VecZ# > 200.0 then VecZ# = 200.0
+	if VecZ# < -200.0 then VecZ# = -200.0
 		
 	`Set vector to PHY_Char.Body
-	NDB_BodyGetPosition PHY_Char.Body
-	NDB_SetVector 2, VecX#, 0.0, VecZ#
-	NDB_BodyAddForceGlobal PHY_Char.Body
+	if Move>0:
+		NDB_BodyGetPosition PHY_Char.Body
+		NDB_SetVector 2, VecX#, CurrentVel_Y#, VecZ#
+		NDB_BodySetForceGlobal PHY_Char.Body
+	endif
 	
 	`jumping
 	AccelY# = 0.0

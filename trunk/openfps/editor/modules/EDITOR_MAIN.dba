@@ -17,7 +17,6 @@
 `----- Function List:
 
 `=========Constants=========`
-
 `===========================`
 
 `==========Globals==========`
@@ -53,6 +52,21 @@ global camera_move
 	set camera range 1,1000000000
 	position camera 160,71,-50:rotate camera 24,0,0:cx#=24.0:ncx#=24.0
 	level_new=1
+	
+	make object plain 501,2,2
+	load image "data\select.png",501
+	texture object 501,501
+	set object light 501,0
+	`disable object zdepth 501
+	set object transparency 501,1
+	set object filter 501,0
+	set object cull 501,0
+	hide object 501
+	
+	// load entity media
+	global ent_offset as integer
+	ent_offset=1000
+	load image "data\entities\char.jpg",ent_offset+18
 
 
 //--main loop begins
@@ -86,8 +100,8 @@ do
 	
 		if level_new<1 then UpdateTerrain()
 	
-		mclick=mouseclick()
-		if mclick=2:
+		mclick=KEYSTATE(18)
+		if mclick=1:
 			if camera_move=0 and clicking=0 then camera_move=1:clicking=1:goto skip
 			if camera_move=1 and clicking=0 then camera_move=0:clicking=1:goto skip
 			skip:
@@ -95,13 +109,14 @@ do
 			if clicking=1 then clicking=0
 		endif
 	
+	
 		skip1:
 	
 		Width#=Get Window Client Width()
 		Height#=Get Window Client Height()
 	
-		if camera_move=0 then setgadgettext cameratext,"3d Top View (FPS: "+str$(screen fps())+") - Space key to enter camera mode"
-		if camera_move=1 then setgadgettext cameratext,"3d Camera Mode (FPS: "+str$(screen fps())+") - WASD or arrow keys to move, mouse to look. Space key to exit Camera Mode."
+		if camera_move=0 then setgadgettext cameratext,"3d Top View (FPS: "+str$(screen fps())+") - press E to enter camera mode"
+		if camera_move=1 then setgadgettext cameratext,"3d Camera Mode (FPS: "+str$(screen fps())+") - WASD or arrow keys to move, mouse to look. E to exit Camera Mode."
 		resizegadget cameratext,(Width#),15
 	
 		if camera_move=0:
@@ -132,6 +147,30 @@ do
     	    rotate camera ncx#,ncy#,0
 		endif
 
+		rem get our simple collision vector
+		oldx#=camera position x()
+		oldy#=camera position y()
+		oldz#=camera position z()
+		move camera 200
+		x#=camera position x()
+		y#=camera position y()
+		z#=camera position z()
+		move camera -200
+		collide=SC_rayCast(0,oldx#,oldy#,oldz#,x#,y#,z#,0)
+		if collide>0
+			rem get the collision point			
+			newx#=SC_getStaticCollisionX()
+			newy#=SC_getStaticCollisionY()
+			newz#=SC_getStaticCollisionZ()
+			rem get collision normal
+			normx#=SC_getCollisionNormalX()
+			normy#=SC_getCollisionNormalY()
+			normz#=SC_getCollisionNormalZ()
+			rem position and point a marker in the right direction
+			position object 501,newx#+normx#/100.0,newy#+normy#/100.0,newz#+normz#/100.0
+			point object 501,newx#+normx#,newy#+normy#,newz#+normz#
+			show object 501
+		endif
 	//---syncronize
 	sync
 loop

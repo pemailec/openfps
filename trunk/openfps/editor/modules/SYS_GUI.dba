@@ -69,6 +69,7 @@
     global menu
     global TerrainMenu
     global HelpMenu
+    global ToolsMenu
     global LoadMenu
     global popupMenu
     global popupMenu_Ents
@@ -146,8 +147,10 @@ endfunction
 
 function updateGui():
 	setMenuItemText popupMenu,15,"("+str$(int(camera position x()))+","+str$(int(camera position y()))+","+str$(int(camera position z()))+")"
-	if spacekey()=1 and camera_move=0:
+	if mouseclick()=2 and camera_move=0:
 		result=showPopupMenu(popupMenu)
+		if result=15 then message "OpenFPS","Camera Position: "+"("+str$(camera position x())+","+str$(camera position y())+","+str$(camera position z())+")"
+		if result=40 then CreateNew("PlayerStart",object position x(501),object position y(501),object position z(501))
 	endif
    	if eventType()=MENU_CLICK
 		select eventData()
@@ -189,6 +192,10 @@ function updateGui():
 			case 6
 				InitTerrain(1)
 			endcase
+			case 18	
+				//delete all objects -- need array for this!
+				message "not implemented"
+			endcase
 		endselect
 	endif		
 endfunction
@@ -221,7 +228,10 @@ function createMainMenu()
 	
 	HelpMenu=createSubMenu(menu,5)
 		addMenuItem HelpMenu,"About",10
-	    
+		
+	ToolsMenu=createSubMenu(menu,4)
+		addMenuItem ToolsMenu,"Clear All Entities",18
+			    
     popupMenu=createPopupMenu()
 	addMenuItem popupMenu,"()",15
 	setMenuItemEnabled popupMenu,15,0
@@ -229,6 +239,6 @@ function createMainMenu()
 	addMenuItem popupMenu,"Create Entity Here",16
 	addMenuItem popupMenu,"Create Static Mesh Here",17
 	popupMenu_Ents=createSubMenu(popupMenu,16)
-	addMenuItem popupMenu_Ents,"Player Start",18
-	addMenuItem popupMenu_Ents,"More...",19
+	addMenuItem popupMenu_Ents,"Player Start",40
+	addMenuItem popupMenu_Ents,"More...",41
 endfunction

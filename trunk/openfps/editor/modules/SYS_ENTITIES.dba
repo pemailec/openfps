@@ -33,3 +33,12 @@
 
 `=========Functions=========`
 
+function CreateNew(type$,eX,eY,eZ):
+	if type$="PlayerStart":
+		object_temp=find free object()
+		object_temp_i=find free image()
+		load object "data\entities\char.x",object_temp
+		position object object_temp,eX,eY,eZ
+		texture object object_temp,ent_offset+18
+	endif
+endfunction
