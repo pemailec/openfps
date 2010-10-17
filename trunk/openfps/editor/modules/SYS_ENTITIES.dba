@@ -13,6 +13,7 @@
 
 `----- Changelog:
 `(2010/09/02) - miso     - Created
+`(2010/10/17) - miso     - Added entity type
 `----- To-Do:
 
 `----- Purpose:
@@ -28,6 +29,19 @@
 `===========================`
 
 `===========Types===========`
+Type mystaticentetytype
+	MESHID as integer //--ID of the source object
+	Objid  as integer //--ID of the created object
+	x      as integer //--coordinates
+	y      as integer
+	z      as integer
+	angx   as integer //--angles
+	angy   as integer
+	angz   as integer
+	scalex as integer //--scale values
+	scaley as integer
+	scalez as integer
+Endtype
 `===========================`
 
 
