@@ -43,9 +43,34 @@ Type mystaticentetytype
 	scalez as integer
 Endtype
 `===========================`
-
+remstart
+type Entity
+	Exists    as boolean
+	Class     as string
+	X         as float
+	Y         as float
+	Z         as float
+	RX        as float
+	RY        as float
+	RZ  	  as float
+	ScaleX    as float
+	ScaleY    as float
+	ScaleZ    as float
+	ModelDB   as dword
+	TextureDB as dword
+	Visible   as boolean
+	Style     as integer
+	Color     as dword
+	Shaders   as integer
+	Sound     as string
+endtype
+remend
 
 `=========Functions=========`
+function Ent_INIT(BufferSize):
+	dim Ent(BufferSize) as Entity
+	Ent_Current=0
+endfunction
 
 function CreateNew(type$,eX,eY,eZ):
 	if type$="PlayerStart":
@@ -54,5 +79,24 @@ function CreateNew(type$,eX,eY,eZ):
 		load object "data\entities\char.x",object_temp
 		position object object_temp,eX,eY,eZ
 		texture object object_temp,ent_offset+18
+		Ent(Ent_Current).Exists=1
+		Ent(Ent_Current).Class="PlayerStart"
+		Ent(Ent_Current).X=eX
+		Ent(Ent_Current).Y=eY
+		Ent(Ent_Current).Z=eZ
+		Ent_1UP()
 	endif
 endfunction
+
+function Ent_1UP():
+	Ent_Current=Ent_Current+1
+endfunction
+remstart
+function Save():
+	file$=saveDialog("Save Array Data","Text File (*.txt)|*.txt|All Files (*.*)|*.*")
+	if file exist(file$)=1 then delete file file$
+	open to write 1,file$
+	SAVE ARRAY TO DATAFILE Ent(),1
+	close file 1
+endfunction
+remend

@@ -26,22 +26,55 @@ Global t_Texture
 Global t_Detail
 global t_Object
 global t_ObjectDB
+global SelectedObject
 
 global camera_move
+global edit_mode
+edit_mode=0
+
+global Ent
+global Entity
+global Ent_Current
 `===========================`
 
 `===========Types===========`
+
+type Entity
+	Exists    as boolean
+	Class     as string
+	X         as float
+	Y         as float
+	Z         as float
+	RX        as float
+	RY        as float
+	RZ  	  as float
+	ScaleX    as float
+	ScaleY    as float
+	ScaleZ    as float
+	ModelDB   as dword
+	TextureDB as dword
+	Visible   as boolean
+	Style     as integer
+	Color     as dword
+	Shaders   as integer
+	Sound     as string
+endtype
+		
 
 `===========================`
 //--Get Desktop parameters
 	Getsystemmetrics()
 //--Start the editor
 	EditorStart()
+	D3D_Init
+	
 //--Create the sky
 	VS_CreateSky()
 	
 //--Create the terrain
-	InitTerrain(0)	
+	InitTerrain(0)
+		
+	Ent_INIT(256)
 	
 //--Create menu
 	createUI()
@@ -49,7 +82,7 @@ global camera_move
 
 //--other
 	maximize window
-	set camera range 1,1000000000
+	set camera range 1,1000000
 	position camera 160,71,-50:rotate camera 24,0,0:cx#=24.0:ncx#=24.0
 	level_new=1
 	
@@ -67,6 +100,17 @@ global camera_move
 	global ent_offset as integer
 	ent_offset=1000
 	load image "data\entities\char.jpg",ent_offset+18
+	
+	make object sphere 257,1
+	color object 257,rgb(255,0,0)
+	hide object 257
+	
+	null = make vector3(1)
+	null = make matrix4(3) : projection matrix4 3
+    null = make matrix4(4) : view matrix4 4
+	null = make matrix4(5) : world matrix4 5
+
+
 
 
 //--main loop begins
@@ -102,6 +146,8 @@ do
 	
 		mclick=KEYSTATE(18)
 		if mclick=1:
+			null=mousemovex()
+			null=mousemovey()
 			if camera_move=0 and clicking=0 then camera_move=1:clicking=1:goto skip
 			if camera_move=1 and clicking=0 then camera_move=0:clicking=1:goto skip
 			skip:
@@ -115,16 +161,16 @@ do
 		Width#=Get Window Client Width()
 		Height#=Get Window Client Height()
 	
-		if camera_move=0 then setgadgettext cameratext,"3d Top View (FPS: "+str$(screen fps())+") - press E to enter camera mode"
+		if camera_move=0 then setgadgettext cameratext,"3d Edit Mode (FPS: "+str$(screen fps())+") - press E to enter camera mode"
 		if camera_move=1 then setgadgettext cameratext,"3d Camera Mode (FPS: "+str$(screen fps())+") - WASD or arrow keys to move, mouse to look. E to exit Camera Mode."
 		resizegadget cameratext,(Width#),15
 	
 		if camera_move=0:
 			show mouse
-			null=mousemovex()
-			null=mousemovey()
 		endif
 		if camera_move=1:
+			edit_mode=0
+			`SelectedObject=0
 			hide mouse
 			position mouse screen width()/2,screen height()/2
 			cr#=0:cf#=0
@@ -171,8 +217,73 @@ do
 			point object 501,newx#+normx#,newy#+normy#,newz#+normz#
 			show object 501
 		endif
+	
+	//---select object
+	if camera_move=0 and mouseclick()=1 and edit_mode=0:
+   		me=pick object(mousex(),mousey(),0,256)
+		if me>1 then SelectedObject=me
+	endif
+	
+	hide object 257
+	if SelectedObject>0:
+		show object 257
+		opx#=object position x(SelectedObject)
+		opy#=object position y(SelectedObject)
+		opz#=object position z(SelectedObject)
+		position object 257,opx#,opy#,opz#
+		ghost object on SelectedObject
+		draw object SelectedObject
+		ghost object off SelectedObject
+		set object wireframe SelectedObject,1
+		
+		
+		if camera_move=0:
+			if KEYSTATE(19)=1 then edit_mode=1
+			show mouse
+			if edit_mode=1:
+				hide mouse
+				rx#=object angle x(SelectedObject)
+				rz#=object angle z(SelectedObject)
+				rotate object SelectedObject,rx#,wrapvalue(object angle y(SelectedObject)+mousemovex()/6),rz#
+				sx=object screen x(SelectedObject)
+				sy=object screen y(SelectedObject)
+				position mouse sx,sy
+				d3d_circle sx,sy,50,0,rgb(100,100,100)
+				AngleX#=sx+(sin((object angle y(SelectedObject)-camera angle y()))*50)
+				AngleY#=sy+(cos((object angle y(SelectedObject)-camera angle y()))*50)
+				AngleX2#=sx+(sin((object angle y(SelectedObject)-camera angle y()+180))*50)
+				AngleY2#=sy+(cos((object angle y(SelectedObject)-camera angle y()+180))*50)
+				AngleX3#=sx+(sin((object angle y(SelectedObject)+90-camera angle y()))*50)
+				AngleY3#=sy+(cos((object angle y(SelectedObject)+90-camera angle y()))*50)
+				AngleX4#=sx+(sin((object angle y(SelectedObject)+90-camera angle y()+180))*50)
+				AngleY4#=sy+(cos((object angle y(SelectedObject)+90-camera angle y()+180))*50)				
+				d3d_line sx,sy,AngleX#,AngleY#,rgb(0,0,0),rgb(100,100,100)
+				d3d_line sx,sy,AngleX2#,AngleY2#,rgb(0,0,0),rgb(100,100,100)
+				d3d_line sx,sy,AngleX3#,AngleY3#,rgb(0,0,0),rgb(100,100,100)
+				d3d_line sx,sy,AngleX4#,AngleY4#,rgb(0,0,0),rgb(100,100,100)
+				edit_mode=0
+			else
+				null=mousemovex()
+				null=mousemovey()
+			endif
+		endif
+		
+	endif
+	
+	`if KEYSTATE(88)=1 then Save():end
+	
 	//---syncronize
 	sync
+	if SelectedObject>0 then set object wireframe SelectedObject,0
+
 loop
 
 `=========Functions=========`
+
+
+function project3dTo2d(result as integer,x as float, y as float, z as float)
+   set vector3 result,x,y,z
+   rem changes when camera angle changes
+   view matrix4 4
+   project vector3 result,result,3,4,5
+endfunction
