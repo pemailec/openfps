@@ -1,0 +1,77 @@
+Rem ***** Included Source File *****
+///////////////////
+// ************** Included Source File **************                             
+// TITAN ENGINE BLANK MODULE
+// 
+// Author: Robert Knight
+//
+//////////////////////////////////////////////////////
+
+#constant GUI_CONSTANTS = 1
+
+rem #constant COMMAND          = 0x111
+#constant MOUSE_CLICK      = 0x202
+#constant LEFTBUTTON_UP    = 0x202
+#constant RIGHTMOUSE_CLICK = 0x205
+#constant RIGHTBUTTON_UP   = 0x205
+#constant MOUSE_MOVE       = 0x200
+#constant GADGET_TIMER     = 0x113
+
+#constant TOOLBAR_CLICK    = 0x111
+#constant HOTKEY           = 0x312
+#constant LEFTBUTTON_DOWN  = 513
+#constant RIGHTBUTTON_DOWN = 0x204
+#constant KEYDOWN          = 0x100
+#constant KEYUP            = 0x101
+
+#constant LOSEFOCUS        = 0x8
+#constant GADGET_SIZING    = 0x214
+#constant GADGET_SIZE      = 0x5
+#constant WINDOW_CLOSE     = 0x10
+#constant LEFTBUTTON_DOUBLECLICK = 0x203
+
+#constant MENU_CLICK      =  0x111
+#constant COMBOBOX_CHANGE =  0x0400+3
+#constant TREEVIEW_CHANGE =  0x0400+4
+
+#constant BORDER_NONE      = 0
+#constant BORDER_FLAT      = 1
+#constant BORDER_3D        = 2
+#constant BORDER_SUNKEN    = 3
+
+#constant ALIGN_NONE       = 0
+#constant ALIGN_ALL        = 1
+#constant ALIGN_TOP        = 2
+#constant ALIGN_LEFT       = 3
+#constant ALIGN_RIGHT      = 4
+#constant ALIGN_BOTTOM     = 5
+
+#constant TOOLBAR_CUT         = 0
+#constant TOOLBAR_COPY        = 1
+#constant TOOLBAR_PASTE       = 2
+#constant TOOLBAR_UNDO        = 3
+#constant TOOLBAR_REDO        = 4
+#constant TOOLBAR_DELETE      = 5
+#constant TOOLBAR_NEW         = 6
+#constant TOOLBAR_OPEN        = 7
+#constant TOOLBAR_SAVE        = 8
+#constant TOOLBAR_PRINTPREVIEW = 9
+#constant TOOLBAR_PROPERTIES   = 10
+#constant TOOLBAR_HELP         = 11
+#constant TOOLBAR_FIND         = 12
+#constant TOOLBAR_REPLACE      = 13
+#constant TOOLBAR_PRINT        = 14
+#constant WINDOW_TITLEBAR      = 12582912 
+#constant WINDOW_CLOSEBUTTON   = 524288			
+#constant WINDOW_MAXBUTTON     = 65536
+#constant WINDOW_MINBUTTON     = 131072
+#constant WINDOW_RESIZEABLE    = 262144			
+#constant WINDOW_NOBORDER      = -2147483648
+#constant WINDOW_TOOLWINDOW    = 128	
+#constant WINDOW_NORMAL        = 13565952
+#constant WINDOW_FIXED         = 13107200
+#constant WINDOW_OVR           = 0
+
+#constant LISTVIEW_ICON        = 0 
+#constant LISTVIEW_REPORT      = 1 
+#constant LISTVIEW_LIST        = 3 

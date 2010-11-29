@@ -467,6 +467,12 @@ Function UI_Handle()
 
 //-Handle all the mouse
 	UI_HandleMouse()
+	
+//-Do Debug
+	if DebugScreen=1:
+		UI_text(1,UI_MouseX()+10,UI_MouseY(),"DEBUG DATA ----"+"("+str$(UI_MouseX())+","+str$(UI_MouseY())+")")
+		UI_text(1,UI_MouseX()+10,UI_MouseY()+20,"SCREEN RATE:"+str$(screen fps()))
+	endif
 //-Check if we disabled non gui mouse movements
 	`If UI_NonguiMouseDisabled = UI_True
 	`	SyS_MouseMoveX = 0:SyS_MouseMoveY = 0
@@ -557,7 +563,7 @@ Local a$ as String:Local b$ as String:Local c$ as String
 	// check if fontfile exist
 	UI_WriteLog(UI_Green,"loading font : " + name$ + " with ID "+str$(ID))
 	UI_CheckFile(name$)
-		UI_TempFileID=grabresource(res_file)
+		UI_TempFileID=RES_grab(res_file)
 		Open To Read UI_tempfileID,name$
 				//read the bitmapfontname and load
 				Read String UI_tempfileID,a$:b$ = First Token$(a$,"="):c$=Next Token$("=")
@@ -744,11 +750,13 @@ If UI_Input.alive = UI_True
          UI_Input.alive  = 3
       Endif
 
-      UI_Input.current=UI_Input.current+Entry$() : Clear Entry Buffer
+      UI_Input.current=Entry$(1)
+      remstart
       If Scancode() = 14
       	If Scancode() = 14 Then UI_Input.current = Left$(UI_Input.current,Len(UI_Input.current)-1)
       	Clear Entry Buffer
       Endif
+      remend
 
       rem Entry Line
       If Len(UI_Input.current)>UI_Input.maxcharacter then UI_Input.current = Left$(UI_Input.current,UI_Input.maxcharacter)

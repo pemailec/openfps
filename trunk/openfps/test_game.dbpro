@@ -4,13 +4,13 @@ version=DBP1.00
 project name=OpenFPS
 
 ; **** source file information ****
-main=test_game.dba
+main=module_main.dba
 LineMain=0
 include1=module_movement.dba
 LineInclude1=423
 include2=module_resource.dba
 LineInclude2=173
-include3=menu.dba
+include3=module_menu.dba
 LineInclude3=139
 include4=module_network.dba
 LineInclude4=15
@@ -35,6 +35,7 @@ LineInclude13=152
 include14=module_ui_credits.dba
 LineInclude14=0
 include15=module_physics.dba
+include16=module_engine.dba
 final source=_Temp.dbsource
 
 ; **** Executable Information  ***
@@ -58,7 +59,7 @@ CommandLineArguments=
 app title=BioStorm
 
 ; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
-graphics mode=fullscreen
+graphics mode=window
 fullscreen resolution=1024x768x32
 
 ; arbitrary sizes are valid for windowed mode

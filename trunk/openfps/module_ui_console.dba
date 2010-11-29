@@ -60,9 +60,19 @@ Function UI_SUB_CheckConsoleCommand()
 //*                                                                  to be called.      *
 //*                                                                                     *
 //***************************************************************************************
-	If Upper$(UI_Input.result)="HIDE MOUSE" then UI_FadeOutMouse()
-	If Upper$(UI_Input.result)="SHOW MOUSE" then UI_FadeInMouse()
-	If Upper$(UI_Input.result)="EXIT" then SyS_Event_Terminate=1
-	If Upper$(UI_Input.result)="DEBUG" then DebugScreen=1
+	select Upper$(UI_Input.result)
+	case "HIDE MOUSE":
+		UI_FadeOutMouse()
+	endcase
+	case "SHOW MOUSE":
+		UI_FadeInMouse()
+	endcase
+	case "EXIT"
+		SyS_Event_Terminate=1
+	endcase
+	case "DEBUG"
+		DebugScreen=1
+	endcase
+	endselect
 Endfunction
 

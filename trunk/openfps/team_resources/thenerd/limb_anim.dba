@@ -1,0 +1,15 @@
+sync on
+sync rate 60
+autocam on
+
+load object "anim_test2.x",1
+loop object 1
+set object speed 1,10
+
+position camera 0,50,-100
+point camera 0,0,0
+do
+	set cursor 0,0
+	print screen fps()
+	sync
+loop

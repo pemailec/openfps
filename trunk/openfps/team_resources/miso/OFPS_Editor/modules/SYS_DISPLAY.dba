@@ -1,0 +1,100 @@
+Rem ***** Included Source File *****
+//////////////////
+// ************** Included Source File ***************                             
+// TITAN ENGINE Display Module
+// 
+// Author: miso
+//
+//////////////////////////////////////////////////////
+
+`----- Changelog:
+`(2010/07/11) - miso     - Created
+
+`----- Purpose:
+`	Sets the display mode, set up basic display variables and syncs
+
+`-----USES: SyS_Core, Advanced Sprites dll,
+
+`=========Constants=========`
+#Constant SyS_maincameraminrange 4        `kamera minimum és maximum látótávolsága
+#Constant SyS_maincameramaxrange 40000000
+`===========================`
+
+
+`==========Globals==========`
+Global Module_SyS_Display as Boolean    ` 1 if display module initialized
+Global SyS_display        as screentype ` holds the parameters of the screen     
+`===========================`
+
+
+`===========Types===========`
+Type Screentype                     : `képernyõ típus
+	Width                as integer : `szélesség
+	Height               as integer : `magasság
+	Middlewidth          as integer : `szélesség fele
+	Middleheight         as integer : `magasság fele
+	Depth                as byte    : `színmélység
+	Vsyncron             as boolean : `Vsync
+	Syncon               as boolean : `sync on
+	Syncrate             as integer : `syncrate
+	Backdrop             as boolean : `backdrop, true esetén fekete backdrop beállítva ae_initscreen hívásakor
+	Dxspriteinitialized  as boolean : `advanced sprite inicializalasa
+Endtype
+`===========================`
+
+
+`=========Functions=========`
+
+//---Init Screen
+Function SyS_Initscreen(xwidth,yheight,ddepth,vvsync,ssyncon,rsyncrate,bbackdrop,dxinit)
+	Module_SyS_Display = SyS_Initialized
+	Hide Mouse
+	SyS_Display.Width                =  Xwidth
+	SyS_Display.Height               =  Yheight
+	SyS_Display.Middlewidth          = (Xwidth/2)
+	SyS_Display.Middleheight         = (Yheight/2)
+	SyS_Display.Depth                =  Ddepth
+	SyS_Display.Vsyncron             =  Vvsync
+	SyS_Display.Syncon               =  Ssyncon
+	SyS_Display.Syncrate             =  Rsyncrate
+	SyS_Display.Backdrop             =  Bbackdrop
+	SyS_Display.Dxspriteinitialized  =  Dxinit
+	Set Window Off
+	Set Display Mode SyS_Display.Width,SyS_Display.Height,SyS_Display.Depth,SyS_Display.Vsyncron,16,0
+	Autocam Off:Set Camera Range 0,SyS_Maincameraminrange,SyS_Maincameramaxrange
+	If SyS_Display.Syncon = 1:Sync On:Else:Sync Off:EndIf
+	Sync Rate SyS_Display.Syncrate
+	If SyS_display.Backdrop  = 1:Backdrop On:Color Backdrop 0:Else:Backdrop Off:EndIf
+	if Dxinit                = 1 then Dxs Initialize
+Endfunction
+
+
+Function SyS_Initwindow(xwidth,yheight,ddepth,vvsync,ssyncon,rsyncrate,bbackdrop,dxinit)
+	Module_SyS_Display = SyS_Initialized
+	Hide Mouse
+	SyS_Display.Width                =  Xwidth
+	SyS_Display.Height               =  Yheight
+	SyS_Display.Middlewidth          = (Xwidth/2)
+	SyS_Display.Middleheight         = (Yheight/2)
+	SyS_Display.Depth                =  Ddepth
+	SyS_Display.Vsyncron             =  Vvsync
+	SyS_Display.Syncon               =  Ssyncon
+	SyS_Display.Syncrate             =  Rsyncrate
+	SyS_Display.Backdrop             =  Bbackdrop
+	SyS_Display.Dxspriteinitialized  =  Dxinit
+	Set Window On
+	Set Display Mode SyS_Display.Width,SyS_Display.Height,SyS_Display.Depth,SyS_Display.Vsyncron,16,0
+	Autocam Off:Set Camera Range 0,SyS_Maincameraminrange,SyS_Maincameramaxrange
+	If SyS_Display.Syncon = 1:Sync On:Else:Sync Off:EndIf
+	Sync Rate SyS_Display.Syncrate
+	If SyS_display.Backdrop  = 1:Backdrop On:Color Backdrop 0:Else:Backdrop Off:EndIf
+	if Dxinit                = 1 then Dxs Initialize
+Endfunction
+
+
+
+//---sync command
+Function SyS_Synchandle()
+	if SyS_display.Syncon = 1 then Sync
+	rem if SyS_Askfpsticker()=1 then fastsync
+Endfunction

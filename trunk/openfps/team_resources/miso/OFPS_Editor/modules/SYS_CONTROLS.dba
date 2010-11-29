@@ -1,0 +1,128 @@
+Rem ***** Included Source File *****
+//////////////////////                         
+// FULLPLATE CONTROLS MODULE
+// 
+// Author: miso, using RiiDii's scancode constants
+//
+//////////////////////////////////////////////////////
+`----- Changelog:
+`(2010/07/11) - miso     - Created
+
+`=========Constants=========`
+#Constant SyS_k1 = keystate(2)
+#Constant SyS_k2 = keystate(3)
+#Constant SyS_k3 = keystate(4)
+#Constant SyS_k4 = keystate(5)
+#Constant SyS_k5 = keystate(6)
+#Constant SyS_k6 = keystate(7)
+#Constant SyS_k7 = keystate(8)
+#Constant SyS_k8 = keystate(9)
+#Constant SyS_k9 = keystate(10)
+#Constant SyS_k0 = keystate(11)
+#Constant SyS_ka = keystate(30)
+#Constant SyS_kb = keystate(48)
+#Constant SyS_kc = keystate(46)
+#Constant SyS_kd = keystate(32)
+#Constant SyS_ke = keystate(18)
+#Constant SyS_kf = keystate(33)
+#Constant SyS_kg = keystate(34)
+#Constant SyS_kh = keystate(35)
+#Constant SyS_ki = keystate(23)
+#Constant SyS_kj = keystate(36)
+#Constant SyS_kk = keystate(37)
+#Constant SyS_kl = keystate(38)
+#Constant SyS_km = keystate(50)
+#Constant SyS_kn = keystate(49)
+#Constant SyS_ko = keystate(24)
+#Constant SyS_kp = keystate(25)
+#Constant SyS_kq = keystate(16)
+#Constant SyS_kr = keystate(19)
+#Constant SyS_ks = keystate(31)
+#Constant SyS_kt = keystate(20)
+#Constant SyS_ku = keystate(22)
+#Constant SyS_kv = keystate(47)
+#Constant SyS_kw = keystate(17)
+#Constant SyS_kx = keystate(45)
+#Constant SyS_ky = keystate(21)
+#Constant SyS_kz = keystate(44)
+
+#Constant SyS_leftshift  = keystate(42)
+#Constant SyS_rightshift = keystate(54)
+#Constant SyS_leftctrl   = keystate(29)
+#Constant SyS_rightctrl  = keystate(157)
+
+#Constant SyS_esc   = escapekey()
+#Constant SyS_space = spacekey()
+#Constant SyS_left  = leftkey()
+#Constant SyS_right = rightkey()
+#Constant SyS_up    = upkey()
+#Constant SyS_down  = downkey()
+
+
+
+#Constant SyS_kp1 = keystate(79)
+#Constant SyS_kp2 = keystate(80)
+#Constant SyS_kp3 = keystate(81)
+#Constant SyS_kp4 = keystate(75)
+#Constant SyS_kp5 = keystate(76)
+#Constant SyS_kp6 = keystate(77)
+#Constant SyS_kp7 = keystate(71)
+#Constant SyS_kp8 = keystate(72)
+#Constant SyS_kp9 = keystate(73)
+#Constant SyS_kp0 = keystate(82)
+
+#Constant SyS_sc1 2
+#Constant SyS_sc2 3
+#Constant SyS_sc3 4
+#Constant SyS_sc4 5
+#Constant SyS_sc5 6
+#Constant SyS_sc6 7
+#Constant SyS_sc7 8
+#Constant SyS_sc8 9
+#Constant SyS_sc9 10
+#Constant SyS_sc0 11
+#Constant SyS_sca 30
+#Constant SyS_scb 48
+#Constant SyS_scc 46
+#Constant SyS_scd 32
+#Constant SyS_sce 18
+#Constant SyS_scf 33
+#Constant SyS_scg 34
+#Constant SyS_sch 35
+#Constant SyS_sci 23
+#Constant SyS_scj 36
+#Constant SyS_sck 37
+#Constant SyS_scl 38
+#Constant SyS_scm 50
+#Constant SyS_scn 49
+#Constant SyS_sco 24
+#Constant SyS_scp 25
+#Constant SyS_scq 16
+#Constant SyS_scr 19
+#Constant SyS_scs 31
+#Constant SyS_sct 20
+#Constant SyS_scu 22
+#Constant SyS_scv 47
+#Constant SyS_scw 17
+#Constant SyS_scx 45
+#Constant SyS_scy 21
+#Constant SyS_scz 44
+
+#Constant SyS_sclshft = 42
+#Constant SyS_scrshft = 54
+#Constant SyS_sclctrl = 29
+#Constant SyS_scrctrl = 157
+
+
+
+`===========================`
+
+`==========Globals==========`
+`===========================`
+
+`===========Types===========`
+`===========================`
+
+
+`=========Functions=========`
+

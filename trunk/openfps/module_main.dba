@@ -1,0 +1,91 @@
+remstart
+/////////////////////////////////////////////////////
+//
+//   OpenFPS
+//   MAIN SOURCE
+//
+//
+/////////////////////////////////////////////////////
+
+----- Changelog (main source file only):
+(11/19/09) - BMacZero - Created
+(11/23/09) - BMacZero - Added menu
+(11/24/09) - BMacZero - [Removed BlitzTerrain temporarily]
+(2/7/10)   - thenerd  - Changed screen res to 1024x768x32 fullscreen, worked on menu functions
+(2/15/10)  - BMacZero - Updated BlitzTerrain code for BT 2.0
+(2/25/10)  - BMacZero - Globalized timerbased system, added shooting
+(2/28/10)  - BMacZero - Removed BT temporary code
+(2/28/10)  - Kaedroho - Position mouse to centre of the screen added. This stops the program from exiting when using multiple monitors.
+(6/23/10)  - miso     - Replaced 2 standard text command to the new UI_Text command, yet using placeholder fonts
+(6/23/10)  - miso     - Added an UI_CenterText command, just to show how it works, can be deleted
+(6/26/10)  - miso     - Wrote a To-Do note.
+(6/27/10)  - thenerd  - Added some effects to the menu background.
+(6/27/10)  - thenerd  - Added some effects to the menu background.
+(6/27/10)  - miso     - Repositioned the texts to give space for the appearing console
+(6/27/10)  - miso     - Added variable SyS_Event_Terminate, to properly jump to the
+                        terminate functions part. Set this to 1 of you want to terminate
+                        instead of an "end" command. I put it here, because I dont know which
+                        module would fit best to contain it. Reposition it if you have a better idea,
+                        or I suggest to create a module_core or module_System, 
+                        so I should put my debug commands there too.
+                      - Added label _terminate:
+(7/29/10)  - thenerd  - Added to game engine.
+(11/28/10) - thenerd  - Restructured game engine code to be more clear (now in module_engine)
+
+----- To-Do
+Modules should be init between initMenu() and runMenu().
+
+Important note for all modules: don't use mousemovex() and mousemovey() commands, it clears the mouse movement buffer.
+                                Instead, use SyS_MouseMoveX and SyS_MouseMoveY integer variables if needed,
+                                they get their value every loop. (miso.)
+
+remend
+
+`==========Globals==========`
+Global SyS_Event_Terminate as Boolean : `set this variable to 1 to force the main module
+                                      : `to run the terminate functions. 
+                                      : `(I need it to close my logfile)
+
+/////////////////////////////////////////////////////////
+// INIT                                                //
+/////////////////////////////////////////////////////////
+
+`set up display
+sync on
+sync rate 0
+set display mode 1024,768,screen depth()
+
+`various settings
+autocam off
+randomize timer()
+hide mouse
+disable escapekey
+
+`INITIATE CORE MODULES
+
+`resource module
+RES_init()
+
+`loading screen
+UI_LoadingScreen()
+
+`engine modules
+UI_init() 	`ui module
+MVM_init()  `movement module
+MENU_init()  `menu module
+
+/////////////////////////////////////////////////////////
+// RUN                                                 //
+/////////////////////////////////////////////////////////
+
+`run menu
+MENU_run()
+
+/////////////////////////////////////////////////////////
+// TERMINATE                                           //
+/////////////////////////////////////////////////////////
+
+`end modules
+SYS_Terminate()
+
+`end of code

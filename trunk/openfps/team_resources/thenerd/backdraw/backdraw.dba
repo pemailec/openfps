@@ -1,0 +1,20 @@
+sync on
+sync rate 60
+backdrop off
+
+
+load object "F:\openfps\media\models\error2.x",1
+color object 1,rgb(255,0,0)
+set object cull 1,0
+set object ambient 1,0
+
+load image "test.png",1
+draw to back
+do
+	r#=wrapvalue(r#+1)
+	position object 1,0,cos(r#),0
+	position camera 0,50,100
+	point camera 0,0,0
+	paste image 1,0,0
+	sync
+loop

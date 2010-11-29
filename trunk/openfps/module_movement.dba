@@ -26,34 +26,27 @@ remstart
                         can't get proper results. Using these variables in all modules solves this problem.
 						User interface module refreshes the values of both variable with every loop.
 (7/4/10)   - miso     - placed four log commands when initiate and terminate module
+(11/28/10) - thenerd  - Restructured module with functions to fit the new module layout
 
 ----- To-Do:
-Apply different speeds and jump heights for different classes.
-Add more realism - camera bobs slightly when walking, more when
-  running.  Camera bobs down before jumping.  Camera dips after
-  landing from a jump - more if it was a hard landing.
-Have stamina based on health - low health?  Low max stamina.
-
-**Stop the player for going up sheer cliffs**
-
+-Apply different speeds and jump heights for different classes.
+-Add more realism:
+	camera bobs slightly when walking, more when running. 
+	Camera bobs down before jumping. 
+	Camera dips after landing from a jump - more if it was a hard landing.
+-Have stamina based on health - low health?  Low max stamina.
 
 ----- Purpose:
 Handles player input as it applies to moving about the world.
-This includes movement, sprinting, crouching, crawling, and
-  collision and gravity for the player.
-It may also do falling damage at a later time.
+This includes FPS player movement, Vehicle movement, and 
+spectator fly modes.
 
 
------ Dependancies and Conflicts (IMPORTANT STUFF):
-All objects the player needs to collide with must be set up
-  for Sparky's Collision.
+----- Dependancies and Conflicts:
+-None-
 
-The module requires the player's class to be stored in a global
-  integer PLR_class, as different classes have different speeds,
-  heights, and jump heights.
-
-Configurable Keys: Keystates should be stored in the following
-  global integers:
+----- Configurable Keys: 
+Keystates should be stored in the following global integers:
     KEY_sprint
     KEY_jump
     KEY_left
@@ -65,26 +58,14 @@ Configurable Keys: Keystates should be stored in the following
 
 
 ----- Other Notes:
-Information about the player will be stored in the following
-  global floats...
-  PLR_footpos.x / y / z
-  PLR_headpos.x / y / z
-  PLR_angle.x / y / z
-  PLR_velocity.x / y / z
-  PLR_stamina
-  
-The player's stance (walk, sprint, crouch, prone) will be
-  stored in the integer PLR_stance, relating to the constants
-  stance_SPRINT, stance_WALK, stance_CROUCH, and stance_PRONE.
-  
-The module contains its own timer-based system.  Any code relating
-  to this is marked with //MOVEMENT MODULE TIMER incase the system
-  needs to be brought in line with a global one later.
-  
-All movements are scaled to:
-  60 units = 1 meter
+All movement module functions are prefixed with MVM_
 
+----- Functions:
+-MVM_init()			-inits the movement module
+-MVM_update()		-updates the movement module
+-MVM_terminate()	-terminates the movement module
 
+/////////////////////////////////////////////////////
 remend
 
 `Player stances
@@ -93,9 +74,6 @@ remend
 #constant stance_CROUCH 2
 #constant stance_PRONE  3
 
-`Random memblock commands for Sparky's
-null = memblock exist(1)
-
 `Vector type
 type vector
    x as float
@@ -103,321 +81,63 @@ type vector
    z as float
 endtype
 
-
 /////////////////////////////////////////////////////////
 // INIT                                                //
 /////////////////////////////////////////////////////////
 
 
-function initMovement()
-UI_WriteLog(UI_Green,"=== Starting Movement module")
-`Initiate controls
-if KEY_sprint   = 0
-    global KEY_sprint   as integer
-    KEY_sprint   = 42
-endif
-if KEY_jump     = 0
-    global KEY_jump     as integer
-    KEY_jump     = 57
-endif
-if KEY_left     = 0
-    global KEY_left     as integer
-    KEY_left     = 30
-endif
-if KEY_right    = 0 
-    global KEY_right    as integer
-    KEY_right    = 32
-endif
-if KEY_forward  = 0
-    global KEY_forward  as integer
-    KEY_forward  = 17
-endif
-if KEY_backward = 0
-    global KEY_backward as integer
-    KEY_backward = 31
-endif
-if KEY_crouch   = 0
-    global KEY_crouch   as integer
-    KEY_crouch   = 46
-endif
-if KEY_prone    = 0
-    global KEY_prone    as integer
-    KEY_prone    = 47
-endif
-
-global PLR_footpos  as vector
-global PLR_headpos  as vector
-global PLR_velocity as vector
-global PLR_angle    as vector
-global PLR_curstam  as float
-global mov_sprendtime as integer `Time since sprinting ended
-
-global PLR_jump as float `Player jump velocity
-PLR_jump=200.0
-global PLR_maxstam  as float
-PLR_maxstam=100.0
-global PLR_stamloss as float
-PLR_stamloss = 10.0 `How much stamina the player loses /sec while sprinting
-global PLR_stamwalkgain as float
-PLR_stamwalkgain = 5.0 `How much stam the player regens /sec while walking
-global PLR_stamidlegain as float
-PLR_stamidlegain = 15.0 `How much stam the player regens /sec while standing still
-global PLR_stamgaindelay as integer
-PLR_stamgaindelay = 2000 `How long after stopping sprinting the player's stam starts to regen (ms)
-
-global PLR_stance   as integer
-
-global DIM PLR_speeds(3)  as float
-global DIM PLR_heights(3) as float
-
-global PLR_gravity       as float
-global PLR_heightspeed   as float `How fast the player crouches and such
-global PLR_currentheight as float
-
-global MOVE_keypress  as boolean
-global MOVE_fall      as boolean
-global MOVE_jumppress as boolean
-global MOVE_jump      as boolean
-
-//vars
-PLR_speeds(stance_WALK)   = 180.0
-PLR_speeds(stance_SPRINT) = PLR_speeds(stance_WALK) * 1.90
-PLR_speeds(stance_CROUCH) = PLR_speeds(stance_WALK) * 0.45
-PLR_speeds(stance_PRONE)  = PLR_speeds(stance_WALK) * 0.20
-
-PLR_heights(stance_WALK)   = 120.0
-PLR_heights(stance_SPRINT) = 110.0
-PLR_heights(stance_CROUCH) = 55.0
-PLR_heights(stance_PRONE)  = 15.0
-
-PLR_footpos.x = 2000.0
-PLR_footpos.y = BT GetGroundHeight(g_Terrain_Main.dwTerrainID,2000.0,2000.0)
-PLR_footpos.z = 2000.0
-PLR_stance    = stance_WALK
-PLR_headpos.x = PLR_footpos.x
-PLR_headpos.y = PLR_footpos.y + PLR_heights(PLR_stance)
-PLR_headpos.z = PLR_footpos.z
-
-PLR_gravity       = -550.0
-PLR_heightspeed   = 3.0
-PLR_currentheight = PLR_heights(stance_WALK)
-PLR_curstam       = PLR_maxstam
-
-PLR_stamina as float
-
-`For head bob
-global mov_HeadOff as float
-
-//misc
-global mov_Mat1
-global mov_Mat2
-global mov_Mat3
-global mov_Mat4
-global mov_Vec5
-global mov_Vec6
-global mov_Vec7
-mov_Mat1 = grabResource(res_Matrix4)
-mov_Mat2 = grabResource(res_Matrix4)
-mov_Mat3 = grabResource(res_Matrix4)
-mov_Mat4 = grabResource(res_Matrix4)
-mov_Vec5 = grabResource(res_Vector)
-mov_Vec6 = grabResource(res_Vector)
-mov_Vec7 = grabResource(res_Vector)
-null = Make Matrix4( mov_Mat1 )
-null = Make Matrix4( mov_Mat2 )
-null = Make Matrix4( mov_Mat3 )
-null = Make Matrix4( mov_Mat4 )
-null = Make Vector3( mov_Vec5 ) // lX
-null = Make Vector3( mov_Vec6 ) // lY
-null = Make Vector3( mov_Vec7 ) // lZ
-
-global mov_synctime as float
-UI_WriteLog(UI_Green,"=== Movement module started")
+function MVM_init()
+	// -----------------------
+	// Init function
+	// -----------------------
+	`write debug
+	UI_WriteLog(UI_Yellow,"=== Starting Movement module")
+	`Initiate controls
+	if KEY_sprint=0
+    	global KEY_sprint   as integer
+    	KEY_sprint=42
+	endif
+	if KEY_jump=0
+    	global KEY_jump     as integer
+    	KEY_jump=57
+	endif
+	if KEY_left=0
+    	global KEY_left     as integer
+    	KEY_left=30
+	endif
+	if KEY_right=0 
+    	global KEY_right    as integer
+    	KEY_right=32
+	endif
+	if KEY_forward=0
+    	global KEY_forward  as integer
+    	KEY_forward=17
+	endif
+	if KEY_backward=0
+    	global KEY_backward as integer
+    	KEY_backward=31
+	endif
+	if KEY_crouch=0
+    	global KEY_crouch   as integer
+    	KEY_crouch=29
+	endif
+	if KEY_prone=0
+    	global KEY_prone    as integer
+    	KEY_prone=46
+	endif
+	// -----------------------
+	UI_WriteLog(UI_Green,"=== Movement module started.")
+	// -----------------------
 endfunction
 
-
-/////////////////////////////////////////////////////////
-// UPDATE                                              //
-/////////////////////////////////////////////////////////
-
-
-function updateMovement()
-
-local movementx as float
-local movementy as float
-local movementz as float
-
-//moving
-Set Vector3 mov_Vec5, 1.0, 0.0, 0.0
-Build Rotation Axis Matrix4 mov_Mat1, mov_Vec5, PLR_angle.x * 0.017453292519943295769236907684886
-Set Vector3 mov_Vec5, 0.0, 1.0, 0.0
-Build Rotation Axis Matrix4 mov_Mat2, mov_Vec5, PLR_angle.y * 0.017453292519943295769236907684886
-Set Vector3 mov_Vec5, 0.0, 0.0, 1.0
-Build Rotation Axis Matrix4 mov_Mat3, mov_Vec5, PLR_angle.z * 0.017453292519943295769236907684886
-Multiply Matrix4 mov_Mat4, mov_Mat1, mov_Mat2
-Multiply Matrix4 mov_Mat4, mov_Mat4, mov_Mat3
-
-Set Vector3 mov_Vec5, 1.0, 0.0, 0.0
-Transform Coords Vector3 mov_Vec5, mov_Vec5, mov_Mat4
-Set Vector3 mov_Vec6, 0.0, 1.0, 0.0
-Transform Coords Vector3 mov_Vec6, mov_Vec6, mov_Mat4
-Set Vector3 mov_Vec7, 0.0, 0.0, 1.0
-Transform Coords Vector3 mov_Vec7, mov_Vec7, mov_Mat4
-
-`Find Left/Right and Forward/Back movement
-movementx = (keystate(KEY_right)   - keystate(KEY_left))     * PLR_speeds(PLR_stance)
-movementz = (keystate(KEY_forward) - keystate(KEY_backward)) * PLR_speeds(PLR_stance)
-
-`Set velocities if we're on the ground
-if MOVE_fall = 0
-   PLR_velocity.x = X Vector3(mov_Vec5) * movementx
-   PLR_velocity.z = Z Vector3(mov_Vec5) * movementx
-   PLR_velocity.x = PLR_velocity.x + X Vector3(mov_Vec6) * movementy + X Vector3(mov_Vec7) * movementz
-   PLR_velocity.z = PLR_velocity.z + Z Vector3(mov_Vec6) * movementy + Z Vector3(mov_Vec7) * movementz
-endif
-
-//stance change
-if keystate(KEY_sprint) and (PLR_velocity.x<>0 or PLR_velocity.z<>0)
-    mov_sprendtime = 0 `Reset time since sprinting end counter
-    dec PLR_curstam,elapsedtime*PLR_stamloss `Decrease stamina from sprinting
-    PLR_stance = stance_SPRINT `Set player to sprint
-    if PLR_curstam<=0 `Stop sprinting if no stamina
-        PLR_curstam=0
-        PLR_stance = stance_WALK
-    endif
-    
-    else
-    
-    `Regen stamina
-    if PLR_curstam<PLR_maxstam
-        if mov_sprendtime=0 then mov_sprendtime = timer()
-        if timer()-mov_sprendtime >= PLR_stamgaindelay
-            if PLR_velocity.x=0.0 and PLR_velocity.z=0.0
-                inc PLR_curstam,elapsedtime*PLR_stamidlegain
-                else
-                inc PLR_curstam,elapsedtime*PLR_stamwalkgain
-            endif
-        endif
-        if PLR_curstam>PLR_maxstam then PLR_curstam=PLR_maxstam
-    endif
-endif
-
-if keystate(KEY_crouch) and MOVE_keypress = 0
-   MOVE_keypress = 1
-   if PLR_stance = stance_CROUCH
-      PLR_stance = stance_WALK
-      else
-      PLR_stance = stance_CROUCH
-   endif
-endif
-
-if keystate(KEY_prone) and MOVE_keypress = 0
-   MOVE_keypress = 1
-   if PLR_stance = stance_PRONE
-      PLR_stance = stance_WALK
-      else
-      PLR_stance = stance_PRONE
-   endif
-endif
-
-
-//collision
-ground = sc_spherecast(0,PLR_headpos.x,PLR_headpos.y-2,PLR_headpos.z,PLR_footpos.x,PLR_footpos.y+2,PLR_footpos.z,2,0)
-if ground <> 0
-   `damage# = ((-PLR_velocity.y) - 100.0)
-   MOVE_fall = 0
-   PLR_velocity.y = 0
-//amendments for uneven terrain
-   PLR_footpos.y = sc_getcollisionslidey()-2    //positions the player at the appropriate height
-   temp# = sc_getcollisionnormaly()                //how flat the land is 1 for flat, 0 for vertical
-   if temp#<0.4 then temp#=0
-   PLR_velocity.x = PLR_velocity.x * temp#             //adjust speed to make up for grade
-   PLR_velocity.z = PLR_velocity.z * temp#
-else
-   PLR_velocity.y = PLR_velocity.y + PLR_gravity * elapsedtime
-endif
-
-//jumping
-if keystate(KEY_jump) and MOVE_jumppress = 0 and MOVE_fall = 0
-   PLR_stance = stance_WALK
-   MOVE_jumppress = 1
-   MOVE_jump = 1
-endif
-
-if MOVE_jump and MOVE_fall = 0
-   MOVE_jump = 0
-   MOVE_fall = 1
-   PLR_velocity.y = PLR_velocity.y + PLR_jump
-endif
-
-
-//update
-PLR_footpos.x = PLR_footpos.x + PLR_velocity.x * elapsedtime
-PLR_footpos.y = PLR_footpos.y + PLR_velocity.y * elapsedtime
-PLR_footpos.z = PLR_footpos.z + PLR_velocity.z * elapsedtime
-
-`Update playersize
-if PLR_heights(PLR_stance)>PLR_currentheight
-    inc PLR_currentheight,PLR_heightspeed
-    if PLR_currentheight>PLR_heights(PLR_stance) then PLR_currentheight = PLR_heights(PLR_stance)
-endif
-if PLR_heights(PLR_stance)<PLR_currentheight
-    dec PLR_currentheight,PLR_heightspeed
-    if PLR_currentheight<PLR_heights(PLR_stance) then PLR_currentheight = PLR_heights(PLR_stance)
-endif
-
-PLR_headpos.x = PLR_footpos.x
-PLR_headpos.y = PLR_footpos.y + PLR_currentheight
-PLR_headpos.z = PLR_footpos.z
-
-PLR_angle.y = PLR_angle.y + SyS_MouseMoveX*0.2
-PLR_angle.x = PLR_angle.x + SyS_MouseMoveY*0.2
-
-//Kaedroho add 03/01/2010
-	if PLR_angle.x > 90.0 then PLR_angle.x = 90.0
-	if PLR_angle.x < -90.0 then PLR_angle.x = -90.0
-
-if keystate(KEY_jump) = 0 then MOVE_jumppress = 0
-if keystate(KEY_prone) = 0 and keystate(KEY_crouch) = 0 then MOVE_keypress = 0
-
-if keystate(KEY_sprint) = 0 and PLR_stance = stance_SPRINT
-   PLR_stance = stance_WALK
-endif
-
-mov_synctime = mov_synctime + elapsedtime
-if mov_synctime > 0.01
-    mov_synctime = 0
-    position camera 0, PLR_headpos.x, PLR_headpos.y, PLR_headpos.z
-    rotate camera 0, PLR_angle.x, PLR_angle.y, PLR_angle.z
-endif
-
+function MVM_update()
+	// -----------------------
+	// NOTHING TO SEE HERE
+	// -----------------------
 endfunction
 
-
-/////////////////////////////////////////////////////////
-// TERMINATE                                           //
-/////////////////////////////////////////////////////////
-
-
-function terminateMovement()
-UI_WriteLog(UI_Green,"=== Terminating Movement module")
-UNDIM PLR_speeds(0)
-UNDIM PLR_heights(0)
-
-null = delete matrix4( mov_Mat1 )
-null = delete matrix4( mov_Mat2 )
-null = delete matrix4( mov_Mat3 )
-null = delete matrix4( mov_Mat4 )
-null = delete vector3( mov_Vec5 )
-null = delete vector3( mov_Vec6 )
-null = delete vector3( mov_Vec7 )
-
-freeResource(mov_Mat1,res_Matrix4)
-freeResource(mov_Mat2,res_Matrix4)
-freeResource(mov_Mat3,res_Matrix4)
-freeResource(mov_Mat4,res_Matrix4)
-freeResource(mov_Vec5,res_Vector)
-freeResource(mov_Vec6,res_Vector)
-freeResource(mov_Vec7,res_Vector)
-UI_WriteLog(UI_Green,"=== Movement module terminated")
+function MVM_terminate()
+	// -----------------------
+	// NOTHING TO SEE HERE
+	// -----------------------
 endfunction

@@ -1,6 +1,5 @@
 remstart
-Rem ***** Included Source File *****
-/////////////////////////
+/////////////////////////////////////////////////////
 //
 // OpenFPS RESOURCE MANAGEMENT Core Module
 //
@@ -16,33 +15,33 @@ Rem ***** Included Source File *****
 (2/11/10)  - Kaedroho - Made all math resource types the same type to avoid conflicts
 (2/12/10)  - BMacZero - Combined Vector values into one.
 (2/12/10)  - miso     - Added log commands.
-
+(11/28/10) - thenerd  - restructured module to fit the new module layout
 
 ----- To-Do:
-
-
------ Purpose:
-Assigns and frees resource numbers (ANYTHING that requires an
-    identification number with DB)
-
-
------ Dependancies and Conflicts (IMPORTANT STUFF):
 -None-
 
+----- Purpose:
+Assigns and frees resource numbers (anything that needs identification in DBpro)
+
+----- Dependancies and Conflicts:
+-None-
 
 ----- Other Notes:
 Usage (IMPORTANT***):
 Whenever ANY module needs ANY type of resource for ANY reason,
-    it MUST go through this module(excepting only BlitzTerrains)
+	it MUST go through this module(excepting only BlitzTerrains)
 How do you do that?  Call the grabResource() function.  The parameter
     represents the type of resource you want (see the constant
     declarations after these statements).
 When you are through with a resource, free it with the freeResource()
     function so it can be reused.
 
-
+All functions in this module are prefixed with RES_
+    
+/////////////////////////////////////////////////////
 remend
 
+`Resource types
 #Constant res_Object   0
 #Constant res_Image    1
 #Constant res_Sprite   2
@@ -61,25 +60,36 @@ remend
 #Constant res_Particle 14
 #Constant res_DLL      15
 
+`number of resource types
 #Constant res_Count    15
 
+`resource management type
 Type res_Type
     start as integer
     qty as integer
 endtype
-
 
 /////////////////////////////////////////////////////////
 // INIT                                                //
 /////////////////////////////////////////////////////////
 
 
-function initResource()
-UI_WriteLog(UI_Green,"=== Starting Resource module") : `will be showned only if we create a debug module initialized first
-global DIM ResourceCounters(res_Count)   as integer
-global DIM FreeResourcesIndex(res_Count) as res_Type
-global DIM FreeResources(0)              as integer
-UI_WriteLog(UI_Green,"=== Resource module started")
+function RES_init()
+	// -----------------------
+	// Init function
+	// -----------------------
+	`write debug
+	UI_WriteLog(UI_Yellow,"=== Starting Resource module")
+	
+	`global init
+	global DIM ResourceCounters(res_Count)   as integer
+	global DIM FreeResourcesIndex(res_Count) as res_Type
+	global DIM FreeResources(0)              as integer
+	
+	`done, write debug
+	// -----------------------
+	UI_WriteLog(UI_Green,"=== Resource module started")
+	// -----------------------
 endfunction
 
 
@@ -88,7 +98,7 @@ endfunction
 /////////////////////////////////////////////////////////
 
 
-function grabResource(restype)
+function RES_grab(restype)
 
 local result as integer
 

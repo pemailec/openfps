@@ -1,0 +1,14 @@
+case statements still work when put inside a remstart / remend comment:
+
+test_var$="test"
+do
+cls 0:set cursor 0,0
+select test_var$
+remstart
+case "test"
+print "inside rem, inside case, this still prints..."
+endcase
+remend
+endselect
+sync
+LOOP

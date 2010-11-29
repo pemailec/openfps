@@ -1,0 +1,265 @@
+Rem ***** Included Source File *****
+//////////////////
+// ************** Included Source File ***************                             
+// TITAN ENGINE DEBUG MODULE
+// 
+// Author: miso
+//
+//////////////////////////////////////////////////////
+
+`----- Changelog:
+`(2010/07/11) - miso     - Created
+`----- To-Do:
+
+`----- Purpose:
+
+`----- USES: none
+
+`----- Function List:
+
+`=========Constants=========`
+#Constant SyS_LogOFF    = 0
+#Constant SyS_LogON     = 1
+#Constant SyS_RED       = 3          :` debug message importance
+#Constant SyS_YELLOW    = 2          :` debug message importance
+#Constant SyS_GREEN     = 1          :` debug message importance
+`===========================`
+
+`==========Globals==========`
+Global SyS_DebugMode             as Boolean      : `internal debug variables, no need to worry about them
+Global SyS_LogMode               as Boolean      : `internal, if logmode is true, then debug will create logfile
+Global SyS_LogFileID             as Integer      : `internal, if logmode is true, then debug will create logfile
+Global SyS_FunctionName$         as String       : `internal debug variables, no need to worry about them
+Global SyS_IncludedFileName$     as String       : `internal debug variables, no need to worry about them
+Global SyS_OldFunctionName$      as String       : `internal debug variables, no need to worry about them
+Global SyS_OldIncludedFileName$  as String       : `internal debug variables, no need to worry about them
+`===========================`
+
+`===========Types===========`
+`===========================`
+
+
+`=========Functions=========`
+
+Function SyS_StartDebugMode( param_logmode as Boolean )
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Starts the debug mode.                                                          *
+//*                                                                                     *
+//***************************************************************************************
+local var_time$ as String
+local var_month$ as String
+local var_day$ as string
+local var_year$ as string
+local var_hour$ as string
+local var_minutes as string
+local var_Seconds as string
+  	SyS_DebugMode = SyS_True
+  	If param_logmode = SyS_True
+  		SyS_LogMode   = SyS_True
+  		SyS_LogFileID = grabresource(res_file)
+var_time$=Get Date$()
+var_month$ = left$(var_time$,2)
+var_day$ = mid$(var_time$,4) + mid$(var_time$,5)
+var_year$ = "20" + right$(var_time$,2)
+
+var_time$=Get Time$()
+var_hour$ = left$(var_time$,2)
+var_minutes$ = mid$(var_time$,4) + mid$(var_time$,5)
+var_seconds$ = right$(var_time$,2)
+
+var_time$="openfps "+var_year$+"."+var_month$+"."+var_day$
+var_time$=var_time$+"_"+var_hour$+"h "+var_minutes$+"m "+var_seconds$+" s.log"
+
+// we need 1 logfile at the moment, so we disable naming depended on time
+		var_time$="openfps_log.html"
+  		If File Exist(var_time$) = SyS_True Then Delete File var_time$
+  		Open to Write SyS_LogFileID,var_time$
+		Write String SyS_LogfileID,"<html><body background="+chr$(34)+"media\images\camo.jpg"+chr$(34)+">"
+		Write String SyS_LogfileID,"<img src="+chr$(34)+"media\menu\logo.png"+chr$(34)+"alt="+chr$(34)+"OpenFPS"+chr$(34)+"><br><br>"
+		Write String SyS_LogfileID,"<u>OpenFps Logfile</u><br>"
+		Write String SyS_LogFileID,"<br>"
+  	else
+  		SyS_Logmode   = SyS_False
+  	Endif
+  	SyS_SetDebugPosition("main program","test_game.dba")
+Endfunction
+
+Function SyS_WriteLog(param_importance,param_log$)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Write a log message to logfile if enabled. Nothing happens if not.              *
+//*                                                                                     *
+//***************************************************************************************
+local var_time$       as String
+local var_hour$       as string
+local var_minutes$    as string
+local var_Seconds$    as string
+Local var_logstring$  as string
+Local var_importance$ as string
+Local var_colorizer$  as string
+
+	If SyS_Logmode = SyS_Logon
+		Select param_importance
+			Case SyS_Red    : var_importance$="RED: "    :var_colorizer$="<font color=#440000>": EndCase
+			Case SyS_YELLOW : var_importance$="YELLOW: " :var_colorizer$="<font color=#444400>": EndCase
+			Case SyS_GREEN  : var_importance$="GREEN: "  :var_colorizer$="<font color=#004400>": EndCase
+		Endselect
+		If File Open(SyS_LogFileID)=1
+			var_time$=Get Time$()
+			var_hour$ = left$(var_time$,2)
+			var_minutes$ = mid$(var_time$,4) + mid$(var_time$,5)
+			var_seconds$ = right$(var_time$,2)
+			var_logstring$=var_colorizer$+var_importance$+" - "+var_hour$+":"+var_minutes$+":"+var_seconds$+" - " + param_log$+"</font><br>"
+			Write String SyS_LogFileID,var_logstring$
+		Endif
+	Endif
+EndFunction
+
+
+Function SyS_StopDebugMode()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Stops  the debug mode.                                                          *
+//*                                                                                     *
+//***************************************************************************************
+  SyS_DebugMode = SyS_False
+	If SyS_Logmode = SyS_Logon
+  		
+  			SyS_WriteLog(SyS_Yellow,"Just testing yellow importance.")
+  			SyS_WriteLog(SyS_RED,"Closing Logfile.")
+ 			Write String SyS_LogfileID,"</body></html>"
+ 			SyS_LogMode   = SyS_Logoff
+  			Close File SyS_LogFileID:rem freeresource(SyS_LogfileID,res_file)
+   	Endif
+
+Endfunction
+
+
+
+
+Function SyS_SetDebugPosition(functionname$ as string ,modulename$ as string )
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Set debug mode position to a named function in a named source file.             *
+//*                                                                                     *
+//***************************************************************************************
+	If SyS_DebugMode=SyS_True	
+			SyS_OldFunctionName$     = SyS_FunctionName$
+			SyS_OldIncludedFileName$ = SyS_IncludedFileName$
+			SyS_FunctionName$        = functionname$
+			SyS_IncludedFileName$    = modulename$
+	Endif
+Endfunction
+
+
+
+
+Function SyS_RestoreDebugPosition()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Sets the debug position to the main program.                                    *
+//*                                                                                     *
+//***************************************************************************************
+	If SyS_DebugMode=SyS_True	
+		rem SyS_FunctionName$     = SyS_OldFunctionName$
+		rem SyS_IncludedFileName$ = SyS_OldIncludedFileName$
+		SyS_FunctionName$         = "main program"
+		SyS_IncludedFileName$     = "test_game.dba"
+	Endif
+Endfunction
+
+
+
+
+
+Function SyS_Checkdxsprites()
+//***************************************************************************************
+//*  Miso:                                                                              *
+//*    Checks if advanced sprites initialized.                                          *
+//*                                                                                     *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+	If SyS_DebugMode=SyS_True 
+		If SyS_display.dxspriteinitialized=1 
+				exitfunction
+			else
+				SyS_WriteLog(SyS_Red,"Advanced Sprites Not Initialized ")+filename$
+				SyS_WriteLog(SyS_Red,"Initializing Advanced Sprites")
+				DXS INITIALIZE : SyS_Display.Dxspriteinitialized  = SyS_True
+				SyS_WriteLog(SyS_Yellow,"Advanced Sprites Initialized, but there may be errors.")+filename$
+								
+				repeat
+					cls:set cursor 1,1
+					print " "
+					print "********************************"
+					Print "*                              *"
+					print "*  miso's UI Debugger V 1.0    *"
+					Print "*                              *"
+					Print "********************************"
+					Print " "
+					Print "ERROR: Advanced Sprites not Initialized."
+					Print "Advanced sprites forced to initiate, errors may occours."
+					Print "Press Enter to continue."
+					Print " "
+					Print "__________________________________________________________________________________________________________________________"
+					print "The "+SyS_FunctionName$+" in "+SyS_IncludedFilename$+" tries to use"
+			    	print "Advanced Sprite functions, while DxSpriteInitialized=0."
+			    	Print "__________________________________________________________________________________________________________________________"
+					Print " "
+				    print " "
+			    	Print "Press Enter to Continue."
+			    	sync
+				until returnkey()=1
+			exitfunction
+		Endif
+	Endif
+Endfunction
+
+
+
+
+
+Function SyS_CheckFile(filename$ as string )
+//***************************************************************************************
+//*  Miso:                                                                              *
+//*    Checks if a file is exist on HDD, if does not, then stops the program.           *
+//*                                                                                     *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************
+	If SyS_DebugMode=SyS_True 
+		If file exist(filename$) = 1
+				exitfunction
+			else
+				SyS_WriteLog(SyS_Red,"Missing File: ")+filename$
+				SyS_WriteLog(SyS_Red,"Exiting instantly ")
+				SyS_Stopdebugmode()
+				repeat
+					cls:set cursor 1,1
+					print " "
+					print "********************************"
+					Print "*                              *"
+					print "*  miso's UI Debugger V 1.0    *"
+					Print "*                              *"
+					Print "********************************"
+					Print " "
+					Print "Error: File not found."
+					Print " "
+					Print " "
+					Print " "
+					Print "_______________________________________________________________________________________________________________________"
+					print "The "+SyS_FunctionName$+" in "+SyS_IncludedFilename$+" tries to manipulate"
+			    	print filename$+", but it does not exist there."
+			    	Print "_______________________________________________________________________________________________________________________"
+					Print " "
+				    print " "
+			    	Print "Press Enter to Halt."
+			    	sync
+				until returnkey()=1
+			End
+		Endif
+	Endif
+Endfunction
+
