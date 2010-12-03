@@ -1,86 +1,50 @@
-; **** Dark BASIC Professional Project File ****
-; **** Written by Synergy Editor ****
+; **** DarkBASIC Professional Project ****
+; Created by CodeSurge IDE
 version=DBP1.00
 project name=editor
 
-; **** source file information ****
+; ****Source file information****
 main=modules\editor_main.dba
-LineMain=0
 include1=modules\SYS_BGUI_USERID.dba
-LineInclude1=35
 include2=modules\SYS_GUI.dba
-LineInclude2=0
 include3=modules\SYS_INCLUDES.dba
-LineInclude3=0
 include4=modules\SYS_CONTROLS.dba
-LineInclude4=10
 include5=modules\SYS_TERRAIN.dba
-LineInclude5=32
 include6=modules\SYS_ENTITIES.dba
-LineInclude6=35
 include7=modules\SYS_EDITOR_GUI_EVENTS.dba
-LineInclude7=19
 include8=modules\SYS_SKY.dba
-LineInclude8=16
 include9=modules\SyS_EDITOR_SUBROUTINES.dba
-LineInclude9=0
+final source=_Temp.dbsource
 
-; **** Executable Information  ***
-; build types: exe, media, installer, alone
+;***Executable filename***
 executable=xEdit.exe
 build type=exe
-; ** Media file compression **
-compression=NO
 
-; ** Media file encryption **
+compression=NO
 encryption=NO
-; ** Display the card options screen window? **
 card options window=NO
 
-; **** debugger information ****
-; If the editor sets this to yes, it is running in debug mode
+; Debugger
 CLI=NO
-CommandLineArguments=
 
-; **** display mode information ****
+; *****Display Settings*****
 app title=xEdit version 3.1 - OpenFPS Subversion
-
-; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
 graphics mode=window
 fullscreen resolution=1280x1024x32
-
-; arbitrary sizes are valid for windowed mode
 window resolution=1024x768
 
-; **** External Files Information ****
 
-; **** Media ****
-; Example entries: media1=graphics\*.jpg
-media root path=C:\==Darkbasic Pro==\Dark Basic Professional\Projects\=Realwork=\=OpenFPS=\editor\
+;*****Media files, icons, cursors*****
+media root path=C:\Users\Jonathan\Documents\My Projects\OpenFPS\Source\editor\
 
-; **** Icons ****
-
-; **** Cursors ****
-
-; **** Version Info ****
+;****Version Information****
 VerComments=
 VerCompany=
 VerFileDesc=
-VerFileNumber=v1.0
+VerFileNumber=
 VerInternal=v1.0
 VerCopyright=
 VerTrademark=
 VerFilename=
 VerProduct=
 VerProductNumber=v1.0
-
-; **** To Do ****
-
-; **** Comments ****
-comments1=
-
-; **** Advanced (setup.ini) configuration ****
-RemoveSafetyCode=NO
-SafeArrays=YES
-LocalTempFolder=NO
-ExternaliseDLLS=NO
