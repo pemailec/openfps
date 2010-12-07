@@ -26,28 +26,17 @@ Remstart
 `----- Other Notes:
 `Usage (IMPORTANT***):
 
-`Just put your own console command here, as the examles shows.
-
-`----- Function List:
+`Just put your own console command here, as the examples shows.
 
 `----------MAIN  COMMANDS
-
-
-`=========Constants=========`
-`===========================`
-
-`==========Globals==========`
-
-`===========================`
-
-`===========Types===========`
-`===========================`
-
-
-`=========Functions=========`
+HIDE MOUSE
+SHOW MOUSE
+MODE MENU
+MODE ENGINE
+DEBUG
+EXIT
+/////////////////////////////////////////////////////
 Remend
-
-
 
 /////////////////////////////////////////////////////
 //MAIN COMMANDS
@@ -67,11 +56,29 @@ Function UI_SUB_CheckConsoleCommand()
 	case "SHOW MOUSE":
 		UI_FadeInMouse()
 	endcase
+	case "DEBUG"
+		CORE_DebugScreen=1
+	endcase
+	case "MODE MENU"
+		SyS_LoopMode="menu"
+	endcase
+	case "MODE ENGINE"
+		SyS_LoopMode="engine"
+	endcase
 	case "EXIT"
 		SyS_Event_Terminate=1
 	endcase
-	case "DEBUG"
-		DebugScreen=1
+	case "SYNC RATE 0"
+		sync rate 0
+	endcase
+	case "SYNC RATE 15"
+		sync rate 15
+	endcase
+	case "SYNC RATE 30"
+		sync rate 30
+	endcase
+	case "SYNC RATE 60"
+		sync rate 60
 	endcase
 	endselect
 Endfunction

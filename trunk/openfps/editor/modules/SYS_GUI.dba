@@ -189,6 +189,13 @@ function updateGui():
 			case 14
 				message "Load Environment","Feature not implemented yet!"
 			endcase
+			case 19
+				obj_string_t$=openDialog("Import Level Mesh","DBO Files (*.dbo)|*.dbo|X Files (*.X)|*.x|All Files (*.*)|*.*")
+				if file exist(obj_string_t$)=1:
+					obj=find free object()
+					load object obj_string_t$,obj
+				endif
+			endcase
 			case 6
 				InitTerrain(1)
 			endcase
@@ -231,6 +238,7 @@ function createMainMenu()
 		
 	ToolsMenu=createSubMenu(menu,4)
 		addMenuItem ToolsMenu,"Clear All Entities",18
+		addMenuItem ToolsMenu,"Load Level Mesh...",19
 			    
     popupMenu=createPopupMenu()
 	addMenuItem popupMenu,"()",15

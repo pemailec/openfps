@@ -64,6 +64,8 @@ All movement module functions are prefixed with MVM_
 -MVM_init()			-inits the movement module
 -MVM_update()		-updates the movement module
 -MVM_terminate()	-terminates the movement module
+-MVM_HideMouse()	-Hides the mouse
+-MVM_ShowMouse() 	-Shows the mouse
 
 /////////////////////////////////////////////////////
 remend
@@ -126,18 +128,44 @@ function MVM_init()
     	KEY_prone=46
 	endif
 	// -----------------------
+	`Various globals
+	global MVM_MouseLook as boolean:MVM_MouseLook=0
+	// -----------------------
 	UI_WriteLog(UI_Green,"=== Movement module started.")
 	// -----------------------
 endfunction
 
+/////////////////////////////////////////////////////////
+// MAIN                                                //
+/////////////////////////////////////////////////////////
+
 function MVM_update()
 	// -----------------------
-	// NOTHING TO SEE HERE
+	// Update movement
 	// -----------------------
+	if MVM_MouseLook>0:
+		UI_SetMousePosition(UI_Display.MiddleWidth,UI_Display.MiddleHeight)
+	endif
 endfunction
+
+function MVM_ShowMouse()
+	MVM_MouseLook=0
+	UI_ShowMouse()
+endfunction
+
+function MVM_HideMouse()
+	MVM_MouseLook=1
+	UI_HideMouse()
+endfunction
+
+/////////////////////////////////////////////////////////
+// TERMINATE                                           //
+/////////////////////////////////////////////////////////
 
 function MVM_terminate()
 	// -----------------------
 	// NOTHING TO SEE HERE
 	// -----------------------
 endfunction
+
+/////////////////////////////////////////////////////////

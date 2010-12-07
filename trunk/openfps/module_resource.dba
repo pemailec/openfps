@@ -30,10 +30,10 @@ Assigns and frees resource numbers (anything that needs identification in DBpro)
 Usage (IMPORTANT***):
 Whenever ANY module needs ANY type of resource for ANY reason,
 	it MUST go through this module(excepting only BlitzTerrains)
-How do you do that?  Call the grabResource() function.  The parameter
+How do you do that?  Call the RES_grab() function.  The parameter
     represents the type of resource you want (see the constant
     declarations after these statements).
-When you are through with a resource, free it with the freeResource()
+When you are through with a resource, free it with the RES_free()
     function so it can be reused.
 
 All functions in this module are prefixed with RES_
@@ -99,115 +99,128 @@ endfunction
 
 
 function RES_grab(restype)
-
-local result as integer
-
-if FreeResourcesIndex(restype).qty=0
-    inc ResourceCounters(restype)
-    result=ResourceCounters(restype)
-    
+	// -----------------------
+	// Grab a resource
+	// -----------------------
+	local result as integer
+	if FreeResourcesIndex(restype).qty=0
+    	inc ResourceCounters(restype)
+    	result=ResourceCounters(restype)
     else
-    result=FreeResources(FreeResourcesIndex(restype).start)
-    array delete element FreeResources(0),FreeResourcesIndex(restype).start
-    dec FreeResourcesIndex(restype).qty
-    
-    for d=restype+1 to res_Count
-        dec FreeResourcesIndex(d).start
-    next d
-endif    
-
+    	result=FreeResources(FreeResourcesIndex(restype).start)
+    	array delete element FreeResources(0),FreeResourcesIndex(restype).start
+    	dec FreeResourcesIndex(restype).qty
+    	
+    	for d=restype+1 to res_Count
+        	dec FreeResourcesIndex(d).start
+    	next d
+	endif    
+	// -----------------------
 endfunction result
 
 
 
-function freeResource(number,restype)
-
-local temp as integer
-
-`Delete it if it hasn't been
-select restype
-    case res_Object
-        if object exist(number) then delete object number
-    endcase
-    case res_Image
-        if image exist(number) then delete image number
-    endcase
-    case res_Sprite
-        if sprite exist(number) then delete sprite number
-    endcase
-    case res_File
-        if file open(number) then close file number
-    endcase
-    case res_Sound
-        if sound exist(number) then delete sound number
-    endcase
-    case res_Music
-        if music exist(number) then delete music number
-    endcase
-    case res_Memblock
-        if memblock exist(number) then delete memblock number
-    endcase
-    case res_Bitmap
-        if bitmap exist(number) then delete bitmap number
-    endcase
-    case res_Anim
-        if animation exist(number) then delete animation number
-    endcase
-    case res_Light
-        if light exist(number) then delete light number
-    endcase
-    case res_Camera
-        if camera exist(number) then delete camera number
-    endcase
-    case res_Mesh
-        if mesh exist(number) then delete mesh number
-    endcase
-    case res_Matrix
-        if matrix exist(number) then delete matrix number
-    endcase
-    case res_Particle
-        if particles exist(number) then delete particles number
-    endcase
-    case res_Matrix4
-        `if matrix4 exist(number) then delete matrix4 number
-    endcase
-    case res_Vector
-        `if vector exist(number) then delete vector number
-    endcase
-    case res_DLL
-        if dll exist(number) then delete dll number
-    endcase
-    case default
-        exitfunction
-    endcase
-endselect
-
-if number=ResourceCounters(restype)
-    dec ResourceCounters(restype)
-    else
-    temp=FreeResourcesIndex(restype).start+FreeResourcesIndex(restype).qty
-    array insert at element FreeResources(0),temp
-    FreeResources(temp)=number
-    inc FreeResourcesIndex(restype).qty
-    
-    for d=restype+1 to res_Count
-        inc FreeResourcesIndex(d).start
-    next d
-endif
-
+function RES_free(number,restype)
+	// -----------------------
+	// Free a resource
+	// -----------------------
+	local temp as integer
+	`Delete it if it hasn't been
+	select restype
+    	case res_Object
+        	if object exist(number) then delete object number
+    	endcase
+    	case res_Image
+        	if image exist(number) then delete image number
+    	endcase
+    	case res_Sprite
+        	if sprite exist(number) then delete sprite number
+    	endcase
+    	case res_File
+        	if file open(number) then close file number
+    	endcase
+    	case res_Sound
+        	if sound exist(number) then delete sound number
+    	endcase
+    	case res_Music
+        	if music exist(number) then delete music number
+    	endcase
+    	case res_Memblock
+        	if memblock exist(number) then delete memblock number
+    	endcase
+    	case res_Bitmap
+        	if bitmap exist(number) then delete bitmap number
+    	endcase
+    	case res_Anim
+        	if animation exist(number) then delete animation number
+    	endcase
+    	case res_Light
+        	if light exist(number) then delete light number
+    	endcase
+    	case res_Camera
+        	if camera exist(number) then delete camera number
+    	endcase
+    	case res_Mesh
+        	if mesh exist(number) then delete mesh number
+    	endcase
+    	case res_Matrix
+        	if matrix exist(number) then delete matrix number
+    	endcase
+    	case res_Particle
+        	if particles exist(number) then delete particles number
+    	endcase
+    	case res_Matrix4
+        	`if matrix4 exist(number) then delete matrix4 number
+    	endcase
+    	case res_Vector
+        	`if vector exist(number) then delete vector number
+    	endcase
+    	case res_DLL
+        	if dll exist(number) then delete dll number
+    	endcase
+    	case default
+        	exitfunction
+    	endcase
+	endselect
+	
+	if number=ResourceCounters(restype)
+    	dec ResourceCounters(restype)
+    	else
+    	temp=FreeResourcesIndex(restype).start+FreeResourcesIndex(restype).qty
+    	array insert at element FreeResources(0),temp
+    	FreeResources(temp)=number
+    	inc FreeResourcesIndex(restype).qty
+    	
+    	for d=restype+1 to res_Count
+        	inc FreeResourcesIndex(d).start
+    	next d
+	endif
+	// -----------------------
 endfunction
 
+`old function names for compatibility
+
+function grabResource(restype)
+	result=RES_grab(restype)
+endfunction result
+
+function freeResource(number,restype)
+	RES_free(number,restype)
+endfunction
 
 /////////////////////////////////////////////////////////
 // TERMINATE                                           //
 /////////////////////////////////////////////////////////
 
 
-function terminateResource()
-UI_WriteLog(UI_Green,"=== Terminating Resource module")
-UNDIM ResourceCounters(0)
-UNDIM FreeResourcesIndex(0)
-UNDIM FreeResources(0)
-UI_WriteLog(UI_Green,"=== Resource module terminated")
-
+function RES_terminate()
+	// -----------------------
+	// Terminate resource module
+	// -----------------------
+	UI_WriteLog(UI_Green,"=== Terminating Resource module")
+	UNDIM ResourceCounters(0)
+	UNDIM FreeResourcesIndex(0)
+	UNDIM FreeResources(0)
+	UI_WriteLog(UI_Green,"=== Resource module terminated")
+	// -----------------------
 endfunction

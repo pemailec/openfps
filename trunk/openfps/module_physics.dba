@@ -45,8 +45,9 @@ game to crash.
 MaterialTypes:
 * Default (0) - No Settings. (DEFAULT)
 PLANNED:
-* Wood    (1) - Wood Material. 
-* Metal   (2) - Metal Material.
+* Wood     (1) - Wood Material. 
+* Metal    (2) - Metal Material.
+* Concrete (3) - Stone Material.
 
 remend
 
@@ -55,7 +56,7 @@ remend
 /////////////////////////////////////////////////////
 
 `MaterialTypes:
-global MType_DEFAULT  as integer
+global PHY_MType_DEFAULT  as integer
 `NDB Variables:
 global PHY_WorldSize# as float
 global PHY_time#      as float
@@ -107,7 +108,7 @@ function PHY_init(world_size#,Debunk):
 	NDB_NewtonSetWorldSize
 	
 	`Assign Material Types
-	MType_DEFAULT=0
+	PHY_MType_DEFAULT=0
 	
 	`Create character.
 	PHY_AddCharacter()

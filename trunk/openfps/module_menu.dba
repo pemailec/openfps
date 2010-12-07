@@ -21,25 +21,26 @@ remstart
 (7/01/10)  - miso           - Hides ui_mouse before entering game mode
                               Creates a stamina bar, before jumping to game mode (won't crash the game if we delete this part)
 (07/04/10) - miso           - Changed an end command to SyS_Event_Terminate=1
-(07/06/10) - thenerd, miso  - Started to rewrote with user interface commands
+(07/06/10) - thenerd, miso  - Started to rewrite with user interface commands
 (07/07/10) - thenerd        - Recoding menu, working on chat lobby and server list.
 (07/08/10) - thenerd        - Added windows to go along with each button.
 (7/20/10)  - thenerd        - Added Lobby window.
 (7/29/10)  - thenerd        - New menu layout, loading screen for game engine.
-(8/13/10) - thenerd        - Finished menu.
+(8/13/10)  - thenerd        - Finished menu.
+(11/28/10) - thenerd 		- Restructured code to use new module layout
 
 ----- To-Do:
+-None-
 
 ----- Purpose:
 Runs the menu.
 
-
------ Dependancies and Conflicts (IMPORTANT STUFF):
+----- Dependancies and Conflicts:
 -None-
 
 ----- Other Notes:
 * For now, to access the game engine part of the project, click on the training button and start training.
-
+* The menu module functions and resources are prefixed with MENU_
 
 remend
 
@@ -47,538 +48,133 @@ remend
 // INIT                                                //
 /////////////////////////////////////////////////////////
 
-function initMenu()
-	UI_WriteLog(UI_Green,"=== Starting Menu module")
-	menu_initbackdrop()
-	menu_CreateMain()
-	UI_WriteLog(UI_Green,"Starting Menu Windows sub-module")
-	InitMenuWindows()
-	UI_WriteLog(UI_Green,"Menu Windows sub-module started")
-	global CurrentWindow$
+function MENU_init():
+	// -----------------------
+	// Init function
+	// -----------------------
+	`write debug
+	UI_WriteLog(UI_Yellow,"=== Starting Menu module")
+	`set up menu variables
+	global MENU_CurrentWindow$			`Current Menu window
+	global MENU_lobby_current_tab$		`Current Menu tab
+	global MENU_lobby_no_servers		`Lobby server list variable
+	global MENU_icon_lock				`Lock icon
+	global MENU_ui_mouse_wait			`Mouse hourglass cursor
+	global MENU_Feather					`Edge of screen feather image
+	global MENU_LoopStartup				`First loop variable
+	global MENU_ForegroundImage			`Menu foreground
+	global MENU_ForegroundSprite		`Menu foreground sprite
+	global MENU_BackgroundImage			`Menu background object image
+	global MENU_BackgroundObject		`Menu background object 
+	global MENU_BackgroundObject2		`Menu background object 2
+	global MENU_BackgroundSphereImg		`Menu background sphere texture
+	global MENU_music					`Menu music
 	
-	global DebugScreen
+	`set variables
+	MENU_LoopStartup=			1
+	MENU_lobby_current_tab$=	"UI_lobby_tab_game"
+	MENU_menu_lobby_no_servers=	RES_grab(res_Image)
+	MENU_icon_lock=				RES_grab(res_Image)
+	MENU_ui_mouse_wait=			RES_grab(res_Image)
+	MENU_Feather=				RES_grab(res_Image)
+	MENU_ForegroundImage=		RES_grab(res_Image)
+	MENU_BackgroundImage=		RES_grab(res_Image)
+	MENU_ForegroundSprite=		RES_grab(res_Sprite)
+	MENU_BackgroundObject=		RES_grab(res_Object)
+	MENU_BackgroundObject2=		RES_grab(res_Object)
+	MENU_BackgroundSphereImg=	RES_grab(res_Image)
+	MENU_music=					RES_grab(res_Music)
 	
-	global ui_mouse_wait
-	ui_mouse_wait = grabResource(res_Image)
-	load image "media\cursors\waitcursor.dds",ui_mouse_wait
+	`load media
+	UI_WriteLog(UI_Yellow,"* Loading Media")
+	load image "media\menu\menu_lobby_no_servers.png",	MENU_menu_lobby_no_servers
+	load image "media\menu\lock.png",					MENU_icon_lock
+	load image "media\cursors\waitcursor.dds",			MENU_ui_mouse_wait
+	load image "media\menu\feather.png",				MENU_Feather
+	load image "media\menu\main.png",					MENU_ForegroundImage
+	load image "media\menu\menu_bgimg.png",				MENU_BackgroundImage
+	load image "media\menu\grid.png",					MENU_BackgroundSphereImg
+	load music "media\audio\The Awakening.mp3",			MENU_music
+	UI_WriteLog(UI_Green,"* Media Loaded.")
 	
-	global Lobby_current_tab$
-	Lobby_current_tab$="UI_lobby_tab_game"
+	`Create objects
+	UI_WriteLog(UI_Yellow,"Creating Menu Backdrop")
+	make object plain MENU_BackgroundObject,1024,768
+	texture object MENU_BackgroundObject,MENU_BackgroundImage
+	position object MENU_BackgroundObject,0,0,512
+	lock object on MENU_BackgroundObject
+	point object MENU_BackgroundObject,0,0,0
 	
-	global menu_lobby_no_servers
-	menu_lobby_no_servers = grabResource(res_Image)
-	load image "media\menu\menu_lobby_no_servers.png",menu_lobby_no_servers
+	make object sphere MENU_BackgroundObject2,40
+	position object MENU_BackgroundObject2,18,-10,36
+	disable object zdepth MENU_BackgroundObject2
+	lock object on MENU_BackgroundObject2
+	texture object MENU_BackgroundObject2,MENU_BackgroundSphereImg
+	set object transparency MENU_BackgroundObject2,1
+	set alpha mapping on MENU_BackgroundObject2,20
 	
-	global Feather
-	Feather = grabResource(res_Image)
-	load image "media\menu\feather.png",Feather
+	UI_WriteLog(UI_Green,"Menu Backdrop Created")
 	
-	global CreditsLayerBG
-	CreditsLayerBG = grabResource(res_Image)
-	load image "media\menu\credits\bg.png",CreditsLayerBG
-	
-	global CreditsLayerBGS
-	CreditsLayerBGS = grabResource(res_Sprite)
-	
-	global CreditsLayerFG
-	global CreditsLayerFGSpr
-	CreditsLayerFG = grabResource(res_Image)
-	CreditsLayerFGSpr =grabResource(res_Sprite)
-	load image "media\menu\credits\fg.png",CreditsLayerFG
-		
-	global BGSalpha
-	global BGHidden
-	
-	global menu_lock
-	menu_lock  = grabResource(res_Image)
-	load image "media\menu\lock.png",menu_lock
-	
-	global CreditsMode
-	CreditsMode=0
-	
-	initNetwork()
+	`play music
+	play music menu_music
+	// -----------------------
 endfunction
+
 /////////////////////////////////////////////////////////
 // CORE                                                //
 /////////////////////////////////////////////////////////
 
-function runMenu()
-UI_HideChatBox()
-do
-	position mouse screen width()/2,screen height()/2
+function MENU_update()
+	// -----------------------
+	// Update function
+	// -----------------------
+	`handle loop startup
+	if MENU_LoopStartup>0:
+		MENU_Show()
+		UI_HideChatBox()
+		MENU_LoopStartup=0
+	endif
 	
-	hide sprite menu_mainimagespr
+	`handle loading fade
 	if sprite alpha(NetConnectSprite)>10:
 		set sprite alpha NetConnectSprite,sprite alpha(NetConnectSprite)-10
 	else
 		hide sprite NetConnectSprite
 	endif
 	
+	`scroll background texture
+	scroll object texture MENU_BackgroundObject,0.0005*SyS_TimeFactor,0
+	scroll object texture MENU_BackgroundObject2,0.0001*SyS_TimeFactor,0
 	
+	`paste menu foreground
+	paste image MENU_ForegroundImage,0,0,1
 	
-	`if KEYSTATE(19)=1 then goto _reset_menu
-	`if mouseclick()=1 then play object icon_blank_obj_test,0
-	updateNetwork()
-	
-	if CreditsMode=1 then goto skip_ui
-	
-	//---update menu and UI
-	menu_updatebackdrop(0)
-	UpdateMenuWindows()
-	
-	//--------------------------------------
-	//----render button-specific windows
-	
-	select CurrentWindow$
-		case "button_quit"
-			ui_putwindow(UI_Display.Middlewidth-280,UI_Display.Middleheight-10,35,15)
-		endcase
-		case "button_training"
-			ui_putwindow(UI_Display.Middlewidth-280,UI_Display.Middleheight-10,35,15)
-		endcase
-		case "button_lobby"
-			`UI_Reinitchatbox()
-			if UI_GadgetExist("button_lobby_game")=1:
-				x=UI_Chatpanel.x-285
-				y=UI_Chatpanel.y-148
-				UI_PositionGadget("button_lobby_game",x,y)
-				x=UI_Chatpanel.x-285
-				y=UI_Chatpanel.y-98
-				UI_PositionGadget("button_lobby_chat",x,y)
-				x=UI_Chatpanel.x-307
-				y=UI_Chatpanel.y-214
-				UI_PositionGadget("chatpanel_tab_game",x,y)
-				x=UI_Chatpanel.x+188
-				y=UI_Chatpanel.y-205
-				UI_PositionGadget("button_close_window",x,y)
-			endif
-			if UI_MouseOveredGadget$="button_lobby_game" and mouseclick()=1:
-				`campaign button
-				UI_DeleteGadget("chatpanel_tab_game")
-				x=UI_Chatpanel.x-307
-				y=UI_Chatpanel.y-214
-				UI_AddCenterGadgettoScreen("chatpanel_tab_game",x,y,"UI_lobby_tab_game")
-				UI_PositionGadget("chatpanel_tab_game",x,y)
-				Lobby_current_tab$="UI_lobby_tab_game"
-			endif
-			if UI_MouseOveredGadget$="button_lobby_chat" and mouseclick()=1:
-				`versus button
-				UI_DeleteGadget("chatpanel_tab_game")
-				x=UI_Chatpanel.x-307
-				y=UI_Chatpanel.y-214
-				UI_AddCenterGadgettoScreen("chatpanel_tab_game",x,y,"UI_lobby_tab_chat")
-				UI_PositionGadget("chatpanel_tab_game",x,y)
-				Lobby_current_tab$="UI_lobby_tab_chat"
-			endif
-			if UI_MouseOveredGadget$="button_close_window" and mouseclick()=1:
-				goto _reset_menu	
-			endif
-			
-		endcase
-		case "button_credits"
-			x=UI_Chatpanel.x+140
-			y=UI_Chatpanel.y-162
-			UI_PositionGadget("button_close_window",x,y)
-			if UI_MouseOveredGadget$="button_close_window" and mouseclick()=1:
-				goto _reset_menu	
-			endif
-		endcase
-		case "button_options"
-			x=UI_Chatpanel.x+140
-			y=UI_Chatpanel.y-142
-			UI_PositionGadget("button_close_window",x,y)
-			if UI_MouseOveredGadget$="button_close_window" and mouseclick()=1:
-				goto _reset_menu	
-			endif
-		endcase
-	endselect
-	
-	UI_handle()
-
-
-	//----check buttonclicks
-	If mouseclick()=1 and UI_Mouseclicked=0
-		Select UI_MouseOveredGadget$
-
-			Case "button_lobby"
-				UI_ClearAllGuis()
-				UI_HideOptions()
-				UI_hidecredits()
-				UI_Reinitchatbox()
-				UI_sub_CheckChatboxScreenedges()
-				CurrentWindow$="button_lobby"
-			EndCase
-			
-			Case "button_training"
-				UI_hidechatbox()
-				UI_HideOptions()
-				UI_hidecredits()
-				UI_ClearAllGuis()
-				Menu_EnterTrainingQuestion()
-				CurrentWindow$="button_training"
-			EndCase
-			
-			Case "button_credits"
-				UI_ClearAllGuis()
-				UI_HideChatBox()
-				UI_HideOptions()
-				UI_showcredits()
-				CurrentWindow$="button_credits"
-				`CreditsMode=1
-			EndCase
-			
-			Case "button_options"
-				UI_ClearAllGuis()
-				UI_HideChatBox()
-				UI_hidecredits()
-				UI_showOptions()
-				CurrentWindow$="button_options"
-			EndCase
-						
-					
-			Case "button_quit"
-				UI_HideChatBox()
-				UI_hidecredits()
-				UI_HideOptions()
-				UI_ClearAllGuis()
-				UI_PlayMouseClickSND()
-				Menu_CreateQuitQuestion()
-				CurrentWindow$="button_quit"
-			EndCase
-		
-			Case "button_yesquit"
-				SyS_Event_Terminate=1
-				Exit
-			EndCase
-			
-			Case "button_yestrain"
-				sync
-				SyS_Event_Terminate=0
-				Exit
-			EndCase	
-					
-			Case "button_backtomain"
-				_reset_menu:
-				UI_HideChatBox()
-				UI_hidecredits()
-				UI_HideOptions()
-				UI_ClearAllGuis()
-				UI_PlayMouseClickSND()
-				Menu_Createmain()
-				CurrentWindow$="main"
-				//Reinit chatbox when back to main
-				if UI_GadgetExist("button_lobby_game")=1:
-					UI_DeleteGadget("button_lobby_game")
-				endif
-				if UI_GadgetExist("button_lobby_chat")=1:
-					UI_DeleteGadget("button_lobby_chat")
-				endif
-				if UI_GadgetExist("chatpanel_tab_game")=1:
-					UI_DeleteGadget("chatpanel_tab_game")
-				endif
-					
-				`UI_Reinitchatbox()
-				
-			EndCase
-			
-			Case "button_credits"
-				MENU_credits.active=0 `1 for credits window active, 0 for now
-			endcase
-			
-		Endselect
-	Endif
-	
-	skip_ui:
-	
-	if CreditsMode=1:
-		
-		`if sprite exist(CreditsLayerFG)<1 then sprite CreditsLayerFGSpr,0,0,CreditsLayerFG`set sprite priority CreditsLayerFGSpr,1
-		
-		if sprite exist(CreditsLayerBG)<1 then sprite CreditsLayerBGS,0,0,CreditsLayerBG:UI_FadeOutMouse()
-		set sprite alpha CreditsLayerBGS,BGSalpha
-		if BGSalpha<254 then BGSalpha=BGSalpha+4
-		if BGSalpha>255 then BGSalpha=255
-		
-		if BGSalpha>250 and BGHidden<1:
-			draw to back
-			backdrop off
-			menu_HideBackdrop()
-			BGHidden=1
-		else:
-			menu_updatebackdrop(1)
-		endif
-		
-		UI_handle()
-		
-		// bg overlay
-
-		
-		if KEYSTATE(19)=1:
-			delete sprite CreditsLayerBGS
-			`delete sprite CreditsLayerFGSpr
-			BGSalpha=0
-			//reset
-			Menu_ShowBackdrop()
-			menu_updatebackdrop(1)
-			UI_FadeInMouse()
-			CreditsMode=0
-			ResetFlag=1
-			BGHidden=0
-			draw to front
-			backdrop on
-			color backdrop rgb(0,0,0)
-			goto _reset_menu
-		endif
+	`debug
+	if CORE_DebugScreen=1:
+		X=UI_MouseX()+16:Y=UI_MouseY()
+		UI_Text(1,X,Y,"Debug Mode====="):Y=Y+18
+		UI_Text(1,X,Y,"Screen rate "+str$(screen fps())):Y=Y+18
+		UI_Text(1,X,Y,"TimeFactor#="+str$(SyS_TimeFactor)):Y=Y+18
 	endif
 	
-	`UI_text(1,0,15,str$(UI_MouseX()-UI_Chatpanel.x))
-	`UI_text(1,0,30,str$(UI_MouseY()-UI_Chatpanel.y))
-	
-	//---Sync
-	`paste image menu_lock,UI_MouseX(),UI_MouseY()
-	
-	Sync
-loop
-//checks if any module triggered a quit event
-UI_WriteLog(UI_Red,"=== Menu Loop Terminated")
-terminateNetwork()
-If SyS_Event_Terminate=1:
-	Menu_DeleteBackdrop()
-	UI_WriteLog(UI_Yellow,"GOTO Terminate Script.")
-	Sys_Terminate()
-endif
-UI_HideChatBox()
-UI_HideOptions()
-UI_ClearAllGuis()
-UI_PlayMouseClickSND()
-menu_updatebackdrop(0)
-ui_putwindow(UI_Display.Middlewidth-280,UI_Display.Middleheight-10,35,15)
-X=UI_Display.Middlewidth:Y=UI_Display.Middleheight+50
-UI_AddTextLine(3,x,y,"Loading...")
-UI_HideMouse()
-
-UI_handle()
-paste image ui_mouse_wait,UI_MouseX(),UI_MouseY(),1
-sync
-	
-`global img_fade
-global img_fadespr
-`img_fade = grabResource(res_Image)
-img_fadespr = dxs create sprite("media\menu\load.bmp")
-`set sprite img_fadeblackspr,1,0
-`set sprite alpha img_fadespr,0
-`set sprite priority img_fadespr,1
-
-
-UI_WriteLog(UI_Green,"Switching To Game Engine...")
-
-endfunction
-/////////////////////////////////////////////////////////
-// SUPPORT                                             //
-/////////////////////////////////////////////////////////
-
-Function menu_CreateMain()
-local x as integer: local y as integer
-x=168:y=240
-	UI_AddCenterGadgettoScreen("button_lobby",x,y,"UI_button")
-	UI_AddMouseoverImageToGadget("button_lobby","UI_buttonhover")
-	UI_AddtitleToGadget("button_lobby",3,x-8,y-14,"Lobby")
-	
-remstart
-x=168:y=y+60
-	UI_AddCenterGadgettoScreen("button_versus",x,y,"UI_button")
-	UI_AddMouseoverImageToGadget("button_versus","UI_buttonhover")
-	UI_AddtitleToGadget("button_versus",3,x-8,y-14,"Versus")
-remend
-
-x=168:y=y+60
-	UI_AddCenterGadgettoScreen("button_training",x,y,"UI_button")
-	UI_AddMouseoverImageToGadget("button_training","UI_buttonhover")
-	UI_AddtitleToGadget("button_training",3,x-8,y-14,"Training")
-
-x=168:y=y+60
-	UI_AddCenterGadgettoScreen("button_options",x,y,"UI_button")
-	UI_AddMouseoverImageToGadget("button_options","UI_buttonhover")
-	UI_AddtitleToGadget("button_options",3,x-8,y-14,"Options")
-
-x=168:y=y+60
-	UI_AddCenterGadgettoScreen("button_credits",x,y,"UI_button")
-	UI_AddMouseoverImageToGadget("button_credits","UI_buttonhover")
-	UI_AddtitleToGadget("button_credits",3,x-8,y-14,"Credits")
-
-
-x=168:y=y+60
-	UI_AddCenterGadgettoScreen("button_quit",x,y,"UI_button")
-	UI_AddMouseoverImageToGadget("button_quit","UI_buttonhover")
-	UI_AddtitleToGadget("button_quit",3,x-8,y-14,"Quit")
-	
-	x=UI_Chatpanel.x-285
-	y=UI_Chatpanel.y-148
-	UI_AddCenterGadgettoScreen("button_lobby_game",x,y,"UI_button_small")
-	UI_AddMouseoverImageToGadget("button_lobby_game","UI_button_small_hover")
-	UI_AddMouseoverTitleToGadget("button_lobby_game",1,x-12,y-6,"-Servers-")
-	UI_AddtitleToGadget("button_lobby_game",1,x-8,y-6,"Servers")
-		
-	x=UI_Chatpanel.x-285
-	y=UI_Chatpanel.y-98
-	UI_AddCenterGadgettoScreen("button_lobby_chat",x,y,"UI_button_small")
-	UI_AddMouseoverImageToGadget("button_lobby_chat","UI_button_small_hover")
-	UI_AddMouseoverTitleToGadget("button_lobby_chat",1,x-12,y-6,"-Chat-")
-	UI_AddtitleToGadget("button_lobby_chat",1,x-12,y-6,"Chat")
-	
-	
-	
-	
-	x=UI_Chatpanel.x-307
-	y=UI_Chatpanel.y-214
-	UI_AddCenterGadgettoScreen("chatpanel_tab_game",x,y,"UI_lobby_tab_game")
-	`UI_AddMouseoverImageToGadget("chatpanel_tab_campaign","UI_chatpanel_tab_versus")
-
-
-EndFunction
-
-Function Menu_CreateQuitQuestion()
-	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight+50
-	
-	UI_AddTextLine(3,x,y,"Are you sure you want to quit?")
-	
-	X=x-150 : Y=Y+100
-	UI_AddCenterGadgettoScreen("button_yesquit",x,y,"UI_button")
-	UI_AddMouseoverImageToGadget("button_yesquit","UI_buttonhover")
-	UI_AddtitleToGadget("button_yesquit",3,x-8,y-14,"Yes")	
-
-	X=x+300
-	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
-	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
-	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"No")	
-
-	
-EndFunction
-
-Function Menu_EnterTrainingQuestion()
-	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight+50
-	
-	UI_AddTextLine(3,x,y-20,"Begin Training?")
-	UI_AddTextLine(1,x,y+20,"Training allows you to familiarize yourself with the controls")
-	UI_AddTextLine(1,x,y+34,"and techniques of the game before entering the field.")
-	
-	X=x-150 : Y=Y+100
-	UI_AddCenterGadgettoScreen("button_yestrain",x,y,"UI_button")
-	UI_AddMouseoverImageToGadget("button_yestrain","UI_buttonhover")
-	UI_AddtitleToGadget("button_yestrain",3,x-8,y-14,"Start")	
-
-	X=x+300
-	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
-	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
-	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Cancel")	
-
-	
-EndFunction
-
-
-Function Menu_CreateIngameQuitQuestion()
-	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight+50
-	UI_AddTextLine(3,x,y,"Are you sure you want to quit?")
-	
-	X=x-150 : Y=Y+100
-	UI_AddCenterGadgettoScreen("button_yesquit",x,y,"UI_button")
-	UI_AddMouseoverImageToGadget("button_yesquit","UI_buttonhover")
-	UI_AddtitleToGadget("button_yesquit",3,x-8,y-14,"Yes")	
-
-	X=x+300
-	UI_AddCenterGadgettoScreen("button_clearquitquestion",x,y,"UI_button")
-	UI_AddMouseoverImageToGadget("button_clearquitquestion","UI_buttonhover")
-	UI_AddtitleToGadget("button_clearquitquestion",3,x-8,y-14,"No")	
-EndFunction
-
-
-
-function Menu_InitBackdrop():
-	UI_WriteLog(UI_Green,"Creating Menu Backdrop")
-	global menu_mainimage
-	global menu_mainimagespr
-	menu_mainimage  = grabResource(res_Image)
-	load image "media\menu\main.png",menu_mainimage
-	menu_mainimagespr = grabResource(res_Sprite)
-	sprite menu_mainimagespr,0,0,menu_mainimage
-	hide sprite menu_mainimagespr
-	
-	backdrop on
-	color backdrop rgb(0,0,0)
-	sync on
-	sync rate 60
-	
-	global menu_bgfx1
-	global menu_bgfx1img
-	menu_bgfx1  = grabResource(res_Object)
-	menu_bgfx1img  = grabResource(res_Image)
-	load image "media\menu\menu_bgfx1img.png",menu_bgfx1img
-	make object plain menu_bgfx1,1024,768
-	texture object menu_bgfx1,menu_bgfx1img
-	set object transparency menu_bgfx1,1
-	position object menu_bgfx1,0,0,512
-	point object menu_bgfx1,0,0,0
-	
-	global menu_music
-	menu_music  = grabResource(res_Music)
-	load music "media\audio\The Awakening.mp3",menu_music
-	play music menu_music
-	UI_WriteLog(UI_Green,"Menu Backdrop Created")
 endfunction
 
-function Menu_UpdateBackdrop(flag):
-	if flag=0 then hide sprite menu_mainimagespr:paste image menu_mainimage,0,0,1
-	if flag=1 then show sprite menu_mainimagespr
-	scroll object texture menu_bgfx1,0.001,0
+function MENU_Show():
+	show object MENU_BackgroundObject
+	show object MENU_BackgroundObject2
 endfunction
 
-function Menu_HideBackdrop():
-	hide object menu_bgfx1
-	if music playing(menu_music)>0 then stop music menu_music
-	color backdrop rgb(0,0,255)
+function MENU_Hide():
+	hide object MENU_BackgroundObject
+	hide object MENU_BackgroundObject2
 endfunction
 
-function Menu_ShowBackdrop():
-	show object menu_bgfx1
-	play music menu_music
-	color backdrop 0
-endfunction
-
-function Menu_DeleteBackdrop():
-	UI_WriteLog(UI_Green,"Deleting Menu...")
-	freeResource(menu_bgfx1        ,res_Object)
-	freeResource(menu_mainimage    ,res_Image )
-	freeResource(menu_bgfx1img     ,res_Image )
-	freeResource(menu_music        ,res_Music )
-	if object exist(menu_bgfx1)=1 then hide object menu_bgfx1:delete object menu_bgfx1
-	UI_WriteLog(UI_Red,"Menu Shutdown Successful")
-endfunction
-
-
-function Menu_AddOPenFPSStaminabar()
-	aa=140:bb=97		
-	UI_AddCenterGadgetToScreen("UI_staminabarholder",0+aa,0+bb,"UI_barholderimage")
-	//--add the BAR for STAMINA
-	UI_AddbarGadgetToScreen("UI_stamina",3+aa,3+bb,"UI_redbar",50)
-	UI_CenterPositionGadget("UI_stamina",aa,bb)
-	UI_addtitletogadget("UI_stamina",3,aa-8,bb-14,"STAMINA")
-Endfunction
-
-Function Menu_AddOpenFpsFatigueBar()
-	aa=140:bb=137		
-	UI_AddCenterGadgetToScreen("UI_fatiguebarholder",0+aa,0+bb,"UI_barholderimage")
-	//--add the BAR for STAMINA
-	UI_AddbarGadgetToScreen("UI_fatigue",3+aa,3+bb,"UI_orangebar",50)
-	UI_CenterPositionGadget("UI_fatigue",aa,bb)
-	UI_addtitletogadget("UI_fatigue",3,aa-8,bb-14,"FATIGUE")
-EndFunction
-
-function UI_LoadingScreen()
+function MENU_LoadingScreen()
 	`Load resource for loading screen
 	global NetConnectImg
 	global NetConnectSprite
-	NetConnectImg = grabResource(res_Image)
-	NetConnectSprite = grabResource(res_Sprite)
+	NetConnectImg = RES_grab(res_Image)
+	NetConnectSprite = RES_grab(res_Sprite)
 	load image "media\menu\loadblur.png",NetConnectImg
 	`do a short sync loop to avoid display corruption
 	for x=0 to 10
@@ -587,15 +183,8 @@ function UI_LoadingScreen()
 	next x
 endfunction
 
-function Sys_Terminate()
-	UI_WriteLog(UI_Red,"Program Ended.")
-	TerminateMovement()
-	TerminateShooting()
-	TerminateAI()
-	TerminateResource()
-	TerminateTerrain()
-	TerminateUI()
-	UI_StopDebugMode()
-	flush video memory
-	end
-endfunction
+/////////////////////////////////////////////////////////
+// TERMINATE                                           //
+/////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////

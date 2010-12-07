@@ -5,37 +5,17 @@ project name=OpenFPS
 
 ; **** source file information ****
 main=module_main.dba
-LineMain=0
-include1=module_movement.dba
-LineInclude1=423
-include2=module_resource.dba
-LineInclude2=173
-include3=module_menu.dba
-LineInclude3=139
-include4=module_network.dba
-LineInclude4=15
-include5=module_shooting.dba
-LineInclude5=16
-include6=module_ai.dba
-LineInclude6=762
-include7=module_terrain.dba
-LineInclude7=18
-include8=module_ui.dba
-LineInclude8=449
-include9=module_ui_console.dba
-LineInclude9=0
-include10=module_visuals.dba
-LineInclude10=271
-include11=module_ui_chatbox.dba
-LineInclude11=240
-include12=menu_windows.dba
-LineInclude12=140
-include13=module_ui_options.dba
-LineInclude13=152
-include14=module_ui_credits.dba
-LineInclude14=0
-include15=module_physics.dba
-include16=module_engine.dba
+include1=module_resource.dba
+include2=module_menu.dba
+include3=module_ui.dba
+include4=module_ui_console.dba
+include5=module_ui_chatbox.dba
+include6=module_ui_options.dba
+include7=module_ui_credits.dba
+include8=module_engine.dba
+include9=module_physics.dba
+include10=module_movement.dba
+include11=module_network.dba
 final source=_Temp.dbsource
 
 ; **** Executable Information  ***
@@ -59,7 +39,7 @@ CommandLineArguments=
 app title=BioStorm
 
 ; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
-graphics mode=window
+graphics mode=fullscreen
 fullscreen resolution=1024x768x32
 
 ; arbitrary sizes are valid for windowed mode

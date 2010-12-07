@@ -236,7 +236,7 @@ If UI_chatpanel.Hidden  = 0
 
 			rem UI_Addtexttochatbox("Client: "+UI_ChatboxInput.Result)
 			msg$=UI_ChatboxInput.Result
-			sendChatMessage(msg$)
+			NET_sendChatMessage(msg$)
 			UI_Chatboxinput.alive=0
 			UI_Chatboxinput.current=""
 			UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)

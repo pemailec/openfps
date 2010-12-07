@@ -591,7 +591,7 @@ Local a$ as String:Local b$ as String:Local c$ as String
 					 UI_stringmap(ID,x).ascii    = Val(b$)
 					 UI_stringmap(ID,x).bitmapID = Val(c$)
 				Next x
-		Close File UI_tempfileID:freeresource(UI_tempfileID,res_file)
+		Close File UI_tempfileID:RES_free(UI_tempfileID,res_file)
 	UI_WriteLog(UI_Green,"font succesfully loaded")
 	UI_RestoreDebugPosition()
 Endfunction
@@ -832,7 +832,7 @@ Local a$ as String:Local b$ as String:Local c$ as String
 	UI_SetDebugPosition("UI_InitAndLoadWindow()","module_ui.dba")
 		UI_CheckDXSprites():UI_Checkfile(name$)	
 		UI_WriteLog(UI_Green,"loading window gui image : "+name$+".")
-		UI_tempfileID=grabresource(res_file)
+		UI_tempfileID=RES_grab(res_file)
 		Open to Read UI_tempfileID,name$
 				`read the windowname and load
 				Read String UI_tempfileID,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
@@ -843,7 +843,7 @@ Local a$ as String:Local b$ as String:Local c$ as String
 				Read String UI_tempfileID,a$:b$ = First Token$(a$,"="):c$ = Next Token$("=")
 				UI_mywindow.yrow    = Val(c$)
 				DXS SET SPRITE TILE SIZE UI_mywindow.ID,UI_mywindow.xwidth,UI_mywindow.yrow    ` Cut the sprites into x * y pixels tiles.
-		Close File UI_tempfileID:freeresource(UI_tempfileID,res_file)
+		Close File UI_tempfileID:RES_free(UI_tempfileID,res_file)
 		UI_WriteLog(UI_Green,"window gui image succesfully loaded.")
 	UI_RestoreDebugPosition()
 Endfunction
@@ -1363,7 +1363,6 @@ Function UI_ClearAllGuis()
 		UI_Settextlineoffset(0,0)
 		
 	Endif
-	ResetMenuWindows()
 Endfunction
 
 
@@ -1380,7 +1379,7 @@ Function UI_LoadAndSetMouseOverSND(snd$)
 	UI_SetDebugPosition("UI_SetMouseOverSND()","module_ui.dba")
 		UI_WriteLog(UI_Green,"loading mouseover sound : " + snd$ + ".")
 		UI_CheckFile(snd$)
-		UI_MouseOverSND = GrabResource(res_Sound)
+		UI_MouseOverSND = RES_grab(res_Sound)
 		Load Sound snd$,UI_MouseOverSND
 		UI_WriteLog(UI_Green,"sound succesfully loaded")
 	UI_RestoreDebugPosition()
@@ -1402,7 +1401,7 @@ Function UI_LoadAndSetMouseClickSND(snd$)
 	UI_SetDebugPosition("UI_SetMouseClickSND()","module_ui.dba")
 		UI_WriteLog(UI_Green,"loading mouse click sound : " + snd$ + ".")
 		UI_CheckFile(snd$)
-		UI_MouseClickSND = GrabResource(res_Sound)
+		UI_MouseClickSND = RES_grab(res_Sound)
 		load sound snd$,UI_MouseClickSND
 		UI_WriteLog(UI_Green,"sound succesfully loaded.")
 	UI_RestoreDebugPosition()      :
@@ -2629,7 +2628,7 @@ local var_Seconds as string
   	UI_DebugMode = UI_True
   	If param_logmode = UI_True
   		UI_LogMode   = UI_True
-  		UI_LogFileID = grabresource(res_file)
+  		UI_LogFileID = RES_grab(res_file)
 var_time$=Get Date$()
 var_month$ = left$(var_time$,2)
 var_day$ = mid$(var_time$,4) + mid$(var_time$,5)
@@ -2702,7 +2701,7 @@ Function UI_StopDebugMode()
   			UI_WriteLog(UI_RED,"Closing Logfile.")
  			Write String UI_LogfileID,"</body></html>"
  			UI_LogMode   = UI_Logoff
-  			Close File UI_LogFileID:rem freeresource(UI_LogfileID,res_file)
+  			Close File UI_LogFileID:rem RES_free(UI_LogfileID,res_file)
    	Endif
 
 Endfunction

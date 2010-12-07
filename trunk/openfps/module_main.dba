@@ -32,12 +32,29 @@ remstart
 (7/29/10)  - thenerd  - Added to game engine.
 (11/28/10) - thenerd  - Restructured game engine code to be more clear (now in module_engine)
 
------ To-Do
-Modules should be init between initMenu() and runMenu().
-
+----- To-Do / Notes:
 Important note for all modules: don't use mousemovex() and mousemovey() commands, it clears the mouse movement buffer.
                                 Instead, use SyS_MouseMoveX and SyS_MouseMoveY integer variables if needed,
                                 they get their value every loop. (miso.)
+                                
+----- Modules
+MODULE_MAIN.dba			- Core module (this one) 					(prefix MAIN)
+MODULE_MENU.dba			- Handles all menu functionality			(prefix MENU)
+MODULE_UI.dba			- Handles user interface elements			(prefix UI)
+ MODULE_UI_CHATBOX.dba  - UI sub-module, text boxes					(prefix UI)
+ MODULE_UI_CONSOLE.dba  - UI sub-module, console menu				(prefix UI)
+ MODULE_UI_CREDITS.dba  - UI sub-module, credits menu				(prefix UI)
+ MODULE_UI_OPTIONS.dba  - UI sub-module, options menu				(prefix UI)
+MODULE_AI.dba			- Artificial intelligence system			(prefix AI)
+MODULE_ENGINE.dba		- Core game engine module					(prefix CORE)
+MODULE_MOVEMENT.dba		- Movement system							(prefix MVM)
+MODULE_NETWORK.dba		- Multiplayer and network functionality		(prefix NET)
+MODULE_PHYSICS.dba		- Uses Newton DLL for physics system		(prefix PHY)
+MODULE_RESOURCE.dba		- Handles all resources for modules			(prefix RES)
+MODULE_SHOOTING.dba		- Handles weapons and shooting mechanics	(prefix GUN)
+MODULE_TERRAIN.dba		- Handles terrain system with Blitzterrain	(prefix LAND)
+MODULE_VISUALS.dba		- Handles all visual effects and systems 	(prefix VIS)
+
 
 remend
 
@@ -45,7 +62,11 @@ remend
 Global SyS_Event_Terminate as Boolean : `set this variable to 1 to force the main module
                                       : `to run the terminate functions. 
                                       : `(I need it to close my logfile)
-
+Global SyS_LoopMode as string		  :	`Variable to determine which modules to update in loop
+Global SyS_TimeFactor as float		  :	`Variable for Timer based engine operations
+									  :	`Updated every loop with an elapsed time variable
+Global SyS_GameSpeed as float		  :	`Speed variable for game loops
+									  
 /////////////////////////////////////////////////////////
 // INIT                                                //
 /////////////////////////////////////////////////////////
@@ -61,31 +82,72 @@ randomize timer()
 hide mouse
 disable escapekey
 
+`backdrop colour
+backdrop on
+color backdrop rgb(200,200,255)
+
 `INITIATE CORE MODULES
 
 `resource module
 RES_init()
 
 `loading screen
-UI_LoadingScreen()
+MENU_LoadingScreen()
 
 `engine modules
 UI_init() 	`ui module
 MVM_init()  `movement module
-MENU_init()  `menu module
+CORE_init()	`game core modules
+MENU_init() `menu module
+NET_init()	`network module
 
 /////////////////////////////////////////////////////////
 // RUN                                                 //
 /////////////////////////////////////////////////////////
 
-`run menu
-MENU_run()
+`menu mode
+SyS_LoopMode="menu"
+
+`run main loop
+while SyS_Event_Terminate<1
+
+	`Update System timer
+	SyS_TimeFactor=CORE_TimeFactor()
+	
+	select SyS_LoopMode
+		case "menu"
+			// Update menu
+			MVM_ShowMouse()
+			MENU_Show()
+			MENU_update()
+		endcase
+		case "engine"
+			// Update game engine
+			MVM_HideMouse()
+			MENU_Hide()
+			CORE_update()
+		endcase
+	endselect
+	
+	`do general stuff
+	position mouse UI_Display.MiddleWidth,UI_Display.MiddleHeight `center mouse
+	
+	`debug
+	
+	`handle UI system
+	UI_Handle()
+	
+	`sync to the screen
+	sync
+	
+endwhile
 
 /////////////////////////////////////////////////////////
 // TERMINATE                                           //
 /////////////////////////////////////////////////////////
 
 `end modules
-SYS_Terminate()
+CORE_TerminateAll()
 
 `end of code
+/////////////////////////////////////////////////////////

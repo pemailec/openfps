@@ -1,139 +1,91 @@
-Rem ***** Included Source File *****
-/////////////////////////////////////////////////////
-//
-// OpenFPS GAME ENGINE MODULE           
-//
-// Created by thenerd   
-//
-/////////////////////////////////////////////////////
-
-`----- Changelog:
-`(11/28/10)  - thenerd  - Created.
-
-`----- To-Do:
-`-None-
-
-`----- Purpose:
-`Implements all the modules together to run the game engine.
-
-`----- Dependancies and Conflicts:
-`All other modules must be initialised before using this one.
-
-/////////////////////////////////////////////////////
 remstart
-`clear gui
-UI_ClearAllGuis()
+/////////////////////////////////////////////////////
+//
+// OpenFPS ENGINE Module
+//
+// Created by thenerd
+//
+/////////////////////////////////////////////////////
 
-`Init other modules here
-PHY_init(10000.0,0)
-initTerrain()
-initVisuals()
-`Temporary
-LoadTerrainFromFile("media/maps/e_blank/e_blank.blitz","media/maps/e_blank/texture.jpg","media/maps/e_blank/detail.tga")
+----- Changelog:
 
+(11/29/10) - thenerd 		- Created.
 
-`initMovement()
-initShooting()
-`initAI()
+----- To-Do:
+-None-
 
+----- Purpose:
+Implements all modules to run the game engine. 
+Also contains various important functions.
 
-//Setup camera
-set camera range 10,10000000000
-hide mouse
+----- Dependancies and Conflicts:
+-None-
 
-/////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////
-// MAIN LOOP                                           //
-/////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////
+----- Other Notes:
+* The functions and resoures in this module use the prefix CORE_
 
-`Timerbased
-global elapsedtime as float
-global timer_starttime as dword
-timer_starttime = timer()
+/////////////////////////////////////////////////////
 
-`player start
-position camera 300,200,300
-
-	`grr bug
-	if object exist(menu_bgfx1)=1 then hide object menu_bgfx1
-	
-al=255
-
-sync rate 0
-
-global CrosshairIMG = grabResource(res_Image)
-global CrosshairSPRITE = grabResource(res_Sprite)
-load image "media/images/crosshair.png",CrosshairIMG
-
-do
-dxs begin sprite render img_fadespr
-dxs draw sprite img_fadespr,0,0
-dxs end sprite render img_fadespr
-
-if al>0 then dec al,20
-if al<0 then al=0
-DXS SET SPRITE ALPHA img_fadespr,al
-		
-
-
-`Timerbased
-elapsedtime=(timer()-timer_starttime)/1000.0
-timer_starttime = timer()
-
-updateTerrain()
-	`updateMovement()
-
-         cr#=0:cf#=0
-      if rightkey()=1 or KEYSTATE(32)=1 then cr#=-6
-      if leftkey()=1 or KEYSTATE(30)=1 then cr#=6
-      if upkey()=1 or KEYSTATE(17)=1 then cf#=6
-      if downkey()=1 or KEYSTATE(31)=1 then cf#=-6
-         ncr#=curvevalue(cr#,ncr#,5)
-         ncf#=curvevalue(cf#,ncf#,5)
-         cx#=cx#+SyS_MouseMoveY*0.2
-         cy#=cy#+SyS_MouseMoveX*0.2
-      if cx#>80 then cx#=80
-      if cx#<-80  then cx#=-80
-         ncx#=curveangle(cx#,ncx#,2)
-         ncy#=curveangle(cy#,ncy#,2)
-      move camera ncf#
-         rotate camera 0,wrapvalue(ncy#-90),0
-            move camera ncr#
-         rotate camera 0,wrapvalue(ncy#+90),0
-      rotate camera ncx#,ncy#,0
-      
-	`updateShooting()
-	`updateAI()
-	
-	//displays some info
-	if DebugScreen=1:
-		UI_Text(2,screen width()-50,screen height()-40,str$(screen fps())) 
-		UI_Centertext(3,UI_display.middlewidth,UI_display.height-40,"<Center Text Showcase, delete this line>")
-		UI_Text(1,10,70+UI_EVENT_ConsoleOffset,"Stamina: "+str$(PLR_curstam))
-		UI_Text(1,10,55+UI_EVENT_ConsoleOffset,str$(screen fps()))
-	endif
-
-
-position mouse screen width()/2,screen height()/2
-
-//Updates sky
-`if KEYSTATE(18)=1 then vis_game_end()
-updateVisuals()
-
-//Updates user interface
-UI_Handle()
-
-//Update Physics
-`PHY_update()
-
-//Syncronize backbuffers
-sync
-//checks if any module triggered a quit event
-If SyS_Event_Terminate=1 then goto _terminate
-
-
-
-//-----------------main loop end
-loop
 remend
+
+/////////////////////////////////////////////////////////
+// INIT                                                //
+/////////////////////////////////////////////////////////
+
+function CORE_init():
+	// -----------------------
+	// Init function
+	// -----------------------
+	`Timer-based variables
+	global CORE_timer      as float : CORE_timer     =hitimer()
+	global CORE_timer_last as float : CORE_timer_last=CORE_timer
+	global CORE_DebugScreen
+endfunction
+
+/////////////////////////////////////////////////////////
+// MAIN                                                //
+/////////////////////////////////////////////////////////
+
+function CORE_update():
+	// -----------------------
+	// update function
+	// -----------------------
+	MVM_update()
+endfunction
+
+function CORE_TimeFactor():
+	// -----------------------
+	// Returns TDM factor
+	// -----------------------
+	CORE_timer     =hitimer()
+	Diff#          =CORE_timer-CORE_timer_last
+	CORE_timer_last=CORE_timer
+	factor#        =Diff#/10.0
+endfunction factor#
+
+/////////////////////////////////////////////////////////
+// TERMINATE                                           //
+/////////////////////////////////////////////////////////
+
+function CORE_TerminateAll():
+	// -----------------------
+	// Terminate function
+	// -----------------------
+	`debug
+	UI_WriteLog(UI_Red,"Program Ended.")
+	`menu hide
+	MENU_Hide()
+	`terminate systems
+	MVM_terminate() `end movement
+	`TerminateShooting()	`end shooting
+	`TerminateAI()		`end ai
+	RES_terminate()	`end resource
+	`TerminateTerrain()	`end terrain
+	TerminateUI()		`end ui
+	UI_StopDebugMode()	`end debug output
+	flush video memory	`flush memory
+	end					`kill program
+endfunction
+
+`end of module
+/////////////////////////////////////////////////////////

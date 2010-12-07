@@ -14,7 +14,7 @@ remstart
 (07/06/10) - thenerd  - added commands
 (07/28/10) - thenerd  - added PlayerData.cfg for player name & other info
 (08/17/10) - miso     - added a display info when waiting to connect master server, not to see tha black screen
-
+(11/29/10) - thenerd  - Restructured code to use new module layout
 ----- To-Do:
 -None-
 
@@ -34,72 +34,91 @@ Chat Message Tags
 &color="r,g,b"		 - Changes your chat color (WORK IN PROGRESS)
 &blarg	             - :D
 
+All functions and resources in the Network module use the prefix NET_
+
 ----- Function List:
 -Client:
-initNetwork()			  - initializes the networking module
-updateNetwork()     	  - updates any network data with the server.
-terminateNetwork()  	  - ends the networking module, and cleans up any used resources.
-getChatMessage()		  - gets the latest chat message.
-sendChatMessage(string$)  -	sends a chat message.
+NET_init()			  		  - initializes the networking module
+NET_update()     	  		  - updates any network data with the server.
+NET_terminate()  	  		  - ends the networking module, and cleans up any used resources.
+NET_getChatMessage()		  - gets the latest chat message.
+NET_sendChatMessage(string$)  -	sends a chat message.
+
 -Server:
 -NONE-
 
 remend
 
 `-------GLOBALS----------
-#constant SERVER_HOST "96.233.35.41"
-#constant SERVER_PORT 27013
-Global channel as DWORD
-Global PlayerName$ as string
+#constant NET_SERVER_HOST "96.233.35.41"
+#constant NET_SERVER_PORT 27013
+Global NET_channel as DWORD
+Global NET_PlayerName$ as string
 
 /////////////////////////////////////////////////////////
 // INIT                                                //
 /////////////////////////////////////////////////////////
 
 
-function initNetwork()
-UI_WriteLog(UI_Yellow,"=== Starting Network module")
-global net_disable
-net_disable=0
-winsock make
-if (winsock error())
-   `an error has occurred, output the error message to the log and quit.
-   UI_WriteLog(UI_RED,winsock error msg$())
-   winsock clean up
-   end
-else
-	UI_WriteLog(UI_Green,"Connected to the master server "+SERVER_HOST+":"+STR$(SERVER_PORT))
-endif
-
-sync
-`UI_Centertext(2,512,300,"Connecting to Master Server..."):sync
-`UI_Centertext(2,512,300,"Connecting to Master Server..."):Sync
-
-channel = winsock connect(SERVER_HOST, SERVER_PORT)
-check_for_error(channel)
-
-if net_disable<1:
-	UI_WriteLog(UI_Green,"=== Network module started")
-
-	UI_WriteLog(UI_Yellow,"=== Loading Player Data")
-	temp_plr_data=grabResource(res_File)
-	OPEN TO READ temp_plr_data,"PlayerData.cfg"
-	READ STRING temp_plr_data,PlayerName$
-	PlayerName$=right$(PlayerName$,(len(PlayerName$)-11))
-	close file temp_plr_data
-	freeResource(temp_plr_data,res_File)
-	UI_WriteLog(UI_Green,"=== Player Data Loaded")
-
-
-	UI_Addtexttochatbox("Welcome to Biostorm: Chemical Warfare!")
+function NET_init()
+	// -----------------------
+	// Init network function
+	// -----------------------
+	UI_WriteLog(UI_Yellow,"=== Starting Network module")
 	
-	UI_Addtexttochatbox("Master server is online.")
-	sendPlayerName(PlayerName$,0)
-else:
-	UI_Addtexttochatbox("Master server is offline!")
-	UI_Addtexttochatbox("No chat will be available.")
-endif
-`delete sprite NetConnectSprite
+	`globals
+	global net_disable
+	net_disable=0
+	
+	`start winsock
+	winsock make
+	if (winsock error())
+   		`an error has occurred, output the error message to the log and quit.
+   		UI_WriteLog(UI_RED,winsock error msg$())
+   		winsock clean up
+   		end
+	else
+		`write init success
+		UI_WriteLog(UI_Green,"Network init Successful.")
+	endif
+	
+	`update once to avoid crash
+	sync
+
+	`attempt connect to master server
+	`NET_channel = winsock connect(NET_SERVER_HOST,NET_SERVER_PORT)
+	`check_for_error(NET_channel)
+	
+	net_disable=1
+	
+	`if success/not success
+	if net_disable<1:
+		`write log
+		UI_WriteLog(UI_Green,"Connected to the master server "+NET_SERVER_HOST+":"+STR$(NET_SERVER_PORT))
+		UI_WriteLog(UI_Yellow,"=== Loading Player Data")
+		
+		`load player data
+		temp_plr_data=RES_grab(res_File)
+		OPEN TO READ temp_plr_data,"PlayerData.cfg"
+		READ STRING temp_plr_data,NET_PlayerName$
+		NET_PlayerName$=right$(NET_PlayerName$,(len(NET_PlayerName$)-11))
+		close file temp_plr_data
+		RES_free(temp_plr_data,res_File)
+		UI_WriteLog(UI_Green,"=== Player Data Loaded")
+	
+		`add text to chat box
+		UI_Addtexttochatbox("Welcome to Biostorm: Chemical Warfare!")
+		UI_Addtexttochatbox("Master server is online.")
+		`send player name packet
+		NET_sendPlayerName(NET_PlayerName$,0)
+	else:
+		`add failure text to chat box
+		UI_Addtexttochatbox("Master server is offline!")
+		UI_Addtexttochatbox("No chat will be available.")
+	endif
+	`write log
+	UI_WriteLog(UI_Green,"=== Network module started")
+	// -----------------------
 endfunction
 
 
@@ -107,49 +126,64 @@ endfunction
 // CORE                                                //
 /////////////////////////////////////////////////////////
 
-function updateNetwork()
-   if net_disable<1:
-  	 	winsock refresh channel channel
-   		check_for_error(channel)
-   		getChatMessage()
-   		`sendPlayerName("&name="+PlayerName$)
-   endif
+function NET_update()
+	// -----------------------
+	// Net Update function
+	// -----------------------
+	if net_disable<1:
+  		winsock refresh channel NET_channel
+   		check_for_error(NET_channel)
+   		NET_getChatMessage()
+	endif
+	// -----------------------
 endfunction
 
-function getChatMessage():
-if net_disable<1:
-   if (winsock channel data waiting(channel))
-      check_for_error(channel)
-      message$ = winsock recv string(channel)
-      if (message$ = "")
-         `this client has been disconnected remotely by the server.
-         if (winsock channel error(channel))
-            UI_Addtexttochatbox("You have been forcefully disconnected by the server!")
-         else
-            UI_Addtexttochatbox("You have been gracefully disconnected by the server!")
-         endif
-      else
-		UI_Addtexttochatbox(message$)
-      endif
-   endif
-endif
+function NET_getChatMessage():
+	// -----------------------
+	// Net communication function
+	// -----------------------
+	if net_disable<1:
+   	if (winsock channel data waiting(NET_channel))
+      	check_for_error(NET_channel)
+      	message$ = winsock recv string(NET_channel)
+      	if (message$ = "")
+         	`this client has been disconnected remotely by the server.
+         	if (winsock channel error(NET_channel))
+            	UI_Addtexttochatbox("You have been forcefully disconnected by the server!")
+         	else
+            	UI_Addtexttochatbox("You have been gracefully disconnected by the server!")
+         	endif
+      	else
+			UI_Addtexttochatbox(message$)
+      	endif
+   	endif
+	endif
+	// -----------------------
 endfunction
 
-function sendPlayerName(string$,mode):
-if net_disable<1:
-	//0=silent
-	//1=normal
-	if mode=0 then winsock send string channel, "&name_silent="+string$
-	if mode=1 then winsock send string channel, "&name="+string$
-	check_for_error(channel)
-endif
+function NET_sendPlayerName(string$,mode):
+	// -----------------------
+	// Net communication function
+	// -----------------------
+	if net_disable<1:
+		//0=silent
+		//1=normal
+		if mode=0 then winsock send string NET_channel, "&name_silent="+string$
+		if mode=1 then winsock send string NET_channel, "&name="+string$
+		check_for_error(NET_channel)
+	endif
+	// -----------------------
 endfunction
 
-function sendChatMessage(string$):
-if net_disable<1:
-	winsock send string channel, string$
-	check_for_error(channel)
-endif
+function NET_sendChatMessage(string$):
+	// -----------------------
+	// Net communication function
+	// -----------------------
+	if net_disable<1:
+		winsock send string NET_channel, string$
+		check_for_error(NET_channel)
+	endif
+	// -----------------------
 endfunction
 
 
@@ -158,12 +192,14 @@ endfunction
 /////////////////////////////////////////////////////////
 
 
-function terminateNetwork()
-
-UI_WriteLog(UI_Green,"=== Terminating module")
-winsock clean up
-UI_WriteLog(UI_Green,"=== Network module terminated")
-
+function NET_terminate()
+	// -----------------------
+	// Terminate function
+	// -----------------------
+	UI_WriteLog(UI_Yellow,"=== Terminating module")
+	winsock clean up
+	UI_WriteLog(UI_Green,"=== Network module terminated")
+	// -----------------------
 endfunction
 
 /////////////////////////////////////////////////////////
@@ -171,9 +207,13 @@ endfunction
 /////////////////////////////////////////////////////////
 
 function check_for_error(a_channel as DWORD)
-`check for an error on a channel.
+	// -----------------------
+	// Winsock debug function
+	// -----------------------
+	`check for an error on a channel.
    if (winsock channel error(a_channel))
       `an error has occurred, enable the net_disable variable.
 	  net_disable=1
    endif
+   // -----------------------
 endfunction

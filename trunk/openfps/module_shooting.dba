@@ -131,8 +131,8 @@ global dim SE_Gun(0) as SE_Gun
 global dim SE_GunType(0) as SE_GunType
 global dim SE_Collision(0) as SE_Collision
 
-SE_Main.checkobj=grabResource(res_Object)
-SE_Main.checkimg=grabResource(res_Image)
+SE_Main.checkobj=RES_grab(res_Object)
+SE_Main.checkimg=RES_grab(res_Image)
 make object cube SE_Main.checkobj,1
 exclude object on SE_Main.checkobj
 
@@ -147,8 +147,8 @@ global shoot_TestGunObject
 global shoot_TestGunTexture
 global shoot_guntype
 global shoot_TestGun
-shoot_TestGunObject=grabResource(res_Object)
-shoot_TestGunTexture=grabResource(res_Image)
+shoot_TestGunObject=RES_grab(res_Object)
+shoot_TestGunTexture=RES_grab(res_Image)
 load object "media/guns/hud.x",shoot_TestGunObject
 load image "media/guns/gun_D2.dds",shoot_TestGunTexture `added by balrog bob. I find your lack of textures disturbing.
 texture object shoot_TestGunObject,shoot_TestGunTexture 
@@ -208,7 +208,7 @@ for i=1 to SE_Main.Projectiles
                 SE_Projectile(i).emitter=0
             endif
             if SE_Projectile(i).objnum
-                freeResource(SE_Projectile(i).objnum,res_object)
+                RES_free(SE_Projectile(i).objnum,res_object)
                 SE_Projectile(i).objnum=0
             endif
             x#=sc_getstaticcollisionx()
@@ -242,11 +242,11 @@ for i=1 to SE_Main.Projectiles
             if SE_Projectile(i).starttime+SE_ProjectileType(SE_Projectile(i).tipe).life<timer()
                 SE_Projectile(i).exists=0
                 if SE_Projectile(i).emitter
-                    freeResource(SE_Projectile(i).emitter,res_Particle)
+                    RES_free(SE_Projectile(i).emitter,res_Particle)
                     SE_Projectile(i).emitter=0
                 endif
                 if SE_Projectile(i).objnum
-                    freeResource(SE_Projectile(i).objnum,res_Object)
+                    RES_free(SE_Projectile(i).objnum,res_Object)
                     SE_Projectile(i).objnum=0
                 endif
             endif
@@ -273,12 +273,12 @@ SE_Projectile(n).starttime=timer()
 SE_Projectile(n).tipe=projtype
 SE_Projectile(n).gun=gun
 if SE_ProjectileType(projtype).objnum
-    SE_Projectile(n).objnum=grabResource(res_Object)
+    SE_Projectile(n).objnum=RES_grab(res_Object)
     instance object SE_Projectile(n).objnum,SE_ProjectileType(projtype).objnum
     scale object SE_Projectile(n).objnum,SE_ProjectileType(projtype).scale,SE_ProjectileType(projtype).scale,SE_ProjectileType(projtype).scale
 endif
 if SE_ProjectileType(projtype).hasemitter
-    SE_Projectile(n).emitter=grabResource(res_Particle)
+    SE_Projectile(n).emitter=RES_grab(res_Particle)
     make particles SE_Projectile(n).emitter,SE_ProjectileType(projtype).img,SE_ProjectileType(projtype).freq,SE_ProjectileType(projtype).rad
 endif
 endfunction
@@ -333,7 +333,7 @@ function SE_MakeGun(guntype)
 inc SE_Main.guns
 array insert at bottom SE_Gun(0)
 n=SE_Main.guns
-SE_Gun(n).objnum=grabResource(res_Object)
+SE_Gun(n).objnum=RES_grab(res_Object)
 SE_Gun(n).ammo=SE_GunType(guntype).startammo
 SE_Gun(n).tipe=guntype
 
@@ -499,8 +499,8 @@ undim SE_Gun(0)
 undim SE_GunType(0)
 undim SE_Collision(0)
 
-freeResource(SE_Main.checkobj,res_Object)
-freeResource(SE_Main.checkimg,res_Image)
+RES_free(SE_Main.checkobj,res_Object)
+RES_free(SE_Main.checkimg,res_Image)
 
 UI_WriteLog(UI_Green,"=== Shooting module terminated")
 endfunction
