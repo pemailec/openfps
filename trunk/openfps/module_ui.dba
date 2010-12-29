@@ -711,7 +711,7 @@ Function UI_HandleConsole()
  If UI_Input.alive        = 3
  	UI_EVENT_ConsoleOffset = -48
 	UI_EVENT_ConsoleInput = 0
-	UI_SUB_CheckConsoleCommand()
+	UI_SUB_CheckConsoleCommand(UI_Input.result)
 	UI_CenterPositionGadget("UI_staminabarholder",140,145+UI_EVENT_ConsoleOffset)
   	UI_CenterPositionGadget("UI_stamina",140,145+UI_EVENT_ConsoleOffset)
   	UI_CenterPositionGadget("UI_fatiguebarholder",140,185+UI_EVENT_ConsoleOffset)
