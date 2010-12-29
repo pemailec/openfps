@@ -65,7 +65,7 @@ Global VS_Sun             as MySunType
 `===========================`
 
 `===========Types===========`
-Type ScreenClip
+Type VS_ScreenClip
 	Initialized      as Boolean:`1 if initialized
 	S_Width  		 as Integer:`screen width
 	S_Height 		 as Integer:`screen height
@@ -77,7 +77,7 @@ Type ScreenClip
 	_Timer			 as Float  :`timer hold
 EndType
 
-Type MyskyType
+Type VS_MyskyType
 	Initialized      as Boolean:`1 if initialized
 	ObjID            as Integer:`ID of the object
 	TextureID        as Integer:`ID of the texture
@@ -86,7 +86,7 @@ Type MyskyType
 	ScrollSpeedY     as Float  :`velocity of scrolling in Y axis
 EndType
 
-Type MySunType
+Type VS_MySunType
 	Initialized      as Boolean:`1 if initialized
 	Bloomenabled     as Boolean:`1 if bloom is enabled
 	ObjID            as Integer:`ID of the sun plane object
@@ -109,7 +109,7 @@ EndType
 
 
 //------ MAIN COMMANDS
-Function initvisuals()
+Function VS_init()
 //***************************************************************************************
 //*   Miso                                                                              *
 //*     This function initiate the visual features.                                     *
@@ -127,7 +127,7 @@ Function initvisuals()
 	VS_CreateSkyScrollTicker()
 	VS_AddSunToScene("media\visuals\vs_basicsun.jpg",100000,50000,100000,46000)
 	`screen setup
-	global vis_s_clip as ScreenClip
+	global vis_s_clip as VS_ScreenClip
 	vis_s_clip.Initialized=0
 	vis_s_clip.S_Width=screen width()
 	vis_s_clip.S_Height=screen height()

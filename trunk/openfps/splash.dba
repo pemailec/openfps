@@ -30,11 +30,47 @@ if file exist(filename$) then delete file filename$
 `motd$=right$(motd$,len(motd$)-19)
 `motd$=left$(motd$,len(motd$)-15)
 
+dim mm$(11)
+mm$(0)="January"
+mm$(1)="February"
+mm$(2)="March"
+mm$(3)="April"
+mm$(4)="May"
+mm$(5)="June"
+mm$(6)="July"
+mm$(7)="August"
+mm$(8)="September"
+mm$(9)="October"
+mm$(10)="November"
+mm$(11)="December"
+dim dd$(3)
+dd$(0)="th"
+dd$(1)="st"
+dd$(2)="nd"
+dd$(3)="rd"
+d=0
+
 do
+	date$=get date$()
+	month$=left$(date$,2):month=(val(month$)-1)
+	day$=right$(left$(date$,5),2):day=(val(day$))
+	year$=right$(date$,2):year=(val(year$))
+	shortmonth$=month$:shortday$=day$:shortyear$=year$
+
+	if month<10 then shortmonth$=right$(month$,1)
+	if day<10 then shortday$=right$(day$,1)
+	if year<10 then shortyear$=right$(year$,1)
+
+	if day=1 or day=21 or day=31 then d=1
+	if day=2 or day=22 then d=2
+	if day=3 or day=23 then d=3
+	
 	paste image 1,0,0
 	text 50,155,"Welcome to Biostorm: Chemical Warfare!"
 	`text 50,168,get time$()
-	text 50,180,motd$
+	time$=get time$()
+	text 50,180,"The time is "+remove$(left$(time$,len(time$)-3),":")+" Hours, "+mm$(month)+" "+day$+dd$(d)+", 20"+year$
+	`text 50,180,motd$
 	if button("Start Game",220-89,390)=1 then id=execute executable("Temp.exe","",""):end
 	if button("Exit",420-89,390)=1 then end
 	sync

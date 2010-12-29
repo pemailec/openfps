@@ -114,17 +114,17 @@ while SyS_Event_Terminate<1
 	`Update System timer
 	SyS_TimeFactor=CORE_TimeFactor()
 	
+	
 	select SyS_LoopMode
 		case "menu"
 			// Update menu
 			MVM_ShowMouse()
+			CORE_CleanUp()
 			MENU_Show()
 			MENU_update()
 		endcase
 		case "engine"
 			// Update game engine
-			MVM_HideMouse()
-			MENU_Hide()
 			CORE_update()
 		endcase
 	endselect

@@ -49,6 +49,7 @@
 	global DebugBar
 	global Fps
 	global mouse
+	global Ter_toggle
 //--START MENU vars
 	global startlogo
 	global startoptions
@@ -155,8 +156,8 @@ function updateGui():
    	if eventType()=MENU_CLICK
 		select eventData()
 			case 9
-				toggle=abs(getMenuItemChecked(TerrainMenu,9)-1)
-				setMenuItemChecked TerrainMenu,9,toggle
+				Ter_toggle=abs(getMenuItemChecked(TerrainMenu,9)-1)
+				setMenuItemChecked TerrainMenu,9,Ter_toggle
 				`BT SetTerrainWireframe g_TerrainID,toggle
 			endcase
 			case 10

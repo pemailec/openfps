@@ -661,7 +661,7 @@ Function UI_HandleConsole()
 			UI_EVENT_Consolestate   = 1
   			UI_EVENT_Consoleinput   = 1
 			UI_EVENT_ConsoleChanged = 1
-			UI_CMDInput(3,0,8+UI_EVENT_ConsoleOffset,"CMD>",30)
+			UI_CMDInput(3,0,8+UI_EVENT_ConsoleOffset,"CMD>",50)
 	Else
 			UI_EVENT_Consolestate   = 2
 			UI_EVENT_Consoleinput   = 0
@@ -674,7 +674,7 @@ Function UI_HandleConsole()
   
   If UI_Event_ConsoleState = 1
   	UI_EVENT_ConsoleOffset = UI_EVENT_ConsoleOffset+4
-  	UI_CMDInput(3,0,8+UI_EVENT_ConsoleOffset,"CMD>",30)
+  	UI_CMDInput(3,0,8+UI_EVENT_ConsoleOffset,"CMD>",50)
   	//Reposition The Bars
   	UI_CenterPositionGadget("UI_staminabarholder",140,145+UI_EVENT_ConsoleOffset)
   	UI_CenterPositionGadget("UI_stamina",140,145+UI_EVENT_ConsoleOffset)
@@ -686,7 +686,7 @@ Function UI_HandleConsole()
  
   If UI_Event_ConsoleState = 2
  	UI_EVENT_ConsoleOffset = UI_EVENT_ConsoleOffset-4
- 	UI_CMDInput(3,0,8+UI_EVENT_ConsoleOffset,"CMD>",30)
+ 	UI_CMDInput(3,0,8+UI_EVENT_ConsoleOffset,"CMD>",50)
 	//Reposition the bars
 	UI_CenterPositionGadget("UI_staminabarholder",140,145+UI_EVENT_ConsoleOffset)
   	UI_CenterPositionGadget("UI_stamina",140,145+UI_EVENT_ConsoleOffset)

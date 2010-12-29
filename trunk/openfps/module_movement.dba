@@ -130,6 +130,14 @@ function MVM_init()
 	// -----------------------
 	`Various globals
 	global MVM_MouseLook as boolean:MVM_MouseLook=0
+	
+    global ncr#
+    global ncf#
+    global cx#
+    global cy#
+    global ncx#
+    global ncy#
+    
 	// -----------------------
 	UI_WriteLog(UI_Green,"=== Movement module started.")
 	// -----------------------
@@ -145,17 +153,36 @@ function MVM_update()
 	// -----------------------
 	if MVM_MouseLook>0:
 		UI_SetMousePosition(UI_Display.MiddleWidth,UI_Display.MiddleHeight)
+		cr#=0:cf#=0
+      	if KEYSTATE(KEY_right)=1 then cr#=-0.6*SyS_TimeFactor
+     	if KEYSTATE(KEY_left)=1 then cr#=0.6*SyS_TimeFactor
+      	if KEYSTATE(KEY_forward)=1 then cf#=0.6*SyS_TimeFactor
+      	if KEYSTATE(KEY_backward)=1 then cf#=-0.6*SyS_TimeFactor
+        ncr#=curvevalue(cr#,ncr#,5)
+        ncf#=curvevalue(cf#,ncf#,5)
+        cx#=cx#+Sys_MouseMoveY*0.2
+        cy#=cy#+Sys_MouseMoveX*0.2
+      	if cx#>80 then cx#=80
+      	if cx#<-80  then cx#=-80
+        ncx#=curveangle(cx#,ncx#,2)
+        ncy#=curveangle(cy#,ncy#,2)
+      	move camera ncf#
+        rotate camera 0,wrapvalue(ncy#-90),0
+        move camera ncr#
+        rotate camera 0,wrapvalue(ncy#+90),0
+     	rotate camera ncx#,ncy#,0
+     	
 	endif
 endfunction
 
 function MVM_ShowMouse()
 	MVM_MouseLook=0
-	UI_ShowMouse()
+	UI_FadeInMouse()
 endfunction
 
 function MVM_HideMouse()
 	MVM_MouseLook=1
-	UI_HideMouse()
+	UI_FadeOutMouse()
 endfunction
 
 /////////////////////////////////////////////////////////

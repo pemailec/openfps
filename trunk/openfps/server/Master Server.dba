@@ -29,7 +29,7 @@ listen_channel = winsock listen(LOCAL_PORT)
 
 MOTD_Debug$="DEBUG"
 Uptime_offset#=timer()
-ip$="96.233.35.41:27013"
+ip$="192.168.1.4:27013"
 online_servers=0
 
 dim chat$(10)
@@ -47,7 +47,7 @@ do
 	print "(",get time$(),") - ","Master Server: ONLINE"
 	print "MOTD_Debug: ",MOTD_Debug$
 	print "Uptime: ",Uptime$," ms"
-	print "Ip_local=192.168.1.6;Ip_global=",ip$
+	print "Ip_local=192.168.1.4;Ip_global=",ip$
 	print "-------------------------------------------"
 	`print "SERVER LIST; (",online_servers," online)"
 	print "NO SERVERS CURRENTLY RUNNING"

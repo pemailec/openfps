@@ -39,7 +39,7 @@ CommandLineArguments=
 app title=BioStorm
 
 ; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
-graphics mode=fullscreen
+graphics mode=window
 fullscreen resolution=1024x768x32
 
 ; arbitrary sizes are valid for windowed mode

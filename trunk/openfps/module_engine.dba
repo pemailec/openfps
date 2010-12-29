@@ -39,7 +39,12 @@ function CORE_init():
 	`Timer-based variables
 	global CORE_timer      as float : CORE_timer     =hitimer()
 	global CORE_timer_last as float : CORE_timer_last=CORE_timer
-	global CORE_DebugScreen
+	global CORE_DebugScreenImg
+	global CORE_GamePanel
+	CORE_DebugScreenImg=RES_grab(Res_Image)
+	CORE_GamePanel=RES_grab(Res_Image)
+	load image "media\windows\debug.png",CORE_DebugScreenImg
+	load image "media\panels\ui_gamepanel.png",CORE_GamePanel
 endfunction
 
 /////////////////////////////////////////////////////////
@@ -50,7 +55,15 @@ function CORE_update():
 	// -----------------------
 	// update function
 	// -----------------------
+	Net_UpdateServer()
 	MVM_update()
+	MENU_Hide()
+endfunction
+
+function CORE_CleanUp():
+	if UI_GadgetExist("button_gamewelcome")=1:
+		UI_DeleteGadget("button_gamewelcome")
+	endif
 endfunction
 
 function CORE_TimeFactor():

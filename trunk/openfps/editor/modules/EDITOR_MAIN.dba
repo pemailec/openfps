@@ -2,7 +2,7 @@
 //
 // EDITOR MAIN PROGRAM
 // 
-// Author: Chris Dalke
+// Author: thenerd
 //
 //////////////////////////////////////////////////////
 
@@ -142,7 +142,7 @@ do
 			goto skip1
 		endif
 	
-		if level_new<1 then UpdateTerrain()
+		if level_new<1 and Ter_toggle>0 then UpdateTerrain()
 	
 		mclick=KEYSTATE(18)
 		if mclick=1:
@@ -239,6 +239,7 @@ do
 		
 		if camera_move=0:
 			if KEYSTATE(19)=1 then edit_mode=1
+			if KEYSTATE(20)=1 then edit_mode=2
 			show mouse
 			if edit_mode=1:
 				hide mouse
@@ -263,6 +264,19 @@ do
 				d3d_line sx,sy,AngleX4#,AngleY4#,rgb(0,0,0),rgb(100,100,100)
 				edit_mode=0
 			else
+				if edit_mode=2:
+					hide mouse
+					scalex#=object scale x(SelectedObject)
+					scaley#=object scale x(SelectedObject)
+					scalez#=object scale x(SelectedObject)
+					mmove#=mousemovey()
+					scalex#=scalex#+mmove#
+					scaley#=scaley#+mmove#
+					scalez#=scalez#+mmove#
+					scale object SelectedObject,scalex#,scaley#,scalez#
+					d3d_circle mousex(),mousey(),50,1,rgb(100,255,100)
+					edit_mode=0
+				endif
 				null=mousemovex()
 				null=mousemovey()
 			endif
