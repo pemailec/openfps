@@ -3,13 +3,30 @@ set display mode 640,480,32,1
 SET WINDOW LAYOUT 0,1,0
 MAKE UNRESIZABLE
 REMOVE MAXIMIZE
-
-sync on:sync rate 0
-backdrop on:color backdrop 0
-center text 320,240,"Please Wait..."
-sync
+sync on
+sync rate 0
+backdrop off
 load image "media\menu\splash2.png",1
+load image "media\menu\splash_load.png",2
+load animation "media\menu\ajax-anim.gif",1
+ax=320-(126/2)-5
+ay=250
+loop animation 1,0,ax,ay,ax+126,ay+22
+for x=0 to 400:
+	paste image 2,0,0
+	sync
+next x
+delete animation 1
 
+_updates=0
+for x=0 to 100:
+	paste image 2,0,0
+	ink rgb(69,69,69),0
+	text ax,ay,str$(_updates)+" Updates Found"
+	sync
+next x
+wait 100
+ink rgb(255,255,255),0
 global menu_button1 = 3
 global menu_button2 = 4
 global menu_button3 = 5
@@ -22,10 +39,17 @@ filename$="_motd.temp"
 
 ok=download(website$,filename$)
 
+ip_website$="https://openfps.googlecode.com/svn/trunk/openfps/website/images/logo2000.png"
+ip_filename$="_temp.png"
+ip=download(ip_website$,ip_filename$)
+
 open to read 1,filename$
 read string 1,motd$
 close file 1
 if file exist(filename$) then delete file filename$
+
+load image ip_filename$,6
+if file exist(ip_filename$) then delete file ip_filename$
 
 `motd$=right$(motd$,len(motd$)-19)
 `motd$=left$(motd$,len(motd$)-15)
@@ -69,8 +93,12 @@ do
 	text 50,155,"Welcome to Biostorm: Chemical Warfare!"
 	`text 50,168,get time$()
 	time$=get time$()
-	text 50,180,"The time is "+remove$(left$(time$,len(time$)-3),":")+" Hours, "+mm$(month)+" "+day$+dd$(d)+", 20"+year$
+	text 50,180,"The time is "+left$(time$,len(time$)-3)+", "+mm$(month)+" "+day$+dd$(d)+", 20"+year$
+	
 	`text 50,180,motd$
+	
+	paste image 6,50,220,1
+	
 	if button("Start Game",220-89,390)=1 then id=execute executable("Temp.exe","",""):end
 	if button("Exit",420-89,390)=1 then end
 	sync
