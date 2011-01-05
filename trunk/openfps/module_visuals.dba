@@ -310,3 +310,112 @@ IF VS_SkyScrollTicker=0
 	VS_SkyScrollTicker = 0
 Endif
 Endfunction
+
+
+//***************************************************************************************
+//*   JRH                                                                               *
+//*   Object shader handling                                                            *
+//*                                                                                     *
+//***************************************************************************************
+// -- Shader Instructions --
+// Shaders are associated with their objects so are removed with the objects.
+// To apply a shader to an object, call VS_SetShader(ObjectNumber, ShaderType) where;
+// ShaderType represents the shader you wish to use. Shaders are as follows;
+//
+// 0:- Removes any existing shader
+// 2:- Glass (D2) 
+// 3:- Gloss (D2,I) 
+// 7:- Weapon Shader (D,D2,N,I)
+//
+// *Does not require lights
+// An X indicates that the shader has been removed.
+
+rem Set the shader for an object
+Function VS_SetShader(ObjectNumber,ShaderType)
+    
+    rem Remove any existing shaders
+    Set Shading Off ObjectNumber
+    
+    rem Apply correct shader by number
+    If ShaderType=0 then Set Shading Off ObjectNumber        
+    If ShaderType=2               
+        Set Reflection Shading On ObjectNumber
+        Set Alpha Mapping On ObjectNumber,25
+    EndIf  
+    If ShaderType=3 then Set Effect On ObjectNumber, "", 0       
+    If ShaderType=7 then Set Effect On ObjectNumber, "", 0
+            
+EndFunction
+
+
+//***************************************************************************************
+//*   JRH                                                                               *
+//*   Object priority handling                                                          *
+//*                                                                                     *
+//***************************************************************************************
+// -- Priority Instructions --
+// Setting the graphical priority is done using a function which using a number controls
+// the visual detail of that object.
+// To set the priority use the function VIS_SetPriority(ObjectNumber,ObjectPriority)
+// In this function ObjectNumber is the ID number of your object and ObjectPiority is 
+// the level of detail you wish it to have. These levels are as follows;
+//
+// 0:- Test Priotiry (Low quality and quick loading)
+// 1:- Low Priority (Grass, Distant Scenery)
+// 2:- Mid Priority (Crate, Barrel)
+// 3:- High Priority (Character, Foreground Weapon)
+// 4:- Above Priority (Highest Quality Graphics are applied)
+// 5:- Sky Priority (Like Mid, but unnaffected by Fog so useful as sky)
+// 6:- Smooth Priority (Design for making low poly objects nicer)
+
+rem Set the graphical priority for the object (Culling, Fog, etc...)
+Function VIS_SetPriority(ObjectNumber,ObjectPriority)
+
+	rem Test Priority level
+	If ObjectPriority=0
+		Set Shading Off ObjectNumber
+		Set Object Filter ObjectNumber, 0
+	EndIf   
+        
+    rem Low Priority level
+    If ObjectPriority=1
+        Set Shading Off ObjectNumber
+        Set Object Cull ObjectNumber,1    
+        Set Object Filter ObjectNumber, 0 
+        Set Object Transparency ObjectNumber, 3              
+    EndIf 
+    
+    rem Mid Priority level
+    If ObjectPriority=2           
+    	 Set Object Transparency ObjectNumber, 2
+    	 Set Object Filter ObjectNumber,1,1 
+    EndIf 
+    
+    rem High Priority level
+    If ObjectPriority=3           
+    	 Set Object Transparency ObjectNumber, 2
+    	 Set Object Filter ObjectNumber,2,1 
+    EndIf 
+   
+    rem Above Priority level
+    If ObjectPriority=4           
+    	 Set Object Transparency ObjectNumber, 1
+    	 Set Object Filter ObjectNumber,2,1 
+    EndIf  
+       
+    rem Sky Priority level
+    If ObjectPriority=5           
+    	Set Object Fog ObjectNumber, 0
+    	Set Object Transparency ObjectNumber, 0
+    	Set Object Filter ObjectNumber,2,1  
+    EndIf 
+    
+    rem Smooth Priority level
+    If ObjectPriority=6         
+    	Set Object Smoothing ObjectNumber,75
+    	Set Object Transparency ObjectNumber, 2
+    	Set Object Filter ObjectNumber,2,1 
+    EndIf 
+    
+EndFunction
+
