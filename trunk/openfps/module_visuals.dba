@@ -14,8 +14,9 @@ remstart
 (07/03/10) - thenerd     - Created
 (07/04/10) - miso        - Added basic sky
 (07/04/10) - miso        - Removed cloud commands for now, maybe we dont need the second layer at all
-(7/4/10)   - miso        - placed log commands
-(7/30/10)   - miso       - Added various effects.
+(07/04/10  - miso        - placed log commands
+(07/30/10) - miso        - Added various effects.
+(05/01/11) - JRH         - Added shader effects and graphical priority.
 
 
 ----- To-Do:
