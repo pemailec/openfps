@@ -33,18 +33,18 @@ remend
 /////////////////////////////////////////////////////////
 
 function CORE_init():
-	// -----------------------
-	// Init function
-	// -----------------------
-	`Timer-based variables
-	global CORE_timer      as float : CORE_timer     =hitimer()
-	global CORE_timer_last as float : CORE_timer_last=CORE_timer
-	global CORE_DebugScreenImg
-	global CORE_GamePanel
-	CORE_DebugScreenImg=RES_grab(Res_Image)
-	CORE_GamePanel=RES_grab(Res_Image)
-	load image "media\windows\debug.png",CORE_DebugScreenImg
-	load image "media\panels\ui_gamepanel.png",CORE_GamePanel
+ // -----------------------
+ // Init function
+ // -----------------------
+    `Timer-based variables
+    global CORE_timer      as float : CORE_timer      = hitimer()
+    global CORE_timer_last as float : CORE_timer_last = CORE_timer
+    global CORE_DebugScreenImg
+    global CORE_GamePanel
+    	CORE_DebugScreenImg= RES_grab(Res_Image)
+    	CORE_GamePanel= RES_grab(Res_Image)
+    load image "media\windows\debug.png", CORE_DebugScreenImg
+    load image "media\panels\ui_gamepanel.png", CORE_GamePanel
 endfunction
 
 /////////////////////////////////////////////////////////
@@ -52,28 +52,27 @@ endfunction
 /////////////////////////////////////////////////////////
 
 function CORE_update():
-	// -----------------------
-	// update function
-	// -----------------------
-	Net_UpdateServer()
-	MVM_update()
-	MENU_Hide()
+ // -----------------------
+ // update function
+ // -----------------------
+    Net_UpdateServer()
+    MVM_update()
+    MENU_Hide()
 endfunction
 
 function CORE_CleanUp():
-	if UI_GadgetExist("button_gamewelcome")=1:
-		UI_DeleteGadget("button_gamewelcome")
-	endif
+    if UI_GadgetExist("button_gamewelcome")=1 : UI_DeleteGadget("button_gamewelcome")
+    endif
 endfunction
 
 function CORE_TimeFactor():
 	// -----------------------
 	// Returns TDM factor
 	// -----------------------
-	CORE_timer     =hitimer()
-	Diff#          =CORE_timer-CORE_timer_last
-	CORE_timer_last=CORE_timer
-	factor#        =Diff#/10.0
+    	CORE_timer     = hitimer()
+    	Diff#          = CORE_timer - CORE_timer_last
+    	CORE_timer_last= CORE_timer
+    	factor#        = Diff# / 10.0
 endfunction factor#
 
 /////////////////////////////////////////////////////////
@@ -84,20 +83,20 @@ function CORE_TerminateAll():
 	// -----------------------
 	// Terminate function
 	// -----------------------
-	`debug
-	UI_WriteLog(UI_Red,"Program Ended.")
-	`menu hide
-	MENU_Hide()
-	`terminate systems
-	MVM_terminate() `end movement
-	`TerminateShooting()	`end shooting
-	`TerminateAI()		`end ai
-	RES_terminate()	`end resource
-	`TerminateTerrain()	`end terrain
-	TerminateUI()		`end ui
-	UI_StopDebugMode()	`end debug output
-	flush video memory	`flush memory
-	end					`kill program
+	   `Debug
+    UI_WriteLog(gUI_Red, "Program Ended.")
+	   `Menu Hide
+    MENU_Hide()
+	   `Terminate Systems
+    MVM_terminate()         `end movement
+	   `TerminateShooting()    	`end shooting
+	   `TerminateAI()          		`end ai
+    RES_terminate()	        `end resource
+	   `TerminateTerrain()     	`end terrain
+    TerminateUI()		         `end ui
+    UI_StopDebugMode()	     `end debug output
+    flush video memory	     `flush memory
+    end					                `kill program
 endfunction
 
 `end of module
