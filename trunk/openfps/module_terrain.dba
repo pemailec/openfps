@@ -1,7 +1,7 @@
 remstart
 /////////////////////////////////////////////////////
 //
-// OpenFPS AI Mechanics Module
+// OpenFPS TERRAIN Module
 //
 // Created by kaedroho
 // Maintained by kaedroho
@@ -14,11 +14,13 @@ remstart
 // Written to comply with the OpenFPS Coding Standard
 
 ----- Changelog:
-(2/28/10) - BMacZero - Created
-(3/01/10) - Kaedroho - Converted SetTerrainCollision() into the same programming standard as the rest of the file (looks neater)
-(7/4/10)  - miso     - placed log commands
------ To-Do:
+(2/28/10) - BMacZero   - Created
+(3/01/10) - Kaedroho   - Converted SetTerrainCollision() into the same programming standard as the rest of the file (looks neater)
+(7/4/10)  - miso       - placed log commands
+(1/14/11) - menderleit - Changed title from AI to TERRAIN (in the opening comments)
 
+----- To-Do:
+- Possibly change function names to adhere to the TER_ naming standard? [menderleit]
 
 ----- Purpose:
 This module creates terrains from heightmaps at the
