@@ -26,6 +26,7 @@ All functions in this module are prefixed with ENT_
 /////////////////////////////////////////////////////
 remend
 
+
 // Constants describing the various Entity types. Use when calling ENT_functions.
 #constant ENT_STATIC    1
 #constant ENT_DYNAMIC   2
@@ -34,13 +35,13 @@ remend
 #constant ENT_PHYSICS   5
 
 // UDTs for the various entity types.
-// The properties are just examples at this point...
+// DEVNOTE: The properties are just examples at this point...
 type ENT_STATIC_TYPE
     name as string
     obj as integer
-    x as float
-    y as float
-    z as float
+    x as float          // These probably aren't necessary, as you can get x/y/z pos and most other object info
+    y as float          // using the commands: object position x(i), object angle x(i), object scale x(i), etc...
+    z as float          // No reason to re-invent the wheel, just a thought... :) [menderleit]
 endtype
 
 type ENT_DYNAMIC_TYPE
@@ -72,6 +73,13 @@ type ENT_PHYSICS_TYPE
     z as float
 endtype
 
+// A UDT to hold info about a script.
+type ENT_SCRIPT_TYPE
+    name as string    // The actual name of "this" entity.
+    attr as string    // Attributes/Values of each entity in the script, parsed into a string.
+endtype
+
+
 // Initialize the ENTITY module.
 // Creates dynamic arrays, sets up globals, and initializes variables to 0.
 function ENT_Init()
@@ -80,16 +88,19 @@ function ENT_Init()
     global dim ENT_Entity() as ENT_ENTITY_TYPE
     global dim ENT_Terrain() as ENT_TERRAIN_TYPE
     global dim ENT_Physics() as ENT_PHYSICS_TYPE
+    global dim ENT_Script() as ENT_SCRIPT_TYPE
     global ENT_NumStatics as integer
     global ENT_NumDynamics as integer
     global ENT_NumEntities as integer
     global ENT_NumTerrains as integer
     global ENT_NumPhysics as integer
+    global ENT_NumScripts as integer
     ENT_NumStatics = 0
     ENT_NumDynamics = 0
     ENT_NumEntities = 0
     ENT_NumTerrains = 0
     ENT_NumPhysics = 0
+    ENT_NumScripts = 0
 endfunction
 
 // Terminate the ENTITY module.
@@ -101,11 +112,13 @@ function ENT_Terminate()
     undim ENT_Entity()
     undim ENT_Terrain()
     undim ENT_Physics()
+    undim ENT_Script()
     ENT_NumStatics = 0
     ENT_NumDynamics = 0
     ENT_NumEntities = 0
     ENT_NumTerrains = 0
     ENT_NumPhysics = 0
+    ENT_NumScripts = 0
 endfunction
 
 // Create a new Entity.
@@ -179,5 +192,23 @@ function ENT_DeleteEntity(EntityIndex as integer, EntityType as integer)
                 endif
             endcase
         endselect
+    endif
+endfunction
+
+// Create a new script.
+function ENT_NewScript(ScriptName as string)
+    ScriptIndex as integer
+    ScriptIndex = -1
+    array insert at bottom ENT_Script()
+    ENT_Script().name = ScriptName
+    ENT_Script().attr = ""
+    ScriptIndex = ENT_NumScripts
+    inc ENT_NumScripts, 1
+endfunction ScriptIndex
+
+// Add an Entity to a script.
+function ENT_ScriptAddEntity(ScriptIndex as integer, EntityName as string, EntityType as integer)
+    if ScriptIndex > 0 and ScriptIndex < ENT_NumScripts
+        // Add new entity to end of string...
     endif
 endfunction
