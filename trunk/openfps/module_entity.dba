@@ -12,12 +12,13 @@ remstart
 (01/13/11) - menderleit - Created
 (01/13/11) - menderleit - Setup basic UDTs and functions.
 (01/14/11) - menderleit - Added SetAttribute function.
+(01/14/11) - menderleit - Added a section on some proposed changes.
 
 ----- To-Do:
 https://www.pivotaltracker.com/projects/202025
 
 ----- Purpose:
-Handling all objects in the game.
+Handling all objects and entities in the game.
 
 ----- Dependancies and Conflicts:
 -None-
@@ -43,7 +44,7 @@ remend
 
 
 // UDTs for the various Entity types.
-// DEVNOTE: The properties are just examples at this point...
+// DEVNOTE: The attributes are just examples at this point...
 type ENT_STATIC_TYPE
     name as string
     obj as integer
@@ -67,6 +68,133 @@ type ENT_PHYSICS_TYPE
     name as string
     obj as integer
 endtype
+
+
+remstart
+////////////////////////////////////////////////////////////////////////////////////////////////
+// DEVNOTE: Proposed changes to the setup of the entities.
+// These types should not be used at this point, as this is only a description
+// of proposed changes to the module.
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Main list of objects/entities.
+type ENT_MAIN_TYPE
+    name as string          // Name of this object/entity.
+    etype as integer        // Type of object/entity. (object, light, zone, etc...)
+endtype
+
+// Info about the Object type.
+type ENT_OBJECT_TYPE
+    parent as integer       // Array index number of the parent object/entity in the main list.
+    obj as integer          // Object resource number.
+    pos as integer          // vector3 position info.
+    rot as integer          // vector3 rotation info.
+    material as integer     // material info
+    shader as integer       // shader number. (0 = no shader)
+    dynamic as boolean      // YES = Dynamic object, NO = Static object.
+    physics as boolean      // YES = Affected by physics, NO = NOT affected by physics.
+endtype
+
+// Info about the Terrain type.
+type ENT_TERRAIN_TYPE2
+    parent as integer       // Array index number of the parent object/entity in the main list.
+    tid as integer          // Terrain resource number.
+    width as float          // Width of Terrain.
+    depth as float          // Depth of Terrain.
+    heightmap as integer    // Resource number for the Heightmap.
+    texture as integer      // Resource number for the Texture.
+    detail as integer       // Resource number for the DetailTexture.
+endtype
+
+// Info about the PointLight type.
+type ENT_POINTLIGHT_TYPE
+    parent as integer       // Array index number of the parent object/entity in the main list.
+    pos as integer          // vector3 position info
+    range as float          // Range of light.
+    color as dword          // Color of light. ( dword = rgb(255,255,255) )
+endtype
+
+// Info about the Zone type.
+type ENT_ZONE_TYPE
+    parent as integer       // Array index number of the parent object/entity in the main list.
+    pos as integer          // vector3 position info.
+    size as integer         // vector3 size info.
+    rot as integer          // vector3 rotation info.
+    action as integer       // Info about what happens when you enter the Zone.
+endtype
+
+global dim ENT_Entity() as ENT_MAIN_TYPE
+global dim ENT_Object() as ENT_OBJECT_TYPE
+global dim ENT_Terrain() as ENT_TERRAIN_TYPE
+...
+...
+a = AddEntity("ThatBoxInTheCorner", ENT_OBJECT)
+SetAttribute( a, ENT_ATTR_SIZE, ENT_SetV3(x#,y#,z#) )
+
+function SetAttribute(EntityIndex as integer, Attribute as integer, Value as string)
+    Success as boolean
+    Success = 0
+    EntityType = ENT_Entity(EntityIndex).etype
+    if EntityType = ENT_OBJECT
+        for i=0 to ENT_NumObjects-1
+            if ENT_Object(i).parent = EntityIndex
+                select Attribute
+                    case ENT_ATTR_SIZE
+                        set vector3 ENT_Object(i).size, ENT_GetV3x(Value), ENT_GetV3y(Value), ENT_GetV3z(Value)
+                        Success = 1
+                        exitfunction Success
+                    endcase
+                endselect
+            endif
+        next i
+    endif
+endfunction Success
+
+function ENT_SetV3(x as float, y as float, z as float)
+    V3 as string
+    V3 = str$(x) + ";" + str$(y) + ";" + str$(z)
+endfunction V3
+
+function ENT_GetV3x(V3 as string)
+    temp$ = ""
+    i = 0
+    repeat
+        inc i, 1
+        temp$ = temp$ + mid$(V3, i)
+    until mid$(V3, i+1) = ";"
+    x# = val(temp$)
+endfunction x#
+
+function ENT_GetV3y(V3 as string)
+    temp$ = ""
+    i = 0
+    repeat
+        inc i, 1
+    until mid$(V3, i) = ";"
+    repeat
+        inc i, 1
+        temp$ = temp$ + mid$(V3, i)
+    until mid$(V3, i+1) = ";"
+    x# = val(temp$)
+endfunction x#
+
+function ENT_GetV3z(V3 as string)
+    temp$ = ""
+    i = 0
+    for j=0 to 1
+        repeat
+            inc i, 1
+        until mid$(V3, i) = ";"
+    next j
+    repeat
+        inc i, 1
+        temp$ = temp$ + mid$(V3, i)
+    until mid$(V3, i+1) = ""
+    x# = val(temp$)
+endfunction x#
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+remend
 
 
 // Initialize the ENTITY module.
