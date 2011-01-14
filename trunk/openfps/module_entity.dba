@@ -1,0 +1,183 @@
+remstart
+/////////////////////////////////////////////////////
+//
+// OpenFPS ENTITY MANAGEMENT Core Module
+//
+// Created by menderleit
+// Maintained by menderleit
+//
+/////////////////////////////////////////////////////
+
+----- Changelog:
+(01/13/11) - menderleit - Created
+
+----- To-Do:
+https://www.pivotaltracker.com/projects/202025
+
+----- Purpose:
+Handling all objects in the game.
+
+----- Dependancies and Conflicts:
+-None-
+
+----- Other Notes:
+All functions in this module are prefixed with ENT_
+    
+/////////////////////////////////////////////////////
+remend
+
+// Constants describing the various Entity types. Use when calling ENT_functions.
+#constant ENT_STATIC    1
+#constant ENT_DYNAMIC   2
+#constant ENT_ENTITY    3
+#constant ENT_TERRAIN   4
+#constant ENT_PHYSICS   5
+
+// UDTs for the various entity types.
+// The properties are just examples at this point...
+type ENT_STATIC_TYPE
+    name as string
+    obj as integer
+    x as float
+    y as float
+    z as float
+endtype
+
+type ENT_DYNAMIC_TYPE
+    name as string
+    obj as integer
+    x as float
+    y as float
+    z as float
+endtype
+
+type ENT_ENTITY_TYPE
+    name as string
+    x as float
+    y as float
+    z as float
+endtype
+
+type ENT_TERRAIN_TYPE
+    name as string
+    width as float
+    depth as float
+endtype
+
+type ENT_PHYSICS_TYPE
+    name as string
+    obj as integer
+    x as float
+    y as float
+    z as float
+endtype
+
+// Initialize the ENTITY module.
+// Creates dynamic arrays, sets up globals, and initializes variables to 0.
+function ENT_Init()
+    global dim ENT_Static() as ENT_STATIC_TYPE
+    global dim ENT_Dynamic() as ENT_DYNAMIC_TYPE
+    global dim ENT_Entity() as ENT_ENTITY_TYPE
+    global dim ENT_Terrain() as ENT_TERRAIN_TYPE
+    global dim ENT_Physics() as ENT_PHYSICS_TYPE
+    global ENT_NumStatics as integer
+    global ENT_NumDynamics as integer
+    global ENT_NumEntities as integer
+    global ENT_NumTerrains as integer
+    global ENT_NumPhysics as integer
+    ENT_NumStatics = 0
+    ENT_NumDynamics = 0
+    ENT_NumEntities = 0
+    ENT_NumTerrains = 0
+    ENT_NumPhysics = 0
+endfunction
+
+// Terminate the ENTITY module.
+// Releases all the dynamic arrays (effectively deleting all entries)
+// DEVNOTE: Could be setup to go through all entities to delete additional resources like images, objects and the likes.
+function ENT_Terminate()
+    undim ENT_Static()
+    undim ENT_Dynamic()
+    undim ENT_Entity()
+    undim ENT_Terrain()
+    undim ENT_Physics()
+    ENT_NumStatics = 0
+    ENT_NumDynamics = 0
+    ENT_NumEntities = 0
+    ENT_NumTerrains = 0
+    ENT_NumPhysics = 0
+endfunction
+
+// Create a new Entity.
+// Returns -1 if a new Entity could not be created, otherwise it returns the IndexNumber of the new Entity.
+// DEVNOTE: Basic framework. Can be modified later to use scripting and setting properties.
+function ENT_NewEntity(EntityType as integer)
+    NewIndex as integer
+    NewIndex = -1
+    select EntityType
+        case ENT_STATIC:
+            array insert at bottom ENT_Static()
+            NewIndex = ENT_NumStatics
+            inc ENT_NumStatics, 1
+        endcase
+        case ENT_DYNAMIC:
+            array insert at bottom ENT_Dynamic()
+            NewIndex = ENT_NumDynamics
+            inc ENT_NumDynamics, 1
+        endcase
+        case ENT_ENTITY:
+            array insert at bottom ENT_Entity()
+            NewIndex = ENT_NumEntities
+            inc ENT_NumEntities, 1
+        endcase
+        case ENT_TERRAIN:
+            array insert at bottom ENT_Terrain()
+            NewIndex = ENT_NumTerrains
+            inc ENT_NumTerrains, 1
+        endcase
+        case ENT_PHYSICS:
+            array insert at bottom ENT_Physics()
+            NewIndex = ENT_NumPhysics
+            inc ENT_NumPhysics, 1
+        endcase
+    endselect
+endfunction NewIndex
+
+// Delete the Entity specified by EntityIndex and EntityType.
+// DEVNOTE: Basic framework. Can be changed later to use scripting...
+function ENT_DeleteEntity(EntityIndex as integer, EntityType as integer)
+    if EntityIndex > 0
+        select EntityType
+            case ENT_STATIC:
+                if EntityIndex < ENT_NumStatics
+                    array delete element ENT_Static(), EntityIndex
+                    dec ENT_NumStatics, 1
+                endif
+            endcase
+            case ENT_DYNAMIC:
+                if EntityIndex < ENT_NumDynamics
+                    array delete element ENT_Dynamic(), EntityIndex
+                    dec ENT_NumDynamics, 1
+                endif
+            endcase
+            case ENT_ENTITY:
+                if EntityIndex < ENT_NumEntities
+                    array delete element ENT_Entity(), EntityIndex
+                    dec ENT_NumEntities, 1
+                endif
+            endcase
+            case ENT_TERRAIN:
+                if EntityIndex < ENT_NumTerrains
+                    array delete element ENT_Terrain(), EntityIndex
+                    dec ENT_NumTerrains, 1
+                endif
+            endcase
+            case ENT_PHYSICS:
+                if EntityIndex < ENT_NumPhysics
+                    array delete element ENT_Physics(), EntityIndex
+                    dec ENT_NumPhysics, 1
+                endif
+            endcase
+        endselect
+    endif
+endfunction
