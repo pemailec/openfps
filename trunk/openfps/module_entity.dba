@@ -16,6 +16,9 @@ remstart
 (01/16/11) - menderleit - Implemented the proposed changes to the module.
 (01/16/11) - menderleit - Added GetAttribute function. Improved comments a bit. Fixed a few typos.
 (01/16/11) - menderleit - Added SaveEntities and LoadEntities functions.
+(01/16/11) - menderleit - Added FindEntityName function to find Entities by name. (binary search method)
+(01/16/11) - menderleit - Entities are now sorted by name as they are added or the name is changed.
+(01/16/11) - menderleit - Added Name versions of each function so you can access Entities by specifying their name.
 
 ----- To-Do:
 https://www.pivotaltracker.com/projects/202025
@@ -206,7 +209,15 @@ endfunction
 //
 function ENT_AddEntity(EntityName as string, EntityType as integer)
     NewIndex as integer
-    array insert at bottom ENT_Entity()             // <- Create entry on main list.
+    i = ENT_FindEntityName(EntityName, 1)           // <- Insert sorted by name. (1=InsertMode)
+    if i = -1
+        array insert at bottom ENT_Entity()         // <- Create entry on main list.
+        NewIndex = ENT_NumEntities
+    else
+        array insert at element ENT_Entity(), i
+        NewIndex = i
+    endif
+    inc ENT_NumEntities, 1                          // <- Increase the number of Entities by 1.
     ENT_Entity().name = EntityName                  // <- Set name on main list.
     select EntityType
         case ENT_TYPE_OBJECT
@@ -228,8 +239,6 @@ function ENT_AddEntity(EntityName as string, EntityType as integer)
         // Create CASE statements here for other Entity types.
         // ...
     endselect
-    NewIndex = ENT_NumEntities                      // <- Set return value to index number of new Entity.
-    inc ENT_NumEntities, 1                          // <- Increase the number of Entities by 1.
 endfunction NewIndex
 
 
@@ -259,6 +268,17 @@ function ENT_DeleteEntity(EntityIndex as integer)
 endfunction
 
 
+// (NO RETURN VALUE) ENT_DeleteEntityName("EntityName")
+// Deletes the Entity specified by "EntityName".
+//
+function ENT_DeleteEntityName(EntityName as string)
+    i = ENT_FindEntityName(EntityName, 0)
+    if i <> -1
+        ENT_DeleteEntity(i)
+    endif
+endfunction
+
+
 // (NO RETURN VALUE) ENT_DeleteAllEntities()
 // Delete all Entities.
 //
@@ -281,9 +301,30 @@ endfunction
 //      ENT_SetAttribute( MyEntity, ENT_ATTR_OBJECT, str$(ObjNum) )
 //
 function ENT_SetAttribute(EntityIndex as integer, Attribute as integer, Value as string)
+    etype as integer
+    info as integer
     if EntityIndex >= 0 and EntityIndex < ENT_NumEntities
         if Attribute = ENT_ATTR_NAME
-            ENT_Entity(EntityIndex).name = Value
+            // If this is a name change, we delete the entry on the main list and
+            // insert it again, sorted by the new name.
+            if ENT_Entity(EntityIndex).name = Value then exitfunction
+            etype = ENT_Entity(EntityIndex).etype           // Save the Type and Info fields to be
+            info = ENT_Entity(EntityIndex).info             // inserted into the new Entity.
+            array delete element ENT_Entity(), EntityIndex  // Delete this Entity.
+            dec ENT_NumEntities, 1                          // Make sure to decrease the number of entries.
+            i = ENT_FindEntityName(Value, 1)                // Find sorted position with new name. (1=InsertMode)
+            if i = -1
+                array insert at bottom ENT_Entity()
+                EntityIndex = ENT_NumEntities
+            else
+                array insert at element ENT_Entity(), i
+                EntityIndex = i
+            endif
+            inc ENT_NumEntities, 1                          // Increase the number of entries again.
+            ENT_Entity(EntityIndex).name = Value            // Set the new name, and restore the
+            ENT_Entity(EntityIndex).etype = etype           // TYPE and INFO field.
+            ENT_Entity(EntityIndex).info = info             // We don't need to create a new Info object as
+            exitfunction                                    // we can just point the new Entity to the old Info.
         endif
         EntityType = ENT_Entity(EntityIndex).etype
         i = ENT_Entity(EntityIndex).info
@@ -310,6 +351,21 @@ function ENT_SetAttribute(EntityIndex as integer, Attribute as integer, Value as
         endif
         // Create IF/ENDIF blocks here to support other Entity types.
         // ...
+    endif
+endfunction
+
+
+// (NO RETURN VALUE) ENT_SetAttributeName("EntityName", Attribute, str$(Value))
+// Sets the specified Attribute of the Entity specified by "EntityName".
+//
+// DEVNOTE: All this does is find the Index number of the Entity and then pass along
+//          the parameters to the regular SetAttribute function.
+//          Returns -1 if the Entity could not be found.
+//
+function ENT_SetAttributeName(EntityName as string, Attribute as integer, Value as string)
+    i = ENT_FindEntityName(EntityName, 0)       // Find the Index of the Entity.
+    if i <> -1
+        ENT_SetAttribute(i, Attribute, Value)   // Just call the regular SetAttribute with same parameters.
     endif
 endfunction
 
@@ -359,6 +415,77 @@ function ENT_GetAttribute(EntityIndex as integer, Attribute as integer)
         // ...
     endif
 endfunction Value
+
+
+// (STRING) = ENT_GetAttributeName("EntityName", Attribute)
+// Returns the specified Attribute from the Entity specified by "EntityName".
+//
+// DEVNOTE: All this does is find the Index number of the Entity and then pass along
+//          the parameters to the regular GetAttribute function.
+//          Returns an empty string if the Entity could not be found.
+//
+function ENT_GetAttributeName(EntityName as string, Attribute as integer)
+    Value as string
+    Value = ""
+    i = ENT_FindEntityName(EntityName, 0)
+    if i <> -1
+        Value = ENT_GetAttribute(i, Attribute)
+    endif
+endfunction Value
+
+
+// (INTEGER) = ENT_FindEntityName("EntityName", InsertMode)
+// Searches the Entity list by name. (uses Binary search method for improved speed)
+//
+// InsertMode = 0
+//     If no matches were found it returns -1.
+//
+// InsertMode = 1
+//     If no matches were found it returns the index of where the "EntityName" should
+//     be inserted so that the list remains sorted, or -1 if "EntityName" should be
+//     inserted at the end of the list. (greater than any in the list)
+//
+// DEVNOTE: The InsertMode(1) is only meant for internal use when adding new Entities
+//          and should not be used from outside the ENTITY module.
+//
+function ENT_FindEntityName(EntityName as string, InsertMode as boolean)
+    EntityIndex as integer
+    EntityIndex = -1
+    subStart as integer
+    subEnd as integer
+    cPos as integer
+    if ENT_NumEntities = 1
+        if InsertMode = 1
+            if ENT_Entities(0).name > EntityName then EntityIndex = 0
+        endif
+        if ENT_Entities(0).name = EntityName then EntityIndex = 0
+        endfunction EntityIndex
+    endif
+    if ENT_NumEntities > 1
+        subStart = 0
+        subEnd = ENT_NumEntities-1
+        do
+            cPos = (subEnd - subStart) / 2 + subStart
+            if (subEnd - subStart) = 0
+                if InsertMode = 1
+                    if ENT_Entities(cPos).name > EntityName
+                        EntityIndex = cPos
+                    else
+                        if ENT_Entities(cPos) < EntityName and ENT_NumEntities-1 > cPos then EntityIndex = cPos+1
+                    endif
+                endif
+                if ENT_Entity(cPos) = EntityName then EntityIndex = cPos
+                exitfunction EntityIndex
+            endif
+            if ENT_Entity(cPos).name = EntityName
+                EntityIndex = cPos
+                exitfunction EntityIndex
+            endif
+            if ENT_Entity(cPos).name < EntityName and subEnd > cPos then subStart = cPos+1
+            if ENT_Entity(cPos).name > EntityName and subStart < cPos then subEnd = cPos-1
+        loop
+    endif
+endfunction EntityIndex
 
 
 // (NO RETURN VALUE) ENT_SaveEntities("FileName")
