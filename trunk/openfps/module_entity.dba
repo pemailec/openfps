@@ -74,11 +74,11 @@ remend
 type ENT_MAIN_LIST
     name as string          // Name of this object/entity.
     etype as integer        // Type of object/entity. (object, light, zone, etc...)
+    info as integer         // Index number of the INFO entry.
 endtype
 
 // Info about the Object type.
 type ENT_OBJECT_INFO
-    parent as integer       // Array index number of the parent object/entity in the main list.
     obj as integer          // Object resource number.
     pos as integer          // vector3 position info.
     rot as integer          // vector3 rotation info.
@@ -88,7 +88,6 @@ endtype
 
 // Info about the Terrain type.
 type ENT_TERRAIN_INFO
-    parent as integer       // Array index number of the parent object/entity in the main list.
     tid as integer          // Terrain resource number.
     size as integer         // vector2 size of Terrain. (width, depth)
     heightmap as integer    // Resource number for the Heightmap.
@@ -98,7 +97,6 @@ endtype
 
 // Info about the Point light.
 type ENT_POINTLIGHT_INFO
-    parent as integer       // Array index number of the parent object/entity in the main list.
     pos as integer          // vector3 position info
     range as float          // Range of light.
     color as dword          // Color of light. ( dword = rgb(255,255,255) )
@@ -106,14 +104,12 @@ endtype
 
 // Info about the Directional light.
 type ENT_DIRLIGHT_INFO
-    parent as integer       // Parent index.
     normal as integer       // vector3 specifying direction of the light.
     color as dword          // Color of light.
 endtype
 
 // Info about the Spot light.
 type ENT_SPOTLIGHT_INFO
-    parent as integer       // Parent index.
     pos as integer          // vector3 position of the spotlight.
     target as integer       // vector3 of the spotlight's target.
     color as dword          // Color of the spotlight.
@@ -121,7 +117,6 @@ endtype
 
 // Info about the Zone entity.
 type ENT_ZONE_INFO
-    parent as integer       // Array index number of the parent object/entity in the main list.
     pos as integer          // vector3 position info.
     rot as integer          // vector3 rotation info.
     size as integer         // vector3 size info.
@@ -190,8 +185,8 @@ function ENT_AddEntity(EntityName as string, EntityType as integer)
     select EntityType
         case ENT_TYPE_OBJECT
             ENT_Entity().etype = EntityType         // <- Set entity type on main list.
+            ENT_Entity().info = ENT_NumObjects      // <- Set index number of INFO entry for this Entity.
             array insert at bottom ENT_Object()     // <- Create entry on the object list.
-            ENT_Object().parent = ENT_NumEntities   // <- Set the parent of this info item.
             ENT_Object().obj = 0                    // <- Initialize attributes to default values,
             v3 = RES_grab(res_Vector)               // and create vector3's for our position and
             make vector3(v3)                        // rotation info.
@@ -201,12 +196,12 @@ function ENT_AddEntity(EntityName as string, EntityType as integer)
             ENT_Object().rot = v3
             ENT_Object().dynamic = 0
             ENT_Object().physics = 0
-            inc ENT_Object, 1                       // <- Increase the number of Objects by 1.
+            inc ENT_NumObjects, 1                   // <- Increase the number of Objects by 1.
         endcase
         // Create CASE statements here for other Entity types.
         // ...
     endselect
-    NewIndex = ENT_NumEntities                      // <- Return the index of the new Entity to Caller.
+    NewIndex = ENT_NumEntities                      // <- Set return value to index number of new Entity.
     inc ENT_NumEntities, 1                          // <- Increase the number of Entities by 1.
 endfunction NewIndex
 
@@ -219,17 +214,13 @@ function ENT_DeleteEntity(EntityIndex as integer)
         select ENT_Entity(EntityIndex).etype
             case ENT_TYPE_OBJECT
                 // Deletion code for an OBJECT Entity.
-                for i=0 to ENT_NumObjects-1
-                    if ENT_Object(i).parent = EntityIndex
-                        RES_free(res_Vector, ENT_Object(i).pos)
-                        RES_free(res_Vector, ENT_Object(i).rot)
-                        array delete element ENT_Object(), i
-                        dec ENT_NumObject, 1
-                        array delete element ENT_Entity(), EntityIndex
-                        dec ENT_NumEntities, 1
-                        exitfunction
-                    endif
-                next i
+                i = ENT_Entity(EntityIndex).info
+                RES_free(res_Vector, ENT_Object(i).pos)
+                RES_free(res_Vector, ENT_Object(i).rot)
+                array delete element ENT_Object(), i
+                dec ENT_NumObjects, 1
+                array delete element ENT_Entity(), EntityIndex
+                dec ENT_NumEntities, 1
             endcase
             // Insert CASE statements here for other Entity types.
             // ...
@@ -255,44 +246,29 @@ endfunction
 //      ENT_SetAttribute( MyEntity, ENT_ATTR_OBJ, str$(ObjNum) )
 //
 function ENT_SetAttribute(EntityIndex as integer, Attribute as integer, Value as string)
-    if ENT_NumEntities > 0 and EntityIndex >= 0 and EntityIndex < ENT_NumEntities
+    if EntityIndex >= 0 and EntityIndex < ENT_NumEntities
         if Attribute = ENT_ATTR_NAME
-            // Sets the name of an Entity.
             ENT_Entity(EntityIndex).name = Value
-            exitfunction
         endif
         EntityType = ENT_Entity(EntityIndex).etype
         if EntityType = ENT_TYPE_OBJECT
             // OBJECT specific attribute assignments.
-            for i=0 to ENT_NumObjects-1
-                if ENT_Object(i).parent = EntityIndex
-                    select Attribute
-                        case ENT_ATTR_OBJECT
-                            ENT_Object(i).obj = val(Value)
-                            exitfunction
-                        endcase
-                        case ENT_ATTR_POSITION
-                            set vector3 ENT_Object(i).pos, x vector3(val(Value)), y vector3(val(Value)), z vector3(val(Value))
-                            exitfunction
-                        endcase
-                        case ENT_ATTR_ROTATION
-                            set vector3 ENT_Object(i).rot, x vector3(val(Value)), y vector3(val(Value)), z vector3(val(Value))
-                            exitfunction
-                        endcase
-                        case ENT_ATTR_DYNAMIC
-                            ENT_Object(i).dynamic = val(Value)
-                            exitfunction
-                        endcase
-                        case ENT_ATTR_PHYSICS
-                            ENT_Object(i).physics = val(Value)
-                            exitfunction
-                        endcase
-                        case default
-                            exitfunction
-                        endcase
-                    endselect
-                endif
-            next i
+            i = ENT_Entity(EntityIndex).info
+            if Attribute = ENT_ATTR_OBJECT
+                ENT_Object(i).obj = val(Value)
+            endif
+            if Attribute = ENT_ATTR_POSITION
+                set vector3 ENT_Object(i).pos, x vector3(val(Value)), y vector3(val(Value)), z vector3(val(Value))
+            endif
+            if Attribute = ENT_ATTR_ROTATION
+                set vector3 ENT_Object(i).rot, x vector3(val(Value)), y vector3(val(Value)), z vector3(val(Value))
+            endif
+            if Attribute = ENT_ATTR_DYNAMIC
+                ENT_Object(i).dynamic = val(Value)
+            endif
+            if Attribute = ENT_ATTR_PHYSICS
+                ENT_Object(i).physics = val(Value)
+            endif
         endif
         // Create IF/ENDIF blocks here to support other Entity types.
         // ...
