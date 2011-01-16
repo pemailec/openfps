@@ -513,6 +513,7 @@ function ENT_SaveEntities(FileName as string)
     endif
 endfunction
 
+
 // (NO RETURN VALUE) ENT_SaveObjectInfo(FileNumber, IndexNumber)
 // Saves Object specific Attributes.
 //
@@ -544,15 +545,16 @@ function ENT_LoadEntities(FileName as string)
     if file exist(FileName) = 0 then exitfunction
     f = RES_grab(res_File)
     open to read f, FileName
-    while file end(f) <> 1
+    do
         read string f, name
+        if file end(f) = 1 then exit
         read word f, etype
         i = ENT_AddEntity(name, etype)
         info = ENT_Entity(i).info
         if etype = ENT_TYPE_OBJECT then ENT_LoadObjectInfo(f, info)
         // Add loading of other Entity types here...
         // ...
-    endwhile
+    loop
     RES_free(f, res_File)       // Close File and free resource number.
 endfunction
 
@@ -569,9 +571,13 @@ function ENT_LoadObjectInfo(f as integer, info as integer)
     y as float
     z as float
     b as boolean
-    read float f, x : read float f, y : read float f, z
+    read float f, x
+    read float f, y
+    read float f, z
     set vector3 ENT_Object(info).pos, x, y, z
-    read float f, x : read float f, y : read float f, z
+    read float f, x
+    read float f, y
+    read float f, z
     set vector3 ENT_Object(info).rot, x, y, z
     read byte f, b
     ENT_Object(info).dynamic = b
