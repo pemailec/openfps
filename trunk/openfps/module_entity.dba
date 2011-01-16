@@ -14,6 +14,7 @@ remstart
 (01/14/11) - menderleit - Added SetAttribute function.
 (01/14/11) - menderleit - Added a section on some proposed changes.
 (01/16/11) - menderleit - Implemented the proposed changes to the module.
+(01/16/11) - menderleit - Added GetAttribute function. Improved comments a bit. Fixed a few typos.
 
 ----- To-Do:
 https://www.pivotaltracker.com/projects/202025
@@ -65,10 +66,15 @@ remend
 //          ALWAYS check what the expected input is.
 
 
+////////////////////////////////////////////////////////////////////////////////////////
+
+
 // UDTs for the various Entity types.
+//
 // DEVNOTE: The attributes are just examples at this point...
 // You can modify these or add new ENT_TYPE_INFO UDTs to support other types.
 // Remember to update the functions in this MODULE to support any new or modifed types.
+//
 
 // Main list of objects/entities.
 type ENT_MAIN_LIST
@@ -124,8 +130,14 @@ type ENT_ZONE_INFO
 endtype
 
 
+///////////////////////////////////////////////////////////////////////////////////
+
+
+// (NO RETURN VALUE) ENT_Init()
 // Initialize the ENTITY module.
+//
 // Creates dynamic arrays, sets up globals, and initializes variables.
+//
 function ENT_Init()
     // Dynamic arrays to hold info about Entities.
     global dim ENT_Entity() as ENT_MAIN_LIST
@@ -154,9 +166,13 @@ function ENT_Init()
 endfunction
 
 
+// (NO RETURN VALUE) ENT_Terminate
 // Terminate the ENTITY module.
+//
 // Deletes all Entities and frees their internally used vectors.
+//
 // DEVNOTE: Does NOT delete referenced resources like objects and images...
+//
 function ENT_Terminate()
     ENT_DeleteAllEntities()
     undim ENT_Entity()
@@ -176,8 +192,11 @@ function ENT_Terminate()
 endfunction
 
 
+// (INTEGER) = ENT_AddEntity("EntityName", EntityType)
 // Adds a new Entity.
+//
 // Returns the IndexNumber of the new Entity.
+//
 function ENT_AddEntity(EntityName as string, EntityType as integer)
     NewIndex as integer
     array insert at bottom ENT_Entity()             // <- Create entry on main list.
@@ -206,9 +225,12 @@ function ENT_AddEntity(EntityName as string, EntityType as integer)
 endfunction NewIndex
 
 
+// (NO RETURN VALUE) ENT_DeleteEntity(EntityIndex)
 // Delete the Entity specified by EntityIndex.
+//
 // DEVNOTE: Caller are responsible for deleting resources like objects and images.
 //          This function only deletes the entry in the Entity system.
+//
 function ENT_DeleteEntity(EntityIndex as integer)
     if EntityIndex >= 0 and EntityIndex < ENT_NumEntities
         select ENT_Entity(EntityIndex).etype
@@ -228,7 +250,10 @@ function ENT_DeleteEntity(EntityIndex as integer)
     endif
 endfunction
 
+
+// (NO RETURN VALUE) ENT_DeleteAllEntities()
 // Delete all Entities.
+//
 function ENT_DeleteAllEntities()
     if ENT_NumEntities > 0
         for i=0 to ENT_NumEntities-1
@@ -238,12 +263,14 @@ function ENT_DeleteAllEntities()
 endfunction
 
 
+// (NO RETURN VALUE) ENT_SetAttribute(EntityIndex, Attribute, str$(Value))
 // Sets the specified Attribute of the Entity specified by EntityIndex.
+//
 // DEVNOTE: All values should be converted to strings before passed in.
-//          String attributes are passed in as usual.
+//          String attributes are passed in as they are.
 //
 // Example of passing in an object resource number:
-//      ENT_SetAttribute( MyEntity, ENT_ATTR_OBJ, str$(ObjNum) )
+//      ENT_SetAttribute( MyEntity, ENT_ATTR_OBJECT, str$(ObjNum) )
 //
 function ENT_SetAttribute(EntityIndex as integer, Attribute as integer, Value as string)
     if EntityIndex >= 0 and EntityIndex < ENT_NumEntities
@@ -251,9 +278,9 @@ function ENT_SetAttribute(EntityIndex as integer, Attribute as integer, Value as
             ENT_Entity(EntityIndex).name = Value
         endif
         EntityType = ENT_Entity(EntityIndex).etype
+        i = ENT_Entity(EntityIndex).info
         if EntityType = ENT_TYPE_OBJECT
             // OBJECT specific attribute assignments.
-            i = ENT_Entity(EntityIndex).info
             if Attribute = ENT_ATTR_OBJECT
                 ENT_Object(i).obj = val(Value)
             endif
@@ -274,3 +301,47 @@ function ENT_SetAttribute(EntityIndex as integer, Attribute as integer, Value as
         // ...
     endif
 endfunction
+
+
+// (STRING) = ENT_GetAttribute(EntityIndex, Attribute)
+// Returns the Value of the specified Attribute as a string.
+//
+// If you are getting a value that are NOT a string call the function like this:
+//     value = val( ENT_GetAttribute(MyEntity, ENT_ATTR_OBJECT) )
+//
+// DEVNOTE: Be aware that when getting a vector value you are getting the actual
+//          vector resource number stored in the Entity list, so be very careful about
+//          what you do with it. Preferably make a copy of it and don't use the original
+//          at all.
+//
+function ENT_GetAttribute(EntityIndex as integer, Attribute as integer)
+    Value as string
+    Value = ""
+    if EntityIndex >= and EntityIndex < ENT_NumEntities
+        if Attribute = ENT_ATTR_NAME
+            Value = ENT_Entity(EntityIndex).name
+            exitfunction Value
+        endif
+        EntityType = ENT_Entity(EntityIndex).etype
+        i = ENT_Entity(EntityIndex).info
+        if EntityType = ENT_TYPE_OBJECT
+            if Attribute = ENT_ATTR_OBJECT
+                Value = str$( ENT_Object(i).obj )
+            endif
+            if Attribute = ENT_ATTR_POSITION
+                Value = str$( ENT_Object(i).pos )
+            endif
+            if Attribute = ENT_ATTR_ROTATION
+                Value = str$( ENT_Object(i).rot )
+            endif
+            if Attribute = ENT_ATTR_DYNAMIC
+                Value = str$( ENT_Object(i).dynamic )
+            endif
+            if Attribute = ENT_ATTR_PHYSICS
+                Value = str$( ENT_Object(i).physics )
+            endif
+        endif
+        // Create IF/ENDIF blocks here to support other Entity types.
+        // ...
+    endif
+endfunction Value
