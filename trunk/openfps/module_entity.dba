@@ -227,10 +227,10 @@ function ENT_AddEntity(EntityName as string, EntityType as integer)
             ENT_Object().fname = ""
             ENT_Object().obj = 0                    // <- Initialize attributes to default values,
             v3 = RES_grab(res_Vector)               // and create vector3's for our position and
-            make vector3(v3)                        // rotation info.
+            a = make vector3(v3)                    // rotation info.
             ENT_Object().pos = v3                   // ...
-            v3 = RES_grap(res_Vector)               // ..
-            make vector3(v3)                        // .
+            v3 = RES_grab(res_Vector)               // ..
+            a = make vector3(v3)                    // .
             ENT_Object().rot = v3
             ENT_Object().dynamic = 0
             ENT_Object().physics = 0
@@ -253,13 +253,16 @@ function ENT_DeleteEntity(EntityIndex as integer)
         select ENT_Entity(EntityIndex).etype
             case ENT_TYPE_OBJECT
                 // Deletion code for an OBJECT Entity.
-                i = ENT_Entity(EntityIndex).info
-                RES_free(res_Vector, ENT_Object(i).pos)
-                RES_free(res_Vector, ENT_Object(i).rot)
-                array delete element ENT_Object(), i
+                info = ENT_Entity(EntityIndex).info
+                RES_free(ENT_Object(info).pos, res_Vector)
+                RES_free(ENT_Object(info).rot, res_Vector)
+                array delete element ENT_Object(), info
                 dec ENT_NumObjects, 1
                 array delete element ENT_Entity(), EntityIndex
                 dec ENT_NumEntities, 1
+                for i=0 to ENT_NumEntities-1    // Correct the Info references in the main list.
+                    if ENT_Entity(i).info > info then dec ENT_Entity(i).info, 1
+                next i
             endcase
             // Insert CASE statements here for other Entity types.
             // ...
@@ -283,11 +286,9 @@ endfunction
 // Delete all Entities.
 //
 function ENT_DeleteAllEntities()
-    if ENT_NumEntities > 0
-        for i=0 to ENT_NumEntities-1
-            ENT_DeleteEntity(i)
-        next i
-    endif
+    while ENT_NumEntities > 0
+        ENT_DeleteEntity(0)
+    endwhile
 endfunction
 
 
@@ -384,7 +385,7 @@ endfunction
 function ENT_GetAttribute(EntityIndex as integer, Attribute as integer)
     Value as string
     Value = ""
-    if EntityIndex >= and EntityIndex < ENT_NumEntities
+    if EntityIndex >= 0 and EntityIndex < ENT_NumEntities
         if Attribute = ENT_ATTR_NAME
             Value = ENT_Entity(EntityIndex).name
             exitfunction Value
@@ -453,32 +454,30 @@ function ENT_FindEntityName(EntityName as string, InsertMode as boolean)
     EntityIndex = -1
     subStart as integer
     subEnd as integer
+    subSize as integer
     cPos as integer
     if ENT_NumEntities = 1
         if InsertMode = 1
-            if ENT_Entities(0).name > EntityName then EntityIndex = 0
+            if ENT_Entity(0).name > EntityName then EntityIndex = 0
         endif
-        if ENT_Entities(0).name = EntityName then EntityIndex = 0
-        endfunction EntityIndex
+        if ENT_Entity(0).name = EntityName then EntityIndex = 0
+        exitfunction EntityIndex
     endif
     if ENT_NumEntities > 1
         subStart = 0
-        subEnd = ENT_NumEntities-1
+        subEnd = ENT_NumEntities - 1
         do
-            cPos = (subEnd - subStart) / 2 + subStart
-            if (subEnd - subStart) = 0
-                if InsertMode = 1
-                    if ENT_Entities(cPos).name > EntityName
-                        EntityIndex = cPos
-                    else
-                        if ENT_Entities(cPos) < EntityName and ENT_NumEntities-1 > cPos then EntityIndex = cPos+1
-                    endif
-                endif
-                if ENT_Entity(cPos) = EntityName then EntityIndex = cPos
-                exitfunction EntityIndex
-            endif
+            subSize = subEnd - subStart
+            cPos = subSize / 2 + subStart
             if ENT_Entity(cPos).name = EntityName
                 EntityIndex = cPos
+                exitfunction EntityIndex
+            endif
+            if subSize < 1
+                if InsertMode = 1
+                    if ENT_Entity(cPos).name > EntityName then EntityIndex = cPos
+                    if ENT_Entity(cPos).name < EntityName and ENT_NumEntities-1 > cPos then EntityIndex = cPos+1
+                endif
                 exitfunction EntityIndex
             endif
             if ENT_Entity(cPos).name < EntityName and subEnd > cPos then subStart = cPos+1
