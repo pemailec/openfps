@@ -1,7 +1,7 @@
 Rem ***** Included Source File *****
 /////////////////////////
 //
-// OpenFPS USER INTERFACE MODULE            
+// OpenFPS USER INTERFACE module
 //
 // Created by miso    
 //                           
@@ -20,8 +20,8 @@ remstart
 (06/27/10) - miso     - Added some basic debug commands for internal use, its works only 1 function deep yet,
                         no need to bother with it.
 (06/27/10) - miso     - Added basic input commands and window commands.
-						Added console, can be called pressing TAB key.
-						Added 2 test console commands, show mouse, hide mouse.
+                        						Added console, can be called pressing TAB key.
+                        						Added 2 test console commands, show mouse, hide mouse.
 						(Be patient, I will add the comments soon, and reorganize the whole)
 (06/27/10) - miso     - Added new internal timer commands. (uses Ian's matrix1)
                         Implementing the hard part, panel, button, checkbox, bar and slider gadgets. 
@@ -41,9 +41,9 @@ remstart
 (7/6/10)   - miso     - changed log commands to write .html format log
 (7/10/10)  - miso     - added 3 new mouse commands to solve gadget dragging artifacts.
                         Dragging now works well using Chris's code.
-(7/20/10)  - thenerd  - Added sprites for lobby window, changed debug HTMl file layout
-(7/29/10)  - thenerd  - Removed unneeded menu  code in UI_Handle(), fixed chat text layering
-`(8/13/10)  - thenerd  - Added close button.
+(7/20/10)  - thenerd  - Added sprites for lobby window, changed debug HTML file layout.
+(7/29/10)  - thenerd  - Removed unneeded menu code in UI_Handle(), fixed chat text layering.
+(8/13/10)  - thenerd  - Added close button.
 
 Remend
 Remstart
@@ -68,7 +68,7 @@ http://forum.thegamecreators.com/?m=forum_view&t=85209&b=18
 
 SOLVED-
 Conflicts with the movement module, because mouse commands and movement module both use
-the mousemovex() and mousemovey() commands, and calling it clears the mousemove puffers.
+the mousemovex() and mousemovey() commands, and calling it clears the mousemove buffers.
 Need a Global variable, that knows who may control these commands first.
 -------
 
