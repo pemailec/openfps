@@ -209,6 +209,10 @@ endfunction
 //
 function ENT_AddEntity(EntityName as string, EntityType as integer)
     NewIndex as integer
+    NewIndex = -1
+    if ENT_FindEntityName(EntityName, 0) <> -1      // Exit if EntityName already exists, or if
+        exitfunction NewIndex                       // the input string is empty.
+    endif
     i = ENT_FindEntityName(EntityName, 1)           // <- Insert sorted by name. (1=InsertMode)
     if i = -1
         array insert at bottom ENT_Entity()         // <- Create entry on main list.
@@ -276,7 +280,7 @@ endfunction
 //
 function ENT_DeleteEntityName(EntityName as string)
     i = ENT_FindEntityName(EntityName, 0)
-    if i <> -1
+    if i > -1
         ENT_DeleteEntity(i)
     endif
 endfunction
@@ -308,6 +312,10 @@ function ENT_SetAttribute(EntityIndex as integer, Attribute as integer, Value as
         if Attribute = ENT_ATTR_NAME
             // If this is a name change, we delete the entry on the main list and
             // insert it again, sorted by the new name.
+            if ENT_FindEntityName(Value, 0) <> -1
+                // If an entity with this name already exists then exit.
+                exitfunction
+            endif
             if ENT_Entity(EntityIndex).name = Value then exitfunction
             etype = ENT_Entity(EntityIndex).etype           // Save the Type and Info fields to be
             info = ENT_Entity(EntityIndex).info             // inserted into the new Entity.
@@ -365,7 +373,7 @@ endfunction
 //
 function ENT_SetAttributeName(EntityName as string, Attribute as integer, Value as string)
     i = ENT_FindEntityName(EntityName, 0)       // Find the Index of the Entity.
-    if i <> -1
+    if i > -1
         ENT_SetAttribute(i, Attribute, Value)   // Just call the regular SetAttribute with same parameters.
     endif
 endfunction
@@ -429,7 +437,7 @@ function ENT_GetAttributeName(EntityName as string, Attribute as integer)
     Value as string
     Value = ""
     i = ENT_FindEntityName(EntityName, 0)
-    if i <> -1
+    if i > -1
         Value = ENT_GetAttribute(i, Attribute)
     endif
 endfunction Value
@@ -439,12 +447,13 @@ endfunction Value
 // Searches the Entity list by name. (uses Binary search method for improved speed)
 //
 // InsertMode = 0
-//     If no matches were found it returns -1.
+//     If no matches were found it returns -1. Returns -2 if the input string is empty.
 //
 // InsertMode = 1
 //     If no matches were found it returns the index of where the "EntityName" should
 //     be inserted so that the list remains sorted, or -1 if "EntityName" should be
 //     inserted at the end of the list. (greater than any in the list)
+//     Returns -2 if the input string is empty.
 //
 // DEVNOTE: The InsertMode(1) is only meant for internal use when adding new Entities
 //          and should not be used from outside the ENTITY module.
@@ -456,6 +465,10 @@ function ENT_FindEntityName(EntityName as string, InsertMode as boolean)
     subEnd as integer
     subSize as integer
     cPos as integer
+    if EntityName = ""
+        EntityIndex = -2    // Return -2 if the inputstring is empty.
+        exitfunction
+    endif
     if ENT_NumEntities = 1
         if InsertMode = 1
             if ENT_Entity(0).name > EntityName then EntityIndex = 0
@@ -464,23 +477,28 @@ function ENT_FindEntityName(EntityName as string, InsertMode as boolean)
         exitfunction EntityIndex
     endif
     if ENT_NumEntities > 1
-        subStart = 0
-        subEnd = ENT_NumEntities - 1
+        subStart = 0                            // subStart is set to the first element of the Array.
+        subEnd = ENT_NumEntities - 1            // subEnd is set to the last element of the Array.
         do
-            subSize = subEnd - subStart
-            cPos = subSize / 2 + subStart
+            subSize = subEnd - subStart         // Set subSize to the number of elements in the current subArray.
+            cPos = subSize / 2 + subStart       // cPos is set to the middle position of the subArray. (remember the array is sorted)
             if ENT_Entity(cPos).name = EntityName
+                // If EntityName is found Exit the loop, returning the Index.
                 EntityIndex = cPos
                 exitfunction EntityIndex
             endif
             if subSize < 1
+                // If we only have 1 item left in the list then Exit and return -1. (InsertMode = 0)
                 if InsertMode = 1
+                    // If (InsertMode=1) then Exit and return the correct Index of the Insert point.
                     if ENT_Entity(cPos).name > EntityName then EntityIndex = cPos
                     if ENT_Entity(cPos).name < EntityName and ENT_NumEntities-1 > cPos then EntityIndex = cPos+1
                 endif
                 exitfunction EntityIndex
             endif
+            // If EntityName is less than the current name, then move subStart to the next position. (halving the search area)
             if ENT_Entity(cPos).name < EntityName and subEnd > cPos then subStart = cPos+1
+            // If EntityName is greater than the current name, then move subEnd to the previous position. (again halved)
             if ENT_Entity(cPos).name > EntityName and subStart < cPos then subEnd = cPos-1
         loop
     endif
