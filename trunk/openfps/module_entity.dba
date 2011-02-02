@@ -605,12 +605,13 @@ endfunction
 
 function ENT_PrintEntities()
     for i=0 to ENT_NumEntities-1
-        print "NAME: " + ENT_Entity(i).name
-        if ENT_Entity(i).etype = ENT_TYPE_OBJECT then print "TYPE: Object"
-        if ENT_Entity(i).etype = ENT_TYPE_TERRAIN then print "TYPE: Terrain"
-        if ENT_Entity(i).etype = ENT_TYPE_PLIGHT then print "TYPE: Point Light"
-        if ENT_Entity(i).etype = ENT_TYPE_DLIGHT then print "TYPE: Directional Light"
-        if ENT_Entity(i).etype = ENT_TYPE_SLIGHT then print "TYPE: Spot Light"
-        if ENT_Entity(i).etype = ENT_TYPE_ZONE then print "TYPE: Zone"
+        print "ENTITY: " + str$(i)
+        print "NAME  : " + ENT_Entity(i).name
+        if ENT_Entity(i).etype = ENT_TYPE_OBJECT then print "TYPE  : Object"
+        if ENT_Entity(i).etype = ENT_TYPE_TERRAIN then print "TYPE  : Terrain"
+        if ENT_Entity(i).etype = ENT_TYPE_PLIGHT then print "TYPE  : Point Light"
+        if ENT_Entity(i).etype = ENT_TYPE_DLIGHT then print "TYPE  : Directional Light"
+        if ENT_Entity(i).etype = ENT_TYPE_SLIGHT then print "TYPE  : Spot Light"
+        if ENT_Entity(i).etype = ENT_TYPE_ZONE then print "TYPE  : Zone"
     next i
 endfunction
