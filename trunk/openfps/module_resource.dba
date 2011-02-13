@@ -172,10 +172,16 @@ function RES_free(number,restype)
         	if particles exist(number) then delete particles number
     	endcase
     	case res_Matrix4
-        	`if matrix4 exist(number) then delete matrix4 number
+    		`WARNING: WILL CRASH IF MATRIX DOES NOT EXIST (no exists command)
+        	delete matrix4 number
     	endcase
     	case res_Vector
-        	`if vector exist(number) then delete vector number
+        	if vector exist(number):
+        		`check for type of vector
+        		if VECTOR TYPE(number)=1 then DELETE VECTOR2 number
+        		if VECTOR TYPE(number)=2 then DELETE VECTOR3 number
+        		if VECTOR TYPE(number)=3 then DELETE VECTOR4 number
+        	endif
     	endcase
     	case res_DLL
         	if dll exist(number) then delete dll number

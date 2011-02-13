@@ -48,66 +48,114 @@ Function UI_SUB_CheckConsoleCommand(console_result$)
 //*                                                                  to be called.      *
 //*                                                                                     *
 //***************************************************************************************
-	console_result$=Upper$(console_result$)
+	console_resultupper$=Upper$(console_result$)
+	command_exec=0
 	
-	select console_result$
+	select console_resultupper$
 	case "HIDE MOUSE":
 		MVM_HideMouse()
+		command_exec=1
 	endcase
 	case "SHOW MOUSE":
 		MVM_ShowMouse()
+		command_exec=1
 	endcase
 	case "DEBUG"
 		CORE_DebugScreen=1
+		command_exec=1
 	endcase
 	case "MODE MENU"
 		SyS_LoopMode="menu"
+		command_exec=1
 	endcase
 	case "MODE ENGINE"
 		SyS_LoopMode="engine"
+		command_exec=1
 	endcase
 	case "EXIT"
 		SyS_Event_Terminate=1
+		command_exec=1
 	endcase
 	case "SYNC RATE 0"
 		sync rate 0
+		command_exec=1
 	endcase
 	case "SYNC RATE 15"
 		sync rate 15
+		command_exec=1
 	endcase
 	case "SYNC RATE 30"
 		sync rate 30
+		command_exec=1
 	endcase
 	case "SYNC RATE 60"
 		sync rate 60
+		command_exec=1
 	endcase
 	case "START SERVER"
 		NET_StartServer()
+		command_exec=1
 	endcase
 	case "WELCOME"
 		NET_Server.DATA_Welcome=1
+		command_exec=1
 	endcase
 	case "WIREFRAME ON"
 		set object wireframe NET_Server.DATA_MapObj,1
+		command_exec=1
 	endcase	
 	case "WIREFRAME OFF"
 		set object wireframe NET_Server.DATA_MapObj,0
+		command_exec=1
+	endcase
+	case "PAUSE 1"
+		CORE_GamePaused=1
+		MVM_ShowMouse()
+		command_exec=1
+	endcase
+	case "PAUSE 0"
+		CORE_GamePaused=0
+		MVM_HideMouse()
+		command_exec=1
 	endcase
 	endselect
-	if left$(console_result$,15)="SET SERVER NAME"
+	if left$(console_resultupper$,15)="SET SERVER NAME"
 		NET_NameServer(right$(console_result$,len(console_result$)-16))
+		command_exec=1
 	endif
-	if left$(console_result$,14)="SET SERVER MAP"
+	if left$(console_resultupper$,14)="SET SERVER MAP"
 		NET_Server.DATA_Map=right$(console_result$,len(console_result$)-15)
+		command_exec=1
 	endif
-	if left$(console_result$,5)="SCALE"
+	if left$(console_resultupper$,5)="SCALE"
 		scale=val(right$(console_result$,len(console_result$)-6))
 		scale object NET_Server.DATA_MapObj,scale,scale,scale
+		command_exec=1
 	endif
-	if left$(console_result$,5)="PARSE"
+	if left$(console_resultupper$,5)="PARSE"
 		parse_file$=right$(console_result$,len(console_result$)-6)
 		UI_SUB_ParseFile(parse_file$)
+		command_exec=1
 	endif
+	if left$(console_resultupper$,10)="MENU_STATE"
+		MENU_state=right$(console_result$,len(console_result$)-11)
+		command_exec=1
+	endif
+	if left$(console_resultupper$,4)="LOAD"
+		LVL_Load(right$(console_result$,len(console_result$)-5))
+		command_exec=1
+	endif
+	if left$(console_resultupper$,13)="SETPLAYERNAME"
+		PlayerName$=right$(console_result$,len(console_result$)-14)
+		
+		UI_WriteLog(UI_Green,"Setting player name to "+PlayerName$)
+		//set the player name here
+		
+		command_exec=1
+	endif
+	`clear the entry buffer if a command was executed
+	if command_exec=1 then Clear Entry Buffer:UI_Input.result = ""
+
 Endfunction
 
 function UI_SUB_ParseFile(file$):

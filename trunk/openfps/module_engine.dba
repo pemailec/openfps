@@ -41,10 +41,14 @@ function CORE_init():
     global CORE_timer_last as float : CORE_timer_last = CORE_timer
     global CORE_DebugScreenImg
     global CORE_GamePanel
-    	CORE_DebugScreenImg= RES_grab(Res_Image)
-    	CORE_GamePanel= RES_grab(Res_Image)
+    global CORE_GamePaused as boolean
+    global CORE_GamePausedImage 
+    CORE_DebugScreenImg= RES_grab(Res_Image)
+    CORE_GamePanel= RES_grab(Res_Image)
+    CORE_GamePausedImage= RES_grab(Res_Image)
     load image "media\windows\debug.png", CORE_DebugScreenImg
     load image "media\panels\ui_gamepanel.png", CORE_GamePanel
+    load image "media\menu\paused.png", CORE_GamePausedImage
 endfunction
 
 /////////////////////////////////////////////////////////
@@ -52,12 +56,23 @@ endfunction
 /////////////////////////////////////////////////////////
 
 function CORE_update():
- // -----------------------
- // update function
- // -----------------------
-    Net_UpdateServer()
-    MVM_update()
+	// -----------------------
+	// update function
+	// -----------------------
+	
+	`put all the game engine update crap here
+	
+	`test game pause code
+    if CORE_GamePaused=0 then MVM_update()
     MENU_Hide()
+    if escapekey():
+		CORE_GamePaused=1
+		MVM_ShowMouse()
+    endif
+    if CORE_GamePaused=1:
+    	paste image CORE_GamePausedImage,0,0,1
+    endif
+    
 endfunction
 
 function CORE_CleanUp():
@@ -84,7 +99,7 @@ function CORE_TerminateAll():
 	// Terminate function
 	// -----------------------
 	   `Debug
-    UI_WriteLog(gUI_Red, "Program Ended.")
+    UI_WriteLog(UI_Red, "Program Ended.")
 	   `Menu Hide
     MENU_Hide()
 	   `Terminate Systems

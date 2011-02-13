@@ -16,6 +16,7 @@ include8=module_engine.dba
 include9=module_physics.dba
 include10=module_movement.dba
 include11=module_network.dba
+include12=module_level.dba
 final source=_Temp.dbsource
 
 ; **** Executable Information  ***
@@ -39,7 +40,7 @@ CommandLineArguments=
 app title=BioStorm
 
 ; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
-graphics mode=window
+graphics mode=fullscreen
 fullscreen resolution=1024x768x32
 
 ; arbitrary sizes are valid for windowed mode
@@ -49,10 +50,10 @@ window resolution=1024x768
 
 ; **** Media ****
 ; Example entries: media1=graphics\*.jpg
-media root path=C:\Users\Jonathan\Documents\My Projects\OpenFPS\Source\
+media root path=F:\openfps\
 
 ; **** Icons ****
-icon1=C:\Users\Jonathan\Documents\My Projects\OpenFPS\Source\media\images\TempIcon.ico
+icon1=media\images\TempIcon.ico
 
 ; **** Cursors ****
 

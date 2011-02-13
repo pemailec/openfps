@@ -28,6 +28,11 @@ global t_Object
 global t_ObjectDB
 global SelectedObject
 
+	t_Heightmap = 141
+	t_Texture   = 142
+	t_Detail    = 143
+	
+
 global camera_move
 global edit_mode
 edit_mode=0
@@ -96,6 +101,19 @@ endtype
 	set object cull 501,0
 	hide object 501
 	
+	
+	make object plain 502,2048,2048
+	load effect "..\media\shaders\object\water.fx",502,0
+	load image "..\media\textures\water.png",502
+	load image "..\media\textures\water_normal.bmp",503
+	set object transparency 502,1
+	texture object 502,0,502
+	texture object 502,1,503
+	set object effect 502,502
+	xrotate object 502,90
+	set object cull 502,0
+	
+	
 	// load entity media
 	global ent_offset as integer
 	ent_offset=1000
@@ -110,7 +128,7 @@ endtype
     null = make matrix4(4) : view matrix4 4
 	null = make matrix4(5) : world matrix4 5
 
-
+Ter_toggle=1
 
 
 //--main loop begins
@@ -122,6 +140,10 @@ do
 		getEvent
 		updateGui()
 
+	scroll object texture 502,0,0.0000001,0.0000001
+	scroll object texture 502,1,-0.0000001,-0.0000001
+	position object 502,camera position x(),0,camera position z()
+	
 		if level_new=1:
 		
 			if eventSource()=startnew and eventType()=MOUSE_CLICK

@@ -1,0 +1,6 @@
+******************************
+Model Folder Directories:
+
+Please put all various prop models into the mdl_database folder.
+
+******************************

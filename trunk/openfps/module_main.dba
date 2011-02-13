@@ -66,6 +66,7 @@ Global SyS_LoopMode as string		  :	`Variable to determine which modules to updat
 Global SyS_TimeFactor as float		  :	`Variable for Timer based engine operations
 									  :	`Updated every loop with an elapsed time variable
 Global SyS_GameSpeed as float		  :	`Speed variable for game loops
+Global CORE_DebugScreen as Boolean    : `Debug setting
 									  
 /////////////////////////////////////////////////////////
 // INIT                                                //
@@ -99,7 +100,11 @@ UI_init() 	`ui module
 MVM_init()  `movement module
 CORE_init()	`game core modules
 MENU_init() `menu module
-NET_init()	`network module
+`NET_init()	`network module
+LVL_Init()  `level module
+
+`load up various configurations
+UI_SUB_ParseFile("PlayerData.cfg")
 
 /////////////////////////////////////////////////////////
 // RUN                                                 //
@@ -114,23 +119,23 @@ while SyS_Event_Terminate<1
 	`Update System timer
 	SyS_TimeFactor=CORE_TimeFactor()
 	
-	
 	select SyS_LoopMode
+		`CORE LOOPS
 		case "menu"
+			`MENU LOOP
 			// Update menu
-			MVM_ShowMouse()
-			CORE_CleanUp()
 			MENU_Show()
-			MENU_update()
+			MENU_Update()
 		endcase
 		case "engine"
+			`GAME ENGINE LOOP
 			// Update game engine
 			CORE_update()
 		endcase
 	endselect
 	
 	`do general stuff
-	position mouse UI_Display.MiddleWidth,UI_Display.MiddleHeight `center mouse
+	position mouse UI_Display.MiddleWidth,UI_Display.MiddleHeight `center windows mouse
 	
 	`debug
 	
@@ -138,7 +143,11 @@ while SyS_Event_Terminate<1
 	UI_Handle()
 	
 	`sync to the screen
+	`Note: would there be any advantages to using fastsync for the menu?
 	sync
+	
+	`destroy temporary gui elements
+	MENU_DestroyButtons()
 	
 endwhile
 

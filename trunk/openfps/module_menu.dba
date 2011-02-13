@@ -70,6 +70,10 @@ function MENU_init():
 	global MENU_BackgroundSphereImg		`Menu background sphere texture
 	global MENU_music					`Menu music
 	
+	global MENU_state as string 		`Menu status
+	global MENU_stateDEBUG as string 		`Menu status debug
+	MENU_state="NONE"
+	
 	`set variables
 	MENU_LoopStartup=			1
 	MENU_lobby_current_tab$=	"UI_lobby_tab_game"
@@ -128,11 +132,38 @@ function MENU_update()
 	// -----------------------
 	// Update function
 	// -----------------------
+	
 	`handle loop startup
 	if MENU_LoopStartup>0:
 		MENU_Show()
 		UI_HideChatBox()
 		MENU_LoopStartup=0
+	endif
+	
+	`paste backdrop
+	paste image MENU_ForegroundImage,0,0,1 
+	
+	`handle buttons
+	MENU_CreateButtons()
+	
+	If mouseclick()=1
+		Select UI_MouseOveredGadget$
+			case "button_lobby"
+				MENU_state="LOBBY"
+			endcase
+			case "button_training"
+				MENU_state="TRAINING"
+			endcase
+		 	case "button_quit"
+		 		MENU_state="QUIT"
+		 	endcase
+		 	case "button_yesquit"
+		 		SyS_Event_Terminate=1
+		 	endcase
+		 	case "button_backtomain"
+		 		MENU_state="NONE"
+		 	endcase
+		endselect
 	endif
 	
 	`handle loading fade
@@ -146,8 +177,6 @@ function MENU_update()
 	scroll object texture MENU_BackgroundObject,0.0005*SyS_TimeFactor,0
 	scroll object texture MENU_BackgroundObject2,0.0001*SyS_TimeFactor,0
 	
-	`paste menu foreground
-	paste image MENU_ForegroundImage,0,0,1
 	
 	`debug
 	if CORE_DebugScreen=1:
@@ -155,6 +184,8 @@ function MENU_update()
 		UI_Text(1,X,Y,"Debug Mode====="):Y=Y+18
 		UI_Text(1,X,Y,"Screen rate "+str$(screen fps())):Y=Y+18
 		UI_Text(1,X,Y,"TimeFactor#="+str$(SyS_TimeFactor)):Y=Y+18
+		UI_Text(1,X,Y,"MENU_stateDEBUG="+MENU_stateDEBUG):Y=Y+18
+		UI_Text(1,X,Y,"UI_Mouseclicked="+str$(UI_Mouseclicked)):Y=Y+18
 	endif
 	
 endfunction
@@ -162,26 +193,125 @@ endfunction
 function MENU_Show():
 	show object MENU_BackgroundObject
 	show object MENU_BackgroundObject2
+	`show the mouse
+	MVM_ShowMouse()
+	CORE_CleanUp()
+endfunction
+
+function MENU_ShowPaused():
+	show object MENU_BackgroundObject2
 endfunction
 
 function MENU_Hide():
 	hide object MENU_BackgroundObject
 	hide object MENU_BackgroundObject2
+	MENU_state="HIDDEN"
+endfunction
+
+function MENU_CreateButtons():
+	select MENU_state
+	case "NONE"
+		local x as integer: local y as integer
+		x=168:y=240
+		UI_AddCenterGadgettoScreen("button_lobby",x,y,"UI_button")
+		UI_AddMouseoverImageToGadget("button_lobby","UI_buttonhover")
+		UI_AddtitleToGadget("button_lobby",3,x-8,y-14,"Lobby")
+		x=168:y=y+60
+		UI_AddCenterGadgettoScreen("button_campaign",x,y,"UI_button")
+		UI_AddMouseoverImageToGadget("button_campaign","UI_buttonhover")
+		UI_AddtitleToGadget("button_campaign",3,x-8,y-14,"Campaign")
+		x=168:y=y+60
+		UI_AddCenterGadgettoScreen("button_training",x,y,"UI_button")
+		UI_AddMouseoverImageToGadget("button_training","UI_buttonhover")
+		UI_AddtitleToGadget("button_training",3,x-8,y-14,"Training")
+		x=168:y=y+60
+		UI_AddCenterGadgettoScreen("button_options",x,y,"UI_button")
+		UI_AddMouseoverImageToGadget("button_options","UI_buttonhover")
+		UI_AddtitleToGadget("button_options",3,x-8,y-14,"Options")
+		x=168:y=y+60
+		UI_AddCenterGadgettoScreen("button_quit",x,y,"UI_button")
+		UI_AddMouseoverImageToGadget("button_quit","UI_buttonhover")
+		UI_AddtitleToGadget("button_quit",3,x-8,y-14,"Quit")
+	endcase
+	case "TRAINING"
+		Menu_CreateTrainingQuestion()
+	endcase
+	case "LOBBY"
+		UI_ShowChatBox()
+	endcase
+	case "QUIT"
+		Menu_CreateQuitQuestion()
+	endcase
+	endselect
+endfunction
+
+function MENU_DestroyButtons():
+	`clear all for now
+	UI_ClearAllGuis()
+	
+	`old code
+	remstart
+	if UI_GadgetExist("button_lobby") then UI_DeleteGadget("button_lobby")
+	if UI_GadgetExist("button_campaign") then UI_DeleteGadget("button_campaign")
+	if UI_GadgetExist("button_training") then UI_DeleteGadget("button_training")
+	if UI_GadgetExist("button_options") then UI_DeleteGadget("button_options")
+	if UI_GadgetExist("button_quit") then UI_DeleteGadget("button_quit")
+	remend
 endfunction
 
 function MENU_LoadingScreen()
 	`Load resource for loading screen
 	global NetConnectImg
 	global NetConnectSprite
+	global SplashVid
 	NetConnectImg = RES_grab(res_Image)
 	NetConnectSprite = RES_grab(res_Sprite)
+	SplashVid = RES_grab(res_Anim)
+	load animation "media\menu\video\openfps.avi",SplashVid
 	load image "media\menu\loadblur.png",NetConnectImg
 	`do a short sync loop to avoid display corruption
+	play animation SplashVid
+	do
+		if animation playing(SplashVid)<1 then exit
+		sync
+	loop
+	delete animation SplashVid
 	for x=0 to 10
 	sprite NetConnectSprite,0,0,NetConnectImg
 	sync
 	next x
 endfunction
+
+
+Function Menu_CreateQuitQuestion()
+	ui_putwindow(UI_Display.Middlewidth-280,UI_Display.Middleheight-10,35,15)
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight+50
+	UI_AddTextLine(3,x,y,"Are you sure you want to quit?")
+	X=x-150 : Y=Y+100
+	UI_AddCenterGadgettoScreen("button_yesquit",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_yesquit","UI_buttonhover")
+	UI_AddtitleToGadget("button_yesquit",3,x-8,y-14,"Yes")	
+	X=x+300
+	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"No")
+EndFunction
+
+Function Menu_CreateTrainingQuestion()
+	ui_putwindow(UI_Display.Middlewidth-280,UI_Display.Middleheight-50,35,15)
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight+20
+	UI_AddTextLine(3,x,y-20,"Begin Training?")
+	UI_AddTextLine(1,x,y+20,"Training allows you to familiarize yourself with the controls")
+	UI_AddTextLine(1,x,y+34,"and techniques of the game before entering the field.")
+	X=x-150 : Y=Y+110
+	UI_AddCenterGadgettoScreen("button_yestrain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_yestrain","UI_buttonhover")
+	UI_AddtitleToGadget("button_yestrain",3,x-8,y-14,"Start")	
+	X=x+300
+	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Cancel")	
+EndFunction
 
 /////////////////////////////////////////////////////////
 // TERMINATE                                           //

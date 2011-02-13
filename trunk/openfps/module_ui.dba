@@ -449,6 +449,7 @@ Function UI_Handle()
 //*                                                                                     *
 //***************************************************************************************
 
+
 //Add value to the mouse variables
 	SyS_MouseMoveX = MouseMoveX():SyS_MouseMoveY = MouseMoveY()
 //-Handle all the console
@@ -484,7 +485,8 @@ Function UI_Handle()
 
 
 //- If pressed esc then quit
-	If Keystate(1)=1 then SyS_Event_Terminate=1
+	`If Keystate(1)=1 then SyS_Event_Terminate=1
+	
 
 Endfunction
 
@@ -2648,7 +2650,7 @@ var_time$=var_time$+"_"+var_hour$+"h "+var_minutes$+"m "+var_seconds$+" s.log"
   		Open to Write UI_LogFileID,var_time$
 		Write String UI_LogfileID,"<html><body background="+chr$(34)+"media\images\camo.jpg"+chr$(34)+">"
 		Write String UI_LogfileID,"<img src="+chr$(34)+"media\menu\logo.png"+chr$(34)+"alt="+chr$(34)+"OpenFPS"+chr$(34)+"><br><br>"
-		Write String UI_LogfileID,"<u>OpenFps Logfile</u><br>"
+		Write String UI_LogfileID,"<img src="+chr$(34)+"website\images\email000.png"+chr$(34)+"alt="+chr$(34)+"Debug File"+chr$(34)+"><u> OpenFps Logfile</u><br>"
 		Write String UI_LogFileID,"<br>"
   	else
   		UI_Logmode   = UI_False
@@ -2699,6 +2701,7 @@ Function UI_StopDebugMode()
   		
   			UI_WriteLog(UI_Yellow,"Just testing yellow importance.")
   			UI_WriteLog(UI_RED,"Closing Logfile.")
+  			Write String UI_LogfileID,"<br><img src="+chr$(34)+"website\images\logo2000.png"+chr$(34)+"alt="+chr$(34)+"OpenFPS"+chr$(34)+"><br><br><br>"
  			Write String UI_LogfileID,"</body></html>"
  			UI_LogMode   = UI_Logoff
   			Close File UI_LogFileID:rem RES_free(UI_LogfileID,res_file)

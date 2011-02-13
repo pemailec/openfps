@@ -330,7 +330,7 @@ Function UI_HideChatBox()
 	UI_DeleteGadget("button_lobby_game")
 	UI_DeleteGadget("button_lobby_chat")
 	UI_DeleteGadget("chatpanel_tab_game")
-	UI_DeleteGadget("button_close_window")
+	UI_DeleteGadget("button_backtomain")
 Endfunction
 
 Function UI_ShowChatBox()
@@ -364,11 +364,11 @@ Function UI_ShowChatBox()
 		y=UI_Chatpanel.y-214
 		UI_AddCenterGadgettoScreen("chatpanel_tab_game",x,y,Lobby_current_tab$)
 	endif
-	if UI_GadgetExist("button_close_window")=0:
+	if UI_GadgetExist("button_backtomain")=0:
 		x=UI_Chatpanel.x+188
 		y=UI_Chatpanel.y-205
-		UI_AddCenterGadgettoScreen("button_close_window",x,y,"UI_button_close")
-		UI_AddMouseoverImageToGadget("button_close_window","UI_button_close_hover")
+		UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button_close")
+		UI_AddMouseoverImageToGadget("button_backtomain","UI_button_close_hover")
 	endif	
 Endfunction
 
