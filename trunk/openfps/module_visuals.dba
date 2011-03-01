@@ -17,7 +17,7 @@ remstart
 (07/04/10  - miso        - placed log commands
 (07/30/10) - miso        - Added various effects.
 (05/01/11) - JRH         - Added shader effects and graphical priority.
-
+(01/03/11) - JRH         - Visual settings loaded from file.
 
 ----- To-Do:
 This module is a blank template with the functions we need for visuals.
@@ -420,3 +420,124 @@ Function VIS_SetPriority(ObjectNumber,ObjectPriority)
     
 EndFunction
 
+
+//***************************************************************************************
+//*   JRH                                                                               *
+//*   Object priority handling                                                          *
+//*                                                                                     *
+//***************************************************************************************
+// -- Load visualo settings from setup file.
+Function VIS_Setup_LoadSettings()
+
+rem Create settings variables
+VIS_Setup_Width as Integer = 1024
+VIS_Setup_Height as Integer = 768
+VIS_Setup_Depth as Integer = 32
+VIS_Setup_Lightmap as Integer = 0
+VIS_Setup_Title as String = "OpenFPS"
+VIS_Setup_Antialiasing as Integer = 0
+VIS_Setup_UseMouse as Integer = 1
+VIS_Setup_UseWindow as Integer = 0
+VIS_Setup_UseVsync as Integer = 0
+VIS_Setup_UseMultimonitorMode as Integer = 0
+VIS_Setup_UseShaders as Integer = 1
+VIS_Setup_DivideTextureQuality as Integer = 0
+
+rem Laod the setup file
+VIS_Setup_SetupFile as String : VIS_Setup_SetupFile = "visualsettings.cfg"
+VIS_Setup_InText as String
+If File Exist(VIS_Setup_SetupFile)=0 then VIS_Setup_CreateSettings()
+VIS_Setup_SetupFileNumber = RES_grab(3)
+Open To Read VIS_Setup_SetupFileNumber,VIS_Setup_SetupFile
+
+rem Read Loop
+Do
+    If File End(1)=1 then Exit `If there is no setup file
+    Read String 1, VIS_Setup_InText
+    
+    Select VIS_Setup_InText
+    
+        Case "height"
+            Read String 1, VIS_Setup_InText
+            VIS_Setup_Height = Val(VIS_Setup_InText)
+        EndCase
+        Case "width"
+            Read String 1, VIS_Setup_InText
+            VIS_Setup_Width = Val(VIS_Setup_InText)
+        EndCase
+        Case "depth"
+            Read String 1, VIS_Setup_InText
+            VIS_Setup_Depth = Val(VIS_Setup_InText)
+        EndCase
+        Case "antialiasing"
+            Read String 1, VIS_Setup_InText
+            VIS_Setup_Antialiasing = Val(VIS_Setup_InText)
+        EndCase
+        Case "lightmap"
+            Read String 1, VIS_Setup_InText
+            VIS_Setup_Lightmap = Val(VIS_Setup_InText)
+        EndCase
+        Case "title"
+            Read String 1, VIS_Setup_InText
+            Set Window Title VIS_Setup_InText
+        EndCase
+        Case "window"
+            Read String 1, VIS_Setup_InText
+            VIS_Setup_UseWindow = Val(VIS_Setup_InText)
+            If VIS_Setup_UseWindow=1 then Set Window On
+            If VIS_Setup_UseWindow=0 then Set Window Off
+        EndCase
+        Case "vsyncenabled"
+            Read String 1, VIS_Setup_InText
+            VIS_Setup_UseVsync = Val(VIS_Setup_InText)
+        EndCase
+        Case "multimonitormode"
+            Read String 1, VIS_Setup_InText
+            VIS_Setup_UseMultimonitorMode = Val(VIS_Setup_InText)
+        EndCase
+        
+    EndSelect
+        
+Loop
+
+Close File 1 `Close the used setup file
+
+
+rem Set the settings into action
+Set Display Mode VIS_Setup_Width, VIS_Setup_Height, VIS_Setup_Depth, VIS_Setup_UseVsync, VIS_Setup_Antialiasing, VIS_Setup_UseMultimonitorMode
+
+EndFunction
+
+Function VIS_Setup_CreateSettings()
+
+    Rem Create a setup file
+    VIS_Setup_SetupFile as String : VIS_Setup_SetupFile = "visualsettings.cfg"
+    VIS_Setup_SetupFileNumber = RES_grab(3)
+    If Can Make File(VIS_Setup_SetupFile)=0 then End
+    Make File VIS_Setup_SetupFile
+    Open To Write VIS_Setup_SetupFileNumber, VIS_Setup_SetupFile
+    
+    Rem Write this data:
+    Write String VIS_Setup_SetupFileNumber, "width"
+    Write String VIS_Setup_SetupFileNumber, "1024"
+    Write String VIS_Setup_SetupFileNumber, "height"
+    Write String VIS_Setup_SetupFileNumber, "768"
+    Write String VIS_Setup_SetupFileNumber, "depth"
+    Write String VIS_Setup_SetupFileNumber, "32"
+    Write String VIS_Setup_SetupFileNumber, "antialiasing"
+    Write String VIS_Setup_SetupFileNumber, "4"
+    Write String VIS_Setup_SetupFileNumber, "lightmap"
+    Write String VIS_Setup_SetupFileNumber, "1"
+    Write String VIS_Setup_SetupFileNumber, "title"
+    Write String VIS_Setup_SetupFileNumber, "OpenFPS"
+    Write String VIS_Setup_SetupFileNumber, "window"
+    Write String VIS_Setup_SetupFileNumber, "0"
+    Write String VIS_Setup_SetupFileNumber, "vsyncenabled"
+    Write String VIS_Setup_SetupFileNumber, "0"
+    Write String VIS_Setup_SetupFileNumber, "multimonitormode"
+    Write String VIS_Setup_SetupFileNumber, "0"
+    
+    Rem Close the file
+    Close File VIS_Setup_SetupFileNumber
+    
+ENDFUNCTION
