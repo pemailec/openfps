@@ -3,7 +3,7 @@ Rem ***** Included Source File *****
 //
 // OpenFPS VISUALS Module         
 //
-// Created by thenerd, miso
+// Created by thenerd, miso, JRH
 //                           
 //
 /////////////////////////////////////////////////////
@@ -423,10 +423,10 @@ EndFunction
 
 //***************************************************************************************
 //*   JRH                                                                               *
-//*   Object priority handling                                                          *
+//*   Load Settings from config file                                                    *
 //*                                                                                     *
 //***************************************************************************************
-// -- Load visualo settings from setup file.
+// -- Load visual settings from setup file.
 Function VIS_Setup_LoadSettings()
 
 rem Create settings variables
@@ -442,8 +442,9 @@ VIS_Setup_UseVsync as Integer = 0
 VIS_Setup_UseMultimonitorMode as Integer = 0
 VIS_Setup_UseShaders as Integer = 1
 VIS_Setup_DivideTextureQuality as Integer = 0
+VIS_Setup_UsePostProcessing as Integer = 0
 
-rem Laod the setup file
+rem Load the setup file
 VIS_Setup_SetupFile as String : VIS_Setup_SetupFile = "visualsettings.cfg"
 VIS_Setup_InText as String
 If File Exist(VIS_Setup_SetupFile)=0 then VIS_Setup_CreateSettings()
@@ -495,7 +496,10 @@ Do
             Read String 1, VIS_Setup_InText
             VIS_Setup_UseMultimonitorMode = Val(VIS_Setup_InText)
         EndCase
-        
+        Case "postprocessing"
+            Read String 1, VIS_Setup_InText
+            VIS_Setup_UsePostProcessing = Val(VIS_Setup_InText)
+        EndCase
     EndSelect
         
 Loop
@@ -505,7 +509,7 @@ Close File 1 `Close the used setup file
 
 rem Set the settings into action
 Set Display Mode VIS_Setup_Width, VIS_Setup_Height, VIS_Setup_Depth, VIS_Setup_UseVsync, VIS_Setup_Antialiasing, VIS_Setup_UseMultimonitorMode
-
+      
 EndFunction
 
 Function VIS_Setup_CreateSettings()
@@ -514,10 +518,11 @@ Function VIS_Setup_CreateSettings()
     VIS_Setup_SetupFile as String : VIS_Setup_SetupFile = "visualsettings.cfg"
     VIS_Setup_SetupFileNumber = RES_grab(3)
     If Can Make File(VIS_Setup_SetupFile)=0 then End
-    Make File VIS_Setup_SetupFile
     Open To Write VIS_Setup_SetupFileNumber, VIS_Setup_SetupFile
     
     Rem Write this data:
+    VIS_Setup_TempHold as String
+    VIS_Setup_TempHold="width"
     Write String VIS_Setup_SetupFileNumber, "width"
     Write String VIS_Setup_SetupFileNumber, "1024"
     Write String VIS_Setup_SetupFileNumber, "height"
@@ -536,8 +541,73 @@ Function VIS_Setup_CreateSettings()
     Write String VIS_Setup_SetupFileNumber, "0"
     Write String VIS_Setup_SetupFileNumber, "multimonitormode"
     Write String VIS_Setup_SetupFileNumber, "0"
+    Write String VIS_Setup_SetupFileNumber, "postprocessing"
+    Write String VIS_Setup_SetupFileNumber, "0"
     
     Rem Close the file
     Close File VIS_Setup_SetupFileNumber
     
 ENDFUNCTION
+
+
+//***************************************************************************************
+//*   JRH                                                                               *
+//*   Post Processing Functions                                                         *
+//*                                                                                     *
+//***************************************************************************************
+// -- Instructions --
+// Post processing includes effects such as  bloom, motion blur and sun glare.
+// To load the effects, call the function VIS_InitPostProcessing()
+// This will check the preloaded user settings from memory (its variable) to see if it
+// is enabled.
+// To update the post processing, use the function VIS_UpdatePostProcessing()
+// To end post processing, use the function VIS_TerminatePostProcessing()
+
+Rem Initiate post processing ...
+Function VIS_InitPostProcessing()
+
+    Rem ONLY USE POST EFFECTS IF ACTIVATED IN SETTINGS FILE
+    If VIS_Setup_UsePostProcessing > 0
+    
+           `Setup Advanced Lighting
+            #include "media/shaders/Advanced Lighting.dba"
+            AdvancedLighting_SetUp(screen width(),screen height(),screen height(),512,8)
+            `Global_Set_Camera(1,5000,80,1.5)
+            
+            `Setup Post Effects
+            PostEffects_Setup(1,1,1,0,0,0)
+                        
+            `SetUp Scattering
+            LightScattering_SetUp(256,256)   
+             
+            `Make Sky box
+            SkyBox_SetUp("media/skyboxes/Cube0.dds")  
+                  
+            `Set Directional Light (This is the sunlight direction)
+            DirectionalLight_Create("Shaders/Lighting/Directional.fx")
+            DirectionalLight_Set_Shadows(4)
+            DirectionalLight_Set_Rotation(35,210,0)
+            DirectionalLight_Set_Specular(1)       
+        
+    EndIf
+       
+ENDFUNCTION
+
+Rem Update post processing...
+Function VIS_UpdatePostProcessing()
+
+    Rem ONLY USE POST EFFECTS IF ACTIVATED IN SETTINGS FILE
+    `Skipping this speeds up render process...
+    If VIS_Setup_UsePostProcessing > 0
+       
+        AdvancedLighting_Update()      
+          
+    EndIf
+    
+ENDFUNCTION
+
+Rem Terminate post processing...
+Function VIS_TerminatePostPorcessing()
+    
+ENDFUNCTION
+

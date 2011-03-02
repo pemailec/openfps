@@ -75,7 +75,7 @@ Global CORE_DebugScreen as Boolean    : `Debug setting
 `set up display
 sync on
 sync rate 0
-set display mode 1024,768,screen depth()
+VIS_Setup_LoadSettings() `Replaces set display mode 1024,768,screen depth()
 
 `various settings
 autocam off

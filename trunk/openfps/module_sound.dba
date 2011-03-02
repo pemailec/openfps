@@ -1,0 +1,122 @@
+Rem ***** Included Source File *****
+/////////////////////////
+//
+// OpenFPS Sound Module         
+//
+// Created by JRH
+//                           
+/////////////////////////////////////////////////////
+remstart
+***** Included Source File *****
+
+----- Changelog:
+(27/February/2011) - JRH     - Created
+
+
+----- To-Do:
+* Everything
+
+----- Purpose:
+This module will han dle the loading and playing of sound including;
+* Footsteps (Including sounds of other players)
+* Weapon Sounds
+* Player Sounds (Jump, hurt,etc...)
+* Music
+
+Basically, a code will be created that will be sent as a string between players, and then
+the appropriate sound will be played based on position. This way the sounds of all
+players will be heard by all other players, relative to distance.
+
+----- Dependancies and Conflicts (IMPORTANT STUFF):
+
+
+----- Conflicts
+*NONE*
+
+----- Other Notes:
+*NONE*
+
+----- Function List:
+
+--MAIN COMMANDS
+ `SND_LoadMusic()
+ `SND_PlayMusic()
+ `SND_StopMusic()
+ `SND_SetMusicType(MUSICTYPE)
+        `Where musictype is a variable that defines the type of music played, e.g. action, ambience, etc...
+ `SND_TerminateMusic()
+ `SND_HandleSound()
+ 
+remend
+
+`==========Constants==========`
+#Constant PlayerMoving = 0
+`===========================`
+
+`==========Globals==========`
+Global SND_MusicType as Integer
+`===========================`
+
+
+Rem Load the music files
+Function SND_LoadMusic()
+    
+ENDFUNCTION
+
+Rem Play the current music
+Function SND_PlayMusic()
+    
+ENDFUNCTION
+
+Rem Stop the currently playing music
+Function SND_StopMusic()
+    
+ENDFUNCTION
+
+Remstart Set the type of music played:
+Possible values for MusicType are:
+1=Ambient Background
+2=Mild Music
+3=Action Music
+4=Menu Music
+5=Lose Music
+6=Victory Music
+7=Loading Music
+remend
+Function SetMusicType(MusicType)
+
+    SND_MusicType=MusicType
+    SND_PlayMusic()
+    
+ENDFUNCTION
+
+`===========================================================
+Function SND_PlayerFootsteps()
+
+    `Retrieve current stance, and if player moving.
+    PlayerHasMoved=0
+    
+    `Set FootstepsPlaying to 0
+    FootstepsPlaying=0
+    
+    `If the player has moved,
+    If PlayerHasMoved=1
+    
+        `If the sound has finished looping:
+        SND_FootstepPlaying(FootstepsPlaying)
+        
+        `If the footsteps are not playing then play the footsteps sound:
+        If FootstepsPlaying=0
+            
+        EndIF
+        
+    ENDIF
+            
+ENDFUNCTION
+
+Function SND_FootstepPlaying(FootstepsPlaying)
+    
+    REM Checks all loaded footstep sounds to see if the are playing or not.
+    
+    
+ENDFUNCTION
