@@ -5,7 +5,7 @@ project name=OpenFPS
 
 ; **** source file information ****
 main=module_main.dba
-LineMain=103
+LineMain=0
 include1=module_resource.dba
 LineInclude1=0
 include2=module_menu.dba
@@ -37,10 +37,11 @@ LineInclude14=1
 include15=module_entity.dba
 LineInclude15=1
 include16=module_sound.dba
+LineInclude16=0
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
-executable=Temp.exe
+executable=BioStorm.exe
 build type=exe
 ; ** Media file compression **
 compression=NO
@@ -72,7 +73,7 @@ window resolution=1024x768
 media root path=C:\Users\Jonathan\Documents\My Projects\OpenFPS\Source\
 
 ; **** Icons ****
-icon1=media\images\TempIcon.ico
+icon1=media\images\OpenFPS.ico
 
 ; **** Cursors ****
 
