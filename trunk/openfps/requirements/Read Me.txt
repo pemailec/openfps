@@ -1,0 +1,7 @@
+Any required software/plugins for compiling/distribution of the game.
+
+For example, for sound the DarkAL plugin will be used. This plugin can be found inside the plugins folder.
+The plugin also requires that OpenAL be installed on the system. This will need to be installed on test systems,
+and with the final game during installation.
+
+For fast install of plugins, copy the plugins/Compiler folder to your compiler folder.
