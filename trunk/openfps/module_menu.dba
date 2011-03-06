@@ -170,7 +170,7 @@ function MENU_update()
 	endif
 	
 	`paste backdrop
-	paste image MENU_ForegroundImage,0,0,1 
+	paste image MENU_ForegroundImage,0,0,1
 	
 	`handle buttons
 	MENU_CreateButtons()

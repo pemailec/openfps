@@ -42,6 +42,7 @@ remend
 
 
 // Entity Types:
+
 #constant ENT_TYPE_OBJECT   1
 #constant ENT_TYPE_TERRAIN  2
 #constant ENT_TYPE_LIGHT    3

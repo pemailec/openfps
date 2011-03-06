@@ -1,4 +1,5 @@
-Rem ***** Included Source File *****
+remstart
+***** Included Source File *****
 /////////////////////////
 //
 // OpenFPS Sound Module         
@@ -6,7 +7,7 @@ Rem ***** Included Source File *****
 // Created by JRH
 //                           
 /////////////////////////////////////////////////////
-remstart
+
 ***** Included Source File *****
 
 ----- Changelog:

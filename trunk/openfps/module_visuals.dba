@@ -1,5 +1,6 @@
-Rem ***** Included Source File *****
-/////////////////////////
+remstart
+ ***** Included Source File *****
+/////////////////////////////////////////////////////
 //
 // OpenFPS VISUALS Module         
 //
@@ -7,8 +8,6 @@ Rem ***** Included Source File *****
 //                           
 //
 /////////////////////////////////////////////////////
-remstart
-***** Included Source File *****
 
 ----- Changelog:
 (07/03/10) - thenerd     - Created
@@ -60,9 +59,9 @@ remend
 `===========================`
 
 `==========Globals==========`
-Global VS_Sky             as Myskytype   :`basic data for sky
+Global VS_Sky             as VS_Myskytype   :`basic data for sky
 Global VS_SkyScrollTicker as Integer     :`timer variable for internal use
-Global VS_Sun             as MySunType
+Global VS_Sun             as VS_MySunType
 `===========================`
 
 `===========Types===========`
@@ -219,7 +218,7 @@ Function VS_UpdateSky()
 //***************************************************************************************
 // scrolls sky
 	If VS_Sky.Initialized=VS_True
-		Position Object VS_Sky.ObjID,PLR_HeadPos.x,PLR_HeadPos.y-15000,PLR_HeadPos.z
+		Position Object VS_Sky.ObjID,camera position x(),camera position y()-15000,camera position z()
 		If VS_Sky.ScrollEnabled=VS_True 
 			If VS_AskSkyScrollTicker()=VS_True 
 				Scroll Object Texture VS_Sky.ObjID,VS_Sky.ScrollSpeedX,VS_Sky.ScrollSpeedY
@@ -448,7 +447,7 @@ rem Load the setup file
 VIS_Setup_SetupFile as String : VIS_Setup_SetupFile = "visualsettings.cfg"
 VIS_Setup_InText as String
 If File Exist(VIS_Setup_SetupFile)=0 then VIS_Setup_CreateSettings()
-VIS_Setup_SetupFileNumber = RES_grab(3)
+VIS_Setup_SetupFileNumber = 1
 Open To Read VIS_Setup_SetupFileNumber,VIS_Setup_SetupFile
 
 rem Read Loop
@@ -485,8 +484,6 @@ Do
         Case "window"
             Read String 1, VIS_Setup_InText
             VIS_Setup_UseWindow = Val(VIS_Setup_InText)
-            If VIS_Setup_UseWindow=1 then Set Window On
-            If VIS_Setup_UseWindow=0 then Set Window Off
         EndCase
         Case "vsyncenabled"
             Read String 1, VIS_Setup_InText
@@ -501,11 +498,12 @@ Do
             VIS_Setup_UsePostProcessing = Val(VIS_Setup_InText)
         EndCase
     EndSelect
-        
 Loop
 
 Close File 1 `Close the used setup file
 
+if VIS_Setup_UseWindow=1 then set window on
+if VIS_Setup_UseWindow=0 then set window off
 
 rem Set the settings into action
 Set Display Mode VIS_Setup_Width, VIS_Setup_Height, VIS_Setup_Depth, VIS_Setup_UseVsync, VIS_Setup_Antialiasing, VIS_Setup_UseMultimonitorMode
@@ -516,8 +514,7 @@ Function VIS_Setup_CreateSettings()
 
     Rem Create a setup file
     VIS_Setup_SetupFile as String : VIS_Setup_SetupFile = "visualsettings.cfg"
-    VIS_Setup_SetupFileNumber = RES_grab(3)
-    If Can Make File(VIS_Setup_SetupFile)=0 then End
+    VIS_Setup_SetupFileNumber = 1
     Open To Write VIS_Setup_SetupFileNumber, VIS_Setup_SetupFile
     
     Rem Write this data:
@@ -549,7 +546,7 @@ Function VIS_Setup_CreateSettings()
     
 ENDFUNCTION
 
-
+remstart
 //***************************************************************************************
 //*   JRH                                                                               *
 //*   Post Processing Functions                                                         *
@@ -564,13 +561,14 @@ ENDFUNCTION
 // To end post processing, use the function VIS_TerminatePostProcessing()
 
 Rem Initiate post processing ...
+
 Function VIS_InitPostProcessing()
 
     Rem ONLY USE POST EFFECTS IF ACTIVATED IN SETTINGS FILE
     If VIS_Setup_UsePostProcessing > 0
     
            `Setup Advanced Lighting
-            #include "media/shaders/Advanced Lighting.dba"
+            `#include "media/shaders/Advanced Lighting.dba"
             AdvancedLighting_SetUp(screen width(),screen height(),screen height(),512,8)
             `Global_Set_Camera(1,5000,80,1.5)
             
@@ -593,6 +591,7 @@ Function VIS_InitPostProcessing()
        
 ENDFUNCTION
 
+
 Rem Update post processing...
 Function VIS_UpdatePostProcessing()
 
@@ -610,4 +609,4 @@ Rem Terminate post processing...
 Function VIS_TerminatePostPorcessing()
     
 ENDFUNCTION
-
+remend

@@ -1,49 +1,26 @@
 ; **** Dark BASIC Professional Project File ****
-; **** Written by Synergy Editor ****
+; **** Written by DarkBASIC Professional Editor ****
 version=DBP1.00
 project name=OpenFPS
 
 ; **** source file information ****
 main=module_main.dba
-LineMain=0
 include1=module_resource.dba
-LineInclude1=0
 include2=module_menu.dba
-LineInclude2=0
 include3=module_ui.dba
-LineInclude3=0
 include4=module_ui_console.dba
-LineInclude4=28
 include5=module_ui_chatbox.dba
-LineInclude5=0
 include6=module_ui_options.dba
-LineInclude6=0
 include7=module_ui_credits.dba
-LineInclude7=0
 include8=module_engine.dba
-LineInclude8=0
 include9=module_physics.dba
-LineInclude9=0
 include10=module_movement.dba
-LineInclude10=0
 include11=module_network.dba
-<<<<<<< .mine
 include12=module_level.dba
 include13=module_entity.dba
+include14=module_sound.dba
+include15=module_visuals.dba
 final source=_Temp.dbsource
-=======
-LineInclude11=0
-include12=module_sound.dba
-LineInclude12=0
-include13=module_visuals.dba
-LineInclude13=19
-include14=module_ai.dba
-LineInclude14=1
-include15=module_entity.dba
-LineInclude15=1
-include16=module_sound.dba
-LineInclude16=0
->>>>>>> .r228
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
@@ -76,7 +53,7 @@ window resolution=1024x768
 
 ; **** Media ****
 ; Example entries: media1=graphics\*.jpg
-media root path=C:\Users\Jonathan\Documents\My Projects\OpenFPS\Source\
+media root path=F:\openfps\
 
 ; **** Icons ****
 icon1=media\images\OpenFPS.ico
@@ -98,10 +75,3 @@ VerProductNumber=v1.0
 ; **** To Do ****
 
 ; **** Comments ****
-comments1=
-
-; **** Advanced (setup.ini) configuration ****
-RemoveSafetyCode=NO
-SafeArrays=YES
-LocalTempFolder=NO
-ExternaliseDLLS=NO
