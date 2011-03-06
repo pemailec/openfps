@@ -76,9 +76,12 @@ function CreateNew(type$,eX,eY,eZ):
 	if type$="PlayerStart":
 		object_temp=find free object()
 		object_temp_i=find free image()
-		load object "data\entities\char.x",object_temp
+		load object "data\entities\Palm.x",object_temp
 		position object object_temp,eX,eY,eZ
+		scale object object_temp,10,10,10
+		xrotate object object_temp,-90
 		texture object object_temp,ent_offset+18
+		set object transparency object_temp,6
 		Ent(Ent_Current).Exists=1
 		Ent(Ent_Current).Class="PlayerStart"
 		Ent(Ent_Current).X=eX

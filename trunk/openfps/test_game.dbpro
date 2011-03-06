@@ -27,6 +27,11 @@ LineInclude9=0
 include10=module_movement.dba
 LineInclude10=0
 include11=module_network.dba
+<<<<<<< .mine
+include12=module_level.dba
+include13=module_entity.dba
+final source=_Temp.dbsource
+=======
 LineInclude11=0
 include12=module_sound.dba
 LineInclude12=0
@@ -38,6 +43,7 @@ include15=module_entity.dba
 LineInclude15=1
 include16=module_sound.dba
 LineInclude16=0
+>>>>>>> .r228
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone

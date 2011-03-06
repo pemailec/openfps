@@ -1,0 +1,9 @@
+2010 - Philip Lewis "Mobiius"
+
+High and Low Poly log objects.
+
+Low poly object has 20 faces
+High poly object has 60 faces
+
+
+Includes 2 bark textures, to use the second one, simply rename each bark image to have the other ones name.

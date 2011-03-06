@@ -412,7 +412,7 @@ Function UI_Init()
 	UI_LoadandSetMouseClickSND("media\cursors\Hit tree.wav")
 // Init Gui functions
 	UI_InitGuiGraphics()	
-	UI_SUB_InitChatBox("media\panels\ui_chatbox.png",570,500)
+	UI_SUB_InitChatBox()
 
 // Load internal Gui Images
 	UI_LoadGuiGraphics("media\bars\barholder.png","UI_barholderimage")
@@ -462,7 +462,6 @@ Function UI_Handle()
 	UI_CheckInput()
 
 //-Handle drag input events
-	UI_Sub_HandleChatBoxDrag()
 	UI_SUB_HandleoptionsDrag()
 	UI_SUB_HandlecreditsDrag()
 
@@ -483,6 +482,8 @@ Function UI_Handle()
 	UI_SetGadgetValue("UI_stamina",Floor(PLR_Curstam/2.0)-1)
 	UI_SetGadgetValue("UI_fatigue",50-Floor(PLR_Curstam/2.0)-1)
 
+// UI fader (credits mostly)
+	Fader_Update()
 
 //- If pressed esc then quit
 	`If Keystate(1)=1 then SyS_Event_Terminate=1
@@ -619,6 +620,23 @@ Function UI_Text(ID,x,y,sstring$)
 	  DXS END SPRITE RENDER UI_stringmap(ID,258).bitmapID
 Endfunction
 
+Function UI_AlphaText(ID,x,y,sstring$,_alpha as float )
+//***************************************************************************************
+//*   thenerd                                                                           *
+//*		Same as UI_text, but with an option to set the alpha.							*
+//*                                                                                     *
+//***************************************************************************************
+  Local UI_StringWidth as Integer:Local xx as Integer
+  UI_StringWidth = len(sstring$)
+	For xx=1 to UI_StringWidth:UI_chain(xx).character = Asc(Mid$(sstring$,xx)):Next xx
+	  DXS SET SPRITE ALPHA UI_stringmap(ID,258).bitmapID,_alpha
+	  DXS BEGIN SPRITE RENDER UI_stringmap(ID,258).bitmapID
+		  For xx=1 to UI_StringWidth
+		        DXS DRAW SPRITE TILE UI_stringmap(ID,258).bitmapID,UI_stringmap(ID,UI_chain(xx).character).bitmapID,x+((xx-1)*UI_stringmap(ID,258).ascii),y
+		  Next xx
+	  DXS END SPRITE RENDER UI_stringmap(ID,258).bitmapID
+	  DXS SET SPRITE ALPHA UI_stringmap(ID,258).bitmapID,_alpha
+Endfunction
 
 
 
@@ -2502,8 +2520,6 @@ Endif
 Next x
 Endif
 
-UI_Sub_HandleChatbox()
-
 if UI_mouseoveredgadget$<>UI_OldMouseOveredGadget$ 
 	If UI_mouseoveredgadget$<>" "
 		If sound exist(UI_MouseOverSND) = UI_True and UI_mouseclicked = UI_False then Play Sound UI_MouseoverSND
@@ -2671,7 +2687,6 @@ local var_Seconds$    as string
 Local var_logstring$  as string
 Local var_importance$ as string
 Local var_colorizer$  as string
-
 	If UI_Logmode = UI_Logon
 		Select param_importance
 			Case UI_Red    : var_importance$="RED: "    :var_colorizer$="<font color=#440000>": EndCase

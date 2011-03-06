@@ -5,3 +5,7 @@ The plugin also requires that OpenAL be installed on the system. This will need 
 and with the final game during installation.
 
 For fast install of plugins, copy the plugins/Compiler folder to your compiler folder.
+
+List of plugins:
+OpenAL
+AdvancedSprites

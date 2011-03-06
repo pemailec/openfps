@@ -59,7 +59,7 @@ remend
 Global NET_channel as DWORD
 
 `server type
-type  Server
+type Server
 	init as boolean
 	name as string
 	ip as string

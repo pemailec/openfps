@@ -101,7 +101,7 @@ endtype
 	set object cull 501,0
 	hide object 501
 	
-	
+	remstart
 	make object plain 502,2048,2048
 	load effect "..\media\shaders\object\water.fx",502,0
 	load image "..\media\textures\water.png",502
@@ -112,12 +112,13 @@ endtype
 	set object effect 502,502
 	xrotate object 502,90
 	set object cull 502,0
-	
+	hide object 502
+	remend
 	
 	// load entity media
 	global ent_offset as integer
 	ent_offset=1000
-	load image "data\entities\char.jpg",ent_offset+18
+	load image "data\entities\Palm_D2.png",ent_offset+18
 	
 	make object sphere 257,1
 	color object 257,rgb(255,0,0)
@@ -140,10 +141,10 @@ do
 		getEvent
 		updateGui()
 
-	scroll object texture 502,0,0.0000001,0.0000001
-	scroll object texture 502,1,-0.0000001,-0.0000001
-	position object 502,camera position x(),0,camera position z()
-	
+	`scroll object texture 502,0,0.0000001,0.0000001
+	`scroll object texture 502,1,-0.0000001,-0.0000001
+	`position object 502,camera position x(),0,camera position z()
+		
 		if level_new=1:
 		
 			if eventSource()=startnew and eventType()=MOUSE_CLICK
@@ -188,7 +189,7 @@ do
 		resizegadget cameratext,(Width#),15
 	
 		if camera_move=0:
-			show mouse
+				show mouse
 		endif
 		if camera_move=1:
 			edit_mode=0
@@ -254,7 +255,7 @@ do
 		opz#=object position z(SelectedObject)
 		position object 257,opx#,opy#,opz#
 		ghost object on SelectedObject
-		draw object SelectedObject
+		`draw object SelectedObject
 		ghost object off SelectedObject
 		set object wireframe SelectedObject,1
 		
@@ -263,6 +264,7 @@ do
 			if KEYSTATE(19)=1 then edit_mode=1
 			if KEYSTATE(20)=1 then edit_mode=2
 			show mouse
+			
 			if edit_mode=1:
 				hide mouse
 				rx#=object angle x(SelectedObject)

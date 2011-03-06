@@ -65,6 +65,7 @@ Global SyS_Event_Terminate as Boolean : `set this variable to 1 to force the mai
 Global SyS_LoopMode as string		  :	`Variable to determine which modules to update in loop
 Global SyS_TimeFactor as float		  :	`Variable for Timer based engine operations
 									  :	`Updated every loop with an elapsed time variable
+Global SyS_TimeMultiplier as float    : `Time Multiplier factor
 Global SyS_GameSpeed as float		  :	`Speed variable for game loops
 Global CORE_DebugScreen as Boolean    : `Debug setting
 									  
@@ -85,7 +86,9 @@ disable escapekey
 
 `backdrop colour
 backdrop on
-color backdrop rgb(200,200,255)
+
+`color backdrop rgb(200,200,255)  `light blue
+color backdrop rgb(0,0,0)		  `black
 
 `INITIATE CORE MODULES
 
@@ -101,10 +104,18 @@ MVM_init()  `movement module
 CORE_init()	`game core modules
 MENU_init() `menu module
 `NET_init()	`network module
+ENT_Init()	`entity module
 LVL_Init()  `level module
 
+
 `load up various configurations
-UI_SUB_ParseFile("PlayerData.cfg")
+if file exist("_PlayerData.cfg")<1:
+	open to write 16,"_PlayerData.cfg"
+	write string 16,"setplayername Unnamed Player"
+	close file 16
+endif
+UI_SUB_ParseFile("_PlayerData.cfg")
+
 
 /////////////////////////////////////////////////////////
 // RUN                                                 //
@@ -113,11 +124,14 @@ UI_SUB_ParseFile("PlayerData.cfg")
 `menu mode
 SyS_LoopMode="menu"
 
+`time multiplier
+SyS_TimeMultiplier=1
+
 `run main loop
 while SyS_Event_Terminate<1
 
 	`Update System timer
-	SyS_TimeFactor=CORE_TimeFactor()
+	SyS_TimeFactor=CORE_TimeFactor()*SyS_TimeMultiplier
 	
 	select SyS_LoopMode
 		`CORE LOOPS
@@ -131,6 +145,17 @@ while SyS_Event_Terminate<1
 			`GAME ENGINE LOOP
 			// Update game engine
 			CORE_update()
+		endcase
+		case "credits"
+			MENU_Hide()
+			`credits loop
+			paste image MENU_creditsPolishBG,0,0
+			paste image MENU_credits,(UI_Display.MiddleWidth-400),(UI_Display.Height-MENU_credits_Y),1
+			MENU_credits_Y=MENU_credits_Y+0.3*SyS_TimeFactor
+			if MENU_credits_Y>100 then UI_text(1,-2,4,"Press [Escape] to return to the menu...")
+			if MENU_credits_Y>2500 or escapekey():
+		 		Credits_FadeOut()
+			endif
 		endcase
 	endselect
 	

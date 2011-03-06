@@ -14,6 +14,7 @@ Remstart
 `(07/08/10) - miso     - Removed most of the artifact, finalising later, its now good for testings
 `(7/20/10)  - thenerd  - Added code for lobby window.
 `(8/13/10)  - thenerd  - Added close button.
+`(2/25/11)  - thenerd  - Modified module to just render the text.
 
 `----- To-Do:
 
@@ -66,55 +67,26 @@ endtype
 
 
 `=========Functions=========`
-Function UI_SUB_InitChatBox(param_chatpanelimage$,param_x,param_y)
-//***************************************************************************************
-//*   Miso   : Initiate the chatbox gui.                                                *
-//*                                                                                     *
-//***************************************************************************************
 
-UI_Chatboxtextoffset=620
-	UI_SetDebugPosition("UI_Sub_InitChatBox()","module_ui_chatbox.dba")
-		//Creates an array for chat messages, they will be displayed in chatbox
-		Dim Chatlines$(30)
-		//Check if we loaded chatbox image
-		If UI_gadgetImageExist("UI_chatboximage")=0 
-			//creates basic chatbox gadget, sets it variables
-			UI_Chatpanel.x=param_x:UI_chatpanel.y=param_y
-			UI_Chatpanel.Offset=180
-			UI_LoadGuiGraphics(param_chatpanelimage$,"UI_chatboximage")
-			UI_AddCenterGadgetToScreen("UI_chatbox",param_x,param_y,"UI_chatboximage")		
 
-			
-			
-			UI_Addmouseoverimagetogadget("UI_chatbox","UI_chatboximage")
-			
-			UI_WriteLog(UI_Green,"Chatbox has been initialized.")
-			UI_TriggerChatboxInput$="UI_chatbox"
-			//offset
-			global a=160
-			//add an input line to chatbox
-			UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
-		Else
-			//creates basic chatbox gadget, sets it variables
-			If UI_chatpanel.hidden=0
-				If UI_GadgetExist("UI_chatbox")=0
-					UI_Chatpanel.x=param_x:UI_chatpanel.y=param_y
-					UI_AddCenterGadgetToScreen("UI_chatbox",param_x,param_y,"UI_chatboximage")			
-					UI_Addmouseoverimagetogadget("UI_chatbox","UI_chatboximage")
-					//add an input line to chatbox
-					UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
-				endif
-			Endif
-		Endif
-	UI_CheckChatboxInput()
-	UI_restoreDebugPosition()
+Function UI_SUB_InitChatBox()
+	//***************************************************************************************
+	//*   Miso   : Initiate the chatbox gui.                                                *
+	//*                                                                                     *
+	//***************************************************************************************
+	
+	//Creates an array for chat messages, they will be displayed in chatbox
+	Dim Chatlines$(30)
+	UI_WriteLog(UI_Green,"Chatbox has been initialized.")
 Endfunction
 
+
+
 Function UI_Addtexttochatbox(param_text$)
-//***************************************************************************************
-//*   Miso   : Adds a new message to the chatbox gadget.                                *
-//*                                                                                     *
-//***************************************************************************************
+	//***************************************************************************************
+	//*   Miso   : Adds a new message to the chatbox gadget.                                *
+	//*                                                                                     *
+	//***************************************************************************************
 	//Scrolls upwards all the texts already exists
 	For X=1 to 29
 		chatlines$(30-x)=chatlines$(29-x)
@@ -124,282 +96,23 @@ Function UI_Addtexttochatbox(param_text$)
 endfunction
 
 
-Function UI_SUB_HandleChatBoxDrag()
-//***************************************************************************************
-//*   Miso   : Handles the chastbox.                                                    *
-//*                                                                                     *
-//***************************************************************************************
 
-	//Gadget is moveable
-	If mouseclick()=1 and UI_mouseoveredgadget$="UI_chatbox"
-		//bring gadget to top
-		UI_ReinitChatbox()
-		//moves
-		UI_MoveGadget("UI_chatbox",SyS_MouseMoveX,SyS_MouseMoveY)
-		UI_chatpanel.x=UI_chatpanel.x+SyS_MouseMoveX
-		UI_chatpanel.y=UI_chatpanel.y+SyS_MouseMoveY
-
-		
-		If UI_chatpanel.x > UI_Display.width-(UI_getgadgetwidth("UI_chatbox")/2)
-			UI_chatpanel.x=UI_Display.width-(UI_getgadgetwidth("UI_chatbox")/2)
-			UI_centerpositiongadget("UI_chatbox",UI_chatpanel.x,UI_Chatpanel.y)
-			UI_ResetXmousemove()
-		endif
-		
-		
-		If UI_chatpanel.x < (UI_getgadgetwidth("UI_chatbox")/2)
-			UI_chatpanel.x=(UI_getgadgetwidth("UI_chatbox")/2)
-			UI_centerpositiongadget("UI_chatbox",UI_chatpanel.x,UI_Chatpanel.y)
-			UI_ResetXmousemove()
-		endif
-		
-		
-		If UI_chatpanel.Y > UI_Display.height-(UI_getgadgetheight("UI_chatbox")/2)
-			UI_chatpanel.Y=UI_Display.height-(UI_getgadgetheight("UI_chatbox")/2)
-			UI_centerpositiongadget("UI_chatbox",UI_chatpanel.x,UI_Chatpanel.y)
-			UI_ResetYmousemove()
-		endif
-		
-		
-		If UI_chatpanel.Y < (UI_getgadgetheight("UI_chatbox")/2)
-			UI_chatpanel.Y=(UI_getgadgetheight("UI_chatbox")/2)
-			UI_centerpositiongadget("UI_chatbox",UI_chatpanel.x,UI_Chatpanel.y)
-			UI_ResetYmousemove()
-		endif
-		
-
-		rem UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
-
-		
-	Endif
-
-Endfunction
-
-Function UI_sub_CheckChatboxScreenedges()
-//***************************************************************************************
-//*   Miso   : Checks if the  gadget is out of screen.                                  *
-//*                                                                                     *
-//***************************************************************************************
-		
-		If UI_chatpanel.x > UI_Display.width-(UI_getgadgetwidth("UI_chatbox")/2)
-			UI_chatpanel.x=UI_Display.width-(UI_getgadgetwidth("UI_chatbox")/2)
-			UI_centerpositiongadget("UI_chatbox",UI_chatpanel.x,UI_Chatpanel.y)
-			UI_ResetXmousemove()
-		endif
-		
-		
-		If UI_chatpanel.x < (UI_getgadgetwidth("UI_chatbox")/2)
-			UI_chatpanel.x=(UI_getgadgetwidth("UI_chatbox")/2)
-			UI_centerpositiongadget("UI_chatbox",UI_chatpanel.x,UI_Chatpanel.y)
-			UI_ResetXmousemove()
-		endif
-		
-		
-		If UI_chatpanel.Y > UI_Display.height-(UI_getgadgetheight("UI_chatbox")/2)
-			UI_chatpanel.Y=UI_Display.height-(UI_getgadgetheight("UI_chatbox")/2)
-			UI_centerpositiongadget("UI_chatbox",UI_chatpanel.x,UI_Chatpanel.y)
-			UI_ResetYmousemove()
-		endif
-		
-		
-		If UI_chatpanel.Y < (UI_getgadgetheight("UI_chatbox")/2)
-			UI_chatpanel.Y=(UI_getgadgetheight("UI_chatbox")/2)
-			UI_centerpositiongadget("UI_chatbox",UI_chatpanel.x,UI_Chatpanel.y)
-			UI_ResetYmousemove()
-		endif
-		
-
-		UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
+Function UI_SUB_HandleChatBox(BottomX,BottomY)
+	//***************************************************************************************
+	//*   Miso   : Handles the chastbox.                                                    *
+	//*                                                                                     *
+	//***************************************************************************************
 	
-Endfunction
-
-
-
-
-
-Function UI_SUB_HandleChatBox()
-//***************************************************************************************
-//*   Miso   : Handles the chastbox.                                                    *
-//*                                                                                     *
-//***************************************************************************************
-// test
-`If inkey$()="6" then UI_hideChatbox()
-`If inkey$()="7" then UI_showChatbox()
-
-
-
-UI_checkchatboxinput()
-If UI_chatpanel.Hidden  = 0
-	If UI_Chatboxinput.alive=3
-		If UI_Chatboxinput.result <> ""
-			UI_Chatboxtextoffset=UI_Chatboxtextoffset-10
-
-			rem UI_Addtexttochatbox("Client: "+UI_ChatboxInput.Result)
-			msg$=UI_ChatboxInput.Result
-			NET_sendChatMessage(msg$)
-			UI_Chatboxinput.alive=0
-			UI_Chatboxinput.current=""
-			UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
-		Else
-			UI_Chatboxinput.alive=0
-			UI_Chatboxinput.current=""
-			UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
-		Endif
-	Endif
-		
-	if CurrentWindow$="button_lobby" and Lobby_current_tab$="UI_lobby_tab_chat":
-		//Display chatbox lines
-		for x=1 to 30
-			UI_text(1,UI_chatpanel.x-180,UI_chatpanel.y+150-(x*10),Chatlines$(x))
-		next x
-	endif
-Endif
-
+	//Display chatbox lines
+	for x=1 to 30
+		text_alpha#=255-((255.0/30.0)*x*4)
+		if text_alpha#<0 then text_alpha#=0
+		UI_alphatext(1,BottomX,BottomY-(x*12),Chatlines$(x),text_alpha#)
+	next x
+	
 Endfunction
 
 Function UI_DestroyCheckbox()
-//Deleting the array. Gui images will be destroyed by the main UI module
+	//Deleting the array. Gui images will be destroyed by the main UI module
 	Undim chatlines$(0)
-Endfunction
-
-
-Function UI_CheckchatboxInput()
-//***************************************************************************************
-//*   Miso                                                                              *
-//*     This function handles input event, if theres one.                               *
-//*                                                                                     *
-//***************************************************************************************
-If UI_chatboxinput.alive = UI_True
-	if Lobby_current_tab$="UI_lobby_tab_chat":
-      //Checks if user hit enter to add message to chatbox
-      If Returnkey() = UI_True
-         Clear Entry Buffer
-         UI_chatboxInput.result = UI_chatboxInput.current
-         UI_chatboxInput.alive  = 3
-      Endif
-      
-      //Handle backspace
-      UI_chatboxInput.current=UI_chatboxInput.current+Entry$() : Clear Entry Buffer
-      If Scancode() = 14
-      	If Scancode() = 14 Then UI_chatboxinput.current = Left$(UI_chatboxInput.current,Len(UI_chatboxInput.current)-1)
-      	Clear Entry Buffer
-      Endif
-
-      rem Entry Line
-      If Len(UI_chatboxInput.current)>UI_chatboxInput.maxcharacter then UI_ChatboxInput.current = Left$(UI_chatboxInput.current,UI_chatboxInput.maxcharacter)
-      UI_Text(UI_chatboxInput.id,UI_chatboxInput.posx,UI_chatboxInput.posy,UI_Chatboxinput.fixstring+(UI_chatboxInput.current)+"*")
-	endif
-Endif
-Endfunction
-
-
-
-Function UI_SUB_ChatboxInput(FontID,x,y,fixstring$,maxcharacter)
-//***************************************************************************************
-//*   Miso                                                                              *
-//*     This function start an input event for chatbox.                                 *
-//*     For the text, it will use FontID, starting to draw the text at x,y.             *
-//*     Fixstring$ will always shown before the user input text.                        *
-//*     Maxcharacter vill be the maximum character the user may type in.                *
-//*                                                                                     *
-//*                                                                                     *
-//***************************************************************************************
-
-			Clear Entry Buffer:Clear Entry Buffer
-			UI_ChatBoxInput.ID           = FontID
-			UI_ChatBoxInput.fixstring    = fixstring$
-			UI_ChatBoxInput.posx         = x
-			UI_ChatBoxInput.posy         = y
-			UI_ChatBoxInput.alive        = UI_True
-			UI_ChatBoxInput.center       = UI_False
-			UI_ChatBoxInput.maxcharacter = maxcharacter
-Endfunction
-
-
-
-Function UI_HideChatBox()
-//***************************************************************************************
-//*   Miso                                                                              *
-//*     This function Hides the checkbox                                                *
-//*                                                                                     *
-//***************************************************************************************
-	UI_chatpanel.Hidden  = 1
-	UI_ChatboxInput.Alive   = 0
-	UI_ChatboxInput.Current = ""
-	UI_DeleteGadget("UI_chatbox")
-	UI_DeleteGadget("button_lobby_game")
-	UI_DeleteGadget("button_lobby_chat")
-	UI_DeleteGadget("chatpanel_tab_game")
-	UI_DeleteGadget("button_backtomain")
-Endfunction
-
-Function UI_ShowChatBox()
-//***************************************************************************************
-//*   Miso                                                                              *
-//*     This function shows chatbox.                                                    *
-//*                                                                                     *
-//***************************************************************************************
-	UI_chatpanel.Hidden  = 0
-			//add an input line to chatbox
-			UI_SUB_Initchatbox("media\panels\ui_chatbox.png",UI_chatpanel.x,UI_Chatpanel.y)
-			UI_SUB_Chatboxinput(1,UI_chatpanel.x-UI_chatpanel.Offset,UI_chatpanel.y+a,"> ",60)
-	if UI_GadgetExist("button_lobby_game")=0:
-		x=UI_Chatpanel.x-285
-		y=UI_Chatpanel.y-148
-		UI_AddCenterGadgettoScreen("button_lobby_game",x,y,"UI_button_small")
-		UI_AddMouseoverImageToGadget("button_lobby_game","UI_button_small_hover")
-		UI_AddMouseoverTitleToGadget("button_lobby_game",1,x-12,y-6,"-Servers-")
-		UI_AddtitleToGadget("button_lobby_game",1,x-12,y-6,"Servers")
-	endif
-	if UI_GadgetExist("button_lobby_chat")=0:
-		x=UI_Chatpanel.x-285
-		y=UI_Chatpanel.y-98
-		UI_AddCenterGadgettoScreen("button_lobby_chat",x,y,"UI_button_small")
-		UI_AddMouseoverImageToGadget("button_lobby_chat","UI_button_small_hover")
-		UI_AddMouseoverTitleToGadget("button_lobby_chat",1,x-12,y-6,"-Chat-")
-		UI_AddtitleToGadget("button_lobby_chat",1,x-12,y-6,"Chat")
-	endif
-	if UI_GadgetExist("chatpanel_tab_game")=0:
-		x=UI_Chatpanel.x-307
-		y=UI_Chatpanel.y-214
-		UI_AddCenterGadgettoScreen("chatpanel_tab_game",x,y,Lobby_current_tab$)
-	endif
-	if UI_GadgetExist("button_backtomain")=0:
-		x=UI_Chatpanel.x+188
-		y=UI_Chatpanel.y-205
-		UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button_close")
-		UI_AddMouseoverImageToGadget("button_backtomain","UI_button_close_hover")
-	endif	
-Endfunction
-
- 
-Function UI_DestroyCHTBXInput()
-//***************************************************************************************
-//*   Miso                                                                              *
-//*     This function closes input event, if theres any. (Chatbox only)                 *
-//*                                                                                     *
-//***************************************************************************************
-	UI_chatboxInput.alive = 0
-Endfunction
-
-
-
-Function UI_CHTBXInputReady()
-//***************************************************************************************
-//*   Miso                                                                              *
-//*     This function returns 0 if an theres no ongoing input event.                    *
-//*                   returns 1 if an theres an ongoing input event.                    *
-//*                   returns 3 if theres a result.                                     *
-//*                                                                                     *
-//***************************************************************************************
-Local a as Integer
-	a = UI_chatboxInput.alive
-Endfunction a
-
-
-Function UI_ReinitChatbox()
-	UI_HideChatBox()
-	UI_showchatbox()
-	UI_showchatbox()
-	
 Endfunction

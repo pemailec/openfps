@@ -1,0 +1,186 @@
+sync on
+sync rate 0
+backdrop on
+color backdrop 0
+
+disable escapekey
+
+global MOTD_Debug$
+global Uptime$
+global ip$
+global online_servers
+
+#constant MAX_CLIENTS 30
+#constant LOCAL_PORT 27013
+
+type CLIENT
+   id as integer
+   channel as DWORD
+   name as string
+endtype
+
+dim clients(0) as CLIENT
+listen_channel as DWORD
+clients_connected as integer
+
+winsock make
+
+listen_channel = winsock listen(LOCAL_PORT)
+
+MOTD_Debug$="DEBUG"
+Uptime_offset#=timer()
+ip$="192.168.1.4:27013"
+online_servers=0
+
+dim chat$(10)
+for x=0 to 10:
+	chat$(x)=" "
+next x
+do
+	winsock refresh channels
+	
+	
+	Uptime$=str$((timer()-Uptime_offset#))
+	set cursor 0,0
+	print "OpenFPS Master Server List v1.1"
+	print "-------------------------------------------"
+	print "(",get time$(),") - ","Master Server: ONLINE"
+	print "MOTD_Debug: ",MOTD_Debug$
+	print "Uptime: ",Uptime$," ms"
+	print "Ip_local=192.168.1.4;Ip_global=",ip$
+	print "-------------------------------------------"
+	`print "SERVER LIST; (",online_servers," online)"
+	print "NO SERVERS CURRENTLY RUNNING"
+	remstart
+	print "|______ SERVER NAME ______ PLAYER # ________ STATUS ______ MAP ____ ALLOC"
+	if online_servers>0:
+		for x=0 to online_servers:
+			print "|",x,"x00d"
+			`______ SERVER NAME ______ PLAYER # ________ STATUS ______ MAP ____ ALLOC
+		next x
+	endif
+	if online_servers=0:
+		print "| No Servers Running!"
+	endif
+	remend
+	if (winsock channel data waiting(listen_channel))
+      `someone wants to connect.
+      if (clients_connected < MAX_CLIENTS)
+         `accept connection request.
+         array insert at bottom clients(0)
+         new_client = array count(clients(0))
+         clients(new_client).channel = winsock accept(listen_channel)
+         clients(new_client).id = new_client;
+         clients(new_client).name = "New Player"
+         if (not winsock channel error(clients(new_client).channel)) 
+            inc clients_connected
+            `send a message to all clients that a new client has connected.
+            for i=1 to clients_connected
+               winsock send string clients(i).channel,clients(new_client).name  + " has connected!"
+            next i
+            AddToChatDisplay("("+get time$()+") - "+ clients(new_client).name  + " has connected!")
+         else
+            AddToChatDisplay(winsock channel error msg$(clients(new_client).channel))
+            winsock delete channel clients(array count(clients(0))).channel
+            array delete element clients(0), array count(clients(0))
+         endif
+      else
+         `max clients reached.
+         AddToChatDisplay("("+get time$()+") - "+"connection request rejected because max amount of clients are already connected.")
+      endif
+   endif
+   `check for incoming chat messages
+   for i=1 to clients_connected
+      if (winsock channel data waiting(clients(i).channel))
+         message$ = winsock recv string(clients(i).channel) 
+         
+         /////////////////////////////////////////////////
+         /////////////////////////////////////////////////
+         /////////////////////////////////////////////////
+         // SPECIAL MESSAGES
+         if (left$(message$,6)="&name=")
+            AddToChatDisplay("("+get time$()+") - "+"Client_" + str$(clients(i).id) + " has changed their name to "+right$(message$,len(message$)-6))
+            `send a message to all clients that client has changed names.
+            for j=1 to clients_connected
+                  winsock send string clients(j).channel, clients(new_client).name + " has changed their name to " + right$(message$,len(message$)-6)
+            next j
+            clients(new_client).name = right$(message$,len(message$)-6)
+            goto skip1
+         endif
+         /////////////////////////////////////////////////
+         if (left$(message$,13)="&name_silent=")
+            AddToChatDisplay("("+get time$()+") - "+"Client_" + str$(clients(i).id) + " has changed their name to "+right$(message$,len(message$)-13))
+            clients(new_client).name = right$(message$,len(message$)-13)
+            goto skip1
+         endif
+         /////////////////////////////////////////////////
+         if (left$(message$,6)="&blarg")
+            AddToChatDisplay("("+get time$()+") - "+clients(new_client).name+" has exploded.")
+            `send a message to all clients that client has exploded.
+            for j=1 to clients_connected
+                  winsock send string clients(j).channel, clients(new_client).name + " HAZ ESPLODED!!!!!!!!!!!!11"
+            next j
+            goto skip1
+         endif
+         /////////////////////////////////////////////////
+         /////////////////////////////////////////////////
+         /////////////////////////////////////////////////\
+         if (message$ = "")
+            AddToChatDisplay("("+get time$()+") - "+clients(new_client).name + " has disconnected.")
+            `send a message to all clients that client has disconnected.
+            for j=1 to clients_connected
+               if (j <> i)
+                  winsock send string clients(j).channel, clients(new_client).name + " has disconnected."
+               endif
+            next j
+            dec clients_connected
+            winsock delete channel clients(i).channel
+            array delete element clients(i), i
+            dec i    `need to do this because the next array element is now at the current position.
+         else
+            `forward messsage to all other clients (including the sender).
+            message$ = clients(i).name + ":  " + message$
+            AddToChatDisplay("("+get time$()+") - "+message$)
+            for j=1 to clients_connected
+               winsock send string clients(j).channel, message$
+            next j
+         endif
+         skip1:
+      endif
+   next i
+	
+	print "-------------------------------------------"
+	print "Chat Lobby: ",clients_connected," connected"
+	for x=0 to 10:
+		print chat$(x)
+	next x
+	print "-------------------------------------------"
+	chat_msg$=entry$(1)
+	print "CONSOLE PROMPT >>>",chat_msg$,"_"
+	if returnkey()=1 and len(chat_msg$)>2:
+		clear entry buffer
+		AddToChatDisplay("("+get time$()+") - "+"Console: "+chat_msg$)
+		for j=1 to clients_connected
+			winsock send string clients(j).channel,"Console: "+chat_msg$
+		next j
+	endif
+	sync
+	if escapekey()=1 then exit
+loop
+
+winsock clean up
+end
+
+function AddToChatDisplay(string1$)
+	chat$(0)=chat$(1)
+	chat$(1)=chat$(2)
+	chat$(2)=chat$(3)
+	chat$(3)=chat$(4)
+	chat$(4)=chat$(5)
+	chat$(5)=chat$(6)
+	chat$(6)=chat$(7)
+	chat$(7)=chat$(8)
+	chat$(8)=chat$(9)
+	chat$(9)=chat$(10)
+	chat$(10)=string1$
+endfunction

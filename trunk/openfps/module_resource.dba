@@ -80,17 +80,11 @@ function RES_init()
 	// -----------------------
 	// Init function
 	// -----------------------
-	`write debug
-	UI_WriteLog(UI_Yellow,"=== Starting Resource module")
 	
 	`global init
 	global DIM ResourceCounters(res_Count)   as integer
 	global DIM FreeResourcesIndex(res_Count) as res_Type
 	global DIM FreeResources(0)              as integer
-	
-	`done, write debug
-	// -----------------------
-	UI_WriteLog(UI_Green,"=== Resource module started")
 	// -----------------------
 endfunction
 

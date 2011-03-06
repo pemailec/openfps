@@ -43,6 +43,7 @@ function CORE_init():
     global CORE_GamePanel
     global CORE_GamePaused as boolean
     global CORE_GamePausedImage 
+    global PlayerName$
     CORE_DebugScreenImg= RES_grab(Res_Image)
     CORE_GamePanel= RES_grab(Res_Image)
     CORE_GamePausedImage= RES_grab(Res_Image)
@@ -63,16 +64,17 @@ function CORE_update():
 	`put all the game engine update crap here
 	
 	`test game pause code
-    if CORE_GamePaused=0 then MVM_update()
-    MENU_Hide()
-    if escapekey():
-		CORE_GamePaused=1
-		MVM_ShowMouse()
-    endif
-    if CORE_GamePaused=1:
-    	paste image CORE_GamePausedImage,0,0,1
-    endif
+    `if CORE_GamePaused=0 then MVM_update()
     
+    MENU_Hide()
+   
+    UI_SUB_HandleChatBox(100,600)
+    
+    y=10
+	UI_Text(1,10,y,str$(LVL_Current.init)):y=y+32
+    UI_Text(1,10,y,LVL_Current.file):y=y+32
+    UI_Text(1,10,y,LVL_Current.name):y=y+32
+    ENT_PrintEntities(y)
 endfunction
 
 function CORE_CleanUp():

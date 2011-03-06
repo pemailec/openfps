@@ -20,8 +20,8 @@ Rem ***** Included Source File *****
 
 `=========Constants=========`
 //---Don't leave it in revisions!!!
-#Constant GUIUSER = ""
-#Constant GUIPASS = ""
+#Constant GUIUSER = "DD6"
+#Constant GUIPASS = "583d7a"
 `===========================`
 
 `==========Globals==========`
