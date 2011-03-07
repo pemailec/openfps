@@ -51,7 +51,7 @@ players will be heard by all other players, relative to distance.
 remend
 
 `==========Constants==========`
-#Constant PlayerMoving = 0
+`#Constant PlayerMoving = 0
 `===========================`
 
 `==========Globals==========`
