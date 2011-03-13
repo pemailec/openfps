@@ -623,20 +623,50 @@ Endfunction
 Function UI_AlphaText(ID,x,y,sstring$,_alpha as float )
 //***************************************************************************************
 //*   thenerd                                                                           *
-//*		Same as UI_text, but with an option to set the alpha.							*
-//*                                                                                     *
+//*		Same as UI_text, but with an option to set the alpha and inline coloring.//*    *
 //***************************************************************************************
   Local UI_StringWidth as Integer:Local xx as Integer
+  Local UI_Charpos as Integer:` character position recount if inline colors are used
+  
   UI_StringWidth = len(sstring$)
+  UI_Charpos=0
 	For xx=1 to UI_StringWidth:UI_chain(xx).character = Asc(Mid$(sstring$,xx)):Next xx
 	  DXS SET SPRITE ALPHA UI_stringmap(ID,258).bitmapID,_alpha
 	  DXS BEGIN SPRITE RENDER UI_stringmap(ID,258).bitmapID
 		  For xx=1 to UI_StringWidth
-		        DXS DRAW SPRITE TILE UI_stringmap(ID,258).bitmapID,UI_stringmap(ID,UI_chain(xx).character).bitmapID,x+((xx-1)*UI_stringmap(ID,258).ascii),y
+		        UI_charpos=UI_charpos+1
+		  		```` Coloring Code
+		  		String_Cur$=Mid$(sstring$,xx)
+		  		if String_Cur$="~"
+		  			select Mid$(sstring$,xx+1)
+		  			case "r" `red
+	 					DXS SET SPRITE DIFFUSE UI_stringmap(ID,258).bitmapID,255,100,100
+		  			endcase
+		  			case "g" `green
+	 					DXS SET SPRITE DIFFUSE UI_stringmap(ID,258).bitmapID,0,255,0
+		  			endcase
+		  			case "b" `blue
+	 					DXS SET SPRITE DIFFUSE UI_stringmap(ID,258).bitmapID,200,200,255
+		  			endcase
+		  			case "w" `white
+		  				DXS SET SPRITE DIFFUSE UI_stringmap(ID,258).bitmapID,255,255,255
+		  			endcase
+		  			case "p" `pink
+		  				DXS SET SPRITE DIFFUSE UI_stringmap(ID,258).bitmapID,255,0,255
+		  			endcase
+		  			endselect
+		  			xx=xx+2
+		  			UI_charpos=UI_charpos-1
+		  		endif
+		  		``````````````
+		  		
+		        DXS DRAW SPRITE TILE UI_stringmap(ID,258).bitmapID,UI_stringmap(ID,UI_chain(xx).character).bitmapID,x+((UI_charpos-1)*UI_stringmap(ID,258).ascii),y
 		  Next xx
 	  DXS END SPRITE RENDER UI_stringmap(ID,258).bitmapID
 	  DXS SET SPRITE ALPHA UI_stringmap(ID,258).bitmapID,_alpha
+	  DXS SET SPRITE DIFFUSE UI_stringmap(ID,258).bitmapID,255,255,255
 Endfunction
+
 
 
 

@@ -151,7 +151,9 @@ while SyS_Event_Terminate<1
 		case "credits"
 			MENU_Hide()
 			`credits loop
-			paste image MENU_creditsPolishBG,0,0
+			
+			texture object MENU_FGObject,MENU_creditsPolishBG
+			`paste image MENU_creditsPolishBG,0,0
 			paste image MENU_credits,(UI_Display.MiddleWidth-400),(UI_Display.Height-MENU_credits_Y),1
 			MENU_credits_Y=MENU_credits_Y+0.3*SyS_TimeFactor
 			if MENU_credits_Y>100 then UI_text(1,-2,4,"Press [Escape] to return to the menu...")

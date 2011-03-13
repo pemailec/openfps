@@ -436,7 +436,8 @@ VIS_Setup_Lightmap as Integer = 0
 VIS_Setup_Title as String = "OpenFPS"
 VIS_Setup_Antialiasing as Integer = 0
 VIS_Setup_UseMouse as Integer = 1
-VIS_Setup_UseWindow as Integer = 0
+global VIS_Setup_UseWindow as Integer
+VIS_Setup_UseWindow = 0
 VIS_Setup_UseVsync as Integer = 0
 VIS_Setup_UseMultimonitorMode as Integer = 0
 VIS_Setup_UseShaders as Integer = 1
@@ -507,6 +508,10 @@ if VIS_Setup_UseWindow=0 then set window off
 
 rem Set the settings into action
 Set Display Mode VIS_Setup_Width, VIS_Setup_Height, VIS_Setup_Depth, VIS_Setup_UseVsync, VIS_Setup_Antialiasing, VIS_Setup_UseMultimonitorMode
+      
+if VIS_Setup_UseWindow=1:
+	position window 0,desktop width()/2,desktop height()/2
+endif
       
 EndFunction
 

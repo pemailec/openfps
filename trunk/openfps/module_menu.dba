@@ -72,6 +72,9 @@ function MENU_init():
 	global MENU_BackgroundObject2		`Menu background object 2
 	global MENU_BackgroundSphereImg		`Menu background sphere texture
 	global MENU_music					`Menu music
+	global MENU_buttons_image			`Menu buttons image
+	global MENU_menusubimage			`Menu subtitle image
+	global MENU_FGObject
 	
 	global MENU_credits					`Menu credits image
 	global MENU_creditsPolish			`Menu credits polish
@@ -84,7 +87,7 @@ function MENU_init():
 	global MENU_creditsmusic			`Menu credits music
 	
 	global MENU_state as string 		`Menu status
-	global MENU_stateDEBUG as string 		`Menu status debug
+	global MENU_stateDEBUG as string 	`Menu status debug
 	MENU_state="NONE"
 	
 	`set variables
@@ -101,6 +104,9 @@ function MENU_init():
 	MENU_BackgroundObject2=		RES_grab(res_Object)
 	MENU_BackgroundSphereImg=	RES_grab(res_Image)
 	MENU_music=					RES_grab(res_Music)
+	MENU_buttons_image= 		RES_grab(res_Image)
+	MENU_menusubimage= 			RES_grab(res_Image)
+	MENU_FGObject=				RES_grab(res_Object)
 	
 	`credits
 	MENU_credits=RES_grab(res_Image)
@@ -117,7 +123,6 @@ function MENU_init():
 	MENU_FaderAlpha=0
 	set sprite alpha MENU_creditsFader,MENU_FaderAlpha
 	
-	
 	`load media
 	UI_WriteLog(UI_Yellow,"* Loading Media")
 	load image "media\menu\menu_lobby_no_servers.png",	MENU_menu_lobby_no_servers
@@ -127,8 +132,24 @@ function MENU_init():
 	load image "media\menu\main.png",					MENU_ForegroundImage
 	load image "media\menu\menu_bgimg.png",				MENU_BackgroundImage
 	load image "media\menu\grid.png",					MENU_BackgroundSphereImg
+	load image "media\menu\menu_buttons.png",			MENU_buttons_image,1
+	load image "media\menu\menu_subtitle.png",			MENU_menusubimage
 	load music "media\audio\The Awakening.mp3",			MENU_music
 	UI_WriteLog(UI_Green,"* Media Loaded.")
+	
+	
+	make object plain MENU_FGObject,UI_Display.Width,UI_Display.Height
+	lock object on MENU_FGObject
+	disable object zdepth MENU_FGObject
+	set object light MENU_FGObject,0
+	set object transparency MENU_FGObject,1
+	
+	xsize=UI_Display.Width:ysize=UI_Display.Height
+	xpos=0:ypos=0
+	dist#=(UI_Display.MiddleHeight)/tan(camera fov()/2)
+	xpos=(xpos-UI_Display.MiddleWidth)+xsize/2         `Adjust position relative to screen pixels
+	ypos=((ypos*-1)+UI_Display.MiddleHeight)-ysize/2
+	position object MENU_FGObject,xpos,ypos,dist#
 	
 	`Create objects
 	UI_WriteLog(UI_Yellow,"Creating Menu Backdrop")
@@ -170,8 +191,8 @@ function MENU_update()
 	endif
 	
 	`paste backdrop
-	paste image MENU_ForegroundImage,0,0,1
-	
+	paste image MENU_buttons_image,168-(178/2),(UI_Display.Height*0.3)-25,1
+	if UI_Display.Height>600 then paste image MENU_menusubimage,0,0,1
 	`handle buttons
 	MENU_CreateButtons()
 	
@@ -212,6 +233,7 @@ function MENU_update()
 	scroll object texture MENU_BackgroundObject,0.0005*SyS_TimeFactor,0
 	scroll object texture MENU_BackgroundObject2,0.0001*SyS_TimeFactor,0
 	
+	texture object MENU_FGObject,MENU_ForegroundImage
 			
 	`debug
 	if CORE_DebugScreen=1:
@@ -235,7 +257,7 @@ endfunction
 
 function MENU_ShowPaused():
 	show object MENU_BackgroundObject2
-endfunction
+endfunction 
 
 function MENU_StartCredits():
 	stop music MENU_music:play music MENU_creditsmusic
@@ -293,7 +315,7 @@ function MENU_CreateButtons():
 	select MENU_state
 	case "NONE"
 		local x as integer: local y as integer
-		x=168:y=240
+		x=168:y=(UI_Display.Height*0.3)
 		UI_AddCenterGadgettoScreen("button_lobby",x,y,"UI_button")
 		UI_AddMouseoverImageToGadget("button_lobby","UI_buttonhover")
 		UI_AddtitleToGadget("button_lobby",3,x-8,y-14,"Lobby")
@@ -354,7 +376,8 @@ function MENU_LoadingScreen()
 	load image "media\menu\loadblur.png",NetConnectImg
 	`do a short sync loop to avoid display corruption, or something.
 	for x=0 to 10
-	sprite NetConnectSprite,0,0,NetConnectImg
+	box 0,0,1024,768,0,0,0,0
+	sprite NetConnectSprite,UI_Display.Width-1024,UI_Display.Height-768,NetConnectImg
 	sync
 	next x
 endfunction
