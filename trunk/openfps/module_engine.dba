@@ -67,8 +67,9 @@ function CORE_update():
     `if CORE_GamePaused=0 then MVM_update()
     
     MENU_Hide()
+	hide object MENU_FGObject
    
-    UI_SUB_HandleChatBox(100,600)
+    UI_SUB_HandleChatBox(40,600)
     
     y=10
 	UI_Text(1,10,y,str$(LVL_Current.init)):y=y+32

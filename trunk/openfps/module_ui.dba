@@ -483,6 +483,7 @@ Function UI_Handle()
 	UI_SetGadgetValue("UI_fatigue",50-Floor(PLR_Curstam/2.0)-1)
 
 // UI fader (credits mostly)
+// DISABLE WHILE COMPILING EXAMPLE (NOT MAIN CODE)
 	Fader_Update()
 
 //- If pressed esc then quit

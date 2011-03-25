@@ -137,6 +137,7 @@ function MENU_init():
 	load music "media\audio\The Awakening.mp3",			MENU_music
 	UI_WriteLog(UI_Green,"* Media Loaded.")
 	
+	UI_TyperInit()
 	
 	make object plain MENU_FGObject,UI_Display.Width,UI_Display.Height
 	lock object on MENU_FGObject
@@ -245,11 +246,17 @@ function MENU_update()
 		UI_Text(1,X,Y,"UI_Mouseclicked="+str$(UI_Mouseclicked)):Y=Y+18
 	endif
 	
+	if KEYSTATE(20)=1:
+		UI_Typer("TEXT TYPING TEST...",300,300,10)
+	else:
+		UI_TyperReset()
+	endif
 endfunction
 
 function MENU_Show():
 	show object MENU_BackgroundObject
 	show object MENU_BackgroundObject2
+	show object MENU_FGObject
 	`show the mouse
 	MVM_ShowMouse()
 	CORE_CleanUp()
@@ -292,6 +299,33 @@ function Fader_Update():
 			set sprite alpha MENU_creditsFader,MENU_FaderAlpha
 		endif
 	endif
+endfunction
+
+function UI_TyperInit():
+	global UI_TyperTime as float
+	global UI_TyperStarted
+	global UI_TyperFinished 
+	global UI_TyperLetter
+	UI_TyperLetter=0
+endfunction
+
+function UI_Typer(text$,x,y,time):
+	UI_TyperTime=UI_TyperTime+(0.1*SyS_TimeFactor)
+	timeperstring#=(time*1.0)/len(text$)
+	if UI_TyperTime>timeperstring#:
+		UI_TyperTime=0
+		UI_TyperLetter=UI_TyperLetter+1
+	endif
+	scrstring$=left$(text$,UI_TyperLetter)
+	if scrstring$=text$ then UI_TyperFinished=1
+	UI_Text(3,x,y,scrstring$)
+endfunction
+
+function UI_TyperReset():
+	UI_TyperTime=0
+	UI_TyperStarted=0
+	UI_TyperFinished=0
+	UI_TyperLetter=0
 endfunction
 
 function Credits_FadeOut():

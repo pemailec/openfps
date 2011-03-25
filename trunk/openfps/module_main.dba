@@ -105,7 +105,7 @@ UI_init() 	`ui module
 MVM_init()  `movement module
 CORE_init()	`game core modules
 MENU_init() `menu module
-`NET_init()	`network module
+NET_start()	`network module
 ENT_Init()	`entity module
 LVL_Init()  `level module
 
@@ -151,7 +151,7 @@ while SyS_Event_Terminate<1
 		case "credits"
 			MENU_Hide()
 			`credits loop
-			
+			show object MENU_FGObject
 			texture object MENU_FGObject,MENU_creditsPolishBG
 			`paste image MENU_creditsPolishBG,0,0
 			paste image MENU_credits,(UI_Display.MiddleWidth-400),(UI_Display.Height-MENU_credits_Y),1
@@ -167,6 +167,9 @@ while SyS_Event_Terminate<1
 	position mouse UI_Display.MiddleWidth,UI_Display.MiddleHeight `center windows mouse
 	
 	`debug
+	
+	`networking
+	NET_update()
 	
 	`handle UI system
 	UI_Handle()

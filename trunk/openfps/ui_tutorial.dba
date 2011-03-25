@@ -29,6 +29,7 @@ Remend
 
 `==========Globals==========`
 Global BackGroundCube as Integer
+Global SyS_LoopMode as string		  :	`Variable to determine which modules to update in loop
 `===========================`
 
 `===========Types===========`
@@ -56,8 +57,8 @@ UI_Init()
 UI_LoadGuiGraphics("media\panels\alphapanel.png","miso_panel")
 
 //Load button for nomral and mouseover state
-UI_LoadGuiGraphics("media\menu\button-normal.png","miso_button")
-UI_LoadGuiGraphics("media\menu\button-hover.png","miso_buttonhover")
+UI_LoadGuiGraphics("media\buttons\button-normal.png","miso_button")
+UI_LoadGuiGraphics("media\buttons\button-hover.png","miso_buttonhover")
 
 //Load images for radiobutton normal mouseover and selected
 UI_LoadGuiGraphics("media\buttons\skull32_1.png","miso_radiobutton")

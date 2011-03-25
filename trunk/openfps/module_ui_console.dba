@@ -96,19 +96,7 @@ Function UI_SUB_CheckConsoleCommand(console_result$)
 		sync rate 60
 		command_exec=1
 	endcase
-	case "START SERVER"
-		NET_StartServer()
-		command_exec=1
-	endcase
 	case "WELCOME"
-		command_exec=1
-	endcase
-	case "WIREFRAME ON"
-		set object wireframe NET_Server.DATA_MapObj,1
-		command_exec=1
-	endcase	
-	case "WIREFRAME OFF"
-		set object wireframe NET_Server.DATA_MapObj,0
 		command_exec=1
 	endcase
 	case "PAUSE 1"
@@ -128,19 +116,6 @@ Function UI_SUB_CheckConsoleCommand(console_result$)
 		UI_SetSmoothMouseOff()
 	endcase
 	endselect
-	if left$(console_resultupper$,15)="SET SERVER NAME"
-		NET_NameServer(right$(console_result$,len(console_result$)-16))
-		command_exec=1
-	endif
-	if left$(console_resultupper$,14)="SET SERVER MAP"
-		NET_Server.DATA_Map=right$(console_result$,len(console_result$)-15)
-		command_exec=1
-	endif
-	if left$(console_resultupper$,5)="SCALE"
-		scale=val(right$(console_result$,len(console_result$)-6))
-		scale object NET_Server.DATA_MapObj,scale,scale,scale
-		command_exec=1
-	endif
 	if left$(console_resultupper$,5)="PARSE"
 		parse_file$=right$(console_result$,len(console_result$)-6)
 		UI_SUB_ParseFile(parse_file$)
@@ -174,7 +149,8 @@ Function UI_SUB_CheckConsoleCommand(console_result$)
 	endif
 	if left$(console_resultupper$,3)="SAY"
 		say_str$="~b"+PlayerName$+":~w "+right$(console_result$,len(console_result$)-4)
-		UI_Addtexttochatbox(say_str$)
+		`UI_Addtexttochatbox(say_str$)
+		NET_SendChatMessageTCP(say_str$)
 		command_exec=1
 	endif
 	`clear the entry buffer if a command was executed

@@ -52,7 +52,10 @@ Global UI_EVENT_ChatboxState        as Integer       : `1 if console is appearin
 Global UI_Chatboxtextoffset         as Integer       : `x position offset variable for chatbox texts
 Global UI_Chatpanel                 as mychatboxtype : `Chatbox
 Global UI_TriggerChatboxInput$      as string        : `name a gadget, that is the chatbox
-                                                       
+global UI_CHATBOX_ACTIVE 			as boolean 		 : `1 if chat typing is active
+global UI_CHATBOX_TOGGLE			as boolean 		 : `toggle chatbox
+global say_str$ 					as string
+                
 `===========================`
 
 `===========Types===========`
@@ -109,6 +112,28 @@ Function UI_SUB_HandleChatBox(BottomX,BottomY)
 		if text_alpha#<0 then text_alpha#=0
 		UI_alphatext(1,BottomX,BottomY-(x*12),Chatlines$(x),text_alpha#)
 	next x
+	
+	if returnkey()=0 then UI_CHATBOX_TOGGLE=0
+	if returnkey()=1 and UI_CHATBOX_ACTIVE=0 and UI_CHATBOX_TOGGLE=0 then UI_CHATBOX_ACTIVE=1:UI_CHATBOX_TOGGLE=1:clear entry buffer
+	
+	if UI_CHATBOX_ACTIVE>0:
+		if returnkey()=0 and escapekey()=0:
+			if UI_CHATBOX_TOGGLE>0 then clear entry buffer:say_str$=""
+			UI_CHATBOX_TOGGLE=0
+		endif
+		if UI_CHATBOX_TOGGLE=0 and escapekey()=1 then UI_CHATBOX_ACTIVE=0:UI_CHATBOX_TOGGLE=1
+		if returnkey():
+			`trim off problems
+			say_str$=right$(say_str$,len(say_str$)-1)
+			if mid$(say_str$,len(say_str$)-1)="!" then say_str$=left$(say_str$,len(say_str$)-1)
+			NET_SendChatMessageTCP(say_str$)
+			say_str$=""
+			UI_CHATBOX_ACTIVE=0
+			clear entry buffer
+		endif
+		say_str$=" ~b"+PlayerName$+":~w "+entry$(1)
+		UI_alphatext(1,BottomX,BottomY,say_str$,255)
+	endif
 	
 Endfunction
 

@@ -10,6 +10,16 @@ include1=module_ui.dba
 LineInclude1=1168
 include2=module_resource.dba
 LineInclude2=8
+include3=module_menu.dba
+include4=module_ui_chatbox.dba
+include5=module_ui_console.dba
+include6=module_ui_credits.dba
+include7=module_ui_options.dba
+include8=module_engine.dba
+include9=module_movement.dba
+include10=module_level.dba
+include11=module_network.dba
+include12=module_entity.dba
 final source=_Temp.dbsource
 
 ; **** Executable Information  ***
@@ -43,7 +53,7 @@ window resolution=640x480
 
 ; **** Media ****
 ; Example entries: media1=graphics\*.jpg
-media root path=F:\openfps\
+media root path=C:\Program Files (x86)\The Game Creators\Dark Basic Professional\Projects\OpenFPS\
 
 ; **** Icons ****
 
