@@ -498,7 +498,6 @@ function ENT_FindEntityName(EntityName as string, InsertMode as boolean)
     endif
 endfunction EntityIndex
 
-
 // (NO RETURN VALUE) ENT_SaveEntities("FileName")
 // Saves all Entities and their Attributes.
 //
@@ -612,18 +611,17 @@ function ENT_LoadObjectInfo(f as integer, info as integer)
     ENT_Object(info).physics = b
 endfunction
 
-
 function ENT_PrintEntities(y)
-	y=y+10
+    inc y, 10
     for i=0 to ENT_NumEntities-1
         UI_Text(1,10,y,"ENTITY: " + str$(i))
         UI_Text(1,10,y,"NAME  : " + ENT_Entity(i).name)
-        y=y+12
+        inc y, 12
         if ENT_Entity(i).etype = ENT_TYPE_OBJECT then UI_Text(1,10,y,"TYPE  : Object")
         if ENT_Entity(i).etype = ENT_TYPE_TERRAIN then UI_Text(1,10,y,"TYPE  : Terrain")
         if ENT_Entity(i).etype = ENT_TYPE_PLIGHT then UI_Text(1,10,y,"TYPE  : Light")
         if ENT_Entity(i).etype = ENT_TYPE_POINT then UI_Text(1,10,y,"TYPE  : Point")
         if ENT_Entity(i).etype = ENT_TYPE_ZONE then UI_Text(1,10,y,"TYPE  : Zone")
-        y=y+12
+        inc y, 12
     next i
 endfunction
