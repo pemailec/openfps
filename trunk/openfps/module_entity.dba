@@ -459,7 +459,7 @@ function ENT_FindEntityName(EntityName as string, InsertMode as boolean)
     cPos as integer
     if EntityName = ""
         EntityIndex = -2    // Return -2 if the inputstring is empty.
-        exitfunction
+        exitfunction EntityIndex
     endif
     if ENT_NumEntities = 1
         if InsertMode = 1
@@ -490,6 +490,7 @@ function ENT_FindEntityName(EntityName as string, InsertMode as boolean)
             endif
             // If EntityName is less than the current name, then move subStart to the next position. (halving the search area)
             if ENT_Entity(cPos).name < EntityName and subEnd > cPos then subStart = cPos+1
+            if ENT_Entity(cPos).name < EntityName and subEnd = cPos then subStart = cPos
             // If EntityName is greater than the current name, then move subEnd to the previous position. (again halved)
             if ENT_Entity(cPos).name > EntityName and subStart < cPos then subEnd = cPos-1
         loop
