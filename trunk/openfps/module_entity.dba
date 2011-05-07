@@ -493,6 +493,7 @@ function ENT_FindEntityName(EntityName as string, InsertMode as boolean)
             if ENT_Entity(cPos).name < EntityName and subEnd = cPos then subStart = cPos
             // If EntityName is greater than the current name, then move subEnd to the previous position. (again halved)
             if ENT_Entity(cPos).name > EntityName and subStart < cPos then subEnd = cPos-1
+            if ENT_Entity(cPos).name > EntityName and subStart = cPos then subEnd = cPos
         loop
     endif
 endfunction EntityIndex
