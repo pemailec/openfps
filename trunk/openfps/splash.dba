@@ -43,6 +43,20 @@ ip_website$="https://openfps.googlecode.com/svn/trunk/openfps/website/images/log
 ip_filename$="_temp.png"
 ip=download(ip_website$,ip_filename$)
 
+loc_web$="http://api.ipinfodb.com/v3/ip-country/?key=7d4408e067712f64ea42f27e3b4c7f3d77c1708a6b1a391dc9d87b8f66291cdf&format=raw"
+loc_file$="_loc.temp"
+loc=download(loc_web$,loc_file$)
+
+open to read 2,loc_file$
+read string 2,loc$
+close file 2
+delete file loc_file$
+
+split string loc$,";"
+last=SPLIT COUNT()
+loc$=GET SPLIT WORD$(last) 
+loc$=lower$(loc$)
+
 open to read 1,filename$
 read string 1,motd$
 close file 1
@@ -91,9 +105,10 @@ do
 	
 	paste image 1,0,0
 	text 50,155,"Welcome to Biostorm: Chemical Warfare!"
+	text 50,180,"your location:"+loc$
 	`text 50,168,get time$()
 	time$=get time$()
-	text 50,180,"The time is "+left$(time$,len(time$)-3)+", "+mm$(month)+" "+day$+dd$(d)+", 20"+year$
+	text 50,205,"The time is "+left$(time$,len(time$)-3)+", "+mm$(month)+" "+day$+dd$(d)+", 20"+year$
 	
 	`text 50,180,motd$
 	

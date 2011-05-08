@@ -86,9 +86,20 @@ function MENU_init():
 	global MENU_credits_Y as float 		`Menu credits scroll
 	global MENU_creditsmusic			`Menu credits music
 	
+	global MENU_CampaignCamera			`Campaign camera
+	global MENU_CampaignCameraImage 	`Campaign camera image
+	global MENU_CampaignCameraCube		`test cube
+	
+	MENU_CampaignCameraImage=RES_grab(res_Image)
+	make image MENU_CampaignCameraImage,600,180
+	
 	global MENU_state as string 		`Menu status
 	global MENU_stateDEBUG as string 	`Menu status debug
 	MENU_state="NONE"
+	
+	global MENU_Cuff					`Menu cuff image
+	MENU_Cuff=RES_grab(res_Image)
+	`load image "media\menu\cuff.png",MENU_Cuff
 	
 	`set variables
 	MENU_LoopStartup=			1
@@ -139,7 +150,7 @@ function MENU_init():
 	
 	UI_TyperInit()
 	
-	make object plain MENU_FGObject,UI_Display.Width,UI_Display.Height
+	make object plain MENU_FGObject,UI_Display.Width+2,UI_Display.Height
 	lock object on MENU_FGObject
 	disable object zdepth MENU_FGObject
 	set object light MENU_FGObject,0
@@ -202,11 +213,20 @@ function MENU_update()
 			case "button_lobby"
 				MENU_state="LOBBY"
 			endcase
+		 	case "button_campaign"
+		 		MENU_state="CAMPAIGN"
+		 	endcase
 			case "button_training"
 				MENU_state="TRAINING"
 			endcase
 			case "button_credits"
 				MENU_StartCredits()
+			endcase
+			case "button_startgame"
+				MENU_StartCampaign()
+			endcase
+			case "button_options"
+				MENU_state="OPTIONS"
 			endcase
 		 	case "button_quit"
 		 		MENU_state="QUIT"
@@ -218,12 +238,9 @@ function MENU_update()
 		 		MENU_state="NONE"
 		 	endcase
 		 	case "button_yestrain"
-         MENU_state="HIDDEN"
-         LVL_Load("media\maps\a_Demo\level.dat")
-    endcase
-		 	case "bar_test"
-				UI_CountNewValue("bar_test")
-		 	endcase
+     		    MENU_state="HIDDEN"
+       			LVL_Load("media\maps\a_Demo\level.dat")
+	    	endcase
 		endselect
 	endif
 	
@@ -355,7 +372,9 @@ function MENU_CreateButtons():
 		local x as integer: local y as integer
 		x=168:y=(UI_Display.Height*0.3)
 		UI_AddCenterGadgettoScreen("button_lobby",x,y,"UI_button")
-		UI_AddMouseoverImageToGadget("button_lobby","UI_buttonhover")
+		UI_AddMouseoverImageToGadget("button_lobby","UI_button")
+		`UI_AddMouseoverTitleToGadget("button_lobby",4,mousex(),mousey(),"Disabled in demo!")
+		
 		UI_AddtitleToGadget("button_lobby",3,x-8,y-14,"Lobby")
 		x=168:y=y+60
 		UI_AddCenterGadgettoScreen("button_campaign",x,y,"UI_button")
@@ -383,6 +402,15 @@ function MENU_CreateButtons():
 	endcase
 	case "LOBBY"
 		Menu_JoinServerTemp()
+	endcase
+	case "CAMPAIGN"
+		Menu_ChooseCampaign()
+	endcase
+	case "OPTIONS"
+		Menu_MakeOptionsDiag()
+	endcase
+	case "APPLIED"
+		Menu_OptionsApplyAtStart()
 	endcase
 	case "QUIT"
 		Menu_CreateQuitQuestion()
@@ -419,6 +447,71 @@ function MENU_LoadingScreen()
 	next x
 endfunction
 
+function Menu_ChooseCampaign():
+	ui_putwindow(UI_Display.Middlewidth-324,UI_Display.Middleheight-90,40,22)
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-70
+	UI_CenterText(3,x,y,"Campaign Missions")
+	y=y+46
+	ink rgb(100,100,100),0
+	draw=DRAW TARGET()
+	DRAW TO IMAGE MENU_CampaignCameraImage
+	cls 0
+	set cursor 10,10
+	print "No campaign levels to load!"
+	DRAW TO BITMAP 0
+	paste image MENU_CampaignCameraImage,x-300,y
+	line x-300,y,x+300,y
+	line x-300,y,x-300,y+180
+	line x-300,y+180,x+300,y+180
+	line x+300,y,x+300,y+180
+	y=y+180
+	y=y+44
+	x=x+200
+	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Back")	
+	`add start game button
+	x=x+-200
+	UI_AddCenterGadgettoScreen("button_startgame",x,y,"UI_button")
+	UI_AddtitleToGadget("button_startgame",3,x-8,y-14,"Start")	
+	UI_AddMouseoverImageToGadget("button_startgame","UI_buttonhover")
+endfunction
+
+function MENU_StartCampaign():	
+	stop music MENU_music
+	loop music ENGINE_tempmusic
+	MENU_state="none"
+	SyS_LoopMode="engine"
+endfunction
+
+function Menu_MakeOptionsDiag()
+	ui_putwindow(UI_Display.Middlewidth-320,UI_Display.Middleheight-90,40,24)
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-70
+	UI_CenterText(3,x,y,"Game Options")
+	y=y+46
+	ink rgb(120,120,120),0
+	line x-300,y,x+300,y
+	y=y+240
+	line x-300,y,x+300,y
+	y=y+44
+	x=x+200
+	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Cancel")	
+	`add apply button
+	x=x+-200
+	MENU_OptionsChanged=0
+	if KEYSTATE(23)=1 then MENU_OptionsChanged=1
+	if MENU_OptionsChanged
+		UI_AddCenterGadgettoScreen("button_apply",x,y,"UI_button")
+		UI_AddtitleToGadget("button_apply",3,x-8,y-14,"Apply")	
+		UI_AddMouseoverImageToGadget("button_apply","UI_buttonhover")
+	else
+		UI_AddCenterGadgettoScreen("button_apply",x,y,"UI_buttongray")
+		UI_AddtitleToGadget("button_apply",3,x-8,y-14,"Apply")	
+	endif
+endfunction
+
 function Menu_JoinServerTemp()
 	ui_putwindow(UI_Display.Middlewidth-280,UI_Display.Middleheight-10,35,15)
 	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight+40
@@ -436,6 +529,16 @@ function Menu_JoinServerTemp()
 	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
 	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Cancel")	
 endfunction
+
+Function Menu_OptionsApplyAtStart()
+	ui_putwindow(UI_Display.Middlewidth-350,UI_Display.Middleheight-10,44,15)
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight+50
+	UI_AddTextLine(3,x,y,"Some changes will not apply until restart!")
+	Y=Y+100
+	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Ok")
+EndFunction
 
 Function Menu_CreateQuitQuestion()
 	ui_putwindow(UI_Display.Middlewidth-280,UI_Display.Middleheight-10,35,15)
@@ -466,6 +569,36 @@ Function Menu_CreateTrainingQuestion()
 	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
 	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Cancel")	
 EndFunction
+
+/////////////////////////////////////////////////////////
+// USER INTERFACE FUNCTIONS                            //
+/////////////////////////////////////////////////////////
+
+function UI_SetRenderTarget(target as string):
+	select target
+		case "screen"
+			draw to bitmap 0
+		endcase
+		case "ui_target"
+			draw to image UI_RenderTarget
+		endcase
+	endselect
+endfunction
+
+/////////////////////////////////////////////////////////
+// MATH FUNCTIONS                                      //
+/////////////////////////////////////////////////////////
+
+function IMG_SET_PIXEL2(memblock as byte, x as integer, y as integer, width as integer, height as integer, colour as dword)
+	if x>-1 and x<width
+		if y>-1 and y<height
+			n as double integer
+			n = (4*((y*width)+x))+12
+			write memblock dword memblock,n,colour
+		endif
+	endif
+endfunction 
+
 
 /////////////////////////////////////////////////////////
 // TERMINATE                                           //

@@ -68,6 +68,7 @@ type Server
 	UDP_channel as dword
 endtype
 
+
 /////////////////////////////////////////////////////////
 // INIT COMMANDS                                       //
 /////////////////////////////////////////////////////////
@@ -180,9 +181,9 @@ function NET_update():
 			`don't do anything in the network code (in a menu)
 			`this space might be replaced with a "menu" case later
 			`if there is to be the chat lobby and server lists
-			if KEYSTATE(38)=1 then NET_connect("192.168.1.6","TestServer",4321,5901)
-			if KEYSTATE(37)=1 then NET_host("TestServer",4321,5901)
-			if KEYSTATE(36)=1 then NET_localhost("TestServer",4321,5901)
+			`if KEYSTATE(38)=1 then NET_connect("192.168.1.6","TestServer",4321,5901)
+			`if KEYSTATE(37)=1 then NET_host("TestServer",4321,5901)
+			`if KEYSTATE(36)=1 then NET_localhost("TestServer",4321,5901)
 		endcase
 	endselect
 endfunction

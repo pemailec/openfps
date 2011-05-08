@@ -44,12 +44,15 @@ function CORE_init():
     global CORE_GamePaused as boolean
     global CORE_GamePausedImage 
     global PlayerName$
+    global ENGINE_tempmusic
     CORE_DebugScreenImg= RES_grab(Res_Image)
     CORE_GamePanel= RES_grab(Res_Image)
     CORE_GamePausedImage= RES_grab(Res_Image)
+    ENGINE_tempmusic=RES_grab(Res_Music)
     load image "media\windows\debug.png", CORE_DebugScreenImg
     load image "media\panels\ui_gamepanel.png", CORE_GamePanel
     load image "media\menu\paused.png", CORE_GamePausedImage
+    load music "media\audio\TheFray2.mp3",ENGINE_tempmusic
 endfunction
 
 /////////////////////////////////////////////////////////
@@ -71,11 +74,8 @@ function CORE_update():
    
     UI_SUB_HandleChatBox(40,600)
     
-    y=10
-	UI_Text(1,10,y,str$(LVL_Current.init)):y=y+32
-    UI_Text(1,10,y,LVL_Current.file):y=y+32
-    UI_Text(1,10,y,LVL_Current.name):y=y+32
-    ENT_PrintEntities(y)
+    UI_AlphaText(3,UI_Display.MiddleWidth-140,UI_Display.MiddleHeight,"~rEngine not functional!",255)
+    
 endfunction
 
 function CORE_CleanUp():

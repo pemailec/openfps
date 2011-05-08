@@ -3,4 +3,15 @@ Model Folder Directories:
 
 Please put all various prop models into the mdl_database folder.
 
+To register a model in the engine, simply open up precache.cfg
+then, input two lines at the end of the file:
+name=(name of model)
+file=(location from this directory)
+
+for example, barrel_1 would be:
+name=barrel_1
+file=barrel_1\Barrel1.x
+
+This system is far from buggy, however, it'll be changed later.
+
 ******************************

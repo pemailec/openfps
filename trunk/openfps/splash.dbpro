@@ -39,10 +39,9 @@ window resolution=640x480
 
 ; **** Media ****
 ; Example entries: media1=graphics\*.jpg
-media root path=C:\Users\Jonathan\Documents\My Projects\OpenFPS\Source\
+media root path=J:\openfps\
 
 ; **** Icons ****
-icon1=C:\Users\Jonathan\Documents\My Projects\OpenFPS\Source\media\images\TempIcon.ico
 
 ; **** Cursors ****
 

@@ -65,16 +65,17 @@ Global SyS_Event_Terminate as Boolean : `set this variable to 1 to force the mai
 Global SyS_LoopMode as string		  :	`Variable to determine which modules to update in loop
 Global SyS_TimeFactor as float		  :	`Variable for Timer based engine operations
 									  :	`Updated every loop with an elapsed time variable
-Global SyS_TimeMultiplier as float    : `Time Multiplier factor
-Global SyS_GameSpeed as float		  :	`Speed variable for game loops
 Global CORE_DebugScreen as Boolean    : `Debug setting
 									  
 /////////////////////////////////////////////////////////
 // INIT                                                //
 /////////////////////////////////////////////////////////
 
-`set up display
+`return to proper directory (safeguard)
+set dir DIR EXE()
 
+
+`set up display
 VIS_Setup_LoadSettings() `Replaces set display mode 1024,768,screen depth()
 
 sync on

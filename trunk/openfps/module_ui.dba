@@ -206,6 +206,8 @@ remend
 Global UI_TempFileID            as Integer      : `for file resource
 //-----Display Globals
 Global UI_Display               as MyScreenType : `for basic display data
+Global UI_RenderTarget          as dword 		: `ui render target
+Global UI_RenderTargetMEM		as dword 		: `ui render target memory block
 
 //-----Mouse Globals
 Global UI_Mouse                 as MouseType    : `stores the parameters of the graphic mouse
@@ -385,14 +387,19 @@ Function UI_Init()
 	UI_StartDebugmode(UI_LogON)    :`change parameter to UI_Logon to do logfile
 	UI_WriteLog(UI_Green,"=== Starting to initiate User Interface module.")
 // Setup basic data
-	UI_Display.Width                = Screen Width()
-	UI_Display.Height               = Screen Height()
+	UI_Display.Width                = 1024 `Screen Width()
+	UI_Display.Height               = 768 `Screen Height()
 	UI_Display.MiddleWidth          = UI_Display.Width/2 
 	UI_Display.MiddleHeight         = UI_Display.Height/2 
 	UI_EVENT_ConsoleOffset=-48
 // Init Advanced Sprite
 	
 	Dxs Initialize:UI_Display.Dxspriteinitialized  = UI_True
+	
+	// Init UI render target
+	UI_RenderTarget=RES_grab(RES_image)
+	UI_RenderTargetMEM=RES_grab(RES_memblock)
+
 	
 // creates 8 blank ascii font
     Global Dim UI_Stringmap(8,258)  as Mystringmaptype
@@ -422,6 +429,8 @@ Function UI_Init()
 		
 	UI_LoadGuiGraphics("media\buttons\button-normal.png","UI_button")
 	UI_LoadGuiGraphics("media\buttons\button-hover.png","UI_buttonhover")
+	UI_LoadGuiGraphics("media\buttons\button_gray.png","UI_buttongray")
+		
 		
 	UI_LoadGuiGraphics("media\buttons\small_button-normal.png","UI_button_small")
 	UI_LoadGuiGraphics("media\buttons\small_button-hover.png","UI_button_small_hover")
