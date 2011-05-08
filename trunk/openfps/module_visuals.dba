@@ -620,3 +620,24 @@ Function VIS_Setup_MotionBlur()
     Set Current Camera VIS_FinalCamera
     
 ENDFUNCTION
+
+Function TExtract(InputText$,Position)
+//This function will extract inputted text in the format 'value1=value2=value3'
+//The text you want to extract from should go in as the InputText variable.
+//The number of the value you want must be defined by the Position variable.
+//An example may be that you have the text "worldfile=C:\foldera\map.x".
+//To get the label you would use 'Label$=TExtract("worldfile=C:\foldera\map.x",1)'.
+//Label$ would then be equal to 'worldfile'.
+//To get the path, you may use 'Path$=TExtract("worldfile=C:\foldera\map.x",2)'.
+    local split as string    
+    if Position=1
+        split=First Token$(InputText$, "=")
+    else
+        x=1
+        split=First Token$(InputText$, "=")
+        repeat
+            split=Next Token$("=")
+            Inc X
+        UNTIL x=Position
+    endif    
+ENDFUNCTION split

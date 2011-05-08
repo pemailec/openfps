@@ -34,6 +34,10 @@ type Level_Data
 	init as boolean
 	name as string
 	file as string
+music as integer
+entityfile as string
+mapfile as string
+loadimage as string
 endtype
 
 /////////////////////////////////////////////////////
@@ -46,15 +50,10 @@ function LVL_Init():
 	//Inits the level system
 	//////////////////////////////
 	UI_WriteLog(UI_Yellow,"=== Starting level module")
-	`setup variables
-	global LVL_LoadImage as integer
-	LVL_LoadImage=RES_grab(RES_image)
 	
-	global LVL_Current as Level_Data
-	
-	`load images
-	load image "media\menu\loading-1.png",LVL_LoadImage
-	
+    Rem Setup variables
+    Global LVL_Current as Level_Data
+		
 	UI_WriteLog(UI_Green,"=== Level module started")
 endfunction
 
@@ -67,29 +66,92 @@ function LVL_Load(level_file$):
 	//LVL_Load()
 	//Loads a level file into the engine
 	//////////////////////////////
-	UI_WriteLog(UI_Yellow,"* Loading level from file <i>"+level_file$+"</i>...")
+ 		UI_WriteLog(UI_Yellow,"Loading level from file <i>"+level_file$+"</i>...")
 	
-	`change to the engine mode
-	SyS_LoopMode="engine"             
+	`Move to 'engine' mode.
+ 	SyS_LoopMode="engine"             
 	
-	`paste level loading image
-	paste image LVL_LoadImage,0,0,1
-	sync
-	wait 1000
-	stop music MENU_music
+	REM START LOADING LEVEL DATA >>>>
 	
-	`do the actual loading stuff!
-	level_file$=level_file$+".fpl"
-	if file exist(level_file$):
-		LVL_Current.init=1
-		LVL_Current.file=level_file$
+	`Predefined information (either create or passed in)
+ LVL_Current.init=1
+ LVL_Current.file=level_file$
+	
+	`Load the level information from the level file  
+ ReadText as String
+ Label as String
+ Value as String
+ If File Exist(level_file$)=0 `Check for file exist
+     UI_WriteLog(UI_Red,"Level load failed: <i>"+level_file$+"</i> not found.")
+     Wait 1000
+     End
+ EndIf
+ FileNumber = res_grab(res_File) `Get the file resource number
+ Open To Read FileNumber,level_file$ `Open the file for reading
+ 
+    Rem The main read loop
+    Do
+        If File End(FileNumber)=1 then Exit
+        Read String FileNumber, ReadText
+        Label=TExtract(ReadText,1)
+        Value=TExtract(ReadText,2)
+            Select Label
+                Case "name"
+                    LVL_Current.name=Value
+                EndCase 
+                Case "music"
+                    LVL_Current.music=Val(Value)
+                EndCase
+                Case "entityfile"
+                    LVL_Current.entityfile=Value
+                EndCase
+                Case "loadimage"
+                    LVL_Current.loadimage=Value
+                EndCase   
+                Case "mapfile"
+                    LVL_Current.mapfile=Value
+                EndCase     
+            EndSelect         
+    LOOP
+    
+Close File FileNumber `Close the file
+res_free(FileNumber, res_File) `Release the file data
+UI_WriteLog(UI_Green,"Loaded level data.")
+Rem FINISHED LOADING LEVEL DATA <<<<
+
+Rem CHECK IF FILES EXIST >>>>
+If File Exist(LVL_Current.mapfile)<1 then UI_WriteLog(UI_Red,"Level load failed: <i>"+LVL_Current.mapfile+"</i> not found."):End
+If File Exist(LVL_Current.loadimage)<1 then UI_WriteLog(UI_Red,"Level load failed: <i>"+LVL_Current.loadimage+"</i> not found."):End
+If File Exist(LVL_Current.entityfile)<1 then UI_WriteLog(UI_Red,"Level load failed: <i>"+LVL_Current.entityfile+"</i> not found."):End
+
+REM LOAD LOADING IMAGE >>>>
+LVLLoadImage=res_grab(res_Image)
+LVLLoadSprite=res_grab(res_Sprite)
+Load Image LVL_Current.loadimage,LVLLoadImage
+CLS
+Sprite LVLLoadSprite, 0, 0, LVLLoadImage
+Stretch Sprite LVLLoadSprite, (Screen Width() / 1024), (Screen Height() / 768)
+Sync
+Sync
+Delete Sprite LVLLoadSprite : res_free(LVLLoadSprite,res_Sprite)
+Delete Image LVLLoadImage : res_free(LVLLoadImage,res_Image)
+UI_WriteLog(UI_Green,"Loaded loading level screen.")
+
+Rem BEGIN LOADING THE 3D WORLD >>>>
+SyS_LoopMode="menu" `Temporary, as cannot proceed
+UI_WriteLog(UI_BLUE,"Halted until code module coded.")
+MENU_state="NONE"
+ExitFunction
+
+    `normal commence>>
 		ENT_DeleteAllEntities()
-		ENT_LoadEntities(LVL_Current.file)
+		ENT_LoadEntities(LVL_Current.entityfile)
 		UI_WriteLog(UI_Yellow,"* level loaded.")
-	else:
+		
+		rem on error
 		LVL_UnLoad()
 		UI_WriteLog(UI_Red,"* level load failed! (File does not exist)"):SyS_LoopMode="menu"
-	endif
+
 endfunction
 
 function LVL_UnLoad():

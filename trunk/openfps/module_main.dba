@@ -146,6 +146,7 @@ while SyS_Event_Terminate<1
 		case "engine"
 			`GAME ENGINE LOOP
 			// Update game engine
+			MENU_Hide()
 			CORE_update()
 		endcase
 		case "credits"

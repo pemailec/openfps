@@ -199,6 +199,7 @@ remend
 #Constant UI_RED       = 3          :` debug message importance
 #Constant UI_YELLOW    = 2          :` debug message importance
 #Constant UI_GREEN     = 1          :` debug message importance
+#Constant UI_BLUE     = 0          :` debug message importance
 `===========================`
 
 `==========Globals==========`
@@ -440,7 +441,6 @@ Function UI_Init()
 	Disable Escapekey
 	UI_WriteLog(UI_Green,"=== User Interface module succesfully initialized")
 Endfunction
-
 
 Function UI_Handle()
 //***************************************************************************************
@@ -2723,6 +2723,7 @@ Local var_colorizer$  as string
 			Case UI_Red    : var_importance$="RED: "    :var_colorizer$="<font color=#440000>": EndCase
 			Case UI_YELLOW : var_importance$="YELLOW: " :var_colorizer$="<font color=#444400>": EndCase
 			Case UI_GREEN  : var_importance$="GREEN: "  :var_colorizer$="<font color=#004400>": EndCase
+			Case UI_BLUE  : var_importance$="BLUE: "  :var_colorizer$="<font color=#0000FF>": EndCase
 		Endselect
 		If File Open(UI_LogFileID)=1
 			var_time$=Get Time$()

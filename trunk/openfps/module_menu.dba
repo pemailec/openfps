@@ -217,6 +217,10 @@ function MENU_update()
 		 	case "button_backtomain"
 		 		MENU_state="NONE"
 		 	endcase
+		 	case "button_yestrain"
+         MENU_state="HIDDEN"
+         LVL_Load("media\maps\a_Demo\level.dat")
+    endcase
 		 	case "bar_test"
 				UI_CountNewValue("bar_test")
 		 	endcase
@@ -373,7 +377,6 @@ function MENU_CreateButtons():
 		UI_AddCenterGadgettoScreen("button_quit",x,y,"UI_button")
 		UI_AddMouseoverImageToGadget("button_quit","UI_buttonhover")
 		UI_AddtitleToGadget("button_quit",3,x-8,y-14,"Quit")
-
 	endcase
 	case "TRAINING"
 		Menu_CreateTrainingQuestion()
