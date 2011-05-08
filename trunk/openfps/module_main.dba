@@ -87,7 +87,7 @@ hide mouse
 disable escapekey
 
 `backdrop colour
-backdrop on
+backdrop on 0
 
 `color backdrop rgb(200,200,255)  `light blue
 color backdrop rgb(0,0,0)		  `black

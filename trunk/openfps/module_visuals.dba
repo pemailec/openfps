@@ -17,6 +17,7 @@ remstart
 (07/30/10) - miso        - Added various effects.
 (05/01/11) - JRH         - Added shader effects and graphical priority.
 (01/03/11) - JRH         - Visual settings loaded from file.
+(08/05/11) - JRH         - Added motion blur and camera loader.
 
 ----- To-Do:
 This module is a blank template with the functions we need for visuals.
@@ -443,6 +444,7 @@ VIS_Setup_UseMultimonitorMode as Integer = 0
 VIS_Setup_UseShaders as Integer = 1
 VIS_Setup_DivideTextureQuality as Integer = 0
 VIS_Setup_UsePostProcessing as Integer = 0
+VIS_Setup_UseMotionBlur as Integer = 0
 
 rem Load the setup file
 VIS_Setup_SetupFile as String : VIS_Setup_SetupFile = "visualsettings.cfg"
@@ -498,6 +500,10 @@ Do
             Read String 1, VIS_Setup_InText
             VIS_Setup_UsePostProcessing = Val(VIS_Setup_InText)
         EndCase
+        Case "motionblur"
+            Read String 1, VIS_Setup_InText
+            VIS_Setup_UseMotionBlur = Val(VIS_Setup_InText)
+        EndCase        
     EndSelect
 Loop
 
@@ -505,6 +511,7 @@ Close File 1 `Close the used setup file
 
 if VIS_Setup_UseWindow=1 then set window on
 if VIS_Setup_UseWindow=0 then set window off
+if VIS_Setup_UseMotionBlur then VIS_Setup_MotionBlur()
 
 rem Set the settings into action
 Set Display Mode VIS_Setup_Width, VIS_Setup_Height, VIS_Setup_Depth, VIS_Setup_UseVsync, VIS_Setup_Antialiasing, VIS_Setup_UseMultimonitorMode
@@ -545,73 +552,71 @@ Function VIS_Setup_CreateSettings()
     Write String VIS_Setup_SetupFileNumber, "0"
     Write String VIS_Setup_SetupFileNumber, "postprocessing"
     Write String VIS_Setup_SetupFileNumber, "0"
+    Write String VIS_Setup_SetupFileNumber, "motionblur"
+    Write String VIS_Setup_SetupFileNumber, "1"
     
     Rem Close the file
     Close File VIS_Setup_SetupFileNumber
     
 ENDFUNCTION
 
-remstart
+Rem Overlay BETA text
+Function VIS_Setup_OverlayText()
+    CurrentEngineVersion as String
+    CurrentEngineVersion = "PRE-ALPHA"
+    VIS_O_OldTextSize=Text Size()
+    set text size 1
+    Text 2,2,"OpenFPS - " + STR$(Screen FPS()) + "FPS - " + GET TIME$() + " - " + CurrentEngineVersion
+    set text size VIS_O_OldTextSize
+ENDFUNCTION
+
+Rem Creates the final camera
+Function VIS_Setup_MakeFinalCamera
+
+    Rem Get camera variable
+    Global VIS_FinalCamera
+    VIS_FinalCamera=res_grab(res_Camera)
+    
+    Rem Create final camera
+    Make Camera VIS_FinalCamera
+    Backdrop Off VIS_FinalCamera
+    
+ENDFUNCTION
+
+
 //***************************************************************************************
 //*   JRH                                                                               *
 //*   Post Processing Functions                                                         *
 //*                                                                                     *
 //***************************************************************************************
-// -- Instructions --
-// Post processing includes effects such as  bloom, motion blur and sun glare.
-// To load the effects, call the function VIS_InitPostProcessing()
-// This will check the preloaded user settings from memory (its variable) to see if it
-// is enabled.
-// To update the post processing, use the function VIS_UpdatePostProcessing()
-// To end post processing, use the function VIS_TerminatePostProcessing()
+// Main Camera is camera 0, default, however final render will be done on camera 'VIS_FinalCamera'
+// Effects to be used:
+// * Bloom
+// * Motion Blur
 
-Rem Initiate post processing ...
+Rem Setup Motion Blur
+Function VIS_Setup_MotionBlur()
 
-Function VIS_InitPostProcessing()
-
-    Rem ONLY USE POST EFFECTS IF ACTIVATED IN SETTINGS FILE
-    If VIS_Setup_UsePostProcessing > 0
+    Rem Create variables for storing information
+    Global VIS_MBCamOut
+    VIS_MBCamOut=res_grab(res_Image)    
+    Global VIS_RenderPlain
+    VIS_RenderPlain=res_grab(res_Object)
     
-           `Setup Advanced Lighting
-            `#include "media/shaders/Advanced Lighting.dba"
-            AdvancedLighting_SetUp(screen width(),screen height(),screen height(),512,8)
-            `Global_Set_Camera(1,5000,80,1.5)
-            
-            `Setup Post Effects
-            PostEffects_Setup(1,1,1,0,0,0)
-                        
-            `SetUp Scattering
-            LightScattering_SetUp(256,256)   
-             
-            `Make Sky box
-            SkyBox_SetUp("media/skyboxes/Cube0.dds")  
-                  
-            `Set Directional Light (This is the sunlight direction)
-            DirectionalLight_Create("Shaders/Lighting/Directional.fx")
-            DirectionalLight_Set_Shadows(4)
-            DirectionalLight_Set_Rotation(35,210,0)
-            DirectionalLight_Set_Specular(1)       
-        
-    EndIf
+    VIS_Setup_MakeFinalCamera() `MOVE THIS LATER
        
-ENDFUNCTION
-
-
-Rem Update post processing...
-Function VIS_UpdatePostProcessing()
-
-    Rem ONLY USE POST EFFECTS IF ACTIVATED IN SETTINGS FILE
-    `Skipping this speeds up render process...
-    If VIS_Setup_UsePostProcessing > 0
-       
-        AdvancedLighting_Update()      
-          
-    EndIf
+    Rem Setup camera for motion blur    
+    Set Camera to Image VIS_FinalCamera, VIS_MBCamOut, Screen Width(), Screen Height()
+    
+    Rem Create the render plain   
+    Make Object Plain VIS_RenderPlain, 8,6
+    Position Object VIS_RenderPlain, 0, -50000, 5
+    Texture Object VIS_RenderPlain, VIS_MBCamOut
+    Set Alpha Mapping On VIS_RenderPlain, 35
+    
+    Position Camera VIS_FinalCamera, 0, -50000, 0
+    Rotate Camera VIS_FinalCamera, 0, 0, 0
+    
+    Set Current Camera VIS_FinalCamera
     
 ENDFUNCTION
-
-Rem Terminate post processing...
-Function VIS_TerminatePostPorcessing()
-    
-ENDFUNCTION
-remend
