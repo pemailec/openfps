@@ -5,11 +5,11 @@ project name=OpenFPS
 
 ; **** source file information ****
 main=module_main.dba
-LineMain=118
+LineMain=0
 include1=module_resource.dba
 LineInclude1=0
 include2=module_menu.dba
-LineInclude2=222
+LineInclude2=0
 include3=module_ui.dba
 LineInclude3=206
 include4=module_ui_console.dba
@@ -29,13 +29,13 @@ LineInclude10=0
 include11=module_network.dba
 LineInclude11=0
 include12=module_level.dba
-LineInclude12=136
+LineInclude12=128
 include13=module_entity.dba
-LineInclude13=575
+LineInclude13=0
 include14=module_sound.dba
 LineInclude14=0
 include15=module_visuals.dba
-LineInclude15=643
+LineInclude15=674
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone

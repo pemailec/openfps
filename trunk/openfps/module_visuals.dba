@@ -641,3 +641,40 @@ Function TExtract(InputText$,Position)
         UNTIL x=Position
     endif    
 ENDFUNCTION split
+
+
+// Use this function to fade two full scr
+Function VIS_FadeBetweenImages(Image1,Image2,UseScreen)
+
+    Rem Create the sprites for the fade
+    Image1Sprite = res_grab(res_Sprite)
+    Image2Sprite = res_grab(res_Sprite)
+    Image1Get = res_grab(Res_Image) `Used when need to fade from screenshot
+    If UseScreen = 1 then Get Image Image1Get, 0, 0, Screen Width(), Screen Height()
+    If UseScreen = 2 then Load Image "media\menu\black.png", Image1Get 
+    Image1=Image1Get
+    Sprite Image1Sprite, 0, 0, Image1
+    Sprite Image2Sprite, 0, 0, Image2
+    Set Sprite Alpha Image1Sprite, 254
+    Set Sprite Alpha Image2Sprite, 0
+    
+    `Fade the images
+    Counter = 1    
+    For Counter = 0 to 254 Step 2
+       
+       Set Sprite Alpha Image1Sprite, (254-Counter)
+       Set Sprite Alpha Image2Sprite, Counter
+       Sync
+        
+    NEXT
+           
+    Rem Remove all data
+    Delete Sprite Image1Sprite
+    Delete Sprite Image2Sprite
+    If UseScreen = 1 then Delete Image Image1Get
+    If UseScreen = 2 then Delete Image Image1Get
+    res_free(Image1Sprite,res_Sprite)
+    res_free(Image2Sprite,res_Sprite)
+    res_free(Image1Get,res_Image)
+    
+ENDFUNCTION

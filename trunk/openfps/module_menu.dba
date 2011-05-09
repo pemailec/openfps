@@ -239,7 +239,7 @@ function MENU_update()
 		 	endcase
 		 	case "button_yestrain"
      		    MENU_state="HIDDEN"
-       			LVL_Load("media\maps\a_Demo\level.dat")
+       			LVL_Load("media\maps\Test\level.dat")
 	    	endcase
 		endselect
 	endif
