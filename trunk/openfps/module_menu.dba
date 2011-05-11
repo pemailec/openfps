@@ -114,7 +114,7 @@ function MENU_init():
 	MENU_BackgroundObject=		RES_grab(res_Object)
 	MENU_BackgroundObject2=		RES_grab(res_Object)
 	MENU_BackgroundSphereImg=	RES_grab(res_Image)
-	MENU_music=					RES_grab(res_Music)
+`	MENU_music=					RES_grab(res_Music) Automated in sound module
 	MENU_buttons_image= 		RES_grab(res_Image)
 	MENU_menusubimage= 			RES_grab(res_Image)
 	MENU_FGObject=				RES_grab(res_Object)
@@ -145,8 +145,10 @@ function MENU_init():
 	load image "media\menu\grid.png",					MENU_BackgroundSphereImg
 	load image "media\menu\menu_buttons.png",			MENU_buttons_image,1
 	load image "media\menu\menu_subtitle.png",			MENU_menusubimage
-	load music "media\audio\The Awakening.mp3",			MENU_music
-	UI_WriteLog(UI_Green,"* Media Loaded.")
+	`load music "media\audio\The Awakening.mp3",			MENU_music
+ MENU_music = SND_LoadSound("media\audio\The Awakening.wav")
+  
+ 	UI_WriteLog(UI_Green,"* Media Loaded.")
 	
 	UI_TyperInit()
 	
@@ -183,7 +185,8 @@ function MENU_init():
 	UI_WriteLog(UI_Green,"Menu Backdrop Created")
 	
 	`play music
-	play music menu_music
+	LoopSound(MENU_music) `REPLACES: play music menu_music
+	
 	// -----------------------
 endfunction
 
@@ -288,7 +291,7 @@ function MENU_ShowPaused():
 endfunction 
 
 function MENU_StartCredits():
-	stop music MENU_music:play music MENU_creditsmusic
+	StopSound(MENU_music):play music MENU_creditsmusic
 	MENU_state="none"
 	MENU_credits_Y=0
 	Credits_FadeIn()
@@ -477,8 +480,9 @@ function Menu_ChooseCampaign():
 	UI_AddMouseoverImageToGadget("button_startgame","UI_buttonhover")
 endfunction
 
-function MENU_StartCampaign():	
-	stop music MENU_music
+function MENU_StartCampaign():
+ 
+	StopSound(MENU_music)   `REPLACES stop music MENU_music
 	loop music ENGINE_tempmusic
 	MENU_state="none"
 	SyS_LoopMode="engine"
