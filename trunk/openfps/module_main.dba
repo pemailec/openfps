@@ -104,6 +104,7 @@ MENU_LoadingScreen()
 `engine modules
 UI_init() 	`ui module
 MVM_init()  `movement module
+SND_Init()  `Sound Module (MUST be before sound uses!)
 CORE_init()	`game core modules
 MENU_init() `menu module
 NET_start()	`network module
@@ -148,7 +149,7 @@ while SyS_Event_Terminate<1
 			`GAME ENGINE LOOP
 			// Update game engine
 			MENU_Hide()
-			CORE_update()
+			CORE_update() 
 		endcase
 		case "credits"
 			MENU_Hide()
@@ -161,7 +162,7 @@ while SyS_Event_Terminate<1
 			if MENU_credits_Y>100 then UI_text(1,-2,4,"Press [Escape] to return to the menu...")
 			if MENU_credits_Y>2500 or escapekey():
 		 		Credits_FadeOut()
-			endif
+    			endif		
 		endcase
 	endselect
 	
@@ -175,6 +176,9 @@ while SyS_Event_Terminate<1
 	
 	`handle UI system
 	UI_Handle()
+	
+	`Sound Module Update
+	SND_Update()
 	
 	`sync to the screen
 	`Note: would there be any advantages to using fastsync for the menu?

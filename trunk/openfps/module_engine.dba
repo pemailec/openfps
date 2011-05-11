@@ -106,6 +106,7 @@ function CORE_TerminateAll():
 	   `Menu Hide
     MENU_Hide()
 	   `Terminate Systems
+	   SND_Terminate()         `End Sound
     MVM_terminate()         `end movement
 	   `TerminateShooting()    	`end shooting
 	   `TerminateAI()          		`end ai
