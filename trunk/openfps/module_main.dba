@@ -54,6 +54,7 @@ MODULE_RESOURCE.dba		- Handles all resources for modules			(prefix RES)
 MODULE_SHOOTING.dba		- Handles weapons and shooting mechanics	(prefix GUN)
 MODULE_TERRAIN.dba		- Handles terrain system with Blitzterrain	(prefix LAND)
 MODULE_VISUALS.dba		- Handles all visual effects and systems 	(prefix VIS)
+MODULE_ENTITY.dba - Sets up, manages, and loads/saves game entities. (prefix ENT)
 
 
 remend
