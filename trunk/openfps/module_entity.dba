@@ -152,6 +152,7 @@ function ENT_Init()
     global dim ENT_Light() as ENT_LIGHT_INFO
     global dim ENT_Point() as ENT_POINT_INFO
     global dim ENT_Zone() as ENT_ZONE_INFO
+
     // Globals to keep track of how many entities of each type we have.
     global ENT_NumEntities as integer
     global ENT_NumObjects as integer
@@ -461,6 +462,7 @@ function ENT_FindEntityName(EntityName as string, InsertMode as boolean)
         EntityIndex = -2    // Return -2 if the inputstring is empty.
         exitfunction EntityIndex
     endif
+    // If there's only 1 entity in the list then insert here according to the insertmode.
     if ENT_NumEntities = 1
         if InsertMode = 1
             if ENT_Entity(0).name > EntityName then EntityIndex = 0
@@ -547,6 +549,8 @@ function ENT_SaveObjectInfo(f as integer, info as integer)
     write byte f, ENT_Object(info).physics
 endfunction
 
+// Added by Chris Dalke? Should it be renamed with ENT_?
+// Sincerely, Martin Enderleit! :)
 function LVL_WriteHeader(file)
 	write string file,"LevelProperties"
 	write string file,"{"
@@ -611,6 +615,10 @@ function ENT_LoadObjectInfo(f as integer, info as integer)
     ENT_Object(info).physics = b
 endfunction
 
+// Prints the entities to the screen for debugging.
+// Created by: enderleit
+// Modified by: thenerd
+// DEVNOTE: Need some kind of explanations?
 function ENT_PrintEntities(y)
     inc y, 10
     for i=0 to ENT_NumEntities-1
