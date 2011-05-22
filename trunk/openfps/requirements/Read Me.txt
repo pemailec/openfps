@@ -7,5 +7,16 @@ and with the final game during installation.
 For fast install of plugins, copy the plugins/Compiler folder to your compiler folder.
 
 List of plugins:
-OpenAL
-AdvancedSprites
+- OpenAL
+- AdvancedSprites
+
+
+
+menderleit: I believe we use more than these plugins? Perhaps this folder needs updating?
+
+Other plugins we use: (the ones I think we are using ;)
+- matrix1utils
+- d3dfunc
+- blitzTerrain
+
+... any more than this?
