@@ -104,14 +104,9 @@ MENU_LoadingScreen()
 
 `engine modules
 UI_init() 	`ui module
-MVM_init()  `movement module
 SND_Init()  `Sound Module (MUST be before sound uses!)
 CORE_init()	`game core modules
 MENU_init() `menu module
-NET_start()	`network module
-ENT_Init()	`entity module
-LVL_Init()  `level module
-
 
 `load up various configurations
 if file exist("_PlayerData.cfg")<1:
@@ -137,6 +132,8 @@ while SyS_Event_Terminate<1
 
 	`Update System timer
 	SyS_TimeFactor=CORE_TimeFactor()*SyS_TimeMultiplier
+
+	if VIS_UseNative<1 then draw to image UI_RenderTarget
 	
 	select SyS_LoopMode
 		`CORE LOOPS
@@ -149,7 +146,7 @@ while SyS_Event_Terminate<1
 		case "engine"
 			`GAME ENGINE LOOP
 			// Update game engine
-			MENU_Hide()
+			MENU_Hide():hide object MENU_FGObject
 			CORE_update() 
 		endcase
 		case "credits"
@@ -163,23 +160,26 @@ while SyS_Event_Terminate<1
 			if MENU_credits_Y>100 then UI_text(1,-2,4,"Press [Escape] to return to the menu...")
 			if MENU_credits_Y>2500 or escapekey():
 		 		Credits_FadeOut()
-    			endif		
+			endif
 		endcase
 	endselect
 	
 	`do general stuff
 	position mouse UI_Display.MiddleWidth,UI_Display.MiddleHeight `center windows mouse
 	
-	`debug
-	
-	`networking
-	NET_update()
-	
 	`handle UI system
 	UI_Handle()
 	
 	`Sound Module Update
 	SND_Update()
+	
+	if CORE_DebugScreen then VIS_Setup_OverlayText()
+	
+	if VIS_UseNative<1:
+		draw to bitmap 0
+		ik paste image UI_RenderTarget,0,0,screen width(),screen height()
+		ik create target image UI_RenderTarget,1024,768
+	endif
 	
 	`sync to the screen
 	`Note: would there be any advantages to using fastsync for the menu?

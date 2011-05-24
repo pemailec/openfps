@@ -182,6 +182,14 @@ function MENU_init():
 	set alpha mapping on MENU_BackgroundObject2,20
 	`set object filter MENU_BackgroundObject2,0
 	
+	global tickbox_select
+	global MENU_MouseClicked
+	
+	global MENU_MouseClickSND
+	
+	MENU_MouseClickSND = RES_grab(res_Sound)
+	Load Sound "media\cursors\stab.wav",MENU_MouseClickSND
+	
 	UI_WriteLog(UI_Green,"Menu Backdrop Created")
 	
 	`play music
@@ -211,7 +219,7 @@ function MENU_update()
 	`handle buttons
 	MENU_CreateButtons()
 	
-	If mouseclick()=1
+	If mouseclick()=1 and MENU_MouseClicked=0
 		Select UI_MouseOveredGadget$
 			case "button_lobby"
 				MENU_state="LOBBY"
@@ -244,6 +252,12 @@ function MENU_update()
      		    MENU_state="HIDDEN"
        			LVL_Load("media\maps\Test\level.dat")
 	    	endcase
+	    	`game options buttons
+	    	case "tickbox_test"
+	    		UI_ToggleGadget("tickbox_test")
+				play sound MENU_MouseClickSND
+				tickbox_select=UI_GetGadgetSelection("tickbox_test")
+	    	endcase
 		endselect
 	endif
 	
@@ -275,6 +289,9 @@ function MENU_update()
 	else:
 		UI_TyperReset()
 	endif
+	
+	MENU_MouseClicked=mouseclick()
+	
 endfunction
 
 function MENU_Show():
@@ -461,7 +478,12 @@ function Menu_ChooseCampaign():
 	cls 0
 	set cursor 10,10
 	print "No campaign levels to load!"
-	DRAW TO BITMAP 0
+	if VIS_UseNative:
+		DRAW TO BITMAP 0
+	else :
+		draw to image UI_RenderTarget
+	endif
+	
 	paste image MENU_CampaignCameraImage,x-300,y
 	line x-300,y,x+300,y
 	line x-300,y,x-300,y+180
@@ -492,6 +514,21 @@ function Menu_MakeOptionsDiag()
 	ui_putwindow(UI_Display.Middlewidth-320,UI_Display.Middleheight-90,40,24)
 	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-70
 	UI_CenterText(3,x,y,"Game Options")
+	X=UI_Display.Middlewidth-294
+	Y=UI_Display.Middleheight-16
+	UI_AddGadgetToScreen("tickbox_test",x,y,"skull32_1")
+	select tickbox_select
+		case 1
+			UI_AddMouseOverImageToGadget("tickbox_test","skull32_2")
+		endcase
+		case 0
+			UI_AddMouseOverImageToGadget("tickbox_test","skull32_1")
+		endcase
+	endselect
+	UI_AddSelectedImageToGadget("tickbox_test","skull32_2")
+	if tickbox_select then UI_SelectGadget("tickbox_test")
+
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-70
 	y=y+46
 	ink rgb(120,120,120),0
 	line x-300,y,x+300,y

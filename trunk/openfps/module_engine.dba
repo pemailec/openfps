@@ -33,26 +33,19 @@ remend
 /////////////////////////////////////////////////////////
 
 function CORE_init():
- // -----------------------
- // Init function
- // -----------------------
-    `Timer-based variables
-    global CORE_timer      as float : CORE_timer      = hitimer()
-    global CORE_timer_last as float : CORE_timer_last = CORE_timer
-    global CORE_DebugScreenImg
-    global CORE_GamePanel
-    global CORE_GamePaused as boolean
-    global CORE_GamePausedImage 
-    global PlayerName$
-    global ENGINE_tempmusic
-    CORE_DebugScreenImg= RES_grab(Res_Image)
-    CORE_GamePanel= RES_grab(Res_Image)
-    CORE_GamePausedImage= RES_grab(Res_Image)
-    ENGINE_tempmusic=RES_grab(Res_Music)
-    load image "media\windows\debug.png", CORE_DebugScreenImg
-    load image "media\panels\ui_gamepanel.png", CORE_GamePanel
-    load image "media\menu\paused.png", CORE_GamePausedImage
-    load music "media\audio\TheFray2.mp3",ENGINE_tempmusic
+	// -----------------------
+	// init function
+	// -----------------------
+	global CORE_ExecServer
+	global CORE_ExecClient
+	
+	CORE_InitTimer()
+	
+	`init modules
+	`ENT_Init()	`entity module
+	`LVL_Init()  `level module
+	`MVM_init()  `movement module
+	
 endfunction
 
 /////////////////////////////////////////////////////////
@@ -64,23 +57,33 @@ function CORE_update():
 	// update function
 	// -----------------------
 	
-	`put all the game engine update crap here
-	
-	`test game pause code
-    `if CORE_GamePaused=0 then MVM_update()
-    
-    MENU_Hide()
-	hide object MENU_FGObject
-   
     UI_SUB_HandleChatBox(40,600)
-    
     UI_AlphaText(3,UI_Display.MiddleWidth-140,UI_Display.MiddleHeight,"~rEngine not functional!",255)
     
+    if CORE_ExecServer then CORE_UpdateClient()
+    if CORE_ExecClient then CORE_UpdateServer()
+endfunction
+
+function CORE_UpdateClient():
+	// -----------------------
+	// update client function
+	// -----------------------
+endfunction
+
+function CORE_UpdateServer():
+	// -----------------------
+	// update server function
+	// -----------------------
 endfunction
 
 function CORE_CleanUp():
     if UI_GadgetExist("button_gamewelcome")=1 : UI_DeleteGadget("button_gamewelcome")
     endif
+endfunction
+
+function CORE_InitTimer():   
+	global CORE_timer      as float : CORE_timer      = hitimer()
+    global CORE_timer_last as float : CORE_timer_last = CORE_timer
 endfunction
 
 function CORE_TimeFactor():

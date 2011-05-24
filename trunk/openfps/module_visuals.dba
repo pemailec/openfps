@@ -446,6 +446,9 @@ VIS_Setup_DivideTextureQuality as Integer = 0
 VIS_Setup_UsePostProcessing as Integer = 0
 VIS_Setup_UseMotionBlur as Integer = 0
 
+global VIS_UseNative as boolean
+VIS_UseNative=0
+
 rem Load the setup file
 VIS_Setup_SetupFile as String : VIS_Setup_SetupFile = "visualsettings.cfg"
 VIS_Setup_InText as String
@@ -513,6 +516,12 @@ if VIS_Setup_UseWindow=1 then set window on
 if VIS_Setup_UseWindow=0 then set window off
 `if VIS_Setup_UseMotionBlur then VIS_Setup_MotionBlur()
 
+if VIS_Setup_Width=1024 and VIS_Setup_Height=768:
+	VIS_UseNative=1
+else :
+	ik set filters 2,2,1
+endif
+
 rem Set the settings into action
 Set Display Mode VIS_Setup_Width, VIS_Setup_Height, VIS_Setup_Depth, VIS_Setup_UseVsync, VIS_Setup_Antialiasing, VIS_Setup_UseMultimonitorMode
       
@@ -567,6 +576,7 @@ Function VIS_Setup_OverlayText()
     VIS_O_OldTextSize=Text Size()
     set text size 1
     Text 2,2,"OpenFPS - " + STR$(Screen FPS()) + "FPS - " + GET TIME$() + " - " + CurrentEngineVersion
+    if VIS_UseNative<1 then Text 2,18,"WARNING: Running in virtual native mode, the FPS might take a hit!"
     set text size VIS_O_OldTextSize
 ENDFUNCTION
 
@@ -650,7 +660,7 @@ Function VIS_FadeBetweenImages(Image1,Image2,UseScreen)
     Image1Sprite = res_grab(res_Sprite)
     Image2Sprite = res_grab(res_Sprite)
     Image1Get = res_grab(Res_Image) `Used when need to fade from screenshot
-    If UseScreen = 1 then Get Image Image1Get, 0, 0, Screen Width(), Screen Height()
+    If UseScreen = 1 then Get Image Image1Get, 0, 0, Screen Width(), Screen Height(),2
     If UseScreen = 2 then Load Image "media\menu\black.png", Image1Get 
     Image1=Image1Get
     Sprite Image1Sprite, 0, 0, Image1
@@ -658,6 +668,8 @@ Function VIS_FadeBetweenImages(Image1,Image2,UseScreen)
     Set Sprite Alpha Image1Sprite, 254
     Set Sprite Alpha Image2Sprite, 0
     
+    MENU_DestroyButtons()
+       
     `Fade the images
     Counter = 1    
     For Counter = 0 to 254 Step 2

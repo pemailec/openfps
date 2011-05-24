@@ -75,30 +75,7 @@ endtype
 
 
 function NET_start():
-	`general variables
-	global NET_mode as string
-	global NET_myip as string
-	
-	`connection variables
-	
-	`tcp server
-	global NET_MASTER_SERVER as Server
-	
-	`real game server
-	global NET_GAME_SERVER as Server
-	global NET_HOST_SERVER as Server
-	dim NET_GAME_SERVER_TCP_client_channels(8) as dword
-	
-	`init the winsock plugin
-	winsock make
-	
-	`try connection to master game server 
-	`no code here, because I haven't coded
-	`the master game server to work with the
-	`new network module system anyway
-	
-	`set the mode to none
-	NET_mode="none"
+	`nope
 endfunction
 
 /////////////////////////////////////////////////////////
@@ -107,148 +84,43 @@ endfunction
 
 
 function NET_connect(IP$,ServerName$,TCPPort,UDPPort):
-	NET_mode="client"
-	NET_GAME_SERVER.Name=ServerName$
-	NET_GAME_SERVER.Ip=IP$
-	NET_GAME_SERVER.Host=0
-	NET_GAME_SERVER.TCP_port=TCPPort
-	NET_GAME_SERVER.UDP_port=UDPPort
-	NET_GAME_SERVER.TCP_channel=WINSOCK CONNECT(IP$,NET_GAME_SERVER.TCP_port)
-	NET_GAME_SERVER.UDP_channel=WINSOCK CREATE UDP CHANNEL()
-	NET_GAME_SERVER.Init=1
-	SyS_LoopMode="engine"
+	`nope
 endfunction
 
 function NET_disconnect():
-	WINSOCK DISCONNECT NET_GAME_SERVER.TCP_channel
-	NET_GAME_SERVER.Init=0
-	NET_GAME_SERVER.Name=""
-	NET_GAME_SERVER.Ip=""
-	NET_GAME_SERVER.TCP_port=0
-	NET_GAME_SERVER.UDP_port=0
-	NET_GAME_SERVER.TCP_channel=0
-	NET_GAME_SERVER.UDP_channel=0
-	NET_GAME_SERVER.TCP_clients=0	
-	NET_HOST_SERVER.Init=0
-	NET_HOST_SERVER.Name=""
-	NET_HOST_SERVER.Ip=""
-	NET_HOST_SERVER.TCP_port=0
-	NET_HOST_SERVER.UDP_port=0
-	NET_HOST_SERVER.TCP_channel=0
-	NET_HOST_SERVER.UDP_channel=0
-	NET_HOST_SERVER.TCP_clients=0
+	`nope
 endfunction
 
 function NET_host(name$,TCPPort,UDPPort):
-	NET_mode="server"
-	NET_HOST_SERVER.Name=ServerName$
-	NET_HOST_SERVER.Ip=IP$
-	NET_HOST_SERVER.Host=1
-	NET_HOST_SERVER.TCP_port=TCPPort
-	NET_HOST_SERVER.UDP_port=UDPPort
-	NET_HOST_SERVER.TCP_channel=WINSOCK LISTEN("0.0.0.0",TCPPort)
-	NET_HOST_SERVER.UDP_channel=WINSOCK CREATE UDP CHANNEL()
-	NET_HOST_SERVER.TCP_clients=0
-	NET_HOST_SERVER.Init=1
-	SyS_LoopMode="engine"
+	`nope
 endfunction
 
 function NET_localhost(name$,TCPPort,UDPPort):
-	NET_host(name$,TCPPort,UDPPort)
-	NET_connect("localhost",name$,TCPPort,UDPPort)
-	NET_mode="localhost"
+	`nope
 endfunction
 
 function NET_update():
-	if NET_connected()=0 then NET_mode="none"
-	winsock refresh channels
-	`NET_checkError()
-	select NET_mode
-		case "server":
-			`dedicated server update
-			NET_UpdateServer()
-		endcase
-		case "client":
-			`client net update
-			NET_UpdateClient()
-		endcase
-		case "localhost"
-			`hosting non-dedicated ingame server
-			NET_UpdateServer()
-			NET_UpdateClient()
-		endcase
-		case "none":
-			`don't do anything in the network code (in a menu)
-			`this space might be replaced with a "menu" case later
-			`if there is to be the chat lobby and server lists
-			`if KEYSTATE(38)=1 then NET_connect("192.168.1.6","TestServer",4321,5901)
-			`if KEYSTATE(37)=1 then NET_host("TestServer",4321,5901)
-			`if KEYSTATE(36)=1 then NET_localhost("TestServer",4321,5901)
-		endcase
-	endselect
+	`nope
 endfunction
 
 function NET_UpdateClient():
-   if (winsock channel data waiting(NET_GAME_SERVER.TCP_channel)):
-   		message$ = winsock recv string(NET_GAME_SERVER.TCP_channel)
-   		if message$=""
-   			UI_Addtexttochatbox("~rYou have lost connection to the server!")
-   		else:
-   			UI_Addtexttochatbox(message$)
-   		endif
-   endif
+	`nope
 endfunction
 
 function NET_UpdateServer():
-	if winsock channel data waiting(NET_HOST_SERVER.TCP_channel):
-		NET_GAME_SERVER_TCP_client_channels(NET_HOST_SERVER.TCP_clients)=WINSOCK ACCEPT(NET_HOST_SERVER.TCP_channel)
-		`UI_Addtexttochatbox("SERVER: A new client has connected! (Client "+str$(NET_HOST_SERVER.TCP_clients)+")")
-		NET_HOST_SERVER.TCP_clients=NET_HOST_SERVER.TCP_clients+1
-	endif
-	if NET_HOST_SERVER.TCP_clients>0:
-		for client=0 to 7:
-		if NET_GAME_SERVER_TCP_client_channels(client):
-		if winsock channel data waiting(NET_GAME_SERVER_TCP_client_channels(client)):
-		msg$=WINSOCK RECV STRING(NET_GAME_SERVER_TCP_client_channels(client))
-		if len(msg$)>0:
-			`UI_Addtexttochatbox(msg$)
-			for n=0 to 7:
-			if NET_GAME_SERVER_TCP_client_channels(n):
-    		winsock send string NET_GAME_SERVER_TCP_client_channels(n),msg$
-    		endif
-    		next n
-		else :
-			NET_GAME_SERVER_TCP_client_channels(client)=0
-			`UI_Addtexttochatbox("A client has disconnected.")
-			for n=0 to 7:
-				if NET_GAME_SERVER_TCP_client_channels(n):
-    				winsock send string NET_GAME_SERVER_TCP_client_channels(n),"A client has disconnected."
-    			endif
-    		next n
-		endif 
-		endif
-		endif
-		next client
-	endif
+	`nope
 endfunction
 
 function NET_SendChatMessageTCP(say_str$):
-	WINSOCK SEND STRING NET_GAME_SERVER.TCP_channel,say_str$
+	`nope
 endfunction
 
 function NET_checkError():
-	error$=""
-	if WINSOCK BUFFER OVERFLOW(NET_GAME_SERVER.TCP_channel)=1 then error$="WINSOCK BufferOverflow (TCP)"
-	if WINSOCK BUFFER OVERFLOW(NET_GAME_SERVER.UDP_channel)=1 then error$="WINSOCK BufferOverflow (UDP)"
-	if WINSOCK ERROR() then error$="UNKNOWN WINSOCK ERROR..."
-	if len(error$)>0:
-		UI_Addtexttochatbox("~r"+error$)
-	endif
+	`nope
 endfunction
 
 function NET_connected():
-	`tells whether the game is connected to a server
-	connection=NET_GAME_SERVER.Init+NET_HOST_SERVER.Init
+	`nope
 endfunction connection
 
 /////////////////////////////////////////////////////////
@@ -262,13 +134,7 @@ endfunction connection
 
 
 function NET_terminate()
-	// -----------------------
-	// Terminate function
-	// -----------------------
-	UI_WriteLog(UI_Yellow,"=== Terminating module")
-	winsock clean up
-	UI_WriteLog(UI_Green,"=== Network module terminated")
-	// -----------------------
+	`nope
 endfunction
 
 /////////////////////////////////////////////////////////

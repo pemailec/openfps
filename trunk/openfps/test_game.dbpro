@@ -1,99 +1,68 @@
-; **** Dark BASIC Professional Project File ****
-; **** Written by Synergy Editor ****
 version=DBP1.00
+;--> DarkBASIC Professional Project <--
+;--> Created with Indigo 1.2.1 b1 <--
+;--> Basic project details <--
 project name=OpenFPS
+project comments=
 
-; **** source file information ****
+;--> Files <--
+final source=_Temp.dbsource
 main=module_main.dba
-LineMain=0
 include1=module_resource.dba
-LineInclude1=0
 include2=module_menu.dba
-LineInclude2=148
 include3=module_ui.dba
-LineInclude3=206
 include4=module_ui_console.dba
-LineInclude4=0
 include5=module_ui_chatbox.dba
-LineInclude5=0
 include6=module_ui_options.dba
-LineInclude6=0
 include7=module_ui_credits.dba
-LineInclude7=0
 include8=module_engine.dba
-LineInclude8=108
 include9=module_physics.dba
-LineInclude9=20
 include10=module_movement.dba
-LineInclude10=0
-include11=module_network.dba
-LineInclude11=0
-include12=module_level.dba
-LineInclude12=128
-include13=module_entity.dba
-LineInclude13=0
-include14=module_sound.dba
-LineInclude14=133
-include15=module_visuals.dba
-LineInclude15=674
-
-; **** Executable Information  ***
-; build types: exe, media, installer, alone
+include11=module_level.dba
+include12=module_entity.dba
+include13=module_sound.dba
+include14=module_visuals.dba
+include15=module_network.dba
 executable=BioStorm.exe
 build type=exe
-; ** Media file compression **
-compression=NO
 
-; ** Media file encryption **
-encryption=NO
-; ** Display the card options screen window? **
-card options window=NO
-
-; **** debugger information ****
-; If the editor sets this to yes, it is running in debug mode
+;--> Debug Mode YES/NO <--
 CLI=NO
-CommandLineArguments=
 
-; **** display mode information ****
-app title=BioStorm
+;--> Media Settings <--
+compression=NO
+encryption=NO
+media root path=J:\openfps\
 
-; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
-graphics mode=fullscreen
-fullscreen resolution=1024x768x32
+;--> Included Media <--
 
-; arbitrary sizes are valid for windowed mode
-window resolution=1024x768
+;--> Cursors <--
 
-; **** External Files Information ****
-
-; **** Media ****
-; Example entries: media1=graphics\*.jpg
-media root path=C:\Users\Jonathan\Documents\My Projects\OpenFPS\Source\
-
-; **** Icons ****
+;--> Icons <--
 icon1=media\images\OpenFPS.ico
 
-; **** Cursors ****
+;--> Other Settings <--
+app title=BioStorm
+graphics mode=fullscreen
+fullscreen resolution=1024x768x32
+window resolution=1024x768
 
-; **** Version Info ****
-VerComments=
-VerCompany=
-VerFileDesc=
-VerFileNumber=v1.0
-VerInternal=v1.0
-VerCopyright=
-VerTrademark=
-VerFilename=
-VerProduct=
-VerProductNumber=v1.0
+;--> Version Information <--
+verfilename=
+verfiledesc=
+vercompany=
+verfilenumber=v1.0
+verproduct=
+verproductnumber=v1.0
+vercopyright=
+vercomments=
+verinternal=v1.0
+vertrademark=
 
-; **** To Do ****
-
-; **** Comments ****
-comments1=
-
-; **** Advanced (setup.ini) configuration ****
+;--> Config/setup.ini values <--
 RemoveSafetyCode=NO
 SafeArrays=YES
 LocalTempFolder=NO
 ExternaliseDLLS=NO
+
+;--> Project Organization <--

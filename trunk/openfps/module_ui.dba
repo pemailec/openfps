@@ -397,8 +397,11 @@ Function UI_Init()
 	Dxs Initialize:UI_Display.Dxspriteinitialized  = UI_True
 	
 	// Init UI render target
+	global UI_RenderTarget
+	global UI_RenderTargetMEM
 	UI_RenderTarget=RES_grab(RES_image)
 	UI_RenderTargetMEM=RES_grab(RES_memblock)
+	ik create target image UI_RenderTarget,1024,768
 
 	
 // creates 8 blank ascii font
@@ -430,6 +433,10 @@ Function UI_Init()
 	UI_LoadGuiGraphics("media\buttons\button-normal.png","UI_button")
 	UI_LoadGuiGraphics("media\buttons\button-hover.png","UI_buttonhover")
 	UI_LoadGuiGraphics("media\buttons\button_gray.png","UI_buttongray")
+	
+	UI_LoadGuiGraphics("media\buttons\skull32_1.png","skull32_1")
+	UI_LoadGuiGraphics("media\buttons\skull32_2.png","skull32_2")
+	UI_LoadGuiGraphics("media\buttons\skull32_3.png","skull32_3")
 		
 		
 	UI_LoadGuiGraphics("media\buttons\small_button-normal.png","UI_button_small")
@@ -2892,4 +2899,3 @@ Function UI_CheckFile(filename$ as string )
 		Endif
 	Endif
 Endfunction
-
