@@ -1487,7 +1487,10 @@ Function UI_PlayMouseClickSND()
 //*                                                                                     *
 //***************************************************************************************
 	`UI_SetDebugPosition("UI_PlayMouseClickSND()","module_ui.dba")
-	If UI_MouseclickSND>0 and Sound exist(UI_MouseclickSND)=1 and UI_MouseClicked=UI_False then play Sound UI_MouseclickSND
+	//__Safe check not to cause crash while checking sound exist(0)
+	If UI_MouseclickSND>0 
+		if Sound exist(UI_MouseclickSND)=1 and UI_MouseClicked=UI_False then play Sound UI_MouseclickSND
+	Endif
 	UI_MouseClicked = UI_True
 	`UI_RestoreDebugPosition()
 Endfunction
@@ -2569,7 +2572,10 @@ Endif
 
 if UI_mouseoveredgadget$<>UI_OldMouseOveredGadget$ 
 	If UI_mouseoveredgadget$<>" "
-		If sound exist(UI_MouseOverSND) = UI_True and UI_mouseclicked = UI_False then Play Sound UI_MouseoverSND
+		//__Safe check not to crash while checking sound exist(0)
+		if UI_MouseoverSND>0
+			If sound exist(UI_MouseOverSND) = UI_True and UI_mouseclicked = UI_False then Play Sound UI_MouseoverSND
+		Endif
 		UI_OldMouseOveredGadget$        = UI_MouseOveredGadget$
 	Endif
 	UI_OldMouseOveredGadget$ = UI_MouseOveredGadget$

@@ -188,7 +188,7 @@ function MENU_init():
 	global MENU_MouseClickSND
 	
 	MENU_MouseClickSND = RES_grab(res_Sound)
-	Load Sound "media\cursors\stab.wav",MENU_MouseClickSND
+rem 	Load Sound "media\cursors\stab.wav",MENU_MouseClickSND
 	
 	UI_WriteLog(UI_Green,"Menu Backdrop Created")
 	
@@ -255,7 +255,7 @@ function MENU_update()
 	    	`game options buttons
 	    	case "tickbox_test"
 	    		UI_ToggleGadget("tickbox_test")
-				play sound MENU_MouseClickSND
+				UI_PlayMouseClickSND()
 				tickbox_select=UI_GetGadgetSelection("tickbox_test")
 	    	endcase
 		endselect
