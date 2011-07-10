@@ -150,7 +150,7 @@ Function UI_SUB_CheckConsoleCommand(console_result$)
 	if left$(console_resultupper$,3)="SAY"
 		say_str$="~b"+PlayerName$+":~w "+right$(console_result$,len(console_result$)-4)
 		`UI_Addtexttochatbox(say_str$)
-		NET_SendChatMessageTCP(say_str$)
+		//NET_SendChatMessageTCP(say_str$)
 		command_exec=1
 	endif
 	`clear the entry buffer if a command was executed

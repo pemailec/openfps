@@ -213,6 +213,45 @@ function freeResource(number,restype)
 	RES_free(number,restype)
 endfunction
 
+//====QUICK SYS RES COMMANDS====
+//--Open file to write
+Function SyS_Opentowrite(param_name$)
+Local ret_ID as integer
+	If File Exist(param_name$) = 1 then Delete File param_name$
+	ret_ID=grabresource(res_file)
+	Open To Write ret_ID,param_name$
+Endfunction ret_ID
+
+//--open file to read
+Function SyS_Opentoread(param_name$)
+//*****************************************************
+//*   Miso                                             
+//*     Opens a file to read if exists, if not, it exit program silently
+//*
+//*****************************************************
+Local ret_ID as integer
+	If File Exist(param_name$) = 0
+		ret_ID=grabresource(res_file)
+		UI_writelog(UI_red,"File doesnot exists to read:"+param_name$+".")
+		End
+	Endif
+	Open to Read ret_ID,param_name$
+Endfunction ret_ID
+
+//--close file and auto free resource
+Function SyS_CloseFile(param_id as integer)
+//*****************************************************
+//*   Miso                                             
+//*     Quick close of an opened file and free its index
+//*
+//*****************************************************
+	If File Open(param_id)=1
+		Close File param_id
+		Freeresource(param_id,res_file)
+	Endif
+Endfunction
+
+
 /////////////////////////////////////////////////////////
 // TERMINATE                                           //
 /////////////////////////////////////////////////////////

@@ -1,68 +1,99 @@
+; **** Dark BASIC Professional Project File ****
+; **** Written by Synergy Editor ****
 version=DBP1.00
-;--> DarkBASIC Professional Project <--
-;--> Created with Indigo 1.2.1 b1 <--
-;--> Basic project details <--
 project name=OpenFPS
-project comments=
 
-;--> Files <--
-final source=_Temp.dbsource
+; **** source file information ****
 main=module_main.dba
+LineMain=74
 include1=module_resource.dba
+LineInclude1=253
 include2=module_menu.dba
+LineInclude2=257
 include3=module_ui.dba
+LineInclude3=549
 include4=module_ui_console.dba
+LineInclude4=152
 include5=module_ui_chatbox.dba
+LineInclude5=128
 include6=module_ui_options.dba
+LineInclude6=0
 include7=module_ui_credits.dba
+LineInclude7=0
 include8=module_engine.dba
+LineInclude8=0
 include9=module_physics.dba
+LineInclude9=0
 include10=module_movement.dba
+LineInclude10=0
 include11=module_level.dba
+LineInclude11=0
 include12=module_entity.dba
+LineInclude12=0
 include13=module_sound.dba
+LineInclude13=0
 include14=module_visuals.dba
+LineInclude14=0
 include15=module_network.dba
+LineInclude15=476
+
+; **** Executable Information  ***
+; build types: exe, media, installer, alone
 executable=BioStorm.exe
 build type=exe
-
-;--> Debug Mode YES/NO <--
-CLI=NO
-
-;--> Media Settings <--
+; ** Media file compression **
 compression=NO
+
+; ** Media file encryption **
 encryption=NO
-media root path=J:\openfps\
+; ** Display the card options screen window? **
+card options window=NO
 
-;--> Included Media <--
+; **** debugger information ****
+; If the editor sets this to yes, it is running in debug mode
+CLI=NO
+CommandLineArguments=
 
-;--> Cursors <--
-
-;--> Icons <--
-icon1=media\images\OpenFPS.ico
-
-;--> Other Settings <--
+; **** display mode information ****
 app title=BioStorm
+
+; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
 graphics mode=fullscreen
 fullscreen resolution=1024x768x32
+
+; arbitrary sizes are valid for windowed mode
 window resolution=1024x768
 
-;--> Version Information <--
-verfilename=
-verfiledesc=
-vercompany=
-verfilenumber=v1.0
-verproduct=
-verproductnumber=v1.0
-vercopyright=
-vercomments=
-verinternal=v1.0
-vertrademark=
+; **** External Files Information ****
 
-;--> Config/setup.ini values <--
+; **** Media ****
+; Example entries: media1=graphics\*.jpg
+media root path=C:\==Darkbasic Pro==\Dark Basic Professional\Projects\=SVN=\=OpenFPS=\
+
+; **** Icons ****
+icon1=media\images\OpenFPS.ico
+
+; **** Cursors ****
+
+; **** Version Info ****
+VerComments=
+VerCompany=
+VerFileDesc=
+VerFileNumber=v1.0
+VerInternal=v1.0
+VerCopyright=
+VerTrademark=
+VerFilename=
+VerProduct=
+VerProductNumber=v1.0
+
+; **** To Do ****
+
+; **** Comments ****
+comments1=
+
+; **** Advanced (setup.ini) configuration ****
 RemoveSafetyCode=NO
 SafeArrays=YES
 LocalTempFolder=NO
 ExternaliseDLLS=NO
-
-;--> Project Organization <--

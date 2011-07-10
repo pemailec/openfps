@@ -126,7 +126,7 @@ Function UI_SUB_HandleChatBox(BottomX,BottomY)
 			`trim off problems
 			say_str$=right$(say_str$,len(say_str$)-1)
 			if mid$(say_str$,len(say_str$)-1)="!" then say_str$=left$(say_str$,len(say_str$)-1)
-			NET_SendChatMessageTCP(say_str$)
+//			NET_SendChatMessageTCP(say_str$)
 			say_str$=""
 			UI_CHATBOX_ACTIVE=0
 			clear entry buffer
