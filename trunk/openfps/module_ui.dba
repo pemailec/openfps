@@ -616,6 +616,300 @@ Local a$ as String:Local b$ as String:Local c$ as String
 	UI_RestoreDebugPosition()
 Endfunction
 
+Function UI_LoadQuickFont(ID,name$,spacing)
+//***************************************************************************************
+//*   miso                                                                              *
+//*     This command will load a bitmap font. ID must be 1-8, name$ must be the route   *
+//*     and name of the font.png file, spacing will be the space between chars in pixel.*
+//*     This function is good for up to 32x32 font files made with my own font creator. *
+//*                                                                                     *
+//***************************************************************************************
+Local a$ as String:Local b$ as String:Local c$ as String
+	UI_SetDebugPosition("UI_LoadStringMap()","module_ui.dba")
+	// check if advanced sprites initialized
+	UI_CheckDXSprites()
+	// check if fontfile exist
+	rem UI_WriteLog(UI_Green,"loading font : " + name$ + " with ID "+str$(ID))
+	UI_CheckFile(name$)
+			 UI_stringmap(ID,258).bitmapID = DXS CREATE SPRITE(name$)
+				DXS SET SPRITE CENTER  UI_stringmap(ID,258).bitmapID,0,0
+    			//WIDTH		    
+			    UI_stringmap(ID,257).ascii = 32
+				//Height
+				UI_stringmap(ID,257).bitmapID = 32
+				DXS SET SPRITE TILE SIZE  UI_stringmap(ID,258).bitmapID, UI_stringmap(ID,257).ascii, UI_stringmap(ID,257).bitmapID    ` Cut the sprites into 32x32 pixels tiles.
+				DXS SET SPRITE SCALE  UI_stringmap(ID,258).bitmapID,100,100
+			    UI_stringmap(ID,258).ascii = spacing
+		
+				//load the ascii codetable
+				For x=1 to 256
+					 UI_stringmap(ID,x).ascii    = Val(b$)
+					 UI_stringmap(ID,x).bitmapID = Val(c$)
+				Next x
+
+//ASCII Hard code
+x=0 : x=x+1				
+UI_stringmap(ID,x).ascii    =1: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =2: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =3: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =4: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =5: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =6: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =7: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =8: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =9: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =10: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =11: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =12: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =13: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =14: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =15: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =16: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =17: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =18: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =19: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =20: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =21: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =22: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =23: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =24: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =25: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =26: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =27: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =28: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =29: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =30: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =31: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =32: UI_stringmap(ID,x).bitmapID=254 : x=x+1				
+UI_stringmap(ID,x).ascii    =33: UI_stringmap(ID,x).bitmapID=1 : x=x+1				
+UI_stringmap(ID,x).ascii    =34: UI_stringmap(ID,x).bitmapID=2 : x=x+1				
+UI_stringmap(ID,x).ascii    =35: UI_stringmap(ID,x).bitmapID=3 : x=x+1				
+UI_stringmap(ID,x).ascii    =36: UI_stringmap(ID,x).bitmapID=4 : x=x+1				
+UI_stringmap(ID,x).ascii    =37: UI_stringmap(ID,x).bitmapID=5 : x=x+1				
+UI_stringmap(ID,x).ascii    =38: UI_stringmap(ID,x).bitmapID=6 : x=x+1				
+UI_stringmap(ID,x).ascii    =39: UI_stringmap(ID,x).bitmapID=7 : x=x+1				
+UI_stringmap(ID,x).ascii    =40: UI_stringmap(ID,x).bitmapID=8 : x=x+1				
+UI_stringmap(ID,x).ascii    =41: UI_stringmap(ID,x).bitmapID=9 : x=x+1				
+UI_stringmap(ID,x).ascii    =42: UI_stringmap(ID,x).bitmapID=10 : x=x+1				
+UI_stringmap(ID,x).ascii    =43: UI_stringmap(ID,x).bitmapID=11 : x=x+1				
+UI_stringmap(ID,x).ascii    =44: UI_stringmap(ID,x).bitmapID=12 : x=x+1				
+UI_stringmap(ID,x).ascii    =45: UI_stringmap(ID,x).bitmapID=13 : x=x+1				
+UI_stringmap(ID,x).ascii    =46: UI_stringmap(ID,x).bitmapID=14 : x=x+1				
+UI_stringmap(ID,x).ascii    =47: UI_stringmap(ID,x).bitmapID=15 : x=x+1				
+UI_stringmap(ID,x).ascii    =48: UI_stringmap(ID,x).bitmapID=16 : x=x+1				
+UI_stringmap(ID,x).ascii    =49: UI_stringmap(ID,x).bitmapID=17 : x=x+1				
+UI_stringmap(ID,x).ascii    =50: UI_stringmap(ID,x).bitmapID=18 : x=x+1				
+UI_stringmap(ID,x).ascii    =51: UI_stringmap(ID,x).bitmapID=19 : x=x+1				
+UI_stringmap(ID,x).ascii    =52: UI_stringmap(ID,x).bitmapID=20 : x=x+1				
+UI_stringmap(ID,x).ascii    =53: UI_stringmap(ID,x).bitmapID=21 : x=x+1				
+UI_stringmap(ID,x).ascii    =54: UI_stringmap(ID,x).bitmapID=22 : x=x+1				
+UI_stringmap(ID,x).ascii    =55: UI_stringmap(ID,x).bitmapID=23 : x=x+1				
+UI_stringmap(ID,x).ascii    =56: UI_stringmap(ID,x).bitmapID=24 : x=x+1				
+UI_stringmap(ID,x).ascii    =57: UI_stringmap(ID,x).bitmapID=25 : x=x+1				
+UI_stringmap(ID,x).ascii    =58: UI_stringmap(ID,x).bitmapID=26 : x=x+1				
+UI_stringmap(ID,x).ascii    =59: UI_stringmap(ID,x).bitmapID=27 : x=x+1				
+UI_stringmap(ID,x).ascii    =60: UI_stringmap(ID,x).bitmapID=28 : x=x+1				
+UI_stringmap(ID,x).ascii    =61: UI_stringmap(ID,x).bitmapID=29 : x=x+1				
+UI_stringmap(ID,x).ascii    =62: UI_stringmap(ID,x).bitmapID=30 : x=x+1				
+UI_stringmap(ID,x).ascii    =63: UI_stringmap(ID,x).bitmapID=31 : x=x+1				
+UI_stringmap(ID,x).ascii    =64: UI_stringmap(ID,x).bitmapID=32 : x=x+1				
+UI_stringmap(ID,x).ascii    =65: UI_stringmap(ID,x).bitmapID=33 : x=x+1				
+UI_stringmap(ID,x).ascii    =66: UI_stringmap(ID,x).bitmapID=34 : x=x+1				
+UI_stringmap(ID,x).ascii    =67: UI_stringmap(ID,x).bitmapID=35 : x=x+1				
+UI_stringmap(ID,x).ascii    =68: UI_stringmap(ID,x).bitmapID=36 : x=x+1				
+UI_stringmap(ID,x).ascii    =69: UI_stringmap(ID,x).bitmapID=37 : x=x+1				
+UI_stringmap(ID,x).ascii    =70: UI_stringmap(ID,x).bitmapID=38 : x=x+1				
+UI_stringmap(ID,x).ascii    =71: UI_stringmap(ID,x).bitmapID=39 : x=x+1				
+UI_stringmap(ID,x).ascii    =72: UI_stringmap(ID,x).bitmapID=40 : x=x+1				
+UI_stringmap(ID,x).ascii    =73: UI_stringmap(ID,x).bitmapID=41 : x=x+1				
+UI_stringmap(ID,x).ascii    =74: UI_stringmap(ID,x).bitmapID=42 : x=x+1				
+UI_stringmap(ID,x).ascii    =75: UI_stringmap(ID,x).bitmapID=43 : x=x+1				
+UI_stringmap(ID,x).ascii    =76: UI_stringmap(ID,x).bitmapID=44 : x=x+1				
+UI_stringmap(ID,x).ascii    =77: UI_stringmap(ID,x).bitmapID=45 : x=x+1				
+UI_stringmap(ID,x).ascii    =78: UI_stringmap(ID,x).bitmapID=46 : x=x+1				
+UI_stringmap(ID,x).ascii    =79: UI_stringmap(ID,x).bitmapID=47 : x=x+1				
+UI_stringmap(ID,x).ascii    =80: UI_stringmap(ID,x).bitmapID=48 : x=x+1				
+UI_stringmap(ID,x).ascii    =81: UI_stringmap(ID,x).bitmapID=49 : x=x+1				
+UI_stringmap(ID,x).ascii    =82: UI_stringmap(ID,x).bitmapID=50 : x=x+1				
+UI_stringmap(ID,x).ascii    =83: UI_stringmap(ID,x).bitmapID=51 : x=x+1				
+UI_stringmap(ID,x).ascii    =84: UI_stringmap(ID,x).bitmapID=52 : x=x+1				
+UI_stringmap(ID,x).ascii    =85: UI_stringmap(ID,x).bitmapID=53 : x=x+1				
+UI_stringmap(ID,x).ascii    =86: UI_stringmap(ID,x).bitmapID=54 : x=x+1				
+UI_stringmap(ID,x).ascii    =87: UI_stringmap(ID,x).bitmapID=55 : x=x+1				
+UI_stringmap(ID,x).ascii    =88: UI_stringmap(ID,x).bitmapID=56 : x=x+1				
+UI_stringmap(ID,x).ascii    =89: UI_stringmap(ID,x).bitmapID=57 : x=x+1				
+UI_stringmap(ID,x).ascii    =90: UI_stringmap(ID,x).bitmapID=58 : x=x+1				
+UI_stringmap(ID,x).ascii    =91: UI_stringmap(ID,x).bitmapID=59 : x=x+1				
+UI_stringmap(ID,x).ascii    =92: UI_stringmap(ID,x).bitmapID=60 : x=x+1				
+UI_stringmap(ID,x).ascii    =93: UI_stringmap(ID,x).bitmapID=61 : x=x+1				
+UI_stringmap(ID,x).ascii    =94: UI_stringmap(ID,x).bitmapID=62 : x=x+1				
+UI_stringmap(ID,x).ascii    =95: UI_stringmap(ID,x).bitmapID=63 : x=x+1				
+UI_stringmap(ID,x).ascii    =96: UI_stringmap(ID,x).bitmapID=64 : x=x+1				
+UI_stringmap(ID,x).ascii    =97: UI_stringmap(ID,x).bitmapID=65 : x=x+1				
+UI_stringmap(ID,x).ascii    =98: UI_stringmap(ID,x).bitmapID=66 : x=x+1				
+UI_stringmap(ID,x).ascii    =99: UI_stringmap(ID,x).bitmapID=67 : x=x+1				
+UI_stringmap(ID,x).ascii    =100: UI_stringmap(ID,x).bitmapID=68 : x=x+1				
+UI_stringmap(ID,x).ascii    =101: UI_stringmap(ID,x).bitmapID=69 : x=x+1				
+UI_stringmap(ID,x).ascii    =102: UI_stringmap(ID,x).bitmapID=70 : x=x+1				
+UI_stringmap(ID,x).ascii    =103: UI_stringmap(ID,x).bitmapID=71 : x=x+1				
+UI_stringmap(ID,x).ascii    =104: UI_stringmap(ID,x).bitmapID=72 : x=x+1				
+UI_stringmap(ID,x).ascii    =105: UI_stringmap(ID,x).bitmapID=73 : x=x+1				
+UI_stringmap(ID,x).ascii    =106: UI_stringmap(ID,x).bitmapID=74 : x=x+1				
+UI_stringmap(ID,x).ascii    =107: UI_stringmap(ID,x).bitmapID=75 : x=x+1				
+UI_stringmap(ID,x).ascii    =108: UI_stringmap(ID,x).bitmapID=76 : x=x+1				
+UI_stringmap(ID,x).ascii    =109: UI_stringmap(ID,x).bitmapID=77 : x=x+1				
+UI_stringmap(ID,x).ascii    =110: UI_stringmap(ID,x).bitmapID=78 : x=x+1				
+UI_stringmap(ID,x).ascii    =111: UI_stringmap(ID,x).bitmapID=79 : x=x+1				
+UI_stringmap(ID,x).ascii    =112: UI_stringmap(ID,x).bitmapID=80 : x=x+1				
+UI_stringmap(ID,x).ascii    =113: UI_stringmap(ID,x).bitmapID=81 : x=x+1				
+UI_stringmap(ID,x).ascii    =114: UI_stringmap(ID,x).bitmapID=82 : x=x+1				
+UI_stringmap(ID,x).ascii    =115: UI_stringmap(ID,x).bitmapID=83 : x=x+1				
+UI_stringmap(ID,x).ascii    =116: UI_stringmap(ID,x).bitmapID=84 : x=x+1				
+UI_stringmap(ID,x).ascii    =117: UI_stringmap(ID,x).bitmapID=85 : x=x+1				
+UI_stringmap(ID,x).ascii    =118: UI_stringmap(ID,x).bitmapID=86 : x=x+1				
+UI_stringmap(ID,x).ascii    =119: UI_stringmap(ID,x).bitmapID=87 : x=x+1				
+UI_stringmap(ID,x).ascii    =120: UI_stringmap(ID,x).bitmapID=88 : x=x+1				
+UI_stringmap(ID,x).ascii    =121: UI_stringmap(ID,x).bitmapID=89 : x=x+1				
+UI_stringmap(ID,x).ascii    =122: UI_stringmap(ID,x).bitmapID=90 : x=x+1				
+UI_stringmap(ID,x).ascii    =123: UI_stringmap(ID,x).bitmapID=91 : x=x+1				
+UI_stringmap(ID,x).ascii    =124: UI_stringmap(ID,x).bitmapID=92 : x=x+1				
+UI_stringmap(ID,x).ascii    =125: UI_stringmap(ID,x).bitmapID=93 : x=x+1				
+UI_stringmap(ID,x).ascii    =126: UI_stringmap(ID,x).bitmapID=94 : x=x+1				
+UI_stringmap(ID,x).ascii    =127: UI_stringmap(ID,x).bitmapID=95 : x=x+1				
+UI_stringmap(ID,x).ascii    =128: UI_stringmap(ID,x).bitmapID=96 : x=x+1				
+UI_stringmap(ID,x).ascii    =129: UI_stringmap(ID,x).bitmapID=97 : x=x+1				
+UI_stringmap(ID,x).ascii    =130: UI_stringmap(ID,x).bitmapID=98 : x=x+1				
+UI_stringmap(ID,x).ascii    =131: UI_stringmap(ID,x).bitmapID=99 : x=x+1				
+UI_stringmap(ID,x).ascii    =132: UI_stringmap(ID,x).bitmapID=100 : x=x+1				
+UI_stringmap(ID,x).ascii    =133: UI_stringmap(ID,x).bitmapID=101 : x=x+1				
+UI_stringmap(ID,x).ascii    =134: UI_stringmap(ID,x).bitmapID=102 : x=x+1				
+UI_stringmap(ID,x).ascii    =135: UI_stringmap(ID,x).bitmapID=103 : x=x+1				
+UI_stringmap(ID,x).ascii    =136: UI_stringmap(ID,x).bitmapID=104 : x=x+1				
+UI_stringmap(ID,x).ascii    =137: UI_stringmap(ID,x).bitmapID=105 : x=x+1				
+UI_stringmap(ID,x).ascii    =138: UI_stringmap(ID,x).bitmapID=106 : x=x+1				
+UI_stringmap(ID,x).ascii    =139: UI_stringmap(ID,x).bitmapID=107 : x=x+1				
+UI_stringmap(ID,x).ascii    =140: UI_stringmap(ID,x).bitmapID=108 : x=x+1				
+UI_stringmap(ID,x).ascii    =141: UI_stringmap(ID,x).bitmapID=109 : x=x+1				
+UI_stringmap(ID,x).ascii    =142: UI_stringmap(ID,x).bitmapID=110 : x=x+1				
+UI_stringmap(ID,x).ascii    =143: UI_stringmap(ID,x).bitmapID=111 : x=x+1				
+UI_stringmap(ID,x).ascii    =144: UI_stringmap(ID,x).bitmapID=112 : x=x+1				
+UI_stringmap(ID,x).ascii    =145: UI_stringmap(ID,x).bitmapID=113 : x=x+1				
+UI_stringmap(ID,x).ascii    =146: UI_stringmap(ID,x).bitmapID=114 : x=x+1				
+UI_stringmap(ID,x).ascii    =147: UI_stringmap(ID,x).bitmapID=115 : x=x+1				
+UI_stringmap(ID,x).ascii    =148: UI_stringmap(ID,x).bitmapID=116 : x=x+1				
+UI_stringmap(ID,x).ascii    =149: UI_stringmap(ID,x).bitmapID=117 : x=x+1				
+UI_stringmap(ID,x).ascii    =150: UI_stringmap(ID,x).bitmapID=118 : x=x+1				
+UI_stringmap(ID,x).ascii    =151: UI_stringmap(ID,x).bitmapID=119 : x=x+1				
+UI_stringmap(ID,x).ascii    =152: UI_stringmap(ID,x).bitmapID=120 : x=x+1				
+UI_stringmap(ID,x).ascii    =153: UI_stringmap(ID,x).bitmapID=121 : x=x+1				
+UI_stringmap(ID,x).ascii    =154: UI_stringmap(ID,x).bitmapID=122 : x=x+1				
+UI_stringmap(ID,x).ascii    =155: UI_stringmap(ID,x).bitmapID=123 : x=x+1				
+UI_stringmap(ID,x).ascii    =156: UI_stringmap(ID,x).bitmapID=124 : x=x+1				
+UI_stringmap(ID,x).ascii    =157: UI_stringmap(ID,x).bitmapID=125 : x=x+1				
+UI_stringmap(ID,x).ascii    =158: UI_stringmap(ID,x).bitmapID=126 : x=x+1				
+UI_stringmap(ID,x).ascii    =159: UI_stringmap(ID,x).bitmapID=127 : x=x+1				
+UI_stringmap(ID,x).ascii    =160: UI_stringmap(ID,x).bitmapID=128 : x=x+1				
+UI_stringmap(ID,x).ascii    =161: UI_stringmap(ID,x).bitmapID=129 : x=x+1				
+UI_stringmap(ID,x).ascii    =162: UI_stringmap(ID,x).bitmapID=130 : x=x+1				
+UI_stringmap(ID,x).ascii    =163: UI_stringmap(ID,x).bitmapID=131 : x=x+1				
+UI_stringmap(ID,x).ascii    =164: UI_stringmap(ID,x).bitmapID=132 : x=x+1				
+UI_stringmap(ID,x).ascii    =165: UI_stringmap(ID,x).bitmapID=133 : x=x+1				
+UI_stringmap(ID,x).ascii    =166: UI_stringmap(ID,x).bitmapID=134 : x=x+1				
+UI_stringmap(ID,x).ascii    =167: UI_stringmap(ID,x).bitmapID=135 : x=x+1				
+UI_stringmap(ID,x).ascii    =168: UI_stringmap(ID,x).bitmapID=136 : x=x+1				
+UI_stringmap(ID,x).ascii    =169: UI_stringmap(ID,x).bitmapID=137 : x=x+1				
+UI_stringmap(ID,x).ascii    =170: UI_stringmap(ID,x).bitmapID=138 : x=x+1				
+UI_stringmap(ID,x).ascii    =171: UI_stringmap(ID,x).bitmapID=139 : x=x+1				
+UI_stringmap(ID,x).ascii    =172: UI_stringmap(ID,x).bitmapID=140 : x=x+1				
+UI_stringmap(ID,x).ascii    =173: UI_stringmap(ID,x).bitmapID=141 : x=x+1				
+UI_stringmap(ID,x).ascii    =174: UI_stringmap(ID,x).bitmapID=142 : x=x+1				
+UI_stringmap(ID,x).ascii    =175: UI_stringmap(ID,x).bitmapID=143 : x=x+1				
+UI_stringmap(ID,x).ascii    =176: UI_stringmap(ID,x).bitmapID=144 : x=x+1				
+UI_stringmap(ID,x).ascii    =177: UI_stringmap(ID,x).bitmapID=145 : x=x+1				
+UI_stringmap(ID,x).ascii    =178: UI_stringmap(ID,x).bitmapID=146 : x=x+1				
+UI_stringmap(ID,x).ascii    =179: UI_stringmap(ID,x).bitmapID=147 : x=x+1				
+UI_stringmap(ID,x).ascii    =180: UI_stringmap(ID,x).bitmapID=148 : x=x+1				
+UI_stringmap(ID,x).ascii    =181: UI_stringmap(ID,x).bitmapID=149 : x=x+1				
+UI_stringmap(ID,x).ascii    =182: UI_stringmap(ID,x).bitmapID=150 : x=x+1				
+UI_stringmap(ID,x).ascii    =183: UI_stringmap(ID,x).bitmapID=151 : x=x+1				
+UI_stringmap(ID,x).ascii    =184: UI_stringmap(ID,x).bitmapID=152 : x=x+1				
+UI_stringmap(ID,x).ascii    =185: UI_stringmap(ID,x).bitmapID=153 : x=x+1				
+UI_stringmap(ID,x).ascii    =186: UI_stringmap(ID,x).bitmapID=154 : x=x+1				
+UI_stringmap(ID,x).ascii    =187: UI_stringmap(ID,x).bitmapID=155 : x=x+1				
+UI_stringmap(ID,x).ascii    =188: UI_stringmap(ID,x).bitmapID=156 : x=x+1				
+UI_stringmap(ID,x).ascii    =189: UI_stringmap(ID,x).bitmapID=157 : x=x+1				
+UI_stringmap(ID,x).ascii    =190: UI_stringmap(ID,x).bitmapID=158 : x=x+1				
+UI_stringmap(ID,x).ascii    =191: UI_stringmap(ID,x).bitmapID=159 : x=x+1				
+UI_stringmap(ID,x).ascii    =192: UI_stringmap(ID,x).bitmapID=160 : x=x+1				
+UI_stringmap(ID,x).ascii    =193: UI_stringmap(ID,x).bitmapID=161 : x=x+1				
+UI_stringmap(ID,x).ascii    =194: UI_stringmap(ID,x).bitmapID=162 : x=x+1				
+UI_stringmap(ID,x).ascii    =195: UI_stringmap(ID,x).bitmapID=163 : x=x+1				
+UI_stringmap(ID,x).ascii    =196: UI_stringmap(ID,x).bitmapID=164 : x=x+1				
+UI_stringmap(ID,x).ascii    =197: UI_stringmap(ID,x).bitmapID=165 : x=x+1				
+UI_stringmap(ID,x).ascii    =198: UI_stringmap(ID,x).bitmapID=166 : x=x+1				
+UI_stringmap(ID,x).ascii    =199: UI_stringmap(ID,x).bitmapID=167 : x=x+1				
+UI_stringmap(ID,x).ascii    =200: UI_stringmap(ID,x).bitmapID=168 : x=x+1				
+UI_stringmap(ID,x).ascii    =201: UI_stringmap(ID,x).bitmapID=169 : x=x+1				
+UI_stringmap(ID,x).ascii    =202: UI_stringmap(ID,x).bitmapID=170 : x=x+1				
+UI_stringmap(ID,x).ascii    =203: UI_stringmap(ID,x).bitmapID=171 : x=x+1				
+UI_stringmap(ID,x).ascii    =204: UI_stringmap(ID,x).bitmapID=172 : x=x+1				
+UI_stringmap(ID,x).ascii    =205: UI_stringmap(ID,x).bitmapID=173 : x=x+1				
+UI_stringmap(ID,x).ascii    =206: UI_stringmap(ID,x).bitmapID=174 : x=x+1				
+UI_stringmap(ID,x).ascii    =207: UI_stringmap(ID,x).bitmapID=175 : x=x+1				
+UI_stringmap(ID,x).ascii    =208: UI_stringmap(ID,x).bitmapID=176 : x=x+1				
+UI_stringmap(ID,x).ascii    =209: UI_stringmap(ID,x).bitmapID=177 : x=x+1				
+UI_stringmap(ID,x).ascii    =210: UI_stringmap(ID,x).bitmapID=178 : x=x+1				
+UI_stringmap(ID,x).ascii    =211: UI_stringmap(ID,x).bitmapID=179 : x=x+1				
+UI_stringmap(ID,x).ascii    =212: UI_stringmap(ID,x).bitmapID=180 : x=x+1				
+UI_stringmap(ID,x).ascii    =213: UI_stringmap(ID,x).bitmapID=181 : x=x+1				
+UI_stringmap(ID,x).ascii    =214: UI_stringmap(ID,x).bitmapID=182 : x=x+1				
+UI_stringmap(ID,x).ascii    =215: UI_stringmap(ID,x).bitmapID=183 : x=x+1				
+UI_stringmap(ID,x).ascii    =216: UI_stringmap(ID,x).bitmapID=184 : x=x+1				
+UI_stringmap(ID,x).ascii    =217: UI_stringmap(ID,x).bitmapID=185 : x=x+1				
+UI_stringmap(ID,x).ascii    =218: UI_stringmap(ID,x).bitmapID=186 : x=x+1				
+UI_stringmap(ID,x).ascii    =219: UI_stringmap(ID,x).bitmapID=187 : x=x+1				
+UI_stringmap(ID,x).ascii    =220: UI_stringmap(ID,x).bitmapID=188 : x=x+1				
+UI_stringmap(ID,x).ascii    =221: UI_stringmap(ID,x).bitmapID=189 : x=x+1				
+UI_stringmap(ID,x).ascii    =222: UI_stringmap(ID,x).bitmapID=190 : x=x+1				
+UI_stringmap(ID,x).ascii    =223: UI_stringmap(ID,x).bitmapID=191 : x=x+1				
+UI_stringmap(ID,x).ascii    =224: UI_stringmap(ID,x).bitmapID=192 : x=x+1				
+UI_stringmap(ID,x).ascii    =225: UI_stringmap(ID,x).bitmapID=193 : x=x+1				
+UI_stringmap(ID,x).ascii    =226: UI_stringmap(ID,x).bitmapID=194 : x=x+1				
+UI_stringmap(ID,x).ascii    =227: UI_stringmap(ID,x).bitmapID=195 : x=x+1				
+UI_stringmap(ID,x).ascii    =228: UI_stringmap(ID,x).bitmapID=196 : x=x+1				
+UI_stringmap(ID,x).ascii    =229: UI_stringmap(ID,x).bitmapID=197 : x=x+1				
+UI_stringmap(ID,x).ascii    =230: UI_stringmap(ID,x).bitmapID=198 : x=x+1				
+UI_stringmap(ID,x).ascii    =231: UI_stringmap(ID,x).bitmapID=199 : x=x+1				
+UI_stringmap(ID,x).ascii    =232: UI_stringmap(ID,x).bitmapID=200 : x=x+1				
+UI_stringmap(ID,x).ascii    =233: UI_stringmap(ID,x).bitmapID=201 : x=x+1				
+UI_stringmap(ID,x).ascii    =234: UI_stringmap(ID,x).bitmapID=202 : x=x+1				
+UI_stringmap(ID,x).ascii    =235: UI_stringmap(ID,x).bitmapID=203 : x=x+1				
+UI_stringmap(ID,x).ascii    =236: UI_stringmap(ID,x).bitmapID=204 : x=x+1				
+UI_stringmap(ID,x).ascii    =237: UI_stringmap(ID,x).bitmapID=205 : x=x+1				
+UI_stringmap(ID,x).ascii    =238: UI_stringmap(ID,x).bitmapID=206 : x=x+1				
+UI_stringmap(ID,x).ascii    =239: UI_stringmap(ID,x).bitmapID=207 : x=x+1				
+UI_stringmap(ID,x).ascii    =240: UI_stringmap(ID,x).bitmapID=208 : x=x+1				
+UI_stringmap(ID,x).ascii    =241: UI_stringmap(ID,x).bitmapID=209 : x=x+1				
+UI_stringmap(ID,x).ascii    =242: UI_stringmap(ID,x).bitmapID=210 : x=x+1				
+UI_stringmap(ID,x).ascii    =243: UI_stringmap(ID,x).bitmapID=211 : x=x+1				
+UI_stringmap(ID,x).ascii    =244: UI_stringmap(ID,x).bitmapID=212 : x=x+1				
+UI_stringmap(ID,x).ascii    =245: UI_stringmap(ID,x).bitmapID=213 : x=x+1				
+UI_stringmap(ID,x).ascii    =246: UI_stringmap(ID,x).bitmapID=214 : x=x+1				
+UI_stringmap(ID,x).ascii    =247: UI_stringmap(ID,x).bitmapID=215 : x=x+1				
+UI_stringmap(ID,x).ascii    =248: UI_stringmap(ID,x).bitmapID=216 : x=x+1				
+UI_stringmap(ID,x).ascii    =249: UI_stringmap(ID,x).bitmapID=217 : x=x+1				
+UI_stringmap(ID,x).ascii    =250: UI_stringmap(ID,x).bitmapID=218 : x=x+1				
+UI_stringmap(ID,x).ascii    =251: UI_stringmap(ID,x).bitmapID=219 : x=x+1				
+UI_stringmap(ID,x).ascii    =252: UI_stringmap(ID,x).bitmapID=220 : x=x+1				
+UI_stringmap(ID,x).ascii    =253: UI_stringmap(ID,x).bitmapID=221 : x=x+1				
+UI_stringmap(ID,x).ascii    =254: UI_stringmap(ID,x).bitmapID=222 : x=x+1				
+UI_stringmap(ID,x).ascii    =255: UI_stringmap(ID,x).bitmapID=223 : x=x+1				
+UI_stringmap(ID,x).ascii    =256: UI_stringmap(ID,x).bitmapID=224 : x=x+1				
+						
+UI_WriteLog(UI_Green,"Quickfont succesfully loaded")
+	UI_RestoreDebugPosition()
+Endfunction
+
 
 
 Function UI_Text(ID,x,y,sstring$)
