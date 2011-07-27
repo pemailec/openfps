@@ -1,7 +1,0 @@
-2010 - Philip Lewis "Mobiius"
-
-Cargo Container object.
-
-Object has 12 faces
-
-Includes a plain texture, which can be recoloured and liveried later.
