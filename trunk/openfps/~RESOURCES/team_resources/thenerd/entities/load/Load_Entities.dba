@@ -1,0 +1,37 @@
+///////////////////////////////
+// Entity system TEST
+// 1/31/11
+// thenerd
+///////////////////////////////
+
+sync on
+sync rate 0
+backdrop on
+color backdrop 0
+autocam off
+
+position camera 0,100,0
+point camera 0,0,0
+
+RES_init()
+
+ENT_Init()
+
+ENT_LoadEntities("EntityList")
+
+do
+	set cursor 0,0
+	print "Loaded:"
+	ENT_PrintEntities()
+	sync
+loop
+
+print "Terminating!"
+ENT_Terminate()
+
+
+end
+
+
+
+///////////////////////////////

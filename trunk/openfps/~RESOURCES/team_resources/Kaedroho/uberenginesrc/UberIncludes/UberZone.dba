@@ -1,0 +1,354 @@
+type UberZone
+zones as dword
+spherezones as dword
+boxzones as dword
+endtype
+
+type UberZone_Zone
+zonetype as byte
+zonenumber as dword
+exists as boolean
+objnum as dword
+group as dword
+name as string
+value as integer
+endtype
+
+type UberZone_Zone_Box
+number as dword
+posx as float
+posy as float
+posz as float
+width as float
+height as float
+depth as float
+origwidth as float
+origheight as float
+origdepth as float
+endtype
+
+type UberZone_Zone_Sphere
+number as dword
+posx as float
+posy as float
+posz as float
+radius as float
+origradius as float
+endtype
+
+UberZone_Start:
+UberZone as UberZone
+dim UberZone_Zone(0) as UberZone_Zone
+dim UberZone_Zone_Box(0) as UberZone_Zone_Box
+dim UberZone_Zone_Sphere(0) as UberZone_Zone_Sphere
+return
+
+UberZone_End:
+UberZone.zones=0
+UberZone.spherezones=0
+UberZone.boxzones=0
+undim UberZone_Zone_Box(0)
+undim UberZone_Zone_Sphere(0)
+return
+
+function UberZone_GetZoneCount()
+zones=UberZone.zones
+endfunction zones
+
+function UberZone_MakeSphereZone(x#,y#,z#,radius#)
+
+inc UberZone.zones
+inc UberZone.spherezones
+array insert at bottom UberZone_Zone(0)
+array insert at bottom UberZone_Zone_Sphere(0)
+
+n=UberZone.zones
+UberZone_Zone(n).zonetype=1
+UberZone_Zone(n).zonenumber=UberZone.spherezones
+UberZone_Zone(n).exists=1
+
+n=UberZone.spherezones
+UberZone_Zone_Sphere(n).number=UberZone.zones
+UberZone_Zone_Sphere(n).posx=x#
+UberZone_Zone_Sphere(n).posy=y#
+UberZone_Zone_Sphere(n).posz=z#
+UberZone_Zone_Sphere(n).radius=radius#
+
+zonenumber=UberZone.zones
+endfunction zonenumber
+
+function UberZone_DeleteZone(n)
+if UberZone_ZoneExists(n)
+   UberZone_Zone(n).exists=0
+endif
+endfunction
+
+function UberZone_FindFreeGroup()
+for i=1 to 100
+   for n=1 to UberZone.zones
+      if UberZone_ZoneExists(n)
+         if UberZone_Zone(n).group=i then goto UberZone_FindFreeGroup_EndI
+      endif
+   next n
+   exitfunction i
+   UberZone_FindFreeGroup_EndI:
+next i
+endfunction 0
+
+function UberZone_MakeBoxZone(x#,y#,z#,width#,height#,depth#)
+
+inc UberZone.zones
+inc UberZone.boxzones
+array insert at bottom UberZone_Zone(0)
+array insert at bottom UberZone_Zone_Box(0)
+
+n=UberZone.zones
+UberZone_Zone(n).zonetype=2
+UberZone_Zone(n).zonenumber=UberZone.boxzones
+UberZone_Zone(n).exists=1
+
+n=UberZone.boxzones
+UberZone_Zone_Box(n).number=UberZone.zones
+UberZone_Zone_Box(n).posx=x#
+UberZone_Zone_Box(n).posy=y#
+UberZone_Zone_Box(n).posz=z#
+UberZone_Zone_Box(n).width=width#
+UberZone_Zone_Box(n).height=height#
+UberZone_Zone_Box(n).depth=depth#
+
+zonenumber=UberZone.zones
+endfunction zonenumber
+
+function UberZone_SetZoneGroup(n,group)
+UberZone_Zone(n).group=group
+endfunction
+
+function UberZone_SetZoneValue(n,value)
+UberZone_Zone(n).value=value
+endfunction
+
+function UberZone_SetZonename(n,name$)
+UberZone_Zone(n).name=name$
+endfunction
+
+function UberZone_GetZoneGroup(n)
+group=UberZone_Zone(n).group
+endfunction group
+
+function UberZone_GetZoneValue(n)
+value=UberZone_Zone(n).value
+endfunction value
+
+function UberZone_GetZonename(n)
+name$=UberZone_Zone(n).name
+endfunction name$
+
+function UberZone_SetZonePosition(n,x#,y#,z#)
+if UberZone_ZoneExists(n)
+   select UberZone_GetZoneType(n)
+      case 1
+         UberZone_Zone_Sphere(UberZone_Zone(n).zonenumber).posx=x#
+         UberZone_Zone_Sphere(UberZone_Zone(n).zonenumber).posy=y#
+         UberZone_Zone_Sphere(UberZone_Zone(n).zonenumber).posz=z#
+      endcase
+      case 2
+         UberZone_Zone_Box(UberZone_Zone(n).zonenumber).posx=x#
+         UberZone_Zone_Box(UberZone_Zone(n).zonenumber).posy=y#
+         UberZone_Zone_Box(UberZone_Zone(n).zonenumber).posz=z#
+      endcase
+   endselect
+   if UberZone_Zone(n).objnum then position object UberZone_Zone(n).objnum,x#,y#,z#
+endif
+endfunction
+
+function UberZone_GetZoneType(n)
+if UberZone_ZoneExists(n)
+   zonetype=UberZone_Zone(n).zonetype
+endif
+endfunction zonetype
+
+function UberZone_ZoneExists(n)
+if n>0 and n<=UberZone.zones
+   if UberZone_Zone(n).exists then exitfunction 1
+endif
+endfunction 0
+
+function UberZone_SetBoxZoneSize(n,width#,height#,depth#)
+if UberZone_ZoneExists(n)
+   if UberZone_GetZoneType(n)=2
+
+      if UberZone_Zone(n).objnum
+         xscale#=width#/UberZone_Zone_Box(UberZone_Zone(n).zonenumber).origwidth*100
+         yscale#=height#/UberZone_Zone_Box(UberZone_Zone(n).zonenumber).origheight*100
+         zscale#=depth#/UberZone_Zone_Box(UberZone_Zone(n).zonenumber).origdepth*100
+         scale object UberZone_Zone(n).objnum,xscale#,yscale#,zscale#
+      endif
+
+      UberZone_Zone_Box(UberZone_Zone(n).zonenumber).width=width#
+      UberZone_Zone_Box(UberZone_Zone(n).zonenumber).height=height#
+      UberZone_Zone_Box(UberZone_Zone(n).zonenumber).depth=depth#
+
+   endif
+endif
+endfunction
+
+function UberZone_SetSphereZoneSize(n,radius#)
+if UberZone_ZoneExists(n)
+   if UberZone_GetZoneType(n)=1
+      if UberZone_Zone(n).objnum
+         scale#=radius#/UberZone_Zone_Sphere(UberZone_Zone(n).zonenumber).origradius*100
+         scale object UberZone_Zone(n).objnum,xscale,yscale,zscale
+      endif
+      UberZone_Zone_Sphere(UberZone_Zone(n).zonenumber).radius=radius#
+   endif
+endif
+endfunction
+
+function UberZone_GetZoneWidth(n)
+if UberZone_ZoneExists(n)
+   if UberZone_GetZoneType(n)=2
+      width#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).width
+   endif
+endif
+endfunction width#
+
+function UberZone_GetZoneHeight(n)
+if UberZone_ZoneExists(n)
+   if UberZone_GetZoneType(n)=2
+      height#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).height
+   endif
+endif
+endfunction height#
+
+function UberZone_GetZoneDepth(n)
+if UberZone_ZoneExists(n)
+   if UberZone_GetZoneType(n)=2
+      depth#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).depth
+   endif
+endif
+endfunction depth#
+
+function UberZone_GetZoneRadius(n)
+if UberZone_ZoneExists(n)
+   if UberZone_GetZoneType(n)=1
+      radius#=UberZone_Zone_Sphere(UberZone_Zone(n).zonenumber).radius
+   endif
+endif
+endfunction radius#
+
+function UberZone_PointInZone(n,x#,y#,z#)
+inzone=0
+if UberZone_ZoneExists(n)
+   select UberZone_GetZoneType(n)
+      case 1
+         zonex#=UberZone_Zone_Sphere(UberZone_Zone(n).zonenumber).posx
+         zoney#=UberZone_Zone_Sphere(UberZone_Zone(n).zonenumber).posy
+         zonez#=UberZone_Zone_Sphere(UberZone_Zone(n).zonenumber).posz
+         zoneradius#=UberZone_Zone_Sphere(UberZone_Zone(n).zonenumber).radius
+
+         inzone=abs((x#-zonex#)^2+(y#-zoney#)^2+(z#-zonez#)^2)<zoneradius#^2
+      endcase
+      case 2
+         zonex#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).posx
+         zoney#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).posy
+         zonez#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).posz
+         zonewidth#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).width
+         zoneheight#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).height
+         zonedepth#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).depth
+
+         inzone=abs(x#-zonex#)<zonewidth#/2 and abs(y#-zoney#)<zoneheight#/2 and abs(z#-zonez#)<zonedepth#/2
+      endcase
+   endselect
+endif
+endfunction inzone
+
+function UberZone_SphereInZone(n,x#,y#,z#,radius#)
+inzone=0
+if UberZone_ZoneExists(n)
+   select UberZone_GetZoneType(n)
+      case 1
+         zonex#=UberZone_Zone_Sphere(UberZone_Zone(n).zonenumber).posx
+         zoney#=UberZone_Zone_Sphere(UberZone_Zone(n).zonenumber).posy
+         zonez#=UberZone_Zone_Sphere(UberZone_Zone(n).zonenumber).posz
+         zoneradius#=UberZone_Zone_Sphere(UberZone_Zone(n).zonenumber).radius
+
+         inzone=abs((x#-zonex#)^2+(y#-zoney#)^2+(z#-zonez#)^2)<(zoneradius#+radius#)^2
+      endcase
+      case 2
+         zonex#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).posx
+         zoney#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).posy
+         zonez#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).posz
+         zonewidth#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).width
+         zoneheight#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).height
+         zonedepth#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).depth
+
+         inzone=abs(x#-zonex#)<(zonewidth#/2+radius#) and abs(y#-zoney#)<(zoneheight#/2+radius#) and abs(z#-zonez#)<(zonedepth#/2+radius#)
+      endcase
+   endselect
+endif
+endfunction inzone
+
+function UberZone_MakeZoneObject(n,objnum)
+if UberZone_ZoneExists(n)
+   select UberZone_GetZoneType(n)
+      case 1
+         zonex#=UberZone_Zone_Sphere(UberZone_Zone(n).zonenumber).posx
+         zoney#=UberZone_Zone_Sphere(UberZone_Zone(n).zonenumber).posy
+         zonez#=UberZone_Zone_Sphere(UberZone_Zone(n).zonenumber).posz
+         zoneradius#=UberZone_Zone_Sphere(UberZone_Zone(n).zonenumber).radius
+
+         UberZone_Zone_Sphere(n).origradius=zoneradius#
+
+         make object sphere objnum,zoneradius#*2
+         position object objnum,zonex#,zoney#,zonez#
+         set object wireframe objnum,1
+         UberZone_Zone(n).objnum=objnum
+      endcase
+      case 2
+         zonex#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).posx
+         zoney#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).posy
+         zonez#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).posz
+         zonewidth#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).width
+         zoneheight#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).height
+         zonedepth#=UberZone_Zone_Box(UberZone_Zone(n).zonenumber).depth
+
+         UberZone_Zone_Box(n).origwidth=zonewidth#
+         UberZone_Zone_Box(n).origheight=zoneheight#
+         UberZone_Zone_Box(n).origdepth=zonedepth#
+
+         make object box objnum,zonewidth#,zoneheight#,zonedepth#
+         position object objnum,zonex#,zoney#,zonez#
+         set object wireframe objnum,1
+         UberZone_Zone(n).objnum=objnum
+      endcase
+   endselect
+endif
+endfunction
+
+function UberZone_GetPointZone(zonegroup,x#,y#,z#)
+UberCore_ClearChecklist()
+for i=1 to UberZone.zones
+   if UberZone_ZoneExists(i) and UberZone_Zone(i).group=group
+      if UberZone_PointInZone(i,x#,y#,z#)
+         UberCore_AddToChecklist(UberZone_Zone(i).name,i,0,0,0,0.0,0.0,0.0,0.0)
+      endif
+   endif
+next i
+endfunction
+
+function UberZone_GetSphereZone(zonegroup,x#,y#,z#,radius#)
+UberCore_ClearChecklist()
+for i=1 to UberZone.zones
+   if UberZone_ZoneExists(i) and UberZone_Zone(i).group=group
+      if UberZone_SphereInZone(i,x#,y#,z#,radius#)
+         UberCore_AddToChecklist(UberZone_Zone(i).name,i,0,0,0,0.0,0.0,0.0,0.0)
+      endif
+   endif
+next i
+endfunction
+
+function UberZone_GetZoneObject(n)
+if UberZone_ZoneExists(n)
+   objnum=UberZone_Zone(n).objnum
+endif
+endfunction objnum

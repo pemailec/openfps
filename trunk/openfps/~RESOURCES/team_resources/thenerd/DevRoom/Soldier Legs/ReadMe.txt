@@ -1,0 +1,1 @@
+place Legs(1).fpi in the scriptbank, then place the rest in the entitybank.

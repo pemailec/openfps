@@ -1,0 +1,234 @@
+type UberUI
+buttons as dword
+buttonsprite as dword
+graphics as dword
+font as dword
+layers as dword
+buttonimg as dword
+starttime as dword
+xscale as float
+yscale as float
+endtype
+
+type UberUI_Layer
+fade as float
+endtype
+
+type UberUI_Button
+x as dword
+y as dword
+visible as boolean
+disabled as boolean
+txt as string
+layer as dword
+frame as byte
+animstage as float
+endtype
+
+type UberUI_Graphic
+x as dword
+y as dword
+visible as boolean
+sprit as dword
+layer as dword
+endtype
+
+UberUI_Start:
+UberUI as UberUI
+dim UberUI_Button(0) as UberUI_Button
+dim UberUI_Graphic(0) as UberUI_Graphic
+dim UberUI_Layer(0) as UberUI_Layer
+UberUI.font=UberCore_FreeFont()
+d3d_font UberUI.font,"Arial",10,1,0,1
+UberUI.buttonimg=UberFile_ExtractImage(UberCore.mediafile,"buttonnew.png")
+UberUI.buttonsprite=dxs create sprite from image(UberUI.buttonimg)
+dxs set sprite frameset UberUI.buttonsprite,3,2
+UberUI.xscale=100
+UberUI.yscale=100
+return
+
+UberUI_Reset:
+gosub UberUI_End
+gosub UberUI_Start
+return
+
+UberUI_Update:
+elapsedtime#=(timer()-UberUI.starttime)/1000.0
+UberUI.starttime=timer()
+for i=1 to UberUI.graphics
+	if UberUI_Graphic(i).visible
+	   dxs begin sprite render UberUI_Graphic(i).sprit
+            dxs set sprite alpha UberUI_Graphic(i).sprit,int(UberUI_Layer(UberUI_Graphic(i).layer).fade)
+            dxs draw sprite UberUI_Graphic(i).sprit,UberUI_Graphic(i).x*UberUI.xscale/100.0-Dxs get sprite width(UberUI_Graphic(i).sprit)/2,UberUI_Button(i).y*UberUI.yscale/100.0-Dxs get sprite height(UberUI_Graphic(i).sprit)/2
+        dxs end sprite render UberUI_Graphic(i).sprit
+	endif
+next i
+
+for i=1 to UberUI.buttons
+   if UberUI_Button(i).visible
+   	xover=mousex()>UberUI_Button(i).x-dxs get sprite frame width(UberUI.buttonsprite)/2 and mousex()<UberUI_Button(i).x+dxs get sprite frame width(UberUI.buttonsprite)/2
+   	yover=mousey()>UberUI_Button(i).y-dxs get sprite frame height(UberUI.buttonsprite)/2 and mousey()<UberUI_Button(i).y+dxs get sprite frame height(UberUI.buttonsprite)/2
+   	if xover and yover
+      	UberUI_Button(i).animstage=UberUI_Button(i).animstage+elapsedtime#*10
+      	if UberUI_Button(i).animstage>1 then UberUI_Button(i).animstage=1
+      else
+      	UberUI_Button(i).animstage=UberUI_Button(i).animstage-elapsedtime#*10
+      	if UberUI_Button(i).animstage<0 then UberUI_Button(i).animstage=0
+   	endif
+   	UberUI_Button(i).frame=int(1+UberUI_Button(i).animstage*4)
+   	dxs begin sprite render UberUI.buttonsprite
+      	dxs set sprite alpha UberUI.buttonsprite,int(UberUI_Layer(UberUI_Button(i).layer).fade)
+      	dxs set sprite frame UberUI.buttonsprite,UberUI_Button(i).frame
+         dxs draw sprite frame UberUI.buttonsprite,UberUI_Button(i).x*UberUI.xscale/100.0-UberUI_ButtonWidth()/2,UberUI_Button(i).y*UberUI.yscale/100.0-UberUI_ButtonHeight()/2
+      dxs end sprite render UberUI.buttonsprite
+      UberUI_DrawText(UberUI_Button(i).x,UberUI_Button(i).y-10,UberUI_Button(i).txt,1,set alpha(rgb(255,255,255),128),UberUI_Button(i).layer)
+   endif
+next i
+return
+
+UberUI_End:
+undim UberUI_Button(0)
+undim UberUI_Graphic(0)
+undim UberUI_Layer(0)
+UberUI.buttons=0
+dxs delete sprite UberUI.buttonsprite
+UberUI.buttonsprite=0
+UberUI.graphics=0
+UberUI.font=0
+UberUI.layers=0
+return
+
+function UberUI_MakeButton(x,y,text$,layer)
+inc UberUI.buttons
+array insert at bottom UberUI_Button(0)
+
+n=UberUI.buttons
+UberUI_Button(n).x=x
+UberUI_Button(n).y=y
+UberUI_Button(n).visible=1
+UberUI_Button(n).disabled=0
+UberUI_Button(n).txt=text$
+UberUI_Button(n).layer=layer
+UberUI_Button(n).frame=1
+ptr=n
+endfunction ptr
+
+function UberUI_SetButtonVisible(button,flag)
+UberUI_Button(button).visible=flag
+endfunction
+
+function UberUI_SetButtonDisabled(button,flag)
+UberUI_Button(button).disabled=flag
+endfunction
+
+function UberUI_SetButtonText(button,text$)
+UberUI_Button(button).txt=text$
+endfunction
+
+function UberUI_ButtonPressed(button)
+pressed=0
+if mouseclick()=1 and UberUI_Button(button).visible and UberUI_Button(button).disabled=0
+   if mousex()>UberUI_Button(button).x-dxs get sprite frame width(UberUI.buttonsprite)/2 and mousex()<UberUI_Button(button).x+dxs get sprite frame width(UberUI.buttonsprite)/2
+   if mousey()>UberUI_Button(button).y-dxs get sprite frame height(UberUI.buttonsprite)/2 and mousey()<UberUI_Button(button).y+dxs get sprite frame height(UberUI.buttonsprite)/2
+      pressed=1
+   endif
+   endif
+endif
+endfunction pressed
+
+function UberUI_SetButtonPosition(button,x,y)
+UberUI_Button(button).x=x*UberUI.xscale/100.0
+UberUI_Button(button).y=y*UberUI.yscale/100.0
+endfunction
+
+function UberUI_MakeGraphic(x,y,imgnum,layer)
+inc UberUI.graphics
+array insert at bottom UberUI_Graphic(0)
+
+n=UberUI.buttons
+UberUI_Graphic(n).x=x
+UberUI_Graphic(n).y=y
+UberUI_Graphic(n).visible=1
+UberUI_Graphic(n).sprit=dxs create sprite from image(imgnum)
+dxs set sprite scale UberUI_Graphic(n).sprit,UberUI.xscale,UberUI.yscale
+UberUI_Graphic(n).layer=layer
+ptr=n
+endfunction ptr
+
+function UberUI_SetGraphicVisible(graphic,flag)
+UberUI_Graphic(graphic).visible=flag
+endfunction
+
+function UberUI_GraphicWidth(graphic)
+width=dxs get sprite width(UberUI_Graphic(n).sprit)
+endfunction width
+
+function UberUI_GraphicHeight(graphic)
+height=dxs get sprite height(UberUI_Graphic(n).sprit)
+endfunction height
+
+function UberUI_SetGraphicPosition(graphic,x,y)
+UberUI_Graphic(graphic).x=x*UberUI.xscale/100.0
+UberUI_Graphic(graphic).y=y*UberUI.yscale/100.0
+endfunction
+
+function UberUI_SetGraphicImage(graphic,imgnum)
+dxs delete sprite UberUI_Graphic(graphic).sprit
+UberUI_Graphic(graphic).sprit=dxs create sprite from image(imgnum)
+endfunction
+
+function UberUI_DrawText(x,y,text$,alignment,colour,layer)
+if layer<=UberUI.layers
+	d3d_starttext
+   	d3d_text UberUI.font,x*UberUI.xscale/100.0,y*UberUI.yscale/100.0,alignment,text$,set alpha(colour,int(UberUI_Layer(layer).fade))
+	d3d_endtext
+endif
+endfunction
+
+function UberUI_DrawTextNoLayer(x,y,text$,alignment,colour)
+d3d_starttext
+   d3d_text UberUI.font,x*UberUI.xscale/100.0,y*UberUI.yscale/100.0,alignment,text$,colour
+d3d_endtext
+endfunction
+
+function UberUI_ButtonWidth()
+width=dxs get sprite frame width(UberUI.buttonsprite)
+endfunction width
+
+function UberUI_ButtonHeight()
+height=dxs get sprite frame height(UberUI.buttonsprite)
+endfunction height
+
+function UberUI_MakeLayer()
+inc UberUI.layers
+array insert at bottom UberUI_layer(0)
+UberUI_layer(UberUI.layers).fade=255
+ptr=UberUI.layers
+endfunction ptr
+
+function UberUI_SetLayerFade(layer,fade#)
+if fade#<0 then fade#=0
+if fade#>255 then fade#=255
+UberUI_layer(layer).fade=fade#
+endfunction
+
+function UberUI_SetAutoScaling(displaywidth,displayheight)
+displaywidth#=displaywidth
+displayheight#=displayheight
+xscale#=screen width()/displaywidth#*100
+yscale#=screen height()/displayheight#*100
+dxs set sprite scale UberUI.buttonsprite,xscale#,yscale#
+for i=1 to UberUI.graphics
+	dxs set sprite scale UberUI_Graphic(i).sprit,xscale#,yscale#
+next i
+UberUI.xscale=xscale#
+UberUI.yscale=yscale#
+endfunction
+
+function UberUI_GetScreenWidth()
+w=screen width()
+endfunction 640
+
+function UberUI_GetScreenHeight()
+h=screen height()
+endfunction 480

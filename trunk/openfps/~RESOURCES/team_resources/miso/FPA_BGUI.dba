@@ -1,0 +1,782 @@
+Rem ***** Included Source File *****
+
+//////////////////////////////////////////////////////
+// FPA BGUI MODULE
+// 
+// Author: miso
+//
+//////////////////////////////////////////////////////
+
+`----- Changelog:
+`(2010/07/11) - miso     - Created
+`(2010/08/25) - added minor bugfix
+`----- To-Do:
+
+`----- Purpose:
+
+`----- USES: none
+
+`----- Function List:
+
+`=========Constants=========`
+#Constant FPA_EVENT_FILE                   =  0
+#Constant FPA_EVENT_EDIT                   =  1
+#Constant FPA_EVENT_LAYERS                 =  2
+#Constant FPA_EVENT_TOOLS                  =  3
+#Constant FPA_EVENT_TIMERS                 =  4
+#Constant FPA_EVENT_HELP                   =  5
+#Constant FPA_EVENT_LOAD                   =  6
+#Constant FPA_EVENT_SAVE                   =  7
+#Constant FPA_EVENT_QUIT                   =  8
+#Constant FPA_EVENT_LOADTESTLEVEL          =  9
+#Constant FPA_EVENT_LOADLEVEL1             =  10
+#Constant FPA_EVENT_LOADLEVEL2             =  11
+#Constant FPA_EVENT_LOADLEVEL3             =  12
+#Constant FPA_EVENT_LOADLEVEL4             =  13
+#Constant FPA_EVENT_LOADLEVEL5             =  14
+#Constant FPA_EVENT_LOADLEVEL6             =  15
+#Constant FPA_EVENT_LOADLEVEL7             =  16
+#Constant FPA_EVENT_LOADLEVEL8             =  17
+#Constant FPA_EVENT_SPRITEIMAGES           =  18
+#Constant FPA_EVENT_SPRITEOBJECTS          =  19
+#Constant FPA_EVENT_VECTOROBJECTS          =  20
+#Constant FPA_EVENT_PHYSICACTORS           =  21
+#Constant FPA_EVENT_SELECTSTATICLAYER      =  22
+#Constant FPA_EVENT_SELECTBACKGROUNDLAYER  =  23
+#Constant FPA_EVENT_SELECTPLAYGROUNDLAYER  =  24
+#Constant FPA_EVENT_SELECTPLAYGROUNDLAYER2 =  25
+#Constant FPA_EVENT_SELECTVECTORLAYER      =  26
+#Constant FPA_EVENT_SELECTFOREGROUNDLAYER  =  27
+
+#Constant FPA_EVENT_HIDESTATIC             =  28
+#Constant FPA_EVENT_HIDEBACK               =  29
+#Constant FPA_EVENT_HIDEPLAY               =  30
+#Constant FPA_EVENT_HIDEPLAY2              =  31
+#Constant FPA_EVENT_HIDEFORE               =  32
+#Constant FPA_EVENT_HIDENODES              =  33
+#Constant FPA_EVENT_HIDEHELPERS            =  34
+
+#Constant FPA_EVENT_CREATETIMER            =  35
+#Constant FPA_EVENT_SCRIPT                 =  36
+
+
+#Constant FPA_EVENT_POPUPMENU              =  50
+#Constant FPA_EVENT_SPRITEPOPUPMENU        =  51
+
+//--VECTOR NODE POPUP MENUITEMS
+#Constant FPA_EVENT_CHOOSEADDNEWVECTOR     =  100
+#Constant FPA_EVENT_CHOOSECONNECTVECTOR    =  101
+#Constant FPA_EVENT_CHOOSEDISCONNECTVECTOR =  102
+#Constant FPA_EVENT_CHOOSEDELETEVECTOR     =  103
+
+//--FPA LAYERS POPUP MENUITEMS
+#Constant FPA_EVENT_CHOOSEADDNEWSPRITE     =  104
+#Constant FPA_EVENT_CHOOSEDELETESPRITE     =  105
+#Constant FPA_EVENT_CHOOSESPRITEIMAGES     =  106
+#Constant FPA_EVENT_CHOOSESHOWSPRITESHEET  =  107
+
+//--Timer modifying
+#Constant FPA_EVENT_Modifytimer            =  108
+
+
+`===========================`
+
+`==========Globals==========`
+Global BG_MAINMENU         as integer
+Global BG_FILEMENU         as integer
+Global BG_LOADMENU         as integer
+Global BG_EDITMENU         as integer
+Global BG_LAYERMENU        as integer
+Global BG_TOOLSMENU        as integer
+Global BG_TIMERSMENU       as integer :`main menu for timers
+Global BG_POPUPMENU        as integer
+Global BG_SPRITEPOPUPMENU  as integer
+
+
+Global BG_imgwindow          as integer :`window for imageload
+Global BG_timerwindow        as integer :`window for creating timer
+Global BG_scriptwindow       as integer :`window for creating timer
+Global BG_Scripteditor       as integer :`scripteditor editgadget
+
+
+//--Timer window gadget globals
+Global BG_Timernameeditbox as integer
+Global BG_Timertime as integer
+Global BG_timercountermin as integer
+Global BG_Timercountermax as integer
+Global TMRTEXT1 as integer
+Global TMRTEXT2 as integer
+Global TMRTEXT3 as integer
+Global TMRTEXT4 as integer
+Global BG_buttonCreateTimer        as integer 
+Global BG_buttonCancelCreatetimer  as integer 
+
+
+
+//--sprite panel gadget globals
+Global BG_imgpanel           as integer :`panel for imageload
+Global BG_loadedsprites      as integer :`panel for imageload
+Global BG_availablesprites   as integer :`panel for imageload
+Global BG_sprtext1 as integer :`text gadget for image loader panel (loaded sprites)
+Global BG_sprtext2 as integer :`text gadget for image loader panel (available sprites)
+Global BG_buttonloadimage   as integer 
+Global BG_buttonunloadimage as integer 
+Global BG_buttonselectimage as integer 
+
+
+`===========================`
+
+`===========Types===========`
+`===========================`
+
+
+`=========Functions=========`
+
+Function FPA_createmainwindow()
+//***************************************************************************************
+//*                                                                                     *
+//*   Miso:                                                                             *
+//*                                                                                     *
+//*      Creates the main menu elements.                                                *
+//*                                                                                     *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************	
+	
+	
+//--add main menu
+BG_MAINMENU=createMenu(0)
+    addMenuItem BG_MAINMENU,"File",FPA_EVENT_FILE
+    addMenuItem BG_MAINMENU,"Edit",FPA_EVENT_EDIT
+    addMenuItem BG_MAINMENU,"Layers",FPA_EVENT_LAYERS
+    addMenuItem BG_MAINMENU,"Tools",FPA_EVENT_TOOLS
+    addMenuItem BG_MAINMENU,"Timers",FPA_EVENT_TIMERS
+    addMenuItem BG_MAINMENU,"Help",FPA_EVENT_HELP
+
+//--add file submenuitems
+BG_fileMenu=createSubMenu(BG_mainMenu,FPA_EVENT_FILE)
+	addMenuItem BG_FILEMENU,"Load",FPA_EVENT_LOAD
+	addMenuItem BG_FILEMENU,"Save",FPA_EVENT_SAVE
+	addMenuItem BG_FILEMENU,"Quit",FPA_EVENT_QUIT
+
+//--add load menu
+BG_LoadMenu=createSubMenu(BG_FileMenu,FPA_EVENT_LOAD)
+	addMenuItem BG_LOADMENU,"=mintalevel=",FPA_EVENT_LOADTESTLEVEL
+	addMenuItem BG_LOADMENU,"Level 1",FPA_EVENT_LOADLEVEL1
+	addMenuItem BG_LOADMENU,"Level 2",FPA_EVENT_LOADLEVEL2
+	addMenuItem BG_LOADMENU,"Level 3",FPA_EVENT_LOADLEVEL3
+	addMenuItem BG_LOADMENU,"Level 4",FPA_EVENT_LOADLEVEL4
+	addMenuItem BG_LOADMENU,"Level 5",FPA_EVENT_LOADLEVEL5
+	addMenuItem BG_LOADMENU,"Level 6",FPA_EVENT_LOADLEVEL6
+	addMenuItem BG_LOADMENU,"Level 7",FPA_EVENT_LOADLEVEL7
+	addMenuItem BG_LOADMENU,"Level 8",FPA_EVENT_LOADLEVEL8
+	
+//--Add edit menu items
+BG_EditMenu=createSubMenu(BG_MainMenu,FPA_EVENT_EDIT)
+	addMenuItem BG_EDITMENU,"Sprite Images",FPA_EVENT_SPRITEIMAGES
+	addMenuItem BG_EDITMENU,"Sprite Objects",FPA_EVENT_SPRITEOBJECTS
+	addMenuItem BG_EDITMENU,"Vector Objects",FPA_EVENT_VECTOROBJECTS
+	addMenuItem BG_EDITMENU,"Physic Actors",FPA_EVENT_PHYSICACTORS
+		
+	
+BG_LayerMenu=createSubMenu(BG_MainMenu,FPA_EVENT_LAYERS)
+	addMenuItem BG_LayerMENU,"Static",FPA_EVENT_SELECTSTATICLAYER
+	addMenuItem BG_LayerMENU,"Parallax Background",FPA_EVENT_SELECTBACKGROUNDLAYER
+	addMenuItem BG_LayerMENU,"Playground",FPA_EVENT_SELECTPLAYGROUNDLAYER
+	addMenuItem BG_LayerMENU,"Foreground",FPA_EVENT_SELECTPLAYGROUNDLAYER2
+	addMenuItem BG_LayerMENU,"Vectorlayer",FPA_EVENT_SELECTVECTORLAYER
+	addMenuItem BG_LayerMENU,"Parallax Foreground",FPA_EVENT_SELECTFOREGROUNDLAYER
+	Setmenuitemradio BG_LAYERMENU,FPA_EVENT_SELECTSTATICLAYER,FPA_EVENT_SELECTFOREGROUNDLAYER,FPA_EVENT_SELECTSTATICLAYER
+	FPA_Currentlayer=FPA_EVENT_SELECTSTATICLAYER
+
+//--Add edit menu items
+BG_ToolsMenu=createSubMenu(BG_MainMenu,FPA_EVENT_TOOLS)
+	addMenuItem BG_toolsMENU,"Hide static backdrop",FPA_EVENT_HIDESTATIC
+	addMenuItem BG_toolsMENU,"Hide parallax BACKground",FPA_EVENT_HIDEBACK
+	addMenuItem BG_toolsMENU,"Hide playground",FPA_EVENT_HIDEPLAY
+	addMenuItem BG_toolsMENU,"Hide playground2",FPA_EVENT_HIDEPLAY2
+	addMenuItem BG_toolsMENU,"Hide foreground",FPA_EVENT_HIDEFORE
+	addMenuItem BG_toolsMENU,"Hide vector nodes",FPA_EVENT_HIDENODES
+	addMenuItem BG_toolsMENU,"Hide helpers",FPA_EVENT_HIDEHELPERS
+
+//--Add timers menu items
+BG_TIMERSMENU=createSubMenu(BG_MainMenu,FPA_EVENT_TIMERS)
+	Global BG_timersMODIFY as integer
+	addMenuItem BG_timersMENU,"Create timer",FPA_EVENT_CREATETIMER
+	addMenuItem BG_timersMENU,"Modify timers",FPA_EVENT_MODIFYTIMER
+	addMenuItem BG_timersMENU,"Script",FPA_EVENT_SCRIPT
+
+		
+
+
+
+//--popupsfor vectors
+BG_popupmenu=createpopupmenu()
+	addMenuItem BG_popupmenu,"addnewvector",FPA_EVENT_CHOOSEADDNEWVECTOR
+   	addMenuItem BG_popupmenu,"connectvector",FPA_EVENT_CHOOSECONNECTVECTOR
+	addMenuItem BG_popupmenu,"disconnectvector",FPA_EVENT_CHOOSEDISCONNECTVECTOR
+   	addMenuItem BG_popupmenu,"deletevector",FPA_EVENT_CHOOSEDELETEVECTOR
+   	
+//--popups for layers
+BG_SPRITEPOPUPMENU=createpopupmenu()
+	addMenuItem BG_spritepopupmenu,"Add sprite to layer",FPA_EVENT_CHOOSEADDNEWSPRITE
+	addMenuItem BG_spritepopupmenu,"Delete sprite from layer",FPA_EVENT_CHOOSEDELETESPRITE
+	addMenuItem BG_spritepopupmenu,"Select image",FPA_EVENT_CHOOSESPRITEIMAGES
+   	addMenuItem BG_spritepopupmenu,"Show Sprite Sheet",FPA_EVENT_CHOOSESHOWSPRITESHEET
+
+//--panel for timercreating
+BG_timerwindow=createwindow(0,0,320,260,"Create a timer",WINDOW_FIXED,0,1,0)
+	//--hides the window
+	setGadgetVisible Bg_timerwindow,0
+	//--buttons for createtimer
+	BG_ButtonCreatetimer=createButton(60,200,75,25,"Create",0,BG_timerwindow)
+	BG_buttoncancelcreatetimer=createButton(185,200,75,25,"Cancel",0,BG_timerwindow)
+	
+	BG_timernameeditbox=createEdit(120, 10, 150, 20, 0, BG_Timerwindow) 
+	BG_timertime=createEdit(120, 50, 150, 20, 0, BG_Timerwindow) 
+	BG_timercountermin=createEdit(120, 90, 150, 20, 0, BG_Timerwindow) 
+	BG_timercountermax=createEdit(120, 130, 150, 20, 0, BG_Timerwindow) 
+	BG_TMRTEXT1=createLabel(10,15,100,20,"[TIMER NAME]",BG_Timerwindow)	
+	BG_TMRTEXT2=createLabel(10,55,100,20,"[TIME RANGE]",BG_Timerwindow)
+	BG_TMRTEXT3=createLabel(10,95,100,20,"[COUNTERMIN]",BG_Timerwindow)
+	BG_TMRTEXT4=createLabel(10,135,100,20,"[COUNTERMAX]",BG_Timerwindow)
+
+//--panel for scripts
+BG_Scriptwindow=createwindow(0,0,640,480,"Script",WINDOW_FIXED,0,1,0)
+BG_Scripteditor=createEdit(0,0,640,480,1,BG_Scriptwindow)
+eventOpen()
+
+
+//--panel for timerchecking
+//--panel for timerchecking
+Global BG_Timerwindow2 as integer
+Global BG_createdtimers as integer
+Global BG_buttonmodifytimer as integer
+Global BG_buttoncancelTimer as integer
+Global BG_timernameeditbox2 as integer
+Global BG_Timertime2 as integer
+Global BG_Timercountermin2 as integer
+Global BG_Timercountermax2 as integer
+Global BG_Tmrtxt21 as integer
+Global BG_Tmrtxt22 as integer
+Global BG_Tmrtxt23 as integer
+Global BG_Tmrtxt24 as integer
+
+
+BG_timerwindow2=createwindow(0,0,320,260,"Check timers",WINDOW_FIXED,0,1,0)
+	//--hides the window
+	setGadgetVisible Bg_timerwindow2,0
+	//--buttons for createtimer
+	BG_createdtimers=createListBox(0,0,100,240,BG_timerwindow2)
+	BG_Buttonmodifytimer=createButton(110,200,75,25,"Modify",0,BG_timerwindow2)
+	BG_buttoncanceltimer=createButton(195,200,75,25,"Cancel",0,BG_timerwindow2)
+	
+	BG_timernameeditbox2=createEdit(120, 20, 150, 20, 0, BG_Timerwindow2) 
+	BG_timertime2=createEdit(120, 60, 150, 20, 0, BG_Timerwindow2) 
+	BG_timercountermin2=createEdit(120, 100, 150, 20, 0, BG_Timerwindow2) 
+	BG_timercountermax2=createEdit(120, 140, 150, 20, 0, BG_Timerwindow2) 
+	BG_TMRTEXT21=createLabel(120,0,100,20,"[TIMER NAME]",BG_Timerwindow2)	
+	BG_TMRTEXT22=createLabel(120,40,100,20,"[TIME RANGE]",BG_Timerwindow2)
+	BG_TMRTEXT23=createLabel(120,80,100,20,"[COUNTERMIN]",BG_Timerwindow2)
+	BG_TMRTEXT24=createLabel(120,120,100,20,"[COUNTERMAX]",BG_Timerwindow2)
+	If FPA_Timernumbers>0
+	For LDA=1 to fpa_timernumbers
+		addItem bg_createdtimers,FPA_Timers(LDA).name
+	Next LDA
+	Endif
+
+//--panel for imageloader
+BG_imgwindow=createwindow(0,0,320,360,"Static Sprite Images",WINDOW_FIXED,0,1,0)
+	//--hides the window
+	setGadgetVisible Bg_imgwindow,0
+BG_imgpanel=createpanel(0,0,320,360,BG_imgwindow)
+
+BG_loadedsprites=createListBox(20,20,100,300,BG_imgpanel)
+BG_availablesprites=createListBox(200,20,100,300,BG_imgpanel)
+BG_sprtext1=createLabel(20,5,100,25,"Loaded Sprites",BG_imgpanel)  	
+BG_sprtext2=createLabel(200,5,100,25,"Available Sprites",BG_imgpanel)    	
+
+
+	
+`BG_imgpanel=createpanel(0,0,320,360,BG_imgwindow)
+
+`BG_loadedsprites=createListBox(20,20,100,300,BG_imgpanel)
+`BG_availablesprites=createListBox(200,20,100,300,BG_imgpanel)
+`BG_sprtext1=createLabel(20,5,100,25,"Loaded Sprites",BG_imgpanel)  	
+`BG_sprtext2=createLabel(200,5,100,25,"Available Sprites",BG_imgpanel)    	
+
+
+
+//--load a list for available sprites
+set dir "data\sprites"
+perform checklist for files
+
+for t=1 to checklist quantity()
+	if checklist string$(t)<>"." and checklist string$(t)<>".." and checklist string$(t)<>".svn"
+		LDA=len(checklist string$(t))
+		LDA$=right$(checklist string$(t),3)
+		if LDA$="png" or LDA$="bmp" or LDA$="dds"
+			addItem bg_availablesprites,checklist string$(t)
+		Endif
+	endif
+next t
+//--change back the folders to game root
+cd "..":cd ".."
+//--Add buttons
+
+
+
+
+//Global BG_buttonunloadimage as integer 
+//Global BG_buttonselectimage as integer 
+
+BG_buttonloadimage=createButton(123,20,75,25,"Add to List",0,BG_imgpanel)
+BG_buttonunloadimage=createButton(123,50,75,25,"Remove",0,BG_imgpanel)
+BG_buttonselectimage=createButton(123,80,75,25,"Exchange",0,BG_imgpanel)
+
+selectitem bg_availablesprites,0
+selectitem bg_loadedprites,0
+
+
+Endfunction
+
+//=====================================================================
+
+Function FPA_checkBguievents()
+//***************************************************************************************
+//*                                                                                     *
+//*   Miso:                                                                             *
+//*                                                                                     *
+//*     Checks the bluegui gadgets.                                                                                *
+//*                                                                                     *
+//*                                                                                     *
+//*                                                                                     *
+//***************************************************************************************	
+local var_fileid as integer
+	getevent
+		If eventType()=MENU_CLICK
+			If eventData()=FPA_EVENT_QUIT then end
+			If eventData()=FPA_EVENT_LOADTESTLEVEL 
+				FPA_Loadlevel("=mintalevel=")
+				FPA_Loadlayers()
+			Endif
+	    	
+	    	//--Load level 1
+	    	If eventData()=FPA_EVENT_LOADLEVEL1
+				FPA_Loadlevel("1")
+				FPA_Loadlayers()
+			Endif
+	    	
+	    	//--Load level 2
+	    	If eventData()=FPA_EVENT_LOADLEVEL2
+				FPA_Loadlevel("2")
+				FPA_Loadlayers()
+			Endif
+	    	
+	    	//--Load level 3
+	    	If eventData()=FPA_EVENT_LOADLEVEL3
+				FPA_Loadlevel("3")
+				FPA_Loadlayers()
+			Endif
+	    	
+	    	//--Load level 4
+	    	If eventData()=FPA_EVENT_LOADLEVEL4
+				FPA_Loadlevel("4")
+				FPA_Loadlayers()
+			Endif
+	    	
+	    	//--Load level 5
+	    	If eventData()=FPA_EVENT_LOADLEVEL5
+				FPA_Loadlevel("5")
+				FPA_Loadlayers()
+			Endif
+	    	
+	    	//--Load level 6
+	    	If eventData()=FPA_EVENT_LOADLEVEL6
+				FPA_Loadlevel("6")
+				FPA_Loadlayers()
+			Endif
+	    	
+	    	//--Load level 7
+	    	If eventData()=FPA_EVENT_LOADLEVEL7
+				FPA_Loadlevel("7")
+				FPA_Loadlayers()
+			Endif
+	    	
+	    	//--Load level 8
+	    	If eventData()=FPA_EVENT_LOADLEVEL8
+				FPA_Loadlevel("8")
+				FPA_Loadlayers()
+			Endif
+	    	
+	    	
+	    	//---SAVE LAYERS
+	    	If eventData()=FPA_EVENT_SAVE
+	    		FPA_Saveimages()
+	    		FPA_SaveLayers()
+	    		FPA_SaveVectors()
+	    	Endif 
+	    
+	    	//--Sprite Images (show the window)
+	    	If eventData()=FPA_EVENT_SPRITEIMAGES
+	    		setGadgetVisible Bg_imgwindow,1
+	    	Endif 
+	    
+	    	If eventData()=FPA_EVENT_CREATETIMER
+	    		setGadgetVisible Bg_timerwindow,1
+	    		SetGadgetText BG_timernameeditbox,"Timer_"+str$(find free ticker())
+				SetGadgetText BG_timertime,"1000"
+				SetGadgetText BG_timercountermin,"0"
+				SetGadgetText BG_timercountermax,"0"
+	    	Endif 
+	    
+	    	If eventData()=FPA_EVENT_MODIFYTIMER
+	    		If FPA_timernumbers>0
+	    			selectitem BG_CreatedTimers,0
+	    			FPA_SELECTEDTIMER=1
+	    			setGadgetVisible Bg_timerwindow2,1
+	    			SetGadgetText BG_timernameeditbox2,FPA_Timers(1).name+" [ID:"+str$(FPA_Timers(1).id)+"]"
+					SetGadgetText BG_timertime2,str$(FPA_Timers(1).Longitude)
+					SetGadgetText BG_timercountermin2,str$(FPA_Timers(1).countermin)
+					SetGadgetText BG_timercountermax2,str$(FPA_Timers(1).countermax)
+				Endif
+	    	Endif 
+	    
+
+	    	//addMenuItem BG_toolsMENU,"Hide static backdrop",FPA_EVENT_HIDESTATIC
+			//addMenuItem BG_toolsMENU,"Hide parallax BACKground",FPA_EVENT_HIDEBACK
+			//addMenuItem BG_toolsMENU,"Hide playground",FPA_EVENT_HIDEPLAY
+			//addMenuItem BG_toolsMENU,"Hide playground2",FPA_EVENT_HIDEPLAY2
+			//addMenuItem BG_toolsMENU,"Hide foreground",FPA_EVENT_HIDEFORE
+			//addMenuItem BG_toolsMENU,"Hide vector nodes",FPA_EVENT_HIDENODES
+	    	
+	    	
+	    	if eventdata()=FPA_EVENT_HIDENODES
+	    		If FPA_HiddenNODES=0
+	    			Setmenuitemchecked BG_TOOLSMENU,FPA_EVENT_HIDENODES,1
+	    			FPA_HiddenNODES=1
+	    		Else
+	    			Setmenuitemchecked BG_TOOLSMENU,FPA_EVENT_HIDENODES,0
+	    			FPA_HiddenNODES=0
+	    		Endif
+	    	Endif
+	    	
+	    	
+	    	if eventdata()=FPA_EVENT_HIDEFORE
+	    		If FPA_HiddenFORE=0
+	    			Setmenuitemchecked BG_TOOLSMENU,FPA_EVENT_HIDEFORE,1
+	    			FPA_HiddenFORE=1
+	    		Else
+	    			Setmenuitemchecked BG_TOOLSMENU,FPA_EVENT_HIDEFORE,0
+	    			FPA_HiddenFORE=0
+	    		Endif
+	    	Endif
+	    	
+	    	
+	    	if eventdata()=FPA_EVENT_HIDEPLAY2
+	    		If FPA_HiddenPLAY2=0
+	    			Setmenuitemchecked BG_TOOLSMENU,FPA_EVENT_HIDEPLAY2,1
+	    			FPA_HiddenPLAY2=1
+	    		Else
+	    			Setmenuitemchecked BG_TOOLSMENU,FPA_EVENT_HIDEPLAY2,0
+	    			FPA_HiddenPLAY2=0
+	    		Endif
+	    	Endif
+	    	
+	    	
+	    	
+	    	if eventdata()=FPA_EVENT_HIDEPLAY
+	    		If FPA_HiddenPLAY=0
+	    			Setmenuitemchecked BG_TOOLSMENU,FPA_EVENT_HIDEPLAY,1
+	    			FPA_HiddenPLAY=1
+	    		Else
+	    			Setmenuitemchecked BG_TOOLSMENU,FPA_EVENT_HIDEPLAY,0
+	    			FPA_HiddenPLAY=0
+	    		Endif
+	    	Endif
+	    	
+	    	
+	    	
+	    	if eventdata()=FPA_EVENT_HIDEBACK
+	    		If FPA_HiddenBACK=0
+	    			Setmenuitemchecked BG_TOOLSMENU,FPA_EVENT_HIDEBACK,1
+	    			FPA_HiddenBACK=1
+	    		Else
+	    			Setmenuitemchecked BG_TOOLSMENU,FPA_EVENT_HIDEBACK,0
+	    			FPA_HiddenBACK=0
+	    		Endif
+	    	Endif
+	    	
+	    	
+	    	if eventdata()=FPA_EVENT_HIDESTATIC
+	    		If FPA_Hiddenstatic=0
+	    			Setmenuitemchecked BG_TOOLSMENU,FPA_EVENT_HIDESTATIC,1
+	    			FPA_Hiddenstatic=1
+	    		Else
+	    			Setmenuitemchecked BG_TOOLSMENU,FPA_EVENT_HIDESTATIC,0
+	    			FPA_Hiddenstatic=0
+	    		Endif
+	    	Endif
+	    	
+	    	
+	    	if eventdata()=FPA_EVENT_HIDEHELPERS
+	    		If FPA_Hiddenhelpers=0
+	    			Setmenuitemchecked BG_TOOLSMENU,FPA_EVENT_HIDEHELPERS,1
+	    			FPA_Hiddenhelpers=1
+	    		Else
+	    			Setmenuitemchecked BG_TOOLSMENU,FPA_EVENT_HIDEHELPERS,0
+	    			FPA_Hiddenhelpers=0
+	    		Endif
+	    	Endif
+	    		
+	    	
+	    	
+	    	
+	    	//---SELECT LAYER MENU
+	    	//--select static layer
+	    	If eventData()=FPA_EVENT_SELECTSTATICLAYER 
+	    		Setmenuitemradio BG_LAYERMENU,FPA_EVENT_SELECTSTATICLAYER,FPA_EVENT_SELECTFOREGROUNDLAYER,FPA_EVENT_SELECTSTATICLAYER
+	    		FPA_Currentlayer=FPA_EVENT_SELECTSTATICLAYER
+	    	Endif
+	    	//--select background parallax layer
+	    	If eventData()=FPA_EVENT_SELECTBACKGROUNDLAYER 
+	    		Setmenuitemradio BG_LAYERMENU,FPA_EVENT_SELECTSTATICLAYER,FPA_EVENT_SELECTFOREGROUNDLAYER,FPA_EVENT_SELECTBACKGROUNDLAYER
+	    		FPA_Currentlayer=FPA_EVENT_SELECTBACKGROUNDLAYER
+	    	Endif
+	    	//--select playground layer
+	    	If eventData()=FPA_EVENT_SELECTPLAYGROUNDLAYER 
+	    		Setmenuitemradio BG_LAYERMENU,FPA_EVENT_SELECTSTATICLAYER,FPA_EVENT_SELECTFOREGROUNDLAYER,FPA_EVENT_SELECTPLAYGROUNDLAYER
+	    		FPA_Currentlayer=FPA_EVENT_SELECTPLAYGROUNDLAYER
+	    	Endif
+	    	//--select vector layer
+	    	If eventData()=FPA_EVENT_SELECTVECTORLAYER 
+	    		Setmenuitemradio BG_LAYERMENU,FPA_EVENT_SELECTSTATICLAYER,FPA_EVENT_SELECTFOREGROUNDLAYER,FPA_EVENT_SELECTVECTORLAYER
+	    		FPA_Currentlayer=FPA_EVENT_SELECTVECTORLAYER
+	    	Endif
+	    	//--select playgroundlayer2
+	    	If eventData()=FPA_EVENT_SELECTPLAYGROUNDLAYER2 
+	    		Setmenuitemradio BG_LAYERMENU,FPA_EVENT_SELECTSTATICLAYER,FPA_EVENT_SELECTFOREGROUNDLAYER,FPA_EVENT_SELECTPLAYGROUNDLAYER2
+	    		FPA_Currentlayer=FPA_EVENT_SELECTPLAYGROUNDLAYER2
+	    	Endif
+	    
+	    	//--select foreground parallax layer
+	   		If eventData()=FPA_EVENT_SELECTFOREGROUNDLAYER 
+	    		Setmenuitemradio BG_LAYERMENU,FPA_EVENT_SELECTSTATICLAYER,FPA_EVENT_SELECTFOREGROUNDLAYER,FPA_EVENT_SELECTFOREGROUNDLAYER
+	    		FPA_Currentlayer=FPA_EVENT_SELECTFOREGROUNDLAYER
+	    	Endif
+	    	
+	    Endif
+		
+		//---CLOSING WINDOWS
+		if eventType()=WINDOW_CLOSE
+			//--close image window
+	        if eventSource()=BG_imgwindow
+	        	setGadgetVisible Bg_imgwindow,0
+	        endif
+	    
+	        //--close timers window
+	        if eventSource()=BG_timerwindow
+	        	setGadgetVisible Bg_timerwindow,0
+	        endif
+		
+	    //--close timersmodify window
+	        if eventSource()=BG_timerwindow2
+	        	setGadgetVisible Bg_timerwindow2,0
+	        endif
+			
+		
+		
+		Endif
+
+
+		If eventType()=Mouse_Click
+	    	//--select sprite image
+	    	
+	    	if eventSource()=BG_loadedsprites 
+	    		FPA_SelectedSpriteImage=selecteditem(BG_loadedsprites)+1
+	    	Endif
+			
+			//--select timer------------------------------------------
+			if eventSource()=BG_createdtimers
+	    		FPA_Selectedtimer=selecteditem(BG_createdtimers)+1
+	    			SetGadgetText BG_timernameeditbox2,FPA_Timers(FPA_Selectedtimer).name+" [ID:"+str$(FPA_Timers(FPA_Selectedtimer).id)+"]"
+	    			SetGadgetText BG_timertime2,str$(FPA_Timers(FPA_SELECTEDTIMER).Longitude)
+					SetGadgetText BG_timercountermin2,str$(FPA_Timers(FPA_SELECTEDTIMER).countermin)
+					SetGadgetText BG_timercountermax2,str$(FPA_Timers(FPA_SELECTEDTIMER).countermax)
+	    	Endif
+			
+	    	
+	    	if eventSource()=BG_buttonselectimage 
+	    		FPA_Replacespriteimage(selecteditem(bg_loadedsprites)+1,"data\sprites\"+itemtext(bg_availablesprites,selecteditem(bg_availablesprites)),itemtext(bg_availablesprites,selecteditem(bg_availablesprites)))
+	    		changeitem BG_Loadedsprites,selecteditem(BG_Loadedsprites),itemtext(bg_availablesprites,selecteditem(bg_availablesprites))
+	    		FPA_refreshallspritedata()
+	    	Endif
+			
+			//--add sprite image
+			if eventSource()=BG_buttonloadimage 
+	    		fpa_loadspriteimage("data\sprites\"+itemtext(bg_availablesprites,selecteditem(BG_availablesprites)),itemtext(bg_availablesprites,selecteditem(BG_availablesprites)))
+	    	Endif
+			
+			//--delete sprite image
+			if eventSource()=BG_buttonunloadimage 
+	    		if FPA_Nopicture.ID<>FPA_SpriteImage(selecteditem(BG_loadedsprites)+1).ID
+	    			FPA_Deletespriteimage(selecteditem(BG_loadedsprites)+1)
+	    			changeitem BG_Loadedsprites,selecteditem(BG_Loadedsprites),"Deleted"
+	    			FPA_refreshallspritedata()
+	    		Endif
+	    	Endif
+			
+			//--Create timer
+			if eventSource()=BG_buttoncreatetimer
+	    		l_LDA$=getgadgettext(BG_timernameeditbox)
+	    		l_LDE$=getgadgettext(BG_timertime)
+	    		l_LDX$=getgadgettext(BG_timercountermin)
+	    		l_LDY$=getgadgettext(BG_timercountermax)
+	    		FPA_Addnewtimer(l_LDA$,val(l_LDE$),val(l_LDX$),val(l_LDY$))
+	    		SetGadgetText BG_timernameeditbox,"Timer_"+str$(find free ticker())
+	    	Endif
+			
+			//--Cancel Create timer
+			if eventSource()=BG_buttonCancelcreatetimer
+	    		setGadgetVisible Bg_timerwindow,0
+	    	Endif
+			
+			If eventsource()=BG_BUTTONMODIFYTIMER
+	    		If FPA_timernumbers>0
+	    			l_LDA$=getgadgettext(BG_timernameeditbox2)
+	    			l_LDA$=first token$(l_LDA$," [")
+	    			l_LDE$=getgadgettext(BG_timertime2)
+	    			l_LDX$=getgadgettext(BG_timercountermin2)
+	    			l_LDY$=getgadgettext(BG_timercountermax2)
+	    			FPA_Modifytimer(l_LDA$,val(l_LDE$),val(l_LDX$),val(l_LDY$))
+	    			Changeitem BG_Createdtimers,FPA_Selectedtimer-1,l_LDA$
+	    		Endif
+	    	Endif 
+
+		Endif
+
+			
+		
+		
+		//---POPUPS
+		If mouseclick()=2
+	    	//--Vector popup
+	    	if fpa_currentlayer=layer_vectors
+	    		If FPA_hiddennodes=0
+	    			result=showPopupMenu(BG_popupMenu)
+					if result=FPA_EVENT_CHOOSEADDNEWVECTOR
+						FPA_Addvectorpoint(mousex()-FPA_worldoffsetx,mousey()-fpa_worldoffsety)
+					Endif
+			
+					if result=FPA_EVENT_CHOOSECONNECTVECTOR
+						FPA_event_vectorconnect=1
+					Endif
+	    
+	   				if result=FPA_EVENT_CHOOSEDISCONNECTVECTOR
+						FPA_event_vectordisconnect=1
+					Endif
+	     
+	    	 		if result=FPA_EVENT_CHOOSEDELETEVECTOR
+						FPA_event_vectordelete=1
+					Endif
+				Endif
+		    Else
+		    	if fpa_currentlayer<>0
+					result=showPopupMenu(BG_spritepopupMenu)    	
+					if result=FPA_EVENT_CHOOSESPRITEIMAGES
+			    		setGadgetVisible Bg_imgwindow,1
+					Endif
+					
+					if result=FPA_EVENT_CHOOSEADDNEWSPRITE
+			    		FPA_AddSpriteToCurrentLayer()
+					Endif
+					
+					if result=FPA_EVENT_CHOOSEDELETESPRITE
+			    		FPA_Event_deletesprite=1
+					Endif
+					
+		    	Endif
+		    Endif
+		Endif
+		
+//---handle error sources
+	//--if no item selected in loaded sprites bluegui object, then select first element if available
+	If selecteditem(bg_loadedsprites)=-1 and fpa_loadedspriteimages>0 
+		selectitem bg_loadedsprites,0
+		Fpa_selectedspriteimage = 1
+	Endif
+
+
+
+		
+Endfunction
+
+
+
+function fpa_doaspriteconversion()
+	
+	//--load a list for available sprites
+set dir "data\needreset"
+perform checklist for files
+imgid=grabresource(res_image)
+for t=1 to checklist quantity()
+
+	if checklist string$(t)<>"." and checklist string$(t)<>".." and checklist string$(t)<>".svn"
+		LDA=len(checklist string$(t))
+		LDA$=right$(checklist string$(t),3)
+		if LDA$="png" or LDA$="bmp" or LDA$="dds"
+			load image checklist string$(t),imgid,1
+			delete file checklist string$(t)
+			save image checklist string$(t),1
+		Endif
+	endif
+next t
+//--change back the folders to game root
+cd "..":cd ".."
+freeresource(imgid,res_file)	
+endfunction
+
+Function FPA_WARNNOSELECTEDSPRITE()
+	message "No selected sprite"
+Endfunction
+
+
+
+
+
+
+
+function eventOpen()
+   local filename as string=""
+   local basename as string=""
+   local fileText as string=""
+
+   filename="data\scripts\test2.script"
+
+   nameLen=len(filename)
+
+
+
+      `Create new tab
+      `Set its caption
+      `Load text into edit control
+
+      open to read 1,filename
+         `Use a for...next loop because repeat...until loops are VERY, VERY slow.
+         for i=0 to 100
+            read string 1,tmp$
+
+            if fileText=""
+               fileText=tmp$
+            else
+               fileText=fileText+chr$(13)+chr$(10)+tmp$
+            endif
+
+            if file end(1) : i=100 : else : i=0 : endif
+         next i
+
+      close file 1
+
+      setGadgetText BG_Scripteditor,fileText
+   
+endfunction

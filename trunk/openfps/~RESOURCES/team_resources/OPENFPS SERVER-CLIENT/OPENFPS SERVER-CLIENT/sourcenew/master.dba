@@ -1,0 +1,67 @@
+/////////////////////////////////////////////////////
+//
+// OpenFPS Master Server Test Module
+//
+// Created by miso
+// Maintained by --
+//
+/////////////////////////////////////////////////////
+
+//----- Changelog:
+//(03/27/11) - miso  - Created
+
+`-------INCLUDES---------
+#Include MODULES\SyS_Core.dba
+#Include MODULES\SyS_Debug.dba
+rem #Include MODULES\SyS_Display.dba
+#Include MODULES\SyS_Fonts.dba
+rem #Include MODULES\SyS_Gadgets.dba
+#Include MODULES\SyS_Input.dba
+#Include MODULES\SyS_Mouse.dba
+#Include MODULES\SyS_Resource.dba
+#Include MODULES\SyS_Windows.dba
+`-------GLOBALS----------
+global myimage as integer
+global myplain as integer
+global mymonitor as integer
+`------- MAIN -----------
+
+
+
+
+disable escapekey
+Masterserver_startGUI()
+
+
+NET_STARTWINSOCK()
+rem NET_START_IDLECLIENT()
+NET_START_MASTERSERVER()
+
+do 
+
+a#=a#+1.0
+if a#=360.0 then a#=0.0
+
+
+		TEST_updatesrvbackground()
+
+		server_handlemenu()
+		SyS_Handlegadgets()
+	
+		
+rem sys_text(1,50,150,"recived:"+str$(test_recived))		
+rem sys_text(1,50,170,"sent:"+str$(test_sent))		
+		SyS_Handlemouse()
+sys_text(1,0,0,str$(aa))
+
+
+		SyS_Synchandle()
+
+	nice wait 4
+	NET_SERVER_RECEIVE()
+	
+		if escapekey() then NET_closewinsock()	
+	
+loop
+
+

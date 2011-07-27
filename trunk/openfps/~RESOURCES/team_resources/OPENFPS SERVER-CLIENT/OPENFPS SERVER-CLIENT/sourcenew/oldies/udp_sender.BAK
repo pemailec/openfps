@@ -1,0 +1,134 @@
+`UDP SENDER EXAMPLE
+`usage: start two instances, the first answer with "n", the second with "y".
+
+`this error nr occurs when UDP channel sends data to a non existing host or closed port.
+#constant WSAECONNRESET 10054
+`lets lower the cpu usage.
+sync sleep 1
+`the channel used for both clients.
+global channel as DWORD
+`initialize winsock
+winsock make
+if winsock error()
+   print "error initializing winsock!"
+   print winsock error msg$()
+   wait key
+   `there is nothing we can do, winsock make automatically has tried all available winsock versions and has failed.
+   end
+endif
+
+input "do you want to send?[y/n]: ", answer$
+if answer$ = "y"
+      `first branch of the program, used by initiator of the transmission.
+      channel = winsock create udp channel()
+      check_for_error(channel)   `possible error: no system ressources available (anymore).
+      winsock set channel target channel, "92.52.220.101", 4000
+      send$ = "hello"
+      make memblock 1, len(send$)+1
+      write_memblock_string(1, 0, send$)
+      winsock send udp message channel, get memblock ptr(1), get memblock size(1)
+      check_for_error(channel)   `possible OS socket error.
+      print "sent: " + memblock_string(1, 0)
+      delete memblock 1
+      print "waiting for response..."
+      repeat
+         `loop until we receive a response...
+         winsock refresh channel channel
+         check_for_error(channel)   `various errors possible.
+         sleep 100
+      until winsock channel data waiting(channel)
+      winsock recv udp message channel
+      check_for_error(channel)
+      make memblock 1, winsock channel data len(channel)
+      winsock copy channel data channel, get memblock ptr(1)
+      check_for_error(channel)
+      print "packet received from: " + winsock remote host$(channel) + ":" + str$(winsock remote port(channel))
+      print "content: " + memblock_string(1, 0)
+      delete memblock 1
+      `end of branch.
+else
+   if answer$ = "n"
+      `second branch used by passive part of the transmission.
+      print "waiting for packets..."
+      channel = winsock create udp channel()
+      check_for_error(channel)   `possible error: no system ressources available (anymore).
+      winsock bind channel channel, "96.233.35.41", 4000
+      check_for_error(channel)   `possible error: port already in use.
+      repeat
+         `loop until we receive something...
+         winsock refresh channel channel
+         check_for_error(channel)   `various errors possible.
+         sleep 100
+      until winsock channel data waiting(channel)
+      winsock recv udp message channel
+      check_for_error(channel)
+      make memblock 1, winsock channel data len(channel)
+      winsock copy channel data channel, get memblock ptr(1)
+      print "packet received from: " + winsock remote host$(channel) + ":" + str$(winsock remote port(channel))
+      content$ = memblock_string(1, 0)
+      print "content: " + content$
+      delete memblock 1
+      `now reply to sender, using the sender information of the channel.
+      winsock set channel target channel, winsock remote host$(channel), winsock remote port(channel)
+      send$ = content$ + " back!"
+      make memblock 1, len(send$)+1
+      write_memblock_string(1, 0, send$)
+      winsock send udp message channel, get memblock ptr(1), get memblock size(1)
+      check_for_error(channel)   `possible OS socket error.
+      print "sent: " + memblock_string(1, 0)
+      delete memblock 1
+      `end of branch.
+   else
+      print "please answer with [y] or [n]."
+   endif
+endif
+
+wait key
+`clean up winsock (not really necessary since it is done automatically upon calling "end")
+winsock clean up
+end
+
+
+
+function check_for_error(a_channel as DWORD)
+`check for an error on a channel.
+   if (winsock channel error(a_channel))
+      `an error has occurred.
+      `cls
+      if winsock channel error nr(a_channel) = WSAECONNRESET
+         `this error message appears if you send UDP data to an invalid destination / where no one is waiting for it.
+         `reset channel error.
+         winsock reset error a_channel
+         print "invalid destination"
+      else
+         print winsock channel error msg$(a_channel)
+         wait key
+         winsock clean up
+         end
+      endif
+   endif
+endfunction
+
+
+
+function write_memblock_string(memblock_nr as INTEGER, position as INTEGER, a_string as STRING)
+      `writes a string into a memblock. careful make sure the memblock has enough space from position to its end!
+   for i = 0 to len(a_string)-1
+      write memblock byte memblock_nr, position + i, asc(mid$(a_string, i+1))
+   next i
+   `terminate string with a 0-character.
+   write memblock byte memblock_nr, position + i, 0
+endfunction
+
+function memblock_string(memblock_nr as INTEGER, position as INTEGER)
+      `reads a null terminated string from a memblock. make sure position is within memblock size!
+   result$ = ""
+   i = position
+   char_val = memblock byte(memblock_nr, i)
+   inc i
+   while char_val <> 0 and i < get memblock size(memblock_nr)
+      result$ = result$ + chr$(char_val)
+      char_val = memblock byte(memblock_nr, i)
+      inc i
+   endwhile
+endfunction result$

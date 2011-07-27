@@ -1,0 +1,51 @@
+type UberMaterials
+Materials as dword
+endtype
+
+type UberMaterials_Material
+effect as dword
+texture as dword
+decaltexture as dword
+physxmaterial as dword
+particles as dword
+endtype
+
+
+UberMaterials_start:
+UberMaterials as UberMaterials
+dim UberMaterials_Material(0) as UberMaterials_Material
+return
+
+
+UberMaterials_end:
+undim UberMaterials_Material(0)
+UberMaterials.Materials=0
+return
+
+function UberMaterials_loadmaterial(file$)
+file=UberFile_LoadFile("media/"+file$)
+UberFile_LoadScript(file,"settings.txt")
+
+if lower$(lua string$("filetype"))="material"
+   select upper$(lua string$("engineversion"))
+      case "UB0.04"
+			inc UberMaterials.Materials
+			array insert at bottom UberMaterials_Material(0)
+			n=UberMaterials.Materials
+			
+			if lua string$("particles")=""
+			else
+				UberMaterials_Material(n).particles=UberFX_GetParticletypeindex(lua string$("particles"))
+			endif
+			
+			ptr=n
+      endcase
+   endselect
+endif
+
+UberFile_CloseFile(file)
+endfunction ptr
+
+function UberMaterials_SetMaterial(object,limb,material)
+
+endfunction

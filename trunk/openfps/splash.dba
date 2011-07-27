@@ -9,6 +9,9 @@ backdrop off
 load image "media\menu\splash2.png",1
 load image "media\menu\splash_load.png",2
 load animation "media\menu\ajax-anim.gif",1
+
+
+
 ax=320-(126/2)-5
 ay=250
 loop animation 1,0,ax,ay,ax+126,ay+22
@@ -37,15 +40,15 @@ load image "media\buttons\button-clicked.png",menu_button3
 website$="https://openfps.googlecode.com/svn/trunk/openfps/media/menu/motd.txt"
 filename$="_motd.temp"
 
-ok=download(website$,filename$)
+ok=downloader(website$,filename$)
 
 ip_website$="https://openfps.googlecode.com/svn/trunk/openfps/website/images/logo2000.png"
 ip_filename$="_temp.png"
-ip=download(ip_website$,ip_filename$)
+ip=downloader(ip_website$,ip_filename$)
 
 loc_web$="http://api.ipinfodb.com/v3/ip-country/?key=7d4408e067712f64ea42f27e3b4c7f3d77c1708a6b1a391dc9d87b8f66291cdf&format=raw"
 loc_file$="_loc.temp"
-loc=download(loc_web$,loc_file$)
+loc=downloader(loc_web$,loc_file$)
 
 open to read 2,loc_file$
 read string 2,loc$
@@ -88,6 +91,14 @@ dd$(2)="nd"
 dd$(3)="rd"
 d=0
 
+
+
+`global sprite start number
+global haloaderspr=20
+
+`Make sure you start with 0, otherwise it wont resize and alpha the sprites
+haloader(0)
+
 do
 	date$=get date$()
 	month$=left$(date$,2):month=(val(month$)-1)
@@ -103,7 +114,12 @@ do
 	if day=2 or day=22 then d=2
 	if day=3 or day=23 then d=3
 	
-	paste image 1,0,0
+	per=mousex()/(screen width()/100)
+	if per<0 then per=0
+	if per>100 then per=100
+	haloader(per)
+
+	`paste image 1,0,0
 	text 50,155,"Welcome to Biostorm: Chemical Warfare!"
 	text 50,180,"your location:"+loc$
 	`text 50,168,get time$()
@@ -155,7 +171,7 @@ function in_box2d(x1,y1,x2,y2):
 	endif
 endfunction result 
 
-function download(w$,f$)
+function downloader(w$,f$):
    if file exist(f$) then delete file f$
    load dll "urlmon",1
    a=CALL DLL(1,"URLDownloadToFileA",0,w$,f$,0,0)
@@ -163,3 +179,15 @@ function download(w$,f$)
    ok=0
    if a=0 then ok=1
 endfunction ok
+
+function haloader(per)
+	per#=per/50.0
+	sc=3
+	for spr=1 to 50
+		`if sprite exist(spr)=1 then delete sprite spr
+		sprite spr+haloaderspr,0-(per#*spr*3),0-(spr*3),1
+		if per=0 then size sprite spr+haloaderspr,screen width()+(spr*6),screen height()+(spr*6)
+		if per=0 and spr>1 then set sprite alpha spr+haloaderspr,50-spr
+		if per=101 then delete sprite spr+haloaderspr
+	next spr
+endfunction

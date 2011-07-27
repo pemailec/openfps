@@ -1,0 +1,34 @@
+type UberScript
+firstfunction as dword
+endtype
+
+UberScript_Start:
+UberScript as UberScript
+lua make 0
+UberFile_LoadScript(UberCore.mediafile,"ScriptCore.txt")
+
+gosub UberScript_RegisterFunctions
+lua push function "Uber_Start"
+r=lua call function(0,0)
+return
+
+UberScript_End:
+lua terminate
+return
+
+UberScript_Update:
+if UberCore.enginerunning
+   `lua push function "Uber_Run"
+   `r=lua call function(0,0)
+endif
+return
+
+
+UberScript_RegisterFunctions:
+
+return
+
+function UberScript_RegisterFunction(name$,params$,returns)
+`ptr=get ptr to function(name$)
+lua register function ptr,name$,params$,returns,0
+endfunction

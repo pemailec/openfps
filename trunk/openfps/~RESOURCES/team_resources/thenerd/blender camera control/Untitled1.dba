@@ -1,0 +1,22 @@
+sync on
+sync rate 60
+backdrop on
+color backdrop rgb(128,128,128)
+autocam on
+
+load object "box2.x",1
+set object speed 1,40
+loop object 1
+
+
+
+cam_limb=get limb by name(1,"Camera")
+hide limb 1,cam_limb
+
+
+do
+	position camera limb position x(1,cam_limb),limb position y(1,cam_limb),limb position z(1,cam_limb)
+	rotate camera limb angle x(1,cam_limb),limb angle y(1,cam_limb),limb angle z(1,cam_limb)
+	
+	sync
+loop

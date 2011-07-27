@@ -1,0 +1,142 @@
+remstart
+/////////////////////////////////////////////////////
+//
+// OpenFPS NETWORK FUNCTIONS Core Module
+//
+// Created by --
+// Maintained by --
+//
+/////////////////////////////////////////////////////
+
+----- Changelog:
+(2/8/10) - BMacZero - Created
+(07/06/10) - miso     - just placed logger commands
+(07/06/10) - thenerd  - added commands
+(07/28/10) - thenerd  - added PlayerData.cfg for player name & other info
+(08/17/10) - miso     - added a display info when waiting to connect master server, not to see tha black screen
+(11/29/10) - thenerd  - Restructured code to use new module layout
+----- To-Do:
+-None-
+
+----- Purpose:
+Communicates with host to retrieve updated information on
+player, enemy, and object positions and states.
+Passes this information to relevant modules to deal with it.
+
+
+----- Dependancies and Conflicts (IMPORTANT STUFF):
+-None-
+
+----- Other Notes:
+Chat Message Tags
+&name=name           - Changes your name and displays a message.
+&name_silent=name    - Changes your name without displaying a message.
+&color="r,g,b"		 - Changes your chat color (WORK IN PROGRESS)
+&blarg	             - :D
+
+All functions and resources in the Network module use the prefix NET_
+
+----- Function List:
+-Client:
+NET_init()			  		  - initializes the networking module
+NET_update()     	  		  - updates any network data with the server.
+NET_terminate()  	  		  - ends the networking module, and cleans up any used resources.
+NET_getChatMessage()		  - gets the latest chat message.
+NET_sendChatMessage(string$)  -	sends a chat message.
+
+-Server variables:
+DATA_MaxPlayers:	max players on server
+DATA_Map:			server map
+DATA_TimeLimit:		Time limit until reset
+DATA_ServerType:	Type (1=Public, 2=Private LAN, 3=LoopBack interface)
+DATA_PrivatePass:   Password for server (Default is blank)
+
+remend
+
+`-------GLOBALS----------
+
+`server type
+type Server
+	Init as boolean
+	Name as string
+	Host as boolean
+	Ip as string
+	TCP_port as integer
+	UDP_port as integer
+	TCP_channel as dword
+	TCP_clients as integer
+	UDP_channel as dword
+endtype
+
+
+/////////////////////////////////////////////////////////
+// INIT COMMANDS                                       //
+/////////////////////////////////////////////////////////
+
+
+function NET_start():
+	`nope
+endfunction
+
+/////////////////////////////////////////////////////////
+// MAIN COMMANDS                                       //
+/////////////////////////////////////////////////////////
+
+
+function NET_connect(IP$,ServerName$,TCPPort,UDPPort):
+	`nope
+endfunction
+
+function NET_disconnect():
+	`nope
+endfunction
+
+function NET_host(name$,TCPPort,UDPPort):
+	`nope
+endfunction
+
+function NET_localhost(name$,TCPPort,UDPPort):
+	`nope
+endfunction
+
+function NET_update():
+	`nope
+endfunction
+
+function NET_UpdateClient():
+	`nope
+endfunction
+
+function NET_UpdateServer():
+	`nope
+endfunction
+
+function NET_SendChatMessageTCP(say_str$):
+	`nope
+endfunction
+
+function NET_checkError():
+	`nope
+endfunction
+
+function NET_connected():
+	`nope
+endfunction connection
+
+/////////////////////////////////////////////////////////
+// SERVER COMMANDS                                     //
+/////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////
+// TERMINATE                                           //
+/////////////////////////////////////////////////////////
+
+
+function NET_terminate()
+	`nope
+endfunction
+
+/////////////////////////////////////////////////////////
+// DEBUG                                               //
+/////////////////////////////////////////////////////////

@@ -1,0 +1,8 @@
+type UberWorld
+worldtype as byte
+
+endtype
+
+function UberWorld_MakeWorld(file$)
+
+endfunction

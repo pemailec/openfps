@@ -1,0 +1,129 @@
+type UberInteligence
+actors as dword
+actortypes as dword
+plans as dword
+actions as dword
+paths as dword
+waypoints as dword
+endtype
+
+type UberInteligence_Actor
+tipe as dword
+posx as float
+posy as float
+posz as float
+direction as float
+pitch as float
+gun as dword
+plan as dword
+planposition as dword
+endtype
+
+type UberInteligence_ActorType
+name as string
+team as byte
+class as byte
+endtype
+
+type UberInteligence_Plan
+firstaction as dword
+lastaction as dword
+endtype
+
+type UberInteligence_Action
+plan as dword
+tipe as dword
+index as dword
+nextaction as dword
+endtype
+
+type UberInteligence_Path
+firstwaypoint as dword
+lastwaypoint as dword
+endtype
+
+type UberInteligence_Waypoint
+path as dword
+x as float
+z as float
+direction as float
+nextwaypoint as dword
+endtype
+
+UberInteligence_Start:
+UberInteligence as UberInteligence
+dim UberInteligence_Actor(0) as UberInteligence_Actor
+dim UberInteligence_ActorType(0) as UberInteligence_ActorType
+dim UberInteligence_Plan(0) as UberInteligence_Plan
+dim UberInteligence_Action(0) as UberInteligence_Action
+dim UberInteligence_Path(0) as UberInteligence_Path
+dim UberInteligence_Waypoint(0) as UberInteligence_Waypoint
+return
+
+UberInteligence_Update:
+
+return
+
+UberInteligence_End:
+UberInteligence.actors=0
+UberInteligence.actortypes=0
+UberInteligence.plans=0
+UberInteligence.actions=0
+UberInteligence.paths=0
+UberInteligence.waypoints=0
+undim UberInteligence_Actor(0)
+undim UberInteligence_ActorType(0)
+undim UberInteligence_Plan(0)
+undim UberInteligence_Action(0)
+undim UberInteligence_Path(0)
+undim UberInteligence_Waypoint(0)
+return
+
+function UberInteligence_LoadActor(file$)
+ptr=0
+file=UberFile_LoadFile(UberCore_Folders.actors+file$)
+UberFile_LoadScript(file,"settings.txt")
+if lower$(lua string$("filetype"))="actor"
+   select upper$(lua string$("engineversion"))
+      case "UB0.01"
+			inc UberInteligence.actortypes
+			array insert at bottom UberInteligence_ActorType(0)
+			n=UberInteligence.actortypes
+			
+			ptr=n
+		endcase
+	endselect
+endif
+endfunction ptr
+
+function UberInteligence_MakeActor(tipe)
+
+endfunction ptr
+
+function UberInteligence_PositionActor(actor,x#,y#,z#)
+
+endfunction
+
+function UberInteligence_RotateActor(actor,direction#,pitch#)
+
+endfunction
+
+function UberInteligence_MakePlan()
+
+endfunction ptr
+
+function UberInteligence_MakePath()
+
+endfunction ptr
+
+function UberInteligence_AddWaypoint(path,x#,z#)
+
+endfunction
+
+function UberInteligence_AddPathToPlan(plan,path)
+
+endfunction
+
+function UberInteligence_SetActorPlan(actor,plan)
+UberInteligence_Actor(actor).plan=plan
+endfunction

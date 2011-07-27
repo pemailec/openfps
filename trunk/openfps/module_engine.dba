@@ -38,13 +38,24 @@ function CORE_init():
 	// -----------------------
 	global CORE_ExecServer
 	global CORE_ExecClient
+	CORE_ExecClient=1
 	
 	CORE_InitTimer()
+	`CAM_Init()
+	VS_Init()
 	
+	TestMapObj=res_grab(res_object)
+	TestMapShader=res_grab(res_Shader)
+    load effect "media\shaders\object\LightMap.fx",TestMapShader,0
+	load object "media\maps\movement_test\testmap.dbo",TestMapObj,3
+	set object effect TestMapObj,TestMapShader
+		
 	`init modules
 	`ENT_Init()	`entity module
 	`LVL_Init()  `level module
 	`MVM_init()  `movement module
+	
+	NET_StartWinsock()
 	
 endfunction
 
@@ -60,14 +71,13 @@ function CORE_update():
     UI_SUB_HandleChatBox(40,600)
     UI_AlphaText(3,UI_Display.MiddleWidth-140,UI_Display.MiddleHeight,"~rEngine not functional!",255)
     
-    if CORE_ExecServer then CORE_UpdateClient()
-    if CORE_ExecClient then CORE_UpdateServer()
+    if CORE_ExecServer then CORE_UpdateServer()
+    if CORE_ExecClient then CORE_UpdateClient()
 endfunction
 
 function CORE_UpdateClient():
-	// -----------------------
-	// update client function
-	// -----------------------
+	`CAM_Update()
+	updatevisuals()
 endfunction
 
 function CORE_UpdateServer():
@@ -84,6 +94,8 @@ endfunction
 function CORE_InitTimer():   
 	global CORE_timer      as float : CORE_timer      = hitimer()
     global CORE_timer_last as float : CORE_timer_last = CORE_timer
+    global CORE_debugtick : CORE_debugtick=1
+    make ticker CORE_debugtick,1000
 endfunction
 
 function CORE_TimeFactor():

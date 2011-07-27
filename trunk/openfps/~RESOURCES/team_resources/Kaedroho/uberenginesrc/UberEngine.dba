@@ -1,0 +1,214 @@
+
+
+#Constant UE_ProductName="ONE"
+#Constant UE_ProductVersion="BETA11"
+
+sync on:sync rate 0
+sync
+flush video memory
+
+UberCore_StartMain()
+UberUI_SetAutoScaling(640,480)
+BeforeMenu:
+
+
+gosub RunMenu
+
+aftermenu:
+UberUI_SetLayerFade(menulayer,0)
+
+UberSound_SetBackGroundSound(0)
+
+UberCore_StartEngine()
+
+pauselayer=UberUI_MakeLayer()
+UberCore_SetPauseLayer(pauselayer)
+ExitBtn=UberUI_MakeButton(UberUI_GetScreenWidth()/2,200+(UberUI_ButtonHeight()+10)*2,"Exit",pauselayer)
+UberCore_SetPauseExitbutton(ExitBtn)
+
+
+UberCore_SetViewrange(30000)
+UberCore_SetFOG(5000)
+
+`UberPlayer_SetPlayerMode(1)
+guntype=UberWeapon_LoadGun("m249.uber")
+gun=UberWeapon_MakeGun(guntype)
+leftover=UberWeapon_AddAmmo(gun,300)
+UberWeapon_ReloadGun(gun)
+UberPlayer_SetGun(gun)
+
+ammotype=UberWeapon_LoadAmmo("m249_ammo.uber")
+
+for i=1 to 10
+	ammo=UberWeapon_MakeAmmo(ammotype)
+	UberWeapon_SetAmmoPosition(ammo,500,3500+100*i,500)
+next i
+
+UberPlayer_PositionPlayer(500,3200,500)
+UberTerrain_LoadTerrain("terrain.uber")
+material=UberMaterials_loadmaterial("groundmaterial.uber")
+UberTerrain_SetTerrainMaterial(material)
+`UberTerrain_makewater(100)
+
+UberPlayer_DisplayMessage("Welcome To ONE Beta 10!",rgb(0,0,255))
+
+n=UberCore_GetElapsedTime()
+while UberCore_Run()
+	elapsedtime#=UberCore_GetElapsedTime()
+	UberCore_Update(elapsedtime#)
+endwhile
+`end
+
+gosub BeforeMenu
+
+
+
+`FUNCTIONS
+
+RunMenu:
+
+
+
+
+global menulayer
+menulayer=UberUI_MakeLayer()
+global menuscreen
+
+`GameCoreFile=UberFile_LoadFile("media/GameCore.uber")
+`logo=UberFile_ExtractImage(GameCoreFile,"logo.png")
+`UberFile_CloseFile(GameCoreFile)
+
+`logographic=UberUI_MakeGraphic(0,0,logo,menulayer)
+`UberUI_SetGraphicPosition(logographic,screen width()/2,UberUI_GraphicHeight(logographic)/2)
+
+global PlayBtn
+PlayBtn=UberUI_MakeButton(UberUI_GetScreenWidth()/2,-(UberUI_ButtonHeight()+10)*3,"Play Game",menulayer)
+global CreditBtn
+CreditBtn=UberUI_MakeButton(UberUI_GetScreenWidth()/2,-(UberUI_ButtonHeight()+10)*2,"Credits",menulayer)
+global ExitBtn
+ExitBtn=UberUI_MakeButton(UberUI_GetScreenWidth()/2,-(UberUI_ButtonHeight()+10),"Exit",menulayer)
+global BackBtn
+BackBtn=UberUI_MakeButton(UberUI_ButtonWidth()/2+10,UberUI_GetScreenHeight()-10-UberUI_ButtonHeight()/2,"Back",menulayer)
+global InstallBtn
+InstallBtn=UberUI_MakeButton(UberUI_GetScreenWidth()/2,UberUI_GetScreenHeight()-10-UberUI_ButtonHeight()/2,"Install",menulayer)
+
+Set_Menu_Screen(1)
+animstarttime=timer()
+while UberUI_ButtonPressed(ExitBtn)=0
+	animtime#=(timer()-animstarttime)/1000.0
+	animframe=int(animtime#*30)
+	if animframe<15
+		start#=-(UberUI_ButtonHeight()+10)
+		end#=250+(UberUI_ButtonHeight()+10)*2
+		pos#=animframe/15.0
+		UberUI_SetButtonPosition(ExitBtn,UberUI_GetScreenWidth()/2,start#+(end#-start#)*pos#)
+	endif
+	if animframe>5 and animframe<20
+		start#=-(UberUI_ButtonHeight()+10)*2
+		end#=250+UberUI_ButtonHeight()+10
+		pos#=(animframe-5)/15.0
+		UberUI_SetButtonPosition(CreditBtn,UberUI_GetScreenWidth()/2,start#+(end#-start#)*pos#)
+	endif
+	if animframe>10 and animframe<25
+		start#=-(UberUI_ButtonHeight()+10)*3
+		end#=250
+		pos#=(animframe-10)/15.0
+		UberUI_SetButtonPosition(PlayBtn,UberUI_GetScreenWidth()/2,start#+(end#-start#)*pos#)
+	endif
+	
+
+		
+   cls
+   if UberUI_ButtonPressed(CreditBtn)=1 then Set_Menu_Screen(2)
+   if UberUI_ButtonPressed(BackBtn)=1 then Set_Menu_Screen(1)
+   select menuscreen
+      case 1
+
+      endcase
+      case 2
+         pastecredits()
+      endcase
+   endselect
+   if UberUI_ButtonPressed(PlayBtn)=1 then UberCore_DisableEditormode():goto aftermenu
+   gosub UberUI_Update
+   version$=UberCore_GetVersion()
+   UberUI_DrawText(UberUI_GetScreenWidth(),UberUI_GetScreenHeight()-20,"UberEngine v"+version$+" (C) BlitzWerks Technology 2008",2,set alpha(rgb(255,255,255),128),menulayer)
+   sync
+endwhile
+end
+
+return
+
+
+function Set_Menu_Screen(number)
+select number
+   case 1
+      UberUI_SetButtonVisible(PlayBtn,1)
+      UberUI_SetButtonVisible(CreditBtn,1)
+      UberUI_SetButtonVisible(ExitBtn,1)
+      UberUI_SetButtonVisible(BackBtn,0)
+      UberUI_SetButtonVisible(UpdateBtn,1)
+      UberUI_SetButtonVisible(InstallBtn,0)
+   endcase
+   case 2
+      UberUI_SetButtonVisible(PlayBtn,0)
+      UberUI_SetButtonVisible(CreditBtn,0)
+      UberUI_SetButtonVisible(ExitBtn,0)
+      UberUI_SetButtonVisible(BackBtn,1)
+      UberUI_SetButtonVisible(UpdateBtn,0)
+      UberUI_SetButtonVisible(InstallBtn,0)
+   endcase
+   case 3
+      UberUI_SetButtonVisible(PlayBtn,0)
+      UberUI_SetButtonVisible(CreditBtn,0)
+      UberUI_SetButtonVisible(ExitBtn,0)
+      UberUI_SetButtonVisible(BackBtn,1)
+      UberUI_SetButtonVisible(UpdateBtn,0)
+      UberUI_SetButtonVisible(InstallBtn,0)
+   endcase
+endselect
+menuscreen=number
+endfunction
+
+function pastecredits()
+
+UberUI_DrawText(UberUI_GetScreenWidth()/2,10,"ONE",1,set alpha(rgb(255,255,255),128),menulayer)
+
+`PROGRAMMING
+UberUI_DrawText(UberUI_GetScreenWidth(),30,"Lead Programming",2,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(UberUI_GetScreenWidth(),40,"--------------------------------",2,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(UberUI_GetScreenWidth(),60,"Karl Hobley",2,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(UberUI_GetScreenWidth(),90,"Programming",2,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(UberUI_GetScreenWidth(),100,"----------------------",2,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(UberUI_GetScreenWidth(),120,"Mike Wild",2,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(UberUI_GetScreenWidth(),140,"Joshua Garland",2,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(UberUI_GetScreenWidth(),180,"Additional Programming",2,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(UberUI_GetScreenWidth(),190,"--------------------------------------------",2,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(UberUI_GetScreenWidth(),210,"IanM - Matrix1Util",2,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(UberUI_GetScreenWidth(),230,"Sparky - Collision",2,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(UberUI_GetScreenWidth(),250,"EVOLVED - Shaders",2,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(UberUI_GetScreenWidth(),270,"Cloggy - D3D_Func",2,set alpha(rgb(255,255,255),128),menulayer)
+
+`3D MODDELING
+UberUI_DrawText(10,30,"Lead 3D Modeling",0,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(10,40,"------------------------------------",0,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(10,60,"Noone",0,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(10,90,"3D Modeling",0,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(10,100,"----------------------",0,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(10,120,"Noone",0,set alpha(rgb(255,255,255),128),menulayer)
+
+`ART
+UberUI_DrawText(10,170,"Lead Artist",0,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(10,180,"----------------------",0,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(10,200,"Noone",0,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(10,230,"Artists",0,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(10,240,"--------------",0,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(10,260,"Alex Dix",0,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(10,280,"Greg Holgate",0,set alpha(rgb(255,255,255),128),menulayer)
+
+`MUSIC
+UberUI_DrawText(10,310,"Music",0,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(10,330,"----------------------",0,set alpha(rgb(255,255,255),128),menulayer)
+UberUI_DrawText(10,340,"James Hobley",0,set alpha(rgb(255,255,255),128),menulayer)
+
+endfunction

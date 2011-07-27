@@ -1,0 +1,78 @@
+type UberSound
+sounds as dword
+bgsound as dword
+endtype
+
+type UberSound_Sound
+dbpronum as dword
+endtype
+
+type UberSound_SphereZone
+x as float
+y as float
+z as float
+radius as float
+sound as dword
+involume as dword
+outvolume as dword
+endtype
+
+type UberSound_Boxzone
+x1 as float
+y1 as float
+z1 as float
+x2 as float
+y2 as float
+z2 as float
+volume as dword
+sound as dword
+endtype
+
+UberSound_Start:
+UberSound as UberSound
+dim UberSound_Sound(0) as UberSound_Sound
+UberSound.bgsound=UberCore_FreeSound()
+return
+
+UberSound_Update:
+
+return
+
+UberSound_Reset:
+if sound exist(UberSound.bgsound) then delete sound UberSound.bgsound
+for i=1 to UberSound.sounds
+   delete sound UberSound_Sound(i).dbpronum
+next i
+undim UberSound_Sound(0)
+dim UberSound_Sound(0) as UberSound_Sound
+return
+
+UberSound_End:
+undim UberSound_Sound(0)
+return
+
+function UberSound_loadsound(file$)
+
+file=UberFile_LoadFile(UberCore_Folders.sounds+file$)
+UberFile_LoadScript(file,"settings.txt")
+
+if lower$(lua string$("filetype"))="sound"
+   select upper$(lua string$("engineversion"))
+      case "UB0.01"
+         inc UberSound.sounds
+         array insert at bottom UberSound_Sound(0)
+         UberSound_Sound(UberSound.sounds).dbpronum=UberFile_ExtractSound(file,lua string$("filename"))
+      endcase
+   endselect
+endif
+ptr=UberSound.sounds
+UberFile_CloseFile(file)
+endfunction ptr
+
+function UberSound_SetBackGroundSound(sound)
+if sound exist(UberSound.bgsound) then delete sound UberSound.bgsound
+if sound
+   clone sound UberSound.bgsound,UberSound_Sound(sound).dbpronum
+   loop sound UberSound.bgsound
+endif
+endfunction

@@ -1,0 +1,71 @@
+
+/////////////////////////////////////////////////////
+//
+// OpenFPS Master Server Test Module
+//
+// Created by miso
+// Maintained by --
+//
+/////////////////////////////////////////////////////
+
+//----- Changelog:
+//(03/27/11) - miso  - Created
+
+`-------INCLUDES---------
+#Include MODULES\SyS_Core.dba
+#Include MODULES\SyS_Debug.dba
+#Include MODULES\SyS_Display.dba
+#Include MODULES\SyS_Fonts.dba
+rem #Include MODULES\SyS_Gadgets.dba
+#Include MODULES\SyS_Input.dba
+#Include MODULES\SyS_Mouse.dba
+#Include MODULES\SyS_Resource.dba
+#Include MODULES\SyS_Windows.dba
+`-------GLOBALS----------
+`------- MAIN -----------
+
+Client_startGUI()
+NET_STARTWINSOCK()
+rem NET_START_MASTERSERVER()
+NET_START_IdleClient()
+load music "data\music\isolate.mp3",1
+loop music 1
+disable escapekey
+local lolo as dword
+lolo=make memory(net_mtu)
+winsock set channel target net_channel(3),"127.0.0.1",net_mrport
+poke dword lolo,net_openfpsid
+poke word lolo+4,15
+poke word lolo+6,0
+
+
+winsock send udp message net_channel(3),lolo,net_mtu
+winsock send udp message net_channel(3),lolo,net_mtu
+winsock send udp message net_channel(3),lolo,net_mtu
+
+do 
+	//if has focus()
+		TEST_updateclntbackground()
+		sys_putwindow(0,404,39,3)
+		SyS_Handlegadgets()
+		SyS_CenterText(1,320,180,"MEMORY:"+str$(SyStem smem available()))
+		If NET_PP>0 then SyS_CenterText(1,320,200,"Resents:"+str$(NET_PACKET_RESENT(1)))
+		SyS_CenterText(1,320,220,"Pending:"+str$(NET_PP)+" packets.")
+		if net_PP>0
+			a=peek word(NET_PACKET_ADRESS(1)+4)
+			SyS_CenterText(1,320,240,"Packet type of the first pending packet:"+str$(peek word(NET_PACKET_ADRESS(1)+4)))
+		endif
+		SyS_Handlemouse()
+	
+		SyS_Synchandle()
+	//endif
+rem NET_SERVER_RECEIVE() 	
+NET_CLIENT_RECEIVE()
+	nice wait 4
+	if escapekey() then NET_closewinsock()	
+loop
+
+
+
+
+

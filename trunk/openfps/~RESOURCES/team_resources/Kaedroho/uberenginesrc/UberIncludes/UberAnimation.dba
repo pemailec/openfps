@@ -1,0 +1,89 @@
+type UberAnimation
+animobjects as dword
+endtype
+
+type UberAnimation_Object
+dbproobject as dword
+startframe as dword
+endframe as dword
+frame as float
+speed as float
+looping as boolean
+animating as boolean
+endtype
+
+UberAnimation_start:
+UberAnimation as UberAnimation
+dim UberAnimation_Object(0) as UberAnimation_Object
+return
+
+UberAnimation_Update:
+for i=1 to UberAnimation.animobjects
+	if UberAnimation_Object(i).animating
+		UberAnimation_Object(i).frame=UberAnimation_Object(i).frame+UberCore.ElapsedTime*UberAnimation_Object(i).speed
+		if UberAnimation_Object(i).frame>UberAnimation_Object(i).endframe
+		  if UberAnimation_Object(i).looping
+        UberAnimation_Object(i).frame=UberAnimation_Object(i).startframe
+		  else
+        UberAnimation_Object(i).frame=UberAnimation_Object(i).endframe
+      endif
+    endif
+		set object frame UberAnimation_Object(i).dbproobject,UberAnimation_Object(i).frame
+	endif
+next i
+return
+
+UberAnimation_end:
+undim UberAnimation_Object(0)
+UberAnimation.animobjects=0
+return
+
+function UberAnimation_PlayObject(objnum,startframe,endframe)
+animobject=UberAnimation_LookupObject(objnum)
+if animobject
+	UberAnimation_SetObjectAnimation(animobject,startframe,endframe,0)
+else
+	animobject=UberAnimation_AddObject(objnum)
+	UberAnimation_SetObjectAnimation(animobject,startframe,endframe,0)
+endif
+endfunction
+
+function UberAnimation_StopObject(objnum)
+UberAnimation_Object(objnum).animating=0
+endfunction
+
+function UberAnimation_SetObjectAnimation(objnum,startframe,endframe,looping)
+UberAnimation_Object(objnum).animating=1
+UberAnimation_Object(objnum).looping=looping
+UberAnimation_Object(objnum).startframe=startframe
+UberAnimation_Object(objnum).endframe=endframe
+UberAnimation_Object(objnum).frame=startframe
+endfunction
+
+function UberAnimation_AddObject(objnum)
+inc UberAnimation.animobjects
+Array insert at bottom UberAnimation_Object(0)
+n=UberAnimation.animobjects
+UberAnimation_Object(n).dbproobject=objnum
+UberAnimation_Object(n).speed=20
+ptr=n
+endfunction ptr
+
+function UberAnimation_LookupObject(objnum)
+for i=1 to UberAnimation.animobjects
+	if objnum=UberAnimation_Object(i).dbproobject then exitfunction i
+next i
+endfunction 0
+
+function UberAnimation_SetObjectSpeed(animobject,speed#)
+UberAnimation_Object(animobject).speed=speed#
+endfunction
+
+function UberAnimation_GetObjectFrame(animobject)
+frame#=UberAnimation_Object(animobject).frame
+endfunction frame#
+
+function UberAnimation_SetObjectFrame(animobject,frame#)
+UberAnimation_Object(animobject).frame=frame#
+UberAnimation_Object(animobject).animating=0
+endfunction

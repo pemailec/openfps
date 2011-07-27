@@ -391,10 +391,8 @@ function MENU_CreateButtons():
 	case "NONE"
 		local x as integer: local y as integer
 		x=168:y=(UI_Display.Height*0.3)
-		UI_AddCenterGadgettoScreen("button_lobby",x,y,"UI_button")
-		UI_AddMouseoverImageToGadget("button_lobby","UI_button")
-		`UI_AddMouseoverTitleToGadget("button_lobby",4,mousex(),mousey(),"Disabled in demo!")
-		
+		UI_AddCenterGadgettoScreen("button_lobby",x,y,"UI_button_gray")
+		`UI_AddMouseoverImageToGadget("button_lobby","UI_button")
 		UI_AddtitleToGadget("button_lobby",3,x-8,y-14,"Lobby")
 		x=168:y=y+60
 		UI_AddCenterGadgettoScreen("button_campaign",x,y,"UI_button")
@@ -409,8 +407,8 @@ function MENU_CreateButtons():
 		UI_AddMouseoverImageToGadget("button_options","UI_buttonhover")
 		UI_AddtitleToGadget("button_options",3,x-8,y-14,"Options")
 		x=168:y=y+60
-		UI_AddCenterGadgettoScreen("button_credits",x,y,"UI_button")
-		UI_AddMouseoverImageToGadget("button_credits","UI_buttonhover")
+		UI_AddCenterGadgettoScreen("button_credits",x,y,"UI_button_gray")
+		`UI_AddMouseoverImageToGadget("button_credits","UI_buttonhover")
 		UI_AddtitleToGadget("button_credits",3,x-8,y-14,"Credits")
 		x=168:y=y+60
 		UI_AddCenterGadgettoScreen("button_quit",x,y,"UI_button")

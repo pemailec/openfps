@@ -1,0 +1,49 @@
+///////////////////////////////
+// Entity system TEST
+// 1/31/11
+// thenerd
+///////////////////////////////
+
+sync on
+sync rate 0
+backdrop on
+color backdrop 0
+autocam off
+
+position camera 0,100,0
+point camera 0,0,0
+
+RES_init()
+
+ENT_Init()
+
+//      ENT_SetAttribute( MyEntity, ENT_ATTR_OBJECT, str$(ObjNum) )
+//
+
+for x=1 to 5:
+	make object sphere x,5
+	position object x,rnd(80)-40,0,rnd(80)-40
+	ent=ENT_AddEntity("object"+str$(x),ENT_TYPE_OBJECT)
+	ENT_SetAttribute(ent,ENT_ATTR_NAME,"object"+str$(x))
+	ENT_SetAttribute(ent,ENT_ATTR_OBJECT,"sphere")
+	ENT_SetAttribute(ent,ENT_ATTR_POSITION,str$(object position x(x))+","+str$(object position y(x))+","+str$(object position z(x)))
+	ENT_SetAttribute(ent,ENT_ATTR_DYNAMIC,"0")
+	ENT_SetAttribute(ent,ENT_ATTR_PHYSICS,"0")
+next x
+
+ENT_SaveEntities("EntityList")
+
+do
+	set cursor 0,0
+	print "Completed: Press space to quit." 
+	if spacekey() then exit
+	sync
+loop
+
+print "Terminating!"
+ENT_Terminate()
+
+
+end
+
+///////////////////////////////

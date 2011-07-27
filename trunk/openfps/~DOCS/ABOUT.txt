@@ -1,0 +1,2 @@
+/openfps/~DOCS/:
+General resource folder for documentation.

@@ -1,0 +1,105 @@
+//////////////////////////////////////
+// FUNCTIONS
+//////////////////////////////////////
+type objectanim_type
+   objectid as integer
+   currentframe# as float
+   currentloop as integer
+   storeloop as integer
+   blend as integer
+   blendstage# as float
+   storestartframe as integer
+endtype
+
+function AnimInit()
+	global newanimid as integer = 0
+	maxobjectanim as integer = 500
+	dim objectanim(maxobjectanim) as objectanim_type
+	global animSpeed# as float = 20.0
+	global animTimer as integer = timer()
+	global timeFrame# as float
+	global AnimState as string
+endfunction
+
+function AnimController(animID,startframe,endframe,loops,blend#)
+
+   if objectanim(animID).storestartframe <> startframe
+      objectanim(animID).blend = 0
+      objectanim(animID).blendstage# = 0
+      objectanim(animID).currentframe# = 0
+      objectanim(animID).currentloop = 0
+   endif
+   objectanim(animID).storestartframe = startframe
+
+ if objectanim(animID).blendstage# < 100
+    objectanim(animID).blend = 1
+ endif
+
+
+ if objectanim(animID).blend = 0
+   if objectanim(animID).currentframe# = 0
+      objectanim(animID).currentframe# = startframe
+   endif
+
+   if loops = 0
+      objectanim(animID).currentloop = 1
+   endif
+
+   if objectanim(animID).currentloop > -1
+      objectanim(animID).currentframe# = objectanim(animID).currentframe# + timeFrame#
+   endif
+
+   if objectanim(animID).currentframe# > endframe
+      objectanim(animID).currentframe# = startframe
+      inc objectanim(animID).currentloop
+   endif
+
+   if objectanim(animID).currentloop = loops
+      objectanim(animID).currentloop = -1
+      objectanim(animID).storeloop = 0
+   endif
+
+   if objectanim(animID).currentloop > -1 or loops = 0
+      set object frame objectanim(animID).objectid, objectanim(animID).currentframe#
+   endif
+ endif
+
+ if objectanim(animID).blend = 1
+   if blend# = 0
+      objectanim(animID).blendstage# = 100
+   else
+      objectanim(animID).blendstage# = objectanim(animID).blendstage# + (timeFrame#*(blend#))
+   endif
+   set object interpolation objectanim(animID).objectid, objectanim(animID).blendstage#
+
+   if objectanim(animID).blendstage# >= 100
+      objectanim(animID).blend = 0
+      objectanim(animID).blendstage# = 100
+      objectanim(animID).currentframe# = 0
+   endif
+   set object frame objectanim(animID).objectid, startframe
+
+ endif
+
+
+endfunction
+
+function AnimPause(animId)
+   if objectanim(animID).currentloop > -1
+      objectanim(animID).storeloop = objectanim(animID).currentloop
+   endif
+   objectanim(animID).currentloop = -1
+endfunction
+
+function AnimContinue(animId)
+   objectanim(animID).currentloop = objectanim(animID).storeloop
+endfunction
+
+function AnimReset(animId)
+   objectanim(animID).currentloop = 0
+   objectanim(animID).currentframe# = 0
+endfunction
+
+function NewAnimIndex()
+   newanimid=newanimid+1
+endfunction newanimid

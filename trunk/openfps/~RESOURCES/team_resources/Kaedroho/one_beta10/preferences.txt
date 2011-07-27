@@ -1,0 +1,8 @@
+Preferences_hudcolourR=0
+Preferences_hudcolourG=255
+Preferences_hudcolourB=0
+
+Preferences_DisplayWidth=1024
+Preferences_DisplayHeight=768
+Preferences_DisplayDepth=32
+Preferences_vsync=1

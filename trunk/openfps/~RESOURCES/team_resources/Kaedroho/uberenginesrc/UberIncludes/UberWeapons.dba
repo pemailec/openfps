@@ -1,0 +1,884 @@
+type UberWeapon
+guns as dword
+guntypes as dword
+defultprojtype as dword
+ammos as dword
+ammotypes as dword
+endtype
+
+type UberWeapon_GunType
+SE_GunType as dword
+name as string
+singleavailable as boolean
+burstavailable as boolean
+autoavailable as boolean
+loadtime as dword
+mainobject as dword
+hudoffsetx as float
+hudoffsety as float
+hudoffsetz as float
+aimedhudoffsetx as float
+aimedhudoffsety as float
+aimedhudoffsetz as float
+hudentoffsetx as float
+hudentoffsety as float
+hudentoffsetz as float
+zoom as float
+recoil as float
+
+anim_selectstart as dword
+anim_selectend as dword
+anim_idle as dword
+anim_reloadstart as dword
+anim_reloadend as dword
+anim_cockstart as dword
+anim_cockend as dword
+anim_putawaystart as dword
+anim_putawayend as dword
+hudobjnumanim as dword
+
+hudobjnum as dword
+magsize as dword
+maxspareammo as dword
+particletype as dword
+endtype
+
+type UberWeapon_AmmoType
+size as dword
+mainobject as dword
+dynamic as boolean
+guntype as dword
+name as string
+endtype
+
+type UberWeapon_Ammo
+objnum as dword
+body as dword
+ammo as dword
+tipe as dword
+exists as boolean
+endtype
+
+type UberWeapon_Gun
+tipe as dword
+SEGun as dword
+Body as dword
+firemode as byte
+burstbulletnum as byte
+nopress as boolean
+lastshot as dword
+recoil as float
+position as byte `0 = on map 1 = in box 2 = on player 3 = on actor 4 = fixed
+thingid as dword `if in box then its the box if on actor then its the actor
+ammo as dword
+spareammo as dword
+exists as boolean
+endtype
+
+UberWeapon_Start:
+UberWeapon as UberWeapon
+dim UberWeapon_Gun(0) as UberWeapon_Gun
+dim UberWeapon_GunType(0) as UberWeapon_GunType
+dim UberWeapon_AmmoType(0) as UberWeapon_AmmoType
+dim UberWeapon_Ammo(0) as UberWeapon_Ammo
+SE_Start()
+
+projtype=SE_MakeProjectiletype()
+SE_SetProjectiletypeLife(projtype,5.0)
+SE_SetProjectiletypeSpeed(projtype,34000.0)
+UberWeapon.defultprojtype=projtype
+return
+
+UberWeapon_Update:
+for i=1 to UberWeapon.guns
+	if UberWeapon_Gun(i).exists
+		UberWeapon_Gun(i).recoil=UberWeapon_Gun(i).recoil-20*UberCore.elapsedtime
+		if UberWeapon_Gun(i).recoil<0 then UberWeapon_Gun(i).recoil=0
+		select UberWeapon_Gun(i).position
+			case 0
+				`on map
+				SE_PositionGun(UberWeapon_Gun(i).SEGun,UberPhysX_BodyPositionX(UberWeapon_Gun(i).body),UberPhysX_BodyPositionY(UberWeapon_Gun(i).body),UberPhysX_BodyPositionZ(UberWeapon_Gun(i).body))
+				SE_RotateGun(UberWeapon_Gun(i).SEGun,UberPhysX_BodyRotationX(UberWeapon_Gun(i).body),UberPhysX_BodyRotationY(UberWeapon_Gun(i).body),UberPhysX_BodyRotationZ(UberWeapon_Gun(i).body))
+			endcase
+			case 1
+				`in box
+			endcase
+			case 2
+				`on player
+			endcase
+			case 3
+				`on actor
+			endcase
+			case 4
+				`fixed
+			endcase
+		endselect
+	endif
+next i
+for i=1 to UberWeapon.Ammos
+	if UberWeapon_Ammo(i).exists
+		if UberCalcs_GetDistanceSquared(UberPlayer_GetPlayerX(),UberPlayer_GetPlayerY(),UberPlayer_GetPlayerZ(),UberPhysX_BodyPositionX(UberWeapon_Ammo(i).body),UberPhysX_BodyPositionY(UberWeapon_Ammo(i).body),UberPhysX_BodyPositionZ(UberWeapon_Ammo(i).body))<(UberCore.viewrange/2)^2
+			position object UberWeapon_Ammo(i).objnum,UberPhysX_BodyPositionX(UberWeapon_Ammo(i).body),UberPhysX_BodyPositionY(UberWeapon_Ammo(i).body),UberPhysX_BodyPositionZ(UberWeapon_Ammo(i).body)
+			rotate object UberWeapon_Ammo(i).objnum,UberPhysX_BodyRotationX(UberWeapon_Ammo(i).body),UberPhysX_BodyRotationY(UberWeapon_Ammo(i).body),UberPhysX_BodyRotationZ(UberWeapon_Ammo(i).body)
+			show object UberWeapon_Ammo(i).objnum
+			UberPhysX_SetBodySleeping(body,0)
+		else
+			hide object UberWeapon_Ammo(i).objnum
+			UberPhysX_SetBodySleeping(body,1)
+		endif
+		if UberPlayer_Gun()
+			if UberCalcs_GetDistanceSquared(UberPlayer_GetPlayerX(),UberPlayer_GetPlayerY(),UberPlayer_GetPlayerZ(),UberPhysX_BodyPositionX(UberWeapon_Ammo(i).body),UberPhysX_BodyPositionY(UberWeapon_Ammo(i).body),UberPhysX_BodyPositionZ(UberWeapon_Ammo(i).body))<200^2
+				ammobefore=UberWeapon_Gun(UberPlayer_Gun()).spareammo
+				UberWeapon_AddAmmoToGun(i,UberPlayer_Gun())
+				ammoafter=UberWeapon_Gun(UberPlayer_Gun()).spareammo
+				numrounds=ammoafter-ammobefore
+				if numrounds>0
+					gunname$=UberWeapon_GunType(UberWeapon_Gun(UberPlayer_Gun()).tipe).name
+					UberPlayer_DisplayMessage("Picked up "+str$(numrounds)+" rounds of "+gunname$+" ammo.",rgb(255,255,255))
+				endif
+			endif
+		endif
+	endif
+next i
+SE_Update(UberCore.elapsedtime)
+
+for i=1 to SE_GetCollisionCount()
+	object=SE_GetCollisionObject(i)
+	material=UberCore_Object(object).material
+	if material
+		particles=UberMaterials_Material(material).particles
+		if particles
+			
+			x#=SE_GetCollisionPositionX(i)
+			y#=SE_GetCollisionPositionY(i)
+			z#=SE_GetCollisionPositionZ(i)
+			xnorm#=SE_GetCollisionNormalX(i)
+			ynorm#=SE_GetCollisionNormalY(i)
+			znorm#=SE_GetCollisionNormalZ(i)
+            
+            for i=1 to 3
+    			velocity#=50.0+rnd(50)
+    			
+    			position object UberCore.checkobj,0,0,0
+    			point object UberCore.checkobj,xnorm#,ynorm#,znorm#
+    			ang#=rnd(359)
+    			dist#=rnd(30)
+    			xturn#=sin(ang#)*dist#
+    			yturn#=cos(ang#)*dist#
+    			turn object right UberCore.checkobj,xturn#
+    			pitch object down UberCore.checkobj,yturn#
+    			move object UberCore.checkobj,velocity#
+    			
+    			UberFX_makeparticle(x#,y#,z#,xvel#,yvel#,zvel#,particles)
+			next i
+		endif
+	endif
+next i
+return
+
+UberWeapons_End:
+undim UberWeapon_Gun(0)
+undim UberWeapon_GunType(0)
+undim UberWeapon_AmmoType(0)
+undim UberWeapon_Ammo(0)
+UberWeapon.ammos=0
+UberWeapon.ammotypes=0
+UberWeapon.guns=0
+UberWeapon.guntypes=0
+SE_End()
+return
+
+function UberWeapon_LoadGun(file$)
+
+
+n=0
+file=UberFile_LoadFile(UberCore_Folders.weapons+file$)
+UberFile_LoadScript(file,"settings.txt")
+
+if lower$(lua string$("filetype"))="weapon"
+   select upper$(lua string$("engineversion"))
+      case "UB0.04"
+      	inc UberWeapon.guntypes
+      	array insert at bottom UberWeapon_GunType(0)
+      	n=UberWeapon.guntypes
+      	imgnum=UberFile_ExtractImageNoDelete(file,lua string$("image"))
+      	handimg=0
+      	if lua string$("handimage") then handimg=UberFile_ExtractImageNoDelete(file,lua string$("handimage"))
+      	objnum=UberFile_ExtractObject(file,lua string$("model"))
+      	hudobjnum=UberFile_ExtractObject(file,lua string$("hudmodel"))
+      	scale object hudobjnum,lua float("hudmodelscale"),lua float("hudmodelscale"),lua float("hudmodelscale")
+      	
+      	delete file lua string$("image")
+      	if handimg then delete file lua string$("handimage")
+      	
+      	sndnum=UberFile_ExtractSound(file,lua string$("sound"))
+      	texture object objnum,imgnum
+      	texture limb hudobjnum,lua int("weaponlimb"),imgnum
+      	UberWeapon_GunType(n).mainobject=objnum
+      	guntype=SE_MakeGunType(objnum,UberWeapon.defultprojtype)
+			UberWeapon_GunType(n).SE_GunType=guntype
+			UberWeapon_GunType(n).zoom=lua float("zoom")-1.0
+			UberWeapon_GunType(n).name=lua string$("name")
+			
+			UberWeapon_GunType(n).hudoffsetx=lua float("hudoffsetx")
+			UberWeapon_GunType(n).hudoffsety=lua float("hudoffsety")
+			UberWeapon_GunType(n).hudoffsetz=lua float("hudoffsetz")
+			UberWeapon_GunType(n).aimedhudoffsetx=lua float("aimedhudoffsetx")
+			UberWeapon_GunType(n).aimedhudoffsety=lua float("aimedhudoffsety")
+			UberWeapon_GunType(n).aimedhudoffsetz=lua float("aimedhudoffsetz")
+			UberWeapon_GunType(n).hudentoffsetx=lua float("hudentoffsetx")
+			UberWeapon_GunType(n).hudentoffsety=lua float("hudentoffsety")
+			UberWeapon_GunType(n).hudentoffsetz=lua float("hudentoffsetz")
+			UberWeapon_GunType(n).loadtime=(1/(lua float("firerate")/60.0))*1000
+			UberWeapon_GunType(n).recoil=lua float("recoil")
+			UberWeapon_GunType(n).magsize=lua float("magsize")
+			UberWeapon_GunType(n).maxspareammo=lua float("maxspareammo")
+			
+			UberWeapon_GunType(n).anim_selectstart=lua int("anim_selectstart")
+			UberWeapon_GunType(n).anim_selectend=lua int("anim_selectend")
+			UberWeapon_GunType(n).anim_idle=lua int("anim_idle")
+			UberWeapon_GunType(n).anim_reloadstart=lua int("anim_reloadstart")
+			UberWeapon_GunType(n).anim_reloadend=lua int("anim_reloadend")
+			UberWeapon_GunType(n).anim_cockstart=lua int("anim_cockstart")
+			UberWeapon_GunType(n).anim_cockend=lua int("anim_cockend")
+			UberWeapon_GunType(n).anim_putawaystart=lua int("anim_putawaystart")
+			UberWeapon_GunType(n).anim_putawayend=lua int("anim_putawayend")
+			UberWeapon_GunType(n).hudobjnum=hudobjnum
+			UberWeapon_GunType(n).hudobjnumanim=UberAnimation_AddObject(hudobjnum)
+			UberAnimation_SetObjectSpeed(UberWeapon_GunType(n).hudobjnumanim,lua int("anim_speed"))
+			
+			
+
+			
+			if lua string$("muzzleparticles")=""
+			else
+				UberWeapon_GunType(n).particletype=UberFX_GetParticletypeindex(lua string$("muzzleparticles"))
+				SE_SetGunTypeParticletype(guntype,UberWeapon_GunType(n).particletype)
+			endif
+			
+
+			
+			SE_SetGuntypeMuzzleDirection(guntype,lua int("muzdir"))
+			SE_SetGunTypeMuzzlePosition(guntype,lua float("muzposx"),lua float("muzposy"),lua float("muzposz"))
+			SE_ScaleGuntypeObject(guntype,lua float("objectscale"))
+			SE_SetGunTypeSound(guntype,sndnum)
+			SE_SetGunTypeAccuracy(guntype,lua float("accuracy"))
+      endcase
+   endselect
+endif
+
+UberFile_CloseFile(file)
+endfunction n
+
+function UberWeapon_MakeGun(tipe)
+inc UberWeapon.Guns
+array insert at bottom UberWeapon_Gun(0)
+n=UberWeapon.Guns
+objnum=UberCore_FreeObject()
+make object box objnum,object size x(UberWeapon_GunType(tipe).mainobject),object size y(UberWeapon_GunType(tipe).mainobject),object size z(UberWeapon_GunType(tipe).mainobject)
+exclude object on objnum
+
+UberWeapon_Gun(n).body=UberPhysX_MakeBody(1,objnum)
+UberWeapon_Gun(n).SEGun=SE_MakeGun(tipe)
+UberWeapon_Gun(n).tipe=tipe
+UberWeapon_Gun(n).exists=1
+
+ptr=n
+endfunction ptr
+
+function UberWeapon_LoadAmmo(file$)
+ptr=0
+file=UberFile_LoadFile("media/"+file$)
+UberFile_LoadScript(file,"settings.txt")
+
+if lower$(lua string$("filetype"))="ammo"
+   select upper$(lua string$("engineversion"))
+      case "UB0.04"
+      	inc UberWeapon.ammotypes
+      	array insert at bottom UberWeapon_AmmoType(0)
+      	n=UberWeapon.ammotypes
+      	UberWeapon_AmmoType(n).size=lua int("size")
+      	UberWeapon_AmmoType(n).name=lua string$("name")
+			UberWeapon_AmmoType(n).mainobject=UberFile_ExtractObject(file,lua string$("model"))
+			texture object UberWeapon_AmmoType(n).mainobject,UberFile_ExtractImage(file,lua string$("texture"))
+			`exclude object on UberWeapon_AmmoType(n).mainobject
+			UberWeapon_AmmoType(n).dynamic=lua int("dynamic")
+			UberWeapon_AmmoType(n).guntype=UberWeapon_GetGunTypeIndex(lua string$("guntype"))
+      	ptr=n
+      endcase
+   endselect
+endif
+endfunction ptr
+
+function UberWeapon_MakeAmmo(tipe)
+inc UberWeapon.Ammos
+array insert at bottom UberWeapon_Ammo(0)
+n=UberWeapon.Ammos
+objnum=UberCore_FreeObject()
+make object box objnum,object size x(UberWeapon_AmmoType(tipe).mainobject),object size y(UberWeapon_AmmoType(tipe).mainobject),object size z(UberWeapon_AmmoType(tipe).mainobject)
+exclude object on objnum
+
+entobjnum=UberCore_FreeObject()
+instance object entobjnum,UberWeapon_AmmoType(tipe).mainobject
+
+UberWeapon_Ammo(n).body=UberPhysX_MakeBody(1,objnum)
+UberWeapon_Ammo(n).ammo=UberWeapon_AmmoType(tipe).size
+UberWeapon_Ammo(n).tipe=tipe
+UberWeapon_Ammo(n).objnum=entobjnum
+UberWeapon_Ammo(n).exists=1
+
+ptr=n
+endfunction ptr
+
+function UberWeapon_GetGunTypeIndex(name$)
+for i=1 to UberWeapon.guntypes
+	if UberWeapon_GunType(i).name=name$ then exitfunction i
+next i
+endfunction 0
+
+function UberWeapon_SetAmmoPosition(ammo,x#,y#,z#)
+if UberWeapon_Ammo(ammo).exists
+	UberPhysX_PositionBody(UberWeapon_Ammo(ammo).body,x#,y#,z#)
+endif
+endfunction
+
+function UberWeapon_SetAmmoRotation(ammo,x#,y#,z#)
+if UberWeapon_Ammo(ammo).exists
+	UberPhysX_RotateBody(UberWeapon_Ammo(ammo).body,x#,y#,z#)
+endif
+endfunction
+
+function UberWeapon_AddAmmoToGun(ammo,gun)
+if UberWeapon_Ammo(ammo).exists
+	UberWeapon_Ammo(ammo).ammo=UberWeapon_AddAmmo(gun,UberWeapon_Ammo(ammo).ammo)
+	if UberWeapon_Ammo(ammo).ammo=0 then UberWeapon_DeleteAmmo(ammo)
+endif
+endfunction
+
+function UberWeapon_DeleteAmmo(ammo)
+if UberWeapon_Ammo(ammo).exists
+	UberWeapon_Ammo(ammo).exists=0
+	delete object UberWeapon_Ammo(ammo).objnum
+	UberPhysX_DeleteBody(UberWeapon_Ammo(ammo).body)
+endif
+endfunction
+
+function UberWeapon_DeleteGun(gun)
+if UberWeapon_Gun(gun).exists
+	SE_DeleteGun(UberWeapon_Gun(gun).SEGun)
+	UberWeapon_Gun(gun).exists=0
+	UberPhysX_DeleteBody(UberWeapon_Gun(gun).body)
+endif
+endfunction
+
+function UberWeapon_SetGunPosition(gun,x#,y#,z#)
+if UberWeapon_Gun(gun).exists
+	UberPhysX_PositionBody(UberWeapon_Gun(gun).body,x#,y#,z#)
+	SE_PositionGun(UberWeapon_Gun(gun).SEGun,x#,y#,z#)
+endif
+endfunction
+
+function UberWeapon_SetGunRotation(gun,x#,y#,z#)
+if UberWeapon_Gun(gun).exists
+	UberPhysX_RotateBody(UberWeapon_Gun(gun).body,x#,y#,z#)
+	SE_RotateGun(UberWeapon_Gun(gun).SEGun,x#,y#,z#)
+endif
+endfunction
+
+function UberWeapon_OffsetGun(gun,right#,up#,forward#)
+if UberWeapon_Gun(gun).exists
+	SE_OffsetGun(UberWeapon_Gun(gun).SEGun,forward#,right#,up#)
+endif
+endfunction
+
+function UberWeapon_FireGun(gun)
+if UberWeapon_Gun(gun).exists
+	guntype=UberWeapon_Gun(gun).tipe
+	if UberWeapon_Gun(gun).ammo>0
+		if UberWeapon_Gun(gun).lastshot+UberWeapon_GunType(guntype).loadtime<timer()
+			SE_FireGun(UberWeapon_Gun(gun).SEGun)
+			UberWeapon_Gun(gun).lastshot=timer()
+			UberWeapon_Gun(gun).recoil=UberWeapon_Gun(gun).recoil+UberWeapon_GunType(guntype).recoil
+			if UberWeapon_Gun(gun).recoil>5 then UberWeapon_Gun(gun).recoil=5
+			dec UberWeapon_Gun(gun).ammo
+		endif
+	endif
+endif
+endfunction
+
+function UberWeapon_ReloadGun(gun)
+if UberWeapon_Gun(gun).exists
+	guntype=UberWeapon_Gun(gun).tipe
+	UberWeapon_Gun(gun).spareammo=UberWeapon_Gun(gun).spareammo+UberWeapon_Gun(gun).ammo
+	if UberWeapon_Gun(gun).spareammo>UberWeapon_GunType(guntype).magsize
+		UberWeapon_Gun(gun).ammo=UberWeapon_GunType(guntype).magsize
+		UberWeapon_Gun(gun).spareammo=UberWeapon_Gun(gun).spareammo-UberWeapon_GunType(guntype).magsize
+	else
+		UberWeapon_Gun(gun).ammo=UberWeapon_Gun(gun).spareammo
+		UberWeapon_Gun(gun).spareammo=0
+	endif
+endif
+endfunction
+
+function UberWeapon_AddAmmo(gun,ammount)
+if UberWeapon_Gun(gun).exists
+	guntype=UberWeapon_Gun(gun).tipe
+	leftover=UberWeapon_Gun(gun).spareammo+ammount-UberWeapon_GunType(guntype).maxspareammo
+	if leftover<0 then leftover=0
+	
+	UberWeapon_Gun(gun).spareammo=UberWeapon_Gun(gun).spareammo+ammount
+	if UberWeapon_Gun(gun).spareammo>UberWeapon_GunType(guntype).maxspareammo then UberWeapon_Gun(gun).spareammo=UberWeapon_GunType(guntype).maxspareammo
+endif
+endfunction leftover
+
+`SHOOTING ENGINE COMMANDS
+
+type SE_Main
+projectiles as dword
+checkobj as dword
+guns as dword
+projectiletypes as dword
+guntypes as dword
+collisions as dword
+endtype
+
+type SE_Projectile
+x as float
+y as float
+z as float
+xvel as float
+yvel as float
+zvel as float
+exists as boolean
+tipe as dword
+objnum as dword
+emitter as dword
+starttime as dword
+gun as dword
+endtype
+
+type SE_ProjectileType
+objnum as dword
+hasemitter as boolean
+parttype as dword
+freq as dword
+rad as float
+speed as float
+emitterx as float
+emittery as float
+emitterz as float
+scale as float
+life as dword
+endtype
+
+type SE_Gun
+objnum as dword
+ammo as dword
+tipe as dword
+exists as boolean
+endtype
+
+type SE_GunType
+objnum as dword
+startammo as dword
+Projectiletype as dword
+sound as dword
+muzx as float
+muzy as float
+muzz as float
+scale as float
+muzdir as boolean
+accuracy as float
+parttype as dword
+endtype
+
+type SE_Collision
+x as float
+y as float
+z as float
+xn as float
+yn as float
+zn as float
+projtype as dword
+gun as dword
+object as dword
+endtype
+
+SE_StartVars:
+SE_Main as SE_Main
+dim SE_Projectile(0) as SE_Projectile
+dim SE_ProjectileType(0) as SE_ProjectileType
+dim SE_Gun(0) as SE_Gun
+dim SE_GunType(0) as SE_GunType
+dim SE_Collision(0) as SE_Collision
+return
+
+function SE_Start()
+gosub SE_StartVars
+SE_Main.checkobj=UberCore.checkobj
+endfunction
+
+function SE_End()
+
+for i=1 to SE_Main.guns
+	delete object SE_Gun(i).objnum
+next i
+for i=1 to SE_Main.projectiles
+	if SE_Projectile(i).objnum then delete object SE_Projectile(i).objnum
+	`if SE_Projectile(i).emitter then delete particles SE_Projectile(i).objnum
+next i
+
+
+`SE_Main.projectiletypes=0
+SE_Main.projectiles=0
+SE_Main.guns=0
+SE_Main.guntypes=0
+SE_Main.collisions=0
+
+undim SE_Projectile(0)
+undim SE_ProjectileType(0)
+undim SE_Gun(0)
+undim SE_GunType(0)
+undim SE_Collision(0)
+
+endfunction
+
+
+function SE_MakeProjectile(projtype,x#,y#,z#,xvel#,yvel#,zvel#,gun)
+n=SE_FreeProjectile()
+SE_Projectile(n).x=x#
+SE_Projectile(n).y=y#
+SE_Projectile(n).z=z#
+SE_Projectile(n).xvel=xvel#
+SE_Projectile(n).yvel=yvel#
+SE_Projectile(n).zvel=zvel#
+SE_Projectile(n).starttime=timer()
+SE_Projectile(n).tipe=projtype
+SE_Projectile(n).gun=gun
+if SE_ProjectileType(projtype).objnum
+	SE_Projectile(n).objnum=UberCore_freeobject()
+	instance object SE_Projectile(n).objnum,SE_ProjectileType(projtype).objnum
+	scale object SE_Projectile(n).objnum,SE_ProjectileType(projtype).scale,SE_ProjectileType(projtype).scale,SE_ProjectileType(projtype).scale
+endif
+if SE_ProjectileType(projtype).hasemitter
+	SE_Projectile(n).emitter=UberFX_makepointparticleemitter(0,0,0,0,0,0,SE_ProjectileType(projtype).freq,SE_ProjectileType(projtype).parttype)
+endif
+endfunction
+
+function SE_FreeProjectile()
+for i=1 to SE_Main.Projectiles
+	if SE_Projectile(i).exists=0
+		SE_Projectile(i).exists=1
+		exitfunction i
+	endif
+next i
+inc SE_Main.Projectiles
+n=SE_Main.Projectiles
+array insert at bottom SE_Projectile(0)
+SE_Projectile(n).exists=1
+endfunction n
+
+function SE_Update(elapsedtime#)
+SE_ClearCollisions()
+for i=1 to SE_Main.Projectiles
+	if SE_Projectile(i).exists
+		oldx#=SE_Projectile(i).x
+		oldy#=SE_Projectile(i).y
+		oldz#=SE_Projectile(i).z
+		
+		SE_Projectile(i).x=SE_Projectile(i).x+SE_Projectile(i).xvel*elapsedtime#
+		SE_Projectile(i).y=SE_Projectile(i).y+SE_Projectile(i).yvel*elapsedtime#
+		SE_Projectile(i).z=SE_Projectile(i).z+SE_Projectile(i).zvel*elapsedtime#
+
+		
+		if sc_raycast(0,oldx#,oldy#,oldz#,SE_Projectile(i).x,SE_Projectile(i).y,SE_Projectile(i).z,0)
+			
+			SE_Projectile(i).exists=0
+			if SE_Projectile(i).emitter
+				UberFX_deleteparticleemitter(SE_Projectile(i).emitter)
+				SE_Projectile(i).emitter=0
+			endif
+			if SE_Projectile(i).objnum
+				delete object SE_Projectile(i).objnum
+				SE_Projectile(i).objnum=0
+			else
+				d3d_line3d oldx#,oldy#,oldz#,sc_getstaticcollisionx(),sc_getstaticcollisiony(),sc_getstaticcollisionz()
+			endif
+			x#=sc_getstaticcollisionx()
+			y#=sc_getstaticcollisiony()
+			z#=sc_getstaticcollisionz()
+			xn#=sc_getcollisionnormalx()
+			yn#=sc_getcollisionnormaly()
+			zn#=sc_getcollisionnormalz()
+			projtype=SE_Projectile(i).tipe
+			gun=SE_Projectile(i).gun
+			object=sc_getobjecthit()
+			SE_AddCollision(x#,y#,z#,xn#,yn#,zn#,projtype,gun,object)
+		else
+		
+			if SE_Projectile(i).objnum
+				position object SE_Projectile(i).objnum,SE_Projectile(i).x,SE_Projectile(i).y,SE_Projectile(i).z
+				point object SE_Projectile(i).objnum,SE_Projectile(i).x+SE_Projectile(i).xvel,SE_Projectile(i).y+SE_Projectile(i).yvel,SE_Projectile(i).z+SE_Projectile(i).zvel
+			else
+				d3d_line3d oldx#,oldy#,oldz#,SE_Projectile(i).x,SE_Projectile(i).y,SE_Projectile(i).z
+			endif
+			if SE_Projectile(i).emitter
+				position object SE_Main.checkobj,SE_Projectile(i).x,SE_Projectile(i).y,SE_Projectile(i).z
+				rotate object SE_Main.checkobj,object angle x(SE_Projectile(i).objnum),object angle y(SE_Projectile(i).objnum),object angle z(SE_Projectile(i).objnum)
+				ex#=SE_ProjectileType(SE_Projectile(i).tipe).emitterx
+				ey#=SE_ProjectileType(SE_Projectile(i).tipe).emittery
+				ez#=SE_ProjectileType(SE_Projectile(i).tipe).emitterz
+				move object SE_Main.checkobj,ey#
+				move object right SE_Main.checkobj,ez#
+				move object down SE_Main.checkobj,ex#
+				
+				UberFX_setparticleemitterposition(SE_Projectile(i).emitter,object position x(SE_Main.checkobj),object position y(SE_Main.checkobj),object position z(SE_Main.checkobj))
+			endif
+			
+			if SE_Projectile(i).starttime+SE_ProjectileType(SE_Projectile(i).tipe).life<timer()
+				SE_Projectile(i).exists=0
+				if SE_Projectile(i).emitter
+					UberFX_deleteparticleemitter(SE_Projectile(i).emitter)
+					SE_Projectile(i).emitter=0
+				endif
+				if SE_Projectile(i).objnum
+					delete object SE_Projectile(i).objnum
+					SE_Projectile(i).objnum=0
+				endif
+			endif
+			
+		endif
+	endif
+next i
+endfunction
+
+function SE_MakeGunType(objnum,projtype)
+inc SE_Main.guntypes
+array insert at bottom SE_GunType(0)
+n=SE_Main.guntypes
+SE_GunType(n).objnum=objnum
+SE_GunType(n).startammo=50
+SE_GunType(n).Projectiletype=projtype
+SE_GunType(n).scale=100
+ptr=n
+endfunction ptr
+
+
+
+function SE_ScaleGuntypeObject(guntype,scale#)
+SE_GunType(guntype).scale=scale#
+endfunction
+
+function SE_SetGunTypeSound(guntype,sound)
+SE_GunType(guntype).sound=sound
+endfunction
+
+function SE_SetGunTypeAccuracy(guntype,accuracy#)
+SE_GunType(guntype).accuracy=accuracy#
+endfunction
+
+function SE_SetGunTypeParticletype(guntype,parttype)
+SE_GunType(guntype).parttype=parttype
+endfunction
+
+function SE_SetGunTypeStartAmmo(guntype,ammo)
+SE_GunType(guntype).startammo=ammo
+endfunction
+
+function SE_SetGunTypeMuzzlePosition(guntype,x#,y#,z#)
+SE_GunType(guntype).muzx=x#
+SE_GunType(guntype).muzy=y#
+SE_GunType(guntype).muzz=z#
+endfunction
+
+function SE_SetGuntypeMuzzleDirection(guntype,direction)
+SE_GunType(guntype).muzdir=direction
+endfunction
+
+function SE_MakeGun(guntype)
+inc SE_Main.guns
+array insert at bottom SE_Gun(0)
+n=SE_Main.guns
+SE_Gun(n).objnum=UberCore_freeobject()
+SE_Gun(n).ammo=SE_GunType(guntype).startammo
+SE_Gun(n).tipe=guntype
+SE_Gun(n).exists=1
+instance object SE_Gun(n).objnum,SE_GunType(guntype).objnum
+scale object SE_Gun(n).objnum,SE_GunType(guntype).scale,SE_GunType(guntype).scale,SE_GunType(guntype).scale
+ptr=n
+endfunction ptr
+
+function SE_SetGunVisible(gun,visible)
+if visible
+	show object SE_Gun(gun).objnum
+else
+	hide object SE_Gun(gun).objnum
+endif
+endfunction
+
+function SE_DeleteGun(num)
+delete object SE_Gun(num).objnum
+SE_Gun(num).exists=0
+endfunction
+
+function SE_PositionGun(gun,x#,y#,z#)
+position object SE_Gun(gun).objnum,x#,y#,z#
+endfunction
+
+function SE_RotateGun(gun,x#,y#,z#)
+rotate object SE_Gun(gun).objnum,x#,y#,z#
+endfunction
+
+function SE_OffsetGun(gun,forward#,right#,up#)
+move object SE_Gun(gun).objnum,forward#
+move object right SE_Gun(gun).objnum,right#
+move object up SE_Gun(gun).objnum,up#
+endfunction
+
+function SE_FireGun(gun)
+if SE_Gun(gun).exists
+	guntype=SE_Gun(gun).tipe
+	if SE_GunType(guntype).Projectiletype
+		tipe=SE_GunType(guntype).Projectiletype
+		position object SE_Main.checkobj,object position x(SE_Gun(gun).objnum),object position y(SE_Gun(gun).objnum),object position z(SE_Gun(gun).objnum)
+		rotate object SE_Main.checkobj,object angle x(SE_Gun(gun).objnum),object angle y(SE_Gun(gun).objnum),object angle z(SE_Gun(gun).objnum)
+		move object left SE_Main.checkobj,SE_GunType(guntype).muzx
+		move object up SE_Main.checkobj,SE_GunType(guntype).muzy
+		move object SE_Main.checkobj,SE_GunType(guntype).muzz
+		x#=object position x(SE_Main.checkobj)
+		y#=object position y(SE_Main.checkobj)
+		z#=object position z(SE_Main.checkobj)
+		position object SE_Main.checkobj,0,0,0
+		ang#=rnd(359)
+		rotate object SE_Main.checkobj,object angle x(SE_Gun(gun).objnum)+cos(ang#)*SE_GunType(guntype).accuracy,object angle y(SE_Gun(gun).objnum)+sin(ang#)*SE_GunType(guntype).accuracy,object angle z(SE_Gun(gun).objnum)
+		direction=1
+		if SE_GunType(guntype).muzdir then direction=-1
+		move object SE_Main.checkobj,1
+		xnorm#=object position x(SE_Main.checkobj)
+		ynorm#=object position y(SE_Main.checkobj)
+		znorm#=object position z(SE_Main.checkobj)
+		
+		xvel#=xnorm#*SE_Projectiletype(SE_GunType(guntype).Projectiletype).speed*direction
+		yvel#=ynorm#*SE_Projectiletype(SE_GunType(guntype).Projectiletype).speed*direction
+		zvel#=znorm#*SE_Projectiletype(SE_GunType(guntype).Projectiletype).speed*direction
+		
+		SE_MakeProjectile(tipe,x#,y#,z#,xvel#,yvel#,zvel#,gun)
+		UberFX_makemuzzleflash(x#,y#,z#,x#+xvel#,y#+yvel#,z#+zvel#)
+		if SE_GunType(guntype).parttype
+            speed#=(50+rnd(100))
+            UberFX_makeparticle(x#,y#,z#,xnorm#*direction*speed#,ynorm#*direction*speed#,znorm#*direction*speed#,SE_GunType(guntype).parttype)
+        endif
+		if SE_GunType(guntype).sound
+			if sound type(SE_GunType(guntype).sound)
+				position sound SE_GunType(guntype).sound,x#,y#,z#
+			endif
+			play sound SE_GunType(guntype).sound
+		endif
+	endif
+endif
+endfunction
+
+function SE_SetGunTypeProjectile(guntype,projectile)
+SE_GunType(guntype).Projectiletype=projectile
+endfunction
+
+function SE_MakeProjectiletype()
+inc SE_Main.projectiletypes
+array insert at bottom SE_ProjectileType(0)
+n=SE_Main.projectiletypes
+SE_Projectiletype(n).speed=1000
+SE_ProjectileType(n).scale=100
+SE_ProjectileType(n).life=5000
+ptr=n
+endfunction ptr
+
+function SE_SetProjectiletypeLife(projtype,life#)
+SE_ProjectileType(n).life=int(life#*1000)
+endfunction
+
+function SE_SetProjectiletypeProjectileObject(projtype,objnum)
+SE_ProjectileType(projtype).objnum=objnum
+endfunction
+
+function SE_SetProjectiletypeProjectileObjectScale(projtype,scale#)
+SE_ProjectileType(projtype).scale=scale#
+endfunction
+
+function SE_SetProjectiletypeEmitter(projtype,parttype,freq,rad#,x#,y#,z#)
+SE_ProjectileType(projtype).hasemitter=1
+SE_ProjectileType(projtype).parttype=parttype
+SE_ProjectileType(projtype).freq=freq
+SE_ProjectileType(projtype).rad=rad#
+SE_ProjectileType(projtype).emitterx=x#
+SE_ProjectileType(projtype).emittery=y#
+SE_ProjectileType(projtype).emitterz=z#
+endfunction
+
+function SE_SetProjectiletypeSpeed(progtype,speed#)
+SE_ProjectileType(projtype).speed=speed#
+endfunction
+
+function SE_GetCollisionCount()
+collisions=SE_Main.collisions
+endfunction collisions
+
+function SE_ClearCollisions()
+SE_Main.collisions=0
+undim SE_Collision(0)
+dim SE_Collision(0) as SE_Collision
+endfunction
+
+function SE_AddCollision(x#,y#,z#,xn#,yn#,zn#,projtype,gun,object)
+inc SE_Main.collisions
+array insert at bottom SE_Collision(0)
+n=SE_Main.collisions
+SE_Collision(n).x=x#
+SE_Collision(n).y=y#
+SE_Collision(n).z=z#
+SE_Collision(n).xn=xn#
+SE_Collision(n).yn=yn#
+SE_Collision(n).zn=zn#
+SE_Collision(n).projtype=projtype
+SE_Collision(n).gun=gun
+SE_Collision(n).object=object
+endfunction
+
+function SE_GetCollisionPositionX(collnum)
+returnval#=SE_Collision(collnum).x
+endfunction returnval#
+
+function SE_GetCollisionPositionY(collnum)
+returnval#=SE_Collision(collnum).y
+endfunction returnval#
+
+function SE_GetCollisionPositionZ(collnum)
+returnval#=SE_Collision(collnum).z
+endfunction returnval#
+
+function SE_GetCollisionNormalX(collnum)
+returnval#=SE_Collision(collnum).xn
+endfunction returnval#
+
+function SE_GetCollisionNormalY(collnum)
+returnval#=SE_Collision(collnum).yn
+endfunction returnval#
+
+function SE_GetCollisionNormalZ(collnum)
+returnval#=SE_Collision(collnum).zn
+endfunction returnval#
+
+function SE_GetCollisionProjectileType(collnum)
+returnval=SE_Collision(collnum).projtype
+endfunction returnval
+
+function SE_GetCollisionGun(collnum)
+returnval=SE_Collision(collnum).gun
+endfunction returnval
+
+function SE_GetCollisionObject(collnum)
+returnval=SE_Collision(collnum).object
+endfunction returnval
+
+function SE_GetGunObject(gun)
+objnum=SE_Gun(gun).objnum
+endfunction objnum

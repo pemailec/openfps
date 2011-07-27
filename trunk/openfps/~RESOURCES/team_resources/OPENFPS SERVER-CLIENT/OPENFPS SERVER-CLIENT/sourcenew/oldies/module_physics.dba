@@ -1,0 +1,274 @@
+remstart
+/////////////////////////////////////////////////////
+//
+// OpenFPS PHYSICS Module
+//
+// Created by thenerd
+// Maintained by thenerd
+//
+/////////////////////////////////////////////////////
+
+----- Changelog:
+(9/20/10) - thenerd - Created.
+
+----- To-Do:
+*Blank*
+
+----- Purpose:
+Handles all physics-related tasks such as:
+-Movement
+-Shooting
+-Vehicles
+-Dynamic Bodies
+-Ragdolls
+
+----- Dependancies and Conflicts (IMPORTANT STUFF):
+This module uses version 1.53 of the NDB Newton wrapper.
+the latest version can be found here:
+http://forum.thegamecreators.com/?m=forum_view&t=154086&b=5
+
+----- Other Notes:
+All the functions and variables in this module
+use the prefix "PHY_" in their names for clarity.
+
+----- Vehicles:
+Vehicles are a WIP, so they are not guaranteed to work, and
+could crash at times.
+Right now, only one vehicle (the jeep) works, this is just a 
+test. Later vehicles will be added via scripting and external
+files.
+The vehicle system uses an array, so the maximum number of 
+vehicles is 32 at one time. Any more than this will cause the
+game to crash.
+
+----- Object setup options:
+MaterialTypes:
+* Default (0) - No Settings. (DEFAULT)
+PLANNED:
+* Wood    (1) - Wood Material. 
+* Metal   (2) - Metal Material.
+
+remend
+
+/////////////////////////////////////////////////////
+// 	GLOBALS
+/////////////////////////////////////////////////////
+
+`MaterialTypes:
+global MType_DEFAULT  as integer
+`NDB Variables:
+global PHY_WorldSize# as float
+global PHY_time#      as float
+global PHY_Debug      as integer
+global PHY_CLICK	  as integer
+`TYPES:
+type PHY_VehicleBase
+   ObjectID as integer
+   TextureID as integer
+   Vis_Camera as integer
+   Vis_Height as float
+   Vis_Distance as float
+   Vis_MouseLook as integer
+   Vis_InitAngle as float
+   Vis_Soundset as integer
+endtype
+type PHY_Controller
+	Initialized as integer
+	Camera as integer
+	Speed as float
+	Height as float
+	Mass as float
+	Col as dword
+	Body as dword
+endtype
+/////////////////////////////////////////////////////
+// 	FUNCTIONS
+/////////////////////////////////////////////////////
+
+function PHY_init(world_size#,Debunk):
+	`Start Newton
+	NDB_NewtonCreate
+	
+	`Set Debug
+	PHY_Debug=Debunk
+	
+	`Set world limits
+	PHY_WorldSize#=world_size#
+	NDB_SetVector 1, 0-PHY_WorldSize#,0-PHY_WorldSize#,0-PHY_WorldSize#
+	NDB_SetVector 2, PHY_WorldSize#,PHY_WorldSize#,PHY_WorldSize#
+	NDB_NewtonSetWorldSize
+	
+	`Assign Material Types
+	MType_DEFAULT=0
+	
+	`Create character.
+	PHY_AddCharacter()
+	
+	`Reset timer
+	PHY_time# = NDB_GetElapsedTimeInSec()
+endfunction
+
+function PHY_AddTerrain(TerrainID,Collision):
+	`Add BlitzTerrain object.	
+	`Blank for now (until multiple terrains are implemented)
+	`module_terrain automatically adds the terrain chunks in.
+endfunction
+
+function PHY_AddStaticObject(ObjectID,MaterialType):
+	`Add static object.
+	col = NDB_NewtonCreateTreeCollision(ObjectID,1)
+	body = NDB_NewtonCreateBody( col )
+	NDB_BuildMatrix object angle x(ObjectID),object angle y(ObjectID),object angle z(ObjectID),object position x(ObjectID),object position y(ObjectID),object position z(ObjectID)
+	NDB_NewtonBodySetMatrix body
+	NDB_BodySetDBProData body,1
+	NDB_NewtonBodySetDestructorCallback body
+endfunction
+
+function PHY_AddDynamicObject(ObjectID,MaterialType,Link):
+	`Add dynamic object.
+	Col = NDB_NewtonCreateBox(object size x(ObjectID),object size y(ObjectID),object size z(ObjectID))
+	Obj = NDB_NewtonCreateBody(Col)
+	NDB_NewtonBodySetMassMatrix Obj,10.0,1.0,1.0,1.0
+	NDB_BodySetDBProData Obj,1
+	if Link>0 then NDB_NewtonBodySetDestructorCallback Obj
+endfunction
+
+function PHY_AddVehicle(Type):
+	`Add drivable vehicle :D
+endfunction
+
+function PHY_AddCharacter():
+	`Add character controller.
+	Global PHY_Char as PHY_Controller
+	PHY_Char.Initialized = 1
+	PHY_Char.Camera      = 0
+	PHY_Char.Speed       = 20
+	PHY_Char.Height      = 100
+	PHY_Char.Mass        = 20.0
+	PHY_Char.Col         = NDB_NewtonCreateSphere(PHY_Char.Height/2.0,PHY_Char.Height,PHY_Char.Height/2.0)
+	PHY_Char.Body        = NDB_NewtonCreateBody(PHY_Char.Col)
+
+	NDB_BuildMatrix 0.0,0.0,0.0,Camera position x(),Camera position y(),Camera position z()
+	NDB_NewtonBodySetMatrix Player
+	
+	`setting the mass...
+	NDB_SetVector 6.0, 8.0, 6.0
+	NDB_CalculateMIBoxSolid Player_Mass#
+	NDB_NewtonBodySetMassMatrix Player, Player_Mass#
+	
+	`Newton automatically "freezes" objects which have come to rest, which means they are no longer calculated
+	`each time you call NDB_NewtonUpdate.  they start calculating agani when another object hits them and sets
+	`them in motion again.  However with our Player rigid body, we want it to be moved by the user's keyboard input.
+	`if the body freezes, Newton will not let the user move the body, because it's not in the active body list.
+	`To make a long story short, we need to tell Newton NOT to freeze this body, EVER.  This will make Newton
+	`calculate this body every call to NewtonUpdate.  this of course takes processor power, so it's best not to
+	`call this for too many bodies.
+	NDB_NewtonBodySetAutoFreeze Player, 0
+	
+	NDB_BodySetGravity Player, 1
+	
+	`Here's the meat and potatoes of the character system: the UpVector joint.  this joint allows the character to
+	`move in 3 dimensions, but won't allow it to "fall over" when it hits other objects.  which is exactly what we want
+	`here.  for more info, have a look at the joint example and the documentation.
+	NDB_SetVector 0.0, 1.0, 0.0
+	UpVector = NDB_NewtonConstraintCreateUpVector( Player )
+	
+	`Finally, because we want to control the player manually, we don't want friction getting in our way and causing
+	`problems... so I remove all friction between the Player material, and the Default material (aka everything else).
+	`this makes it MUCH easier to calculate the forces needed to move the player later.
+	Default = NDB_NewtonMaterialGetDefaultGroupID()
+	PlayerID = NDB_NewtonMaterialCreateGroupID()
+	NDB_NewtonMaterialSetDefaultFriction Default, PlayerID, 0.01, 0.01
+	NDB_NewtonMaterialSetDefaultElasticity Default, PlayerID, 0.01
+	
+	`after setting the materials, we need to apply the Player material to the Player rigid body.
+	NDB_NewtonBodySetMaterialGroupID Player, PlayerID
+	
+endfunction
+
+function PHY_UpdateCharacter():
+	`Update the character.
+	
+endfunction
+
+function PHY_update():
+	`Debug
+	if PHY_Debug>0:
+		PHY_DebugTest()
+		set cursor 0,0
+		print "Screen FPS:",screen fps()
+	endif
+	
+	`Update Character
+	PHY_UpdateCharacter()
+
+	`Update physics using elapsed time (TBM!)
+	time# = NDB_GetElapsedTimeInSec()
+	NDB_NewtonUpdate time#
+endfunction
+
+function PHY_DebugTest():
+
+	`Tests the physics system.
+	`NDB_DebugDrawNewtonLines
+	if controlkey() then NDB_DebugDrawNewtonLines
+	
+	`Throw spheres
+	if mouseclick()=1 and PHY_CLICK=0
+		PHY_CLICK=1
+		`Make Sphere
+		PHY_MakeDebugSphere(camera position x(),camera position y(),camera position z(),50.0,20.0)
+	endif
+	if mouseclick()=0 then PHY_CLICK=0
+	
+endfunction
+
+function PHY_MakeDebugSphere(x#,y#,z#,s#,mass#)
+	Col = NDB_NewtonCreateSphere( s# )
+	Body = NDB_NewtonCreateBody(Col)
+	`Set initial position and rotation
+	NDB_BuildMatrix 0.0, 0.0, 0.0,x#,y#,z#
+	NDB_NewtonBodySetMatrix Body
+	NDB_CalculateMISphereSolid mass#, s#
+	NDB_NewtonBodySetMassMatrix Body, mass#
+	NDB_NewtonReleaseCollision Col
+
+	Object = grabResource(res_Object)
+	make object sphere Object,s#
+	color object Object,GetColor()
+	set object ambience Object,50
+	position object Object,x#,y#,z#
+	
+	NDB_BodySetDBProData Body,Object
+	NDB_NewtonBodySetDestructorCallback Body
+	NDB_BodySetGravity Body,1
+		
+	`Calculate Vector
+	x1#=camera position x():y1#=camera position y():z1#=camera position z():move camera 1.0
+	x2#=camera position x():y2#=camera position y():z2#=camera position z():move camera -1.0
+	unit_x#=x2#-x1#:unit_y#=y2#-y1#:unit_z#=z2#-z1#:vel#=1000.0
+	vel_x#=unit_x#*vel#:vel_y#=unit_y#*vel#:vel_z#=unit_z#*vel#
+	`Set Vector
+	NDB_SetVector vel_x#, vel_y#, vel_z#
+	NDB_NewtonBodySetVelocity Body
+endfunction
+
+function PHY_end(EndAll):
+	`Clean up and end...WARNING! THIS DELETES DB OBJECTS AS WELL!
+	if EndAll>0:
+		NDB_NewtonDestroy
+	endif
+endfunction
+
+/////////////////////////////////////////////////////
+// 	MISC
+/////////////////////////////////////////////////////
+
+function GetColor()
+	repeat
+		r = rnd(1)*255
+		g = rnd(1)*255
+		b = rnd(1)*255
+	until r<>0 or g<>0 or b<> 0
+	color =  rgb(r,g,b)
+endfunction color

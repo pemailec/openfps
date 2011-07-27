@@ -167,7 +167,7 @@ Function updatevisuals()
 	if vis_s_clip.Initialized>0:
 		vis_s_clip._Timer=vis_s_clip._Timer+1.0
 		if vis_s_clip.Current<vis_s_clip.End_Size:
-			vis_s_clip.Current=vis_s_clip.Current+vis_s_clip.Speed
+			vis_s_clip.Current=vis_s_clip.Current+(vis_s_clip.Speed*SyS_TimeFactor)
 		endif
 		paste sprite vis_s_clip._sprite,0,vis_s_clip.Current-200
 		paste sprite vis_s_clip._sprite,0,vis_s_clip.S_Height-(vis_s_clip.Current)

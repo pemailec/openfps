@@ -76,6 +76,10 @@ Function UI_SUB_CheckConsoleCommand(console_result$)
 		MENU_StartCredits()
 		command_exec=1
 	endcase
+	case "TEST_GAMESTATE"
+		vis_game_end()
+		command_exec=1
+	endcase
 	case "EXIT"
 		SyS_Event_Terminate=1
 		command_exec=1

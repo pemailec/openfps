@@ -1,0 +1,554 @@
+/////////////////////////////////////
+// FPS MOVEMENT TEST ENVIRONMENT
+// Coded by thenerd 
+// July 14th, 2011
+/////////////////////////////////////
+
+`main init code
+set display mode 1024,768,32,1
+center window
+disable escapekey
+sync on
+sync rate 60
+backdrop off
+cls 0
+autocam off
+hide mouse
+
+setupcrosshair1024()
+
+`make font
+font_default=a2CreateFont("Tahoma",12,a2Size_Point(),a2Style_Normal())
+
+`Blend modes
+#constant BLEND_HIDDEN       0 : `You probably won't need this
+#constant BLEND_FASTNORMAL   1 : `Ignores background alpha but is very fast
+#constant BLEND_NORMAL       2 : `Uses background alpha to calculate a new alpha but is slower
+#constant BLEND_DISSOLVE     3
+#constant BLEND_MULTIPLY     4
+#constant BLEND_DIVIDE       5
+#constant BLEND_SCREEN       6
+#constant BLEND_OVERLAY      7
+#constant BLEND_DODGE        8
+#constant BLEND_BURN         9
+#constant BLEND_HARDLIGHT    10
+#constant BLEND_SOFTLIGHT    11
+#constant BLEND_GRAINEXTRACT 12
+#constant BLEND_GRAINMERGE   13
+#constant BLEND_DIFFERENCE   14
+#constant BLEND_ADDITION     15
+#constant BLEND_SUBTRACT     16
+#constant BLEND_DARKENONLY   17
+#constant BLEND_LIGHTENONLY  18
+#constant BLEND_FORCE        19 : `Force color with current alpha
+#constant BLEND_FORCENOALPHA 20 : `Ignores the current alpha (fastest)
+
+#CONSTANT White rgb(255,255,255)
+GLOBAL comet_screen_fps
+
+a2text font_default,10,10,"...Loading Game Engine Media...",White:sync
+
+load object "J:\openfps\media\visuals\VS_skydome.x",1
+load image "J:\openfps\media\visuals\VS_basicsky.jpg",1
+texture object 1,1
+set object light 1,0
+scale object 1,100000,100000,100000
+disable object zread 1
+
+remstart
+`load test level
+load object "movement_test\level_shed\shed.dbo",11,3
+`load object "movement_test\testmap_Transparency.dbo",12,3
+load effect "movement_test\level_shed\LightMap.fx",1,0
+set object effect 11,1
+`set object effect 12,1
+`set object transparency 12,2
+Add_ObjectCollision(11)
+`Add_ObjectCollision(12)
+remend
+
+remstart
+load object "movement_test\terrain.x",13
+load image "movement_test\grass.png",13
+texture object 13,13
+scale object 13,10000,10000,10000
+xrotate object 13,90
+fix object pivot 13
+move object down 13,100
+Add_objectcollision(13)
+remend
+
+global cr#
+global cf#
+global ncr#
+global ncf#
+global ncx#
+global ncy#
+global camera_object
+global camera_object2
+camera_object=20
+camera_object2=21
+
+rem player movement vector
+global vx# as double float
+global vy# as double float
+global vz# as double float
+
+global cvx# as double float
+global cvz# as double float
+
+global CAM_x# as float
+global CAM_y# as float
+global CAM_z# as float
+global CAM_AngleX# as float
+global CAM_AngleY# as float
+global CAM_AngleZ# as float
+global CAM_AngleZOrig# as float
+global CAM_MouseMove# as float
+
+global gravity# as double float : gravity# = -0.2
+global slope# as double float : slope# = 0.5
+global ground as integer : ground = 1
+global jumptimer as integer : jumptimer = 0
+global radius# as double float : radius# = 7.0
+global littleRadius# as double float : littleRadius# = 2.0
+global Sprint_energy# as float
+global Speed_factor# as float
+global PlayerHeight# as float
+global PlayerHeightDest# as float
+PlayerHeightDest#=36.0
+
+global PlayerState as string
+
+Sprint_energy#=100.0
+Speed_factor#=2.0
+
+Create_CameraController()
+
+`test cube (for refraction code)
+`converted into water, too!
+`make object cube 3,60
+make object plain 3,400,400
+xrotate object 3,90
+fix object pivot 3
+position object 3,0,-140,0
+`Add_ObjectCollision(3)
+
+
+make camera 1
+set camera range 1,15,400
+`set camera fov 1,100
+`set camera aspect 1,1.35
+SET CURRENT CAMERA 1
+backdrop off 1
+set camera to image 1,2,64,64
+SET CURRENT CAMERA 0
+
+fog on
+fog color rgb(200,200,200)
+fog distance 10,3500
+
+set camera to image 0,4,1024,778
+
+IK Create Target Image 5,1024,768
+IK Set Blend Mode BLEND_FASTNORMAL
+IK Load Effect "movement_test\RemoveAlpha.fx",1
+`IK Load Effect "movement_test\saturate.fx",2
+IK Set Effect Technique 1,"Remove_Alpha"
+
+load image "movement_test\feather.png",6
+
+`shader config
+global MotionBlur
+global EdgeFeather
+global MotionBlurToggle
+global EdgeFeatherToggle
+
+global I_glass
+global o_glass
+o_glass = 3
+I_glass = 3
+load image "movement_test\water_normal.bmp",I_glass
+
+global y
+
+load effect "movement_test\refraction.fx",3,0
+texture object o_glass,0,2
+texture object o_glass,1,I_glass
+set object effect o_glass,3
+set alpha mapping on o_glass,50
+position object o_glass,-430,-140,630
+
+`particle system test
+load image "media\explosion.bmp",8
+
+global g_HeightmapImgID
+global g_TextureImgID
+global g_DetailmapImgID
+g_HeightmapImgID=501
+g_TextureImgID=502
+g_DetailmapImgID=503
+load image "movement_test\heightmap.bmp",g_HeightmapImgID
+load image "movement_test\texture.jpg",g_TextureImgID
+load image "movement_test\detail.tga",g_DetailmapImgID
+global g_TerrainID
+g_TerrainID=BT MakeTerrain()
+BT SetTerrainHeightmap g_TerrainID,g_HeightmapImgID
+BT SetTerrainTexture g_TerrainID,g_TextureImgID
+BT SetTerrainDetail g_TerrainID,g_DetailmapImgID
+BT SetTerrainScale g_TerrainID,24.0
+BT SetTerrainYScale g_TerrainID,4.0
+BT SetTerrainSplit g_TerrainID,8
+BT SetTerrainDetailTile g_TerrainID,3.0
+BT SetTerrainLOD g_TerrainID,3
+BT SetTerrainLODDistance g_TerrainID,1,1000.0
+BT SetTerrainLODDistance g_TerrainID,2,2000.0
+BT SetTerrainSmoothing g_TerrainID,1
+BT SetTerrainQuadRotation g_TerrainID,1
+global g_TerrainObjectID
+g_TerrainObjectID=500
+BT BuildTerrain g_TerrainID,g_TerrainObjectID
+BT SetBuildStep 0
+repeat
+	progress=BT ContinueBuild()
+until progress=-1
+LODLevel=1 //Set this anywhere between 0 and 2
+for i=0 to BT GetSectorCount(g_TerrainID,LODLevel)-1
+	if BT GetSectorExcluded(g_TerrainID,LODLevel,i)=0
+		BT MakeSectorObject g_TerrainID,LODLevel,i,501+i
+		Add_ObjectCollision(501+i)
+		exclude object off 501+i
+	endif
+next i
+
+remstart
+mySystem = sp create system (0,-62,-80,-60)
+sp set system speed mySystem ,-1
+myGroup = sp add group (mySystem , 200 ,-62,-80,-60)
+sp set group lifetime myGroup , 3.5 , 4.5
+myRenderer = sp set quad renderer (myGroup , 8 , 5,5,2,2,BLEND_ADD)
+scaleInterpolator = sp add interpolator (myGroup , PARAM_SCALE , 0.8 , 1.0 , 5 ,12)
+textureInterpolator = sp add interpolator (myGroup , PARAM_ATLAS_DIMENSIONS , 0 , 4 ,1)
+angleInterpolator = sp add interpolator (myGroup ,PARAM_ANGLE, 0.01 , 2.2,0)
+rgbaInterpolator = sp add rgba interpolator (myGroup , 0xEA3000FF , 0xAD500000 , 0)
+myEmitter = sp add spheric emitter (myGroup , 0 , 1 , 0 , 0.3 , 0.6 , 20 , 0.1 , 0.5 ,-1 , sp sphere zone(-62,-80,-60,0.05))
+remend
+
+/////////////////////////////////////
+
+`main loop
+
+do
+	y=10
+	a2text font_default,10,y,"OpenFPS Game Engine",White:y=y+a2GetLineHeight(font_default)
+	a2text font_default,10,y,"[Comet Fps] Loops/Second: "+str$(comet_screen_fps),White:y=y+a2GetLineHeight(font_default)
+	a2text font_default,10,y,"[Comet Fps] Screen Fps: "+str$(screen fps()),White:y=y+a2GetLineHeight(font_default)
+	
+	y=y+10
+	`draw ui options
+	`a2box 10,y,200,y+110,White
+    if KEYSTATE(59) and MotionBlurToggle=0 then MotionBlur=1-MotionBlur:MotionBlurToggle=1
+    if KEYSTATE(60) and EdgeFeatherToggle=0 then EdgeFeather=1-EdgeFeather:EdgeFeatherToggle=1
+    if KEYSTATE(59)=0 then MotionBlurToggle=0
+    if KEYSTATE(60)=0 then EdgeFeatherToggle=0
+    
+	y=y+80
+	
+	a2text font_default,10,y,"[Movement Scripting]",White:y=y+a2GetLineHeight(font_default)
+	a2text font_default,10,y,"[Cam] Speed Factor: "+str$(Speed_factor#),White:y=y+a2GetLineHeight(font_default)
+	a2text font_default,10,y,"[Cam] Position X: "+str$(camera position x()),White:y=y+a2GetLineHeight(font_default)
+	a2text font_default,10,y,"[Cam] Position Y:"+str$(camera position y()),White:y=y+a2GetLineHeight(font_default)
+	a2text font_default,10,y,"[Cam] Position Z:"+str$(camera position z()),White:y=y+a2GetLineHeight(font_default)
+	a2text font_default,10,y,"[Cam] State: "+PlayerState,White:y=y+a2GetLineHeight(font_default)
+
+    position mouse 320,240
+    
+    Update_CameraController()
+    updatecrosshair()
+    
+    `NOTE:
+    `put code for other camera controls here
+    `(camera shake, all that)
+    
+    `POSITION CAMERA (MOVEMENT IS FINISHED)
+	position camera CAM_x#,CAM_y#,CAM_z#
+	rotate camera CAM_AngleX#,CAM_AngleY#,CAM_AngleZ#
+	
+	`position refraction camera
+	position camera 1,camera position x(),camera position y(),camera position z()
+   	rotate camera 1,camera angle x(),camera angle y(),camera angle z()
+   	
+   	`position sky
+	position object 1,camera position x(),camera position y(),camera position z()
+	yrotate object 1,wrapvalue(object angle y(1)+0.01)
+	  
+		
+   	hide object o_glass
+   	sync mask 0xF0000002
+   	
+	comet_screen_fps=cometSYNC(60,500)
+	`sp update
+	
+	`other sync
+   	show object o_glass
+   	sync mask 0x00000001
+   	fastsync
+   	
+	if MotionBlur:
+		IK Set Effect Float 1,"Speed",clamp((1.0-(CAM_MouseMove#/10)),0.3,1.0)
+	else
+		IK Set Effect Float 1,"Speed",1.0
+	endif
+	IK Paste Image On Image 4,5,0,0,1
+	if EdgeFeather then IK Paste Image On Image 6,5,0,0,1
+	Paste Image 5,0,0
+	
+	BT SetCurrentCamera 0 //Set current camera to 0 (if the camera has moved/rotated since this command was last called, you must call it again!)
+	BT UpdateTerrainCull g_TerrainID //Update frustum culling
+	BT UpdateTerrainLOD g_TerrainID //Update LOD
+	BT RenderTerrain g_TerrainID //Render the terrain
+	BT SetCurrentCamera 1 //Set current camera to 0 (if the camera has moved/rotated since this command was last called, you must call it again!)
+	BT UpdateTerrainCull g_TerrainID //Update frustum culling
+	BT UpdateTerrainLOD g_TerrainID //Update LOD
+	BT RenderTerrain g_TerrainID //Render the terrain
+	
+	
+	`terminate the loop on escapekey
+	if escapekey():
+		exit
+	endif
+loop
+
+/////////////////////////////////////
+
+`terminate
+end
+
+/////////////////////////////////////
+
+`functions 
+
+function Add_ObjectCollision(obj_num):
+    sc_setupComplexObject obj_num,1,2
+	sc_updateObject obj_num
+endfunction
+
+function Create_CameraController():
+	make object sphere camera_object,24.0
+	sc_setupObject camera_object,0,1	
+	position object camera_object,0,500,0
+	make object sphere camera_object2,24.0
+	sc_setupObject camera_object2,0,1
+	position object camera_object2,-500,0,35
+	set alpha mapping on camera_object,50
+	set object wireframe camera_object,1
+endfunction
+
+function Update_CameraController():	
+	PlayerState="STILL"
+	rem rotate player with mouse
+	mmx#=mousemovex()/3.0
+	mmy#=mousemovey()/3.0
+	yrotate object camera_object,object angle y(camera_object)+mmx#
+	xrotate object camera_object,object angle x(camera_object)+mmy#
+	
+	CAM_MouseMove#=abs(mmx#)+abs(mmy#)
+	
+	oldx# = object position x(camera_object)
+	oldy# = object position y(camera_object)
+	oldz# = object position z(camera_object)
+	oldx2# = object position x(camera_object2)
+	oldy2# = object position y(camera_object2)
+	oldz2# = object position z(camera_object2)
+	
+	angy# = object angle y(camera_object)
+	vx# = 0 
+	vz# = 0
+	CAM_AngleZOrig# = 0
+	
+	if vy#=0 and jumptimer=0 then vy# = vy# + 10*gravity# else vy# = vy# + gravity#
+	if keystate(32)=1 then vx# = vx# + cos(angy#) : vz# = vz# - sin(angy#) : CAM_AngleZOrig# = -8
+	if keystate(30)=1 then vx# = vx# - cos(angy#) : vz# = vz# + sin(angy#) : CAM_AngleZOrig# = 8
+	if keystate(31)=1 then vx# = vx# - sin(angy#) : vz# = vz# - cos(angy#) 
+	if keystate(17)=1 then vx# = vx# + sin(angy#) : vz# = vz# + cos(angy#) 
+	if ground=1
+		if spacekey()=1 and jumptimer=0:
+			vy# = vy# + 4.6 + (Speed_factor#/2)
+			jumping = 1
+			jumptimer=1
+		endif
+	endif
+	
+	if KEYSTATE(47) then vy#=2.0
+	
+	if abs(vx#)+abs(vz#)>0.1 then PlayerState="WALKING"
+	
+	if shiftkey():
+		if abs(vx#)+abs(vz#)>0.1:
+			if Sprint_energy#>4:
+			Sprint_energy#=Sprint_energy#-1.0
+			Speed_factor#=Speed_factor#+0.1
+			PlayerState="RUNNING"
+			else
+				Sprint_energy#=-40
+				Speed_factor#=Speed_factor#-0.1
+			endif
+		endif
+	else
+		Sprint_energy#=Sprint_energy#+1.0
+		Speed_factor#=Speed_factor#-0.1
+	endif
+	Sprint_energy#=clamp(Sprint_energy#,-40.0,100.0)
+	Speed_factor#=clamp(Speed_factor#,2.0,4.0)
+	
+	cvx#=curvevalue((vx#*Speed_factor#),cvx#,4.0)
+	cvz#=curvevalue((vz#*Speed_factor#),cvz#,4.0)
+	
+	x# = oldx#+(cvx#)
+	y# = oldy#+(vy#)
+	z# = oldz#+(cvz#)
+	
+	`gravity (sparkies example code)
+	collide = sc_SphereCastGroup(1,oldx#,oldy#,oldz#,oldx#,oldy#+vy#,oldz#,radius#,0)
+	if collide>0 
+		rem how flat is this ground
+		ny# = sc_getCollisionNormalY()
+		if abs(ny#)>slope#
+			rem FLAT, stick
+			oldy# = sc_getStaticCollisionY()
+		else
+			rem STEEP, slide
+	      x# = x# - oldx# : z# = z# - oldz#
+	      oldx# = sc_getCollisionSlideX()
+	      oldy# = sc_getCollisionSlideY()
+	      oldz# = sc_getCollisionSlideZ()
+	      x# = x# + oldx# : z# = z# + oldz#
+		endif
+		
+		rem ny#<0 means the player has hit a ceiling rather than a floor
+		
+		if ny#>slope#
+			rem only on ground if standing on flat ground
+			ground = 1 
+			vy# = 0
+		else 
+			ground = 0
+			rem if player has hit a flat ceiling then stop vy# movement
+			if ny#<-slope# then vy# = gravity#
+		endif
+	else
+		rem nothing below player, not on ground, add vertical speed to player
+		oldy# = oldy# + vy#
+		ground = 0
+	endif
+	
+	rem jumptimer will decrease only when player is back on ground
+	rem creates a pause between two successive jumps
+	if spacekey()=0 then jumptimer=0
+	if ground=1 then jumping=0
+	
+	rem handle horizontal movement as sliding
+	rem player only collides with group 1 (level) objs and moves freely through others
+	collide = sc_SphereSlideGroup(1,oldx#,oldy#,oldz#,x#,oldy#,z#,radius#,0)
+	
+	if controlkey()
+		PlayerHeightDest#=20.0
+		PlayerState="CROUCHING"
+	else
+		PlayerHeightDest#=36.0
+	endif
+	PlayerHeight#=curvevalue(PlayerHeightDest#,PlayerHeight#,2.0)
+	
+	if collide>0
+		rem if hit, reposition player, halt movement vector
+		x# = sc_getCollisionSlideX()
+		oldy# = sc_getCollisionSlideY()
+		z# = sc_getCollisionSlideZ()
+		vx# = 0
+		vz# = 0
+		rem possible code for giving the player a jumping help up stairs...
+		rem might be useful if slope# is set very high but stairs are still required
+		`dy# = oldy#-sc_getStaticCollisionY()
+		`if dy#<slope# and dy#>0 and ground=1 then vy# = 0.5
+		a2text font_default,10,y,"[Cam] Body Collide!",White:y=y+a2GetLineHeight(font_default)
+	endif
+	
+	`position player objects
+	position object camera_object,x#,oldy#,z#
+	
+	`collide with actual head...
+	x2#=x#
+	y2#=oldy#+PlayerHeight#
+	z2#=z#
+	collide = sc_SphereSlideGroup(1,oldx2#,oldy2#,oldz2#,x2#,y2#,z2#,radius#-3,0)
+	if collide>0
+		x2# = sc_getCollisionSlideX()
+		y2# = sc_getCollisionSlideY()
+		z2# = sc_getCollisionSlideZ()
+		PlayerHeightDest#=20.0
+		vy# = 0
+		position object camera_object,x2#,oldy#,z2#
+		a2text font_default,10,y,"[Cam] Head Collide!",White:y=y+a2GetLineHeight(font_default)
+	endif
+	position object camera_object2,x2#,y2#,z2#
+		
+	
+	sc_updateObject camera_object
+	
+	`CAM_AngleZ#=curvevalue(0.0,CAM_AngleZOrig#,8.0)
+	
+	CAM_x#=object position x(camera_object2)
+	CAM_y#=object position y(camera_object2)
+	CAM_z#=object position z(camera_object2)
+	CAM_AngleX#=object angle x(camera_object)
+	CAM_AngleY#=object angle y(camera_object)
+endfunction
+
+
+rem comet sync function
+function cometSYNC(syncrate,update)
+
+   rem get time elapsed
+   syncrate=syncrate/(1000/update)
+   ssync=syncrate
+   inc syncrate,offset
+   time=timer()
+   time_elapsed=time-oldtimer
+
+   rem count loops
+   inc cloop
+
+   rem check if 1 second passed
+   if time_elapsed>=update
+
+      rem calculate loops missed
+      lastloopsmissed=loopsmissed
+      loopsmissed=((syncrate-cloop)+lastloopsmissed)/2
+
+      rem reset values
+      result=cloop
+      cloop=1
+      oldtimer=time
+
+      rem calculate when to skip next loops
+      if loopsmissed<1
+         skip#=0
+         incskip#=0
+      else
+         x#=syncrate
+         y#=loopsmissed
+         skip#=x#/y#
+         incskip#=skip#
+      endif
+      inc offset,(ssync-result)
+      result=result*(1000/update)
+   endif
+
+   rem sync
+   if int(skip#)=cloop then inc skip#,incskip# else sync
+
+endfunction result
+
+
+
+/////////////////////////////////////

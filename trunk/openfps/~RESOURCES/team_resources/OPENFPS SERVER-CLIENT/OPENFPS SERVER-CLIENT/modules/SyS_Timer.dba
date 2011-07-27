@@ -1,0 +1,185 @@
+//***** Included Source File *****
+
+//**************************************************************************
+//*  Miso: log - 2010.06.18 - created                                      *
+//*                                                                        *
+//*                                                                        *
+//*    A SyS_Timer fuggvenytar hivatott az timerbased dolgokat kezelni.    *
+//*   Szükséges: Ians matrix plugins egyes funkciókhoz, hacsak valakinek   *
+//*   nem lesz kedve a beépített db parancsokkal veszõdni és megírni.      *
+//**************************************************************************
+
+`=========Constants=========`
+`===========================`
+
+`==========Globals==========`
+// Ticker Globals
+Global SyS_HeartBeat        as Integer  `ticker for 1000 milisecs this is for manual handle
+Global SyS_HalfBeat         as Integer  `ticker for  500 milisecs this is for manual handle
+Global SyS_FiveBeat         as Integer  `ticker for  200 milisecs this is for manual handle
+Global SyS_Mousefadertimer  as Integer  `ticker for mousefader commands, no need to handle manually
+Global SyS_TextScrolltimer  as Integer  `ticker for textscroll commands, no need to handle manually
+
+// Perftimer globals. All movement and rotation must be corrected with *SyS_PTA, to get FPS independent results
+Global SyS_Newtime          as Integer  `variable for perfect timer based movement
+Global SyS_OldTime          as Integer  `variable for perfect timer based movement
+Global SyS_ElapsedTime      as Integer  `Variable for perfect timer based movement, remained unused
+Global SyS_PTA              as Float    `Multiplier for moves
+`===========================`
+
+`===========Types===========`
+`===========================`
+
+`=========Functions=========`
+
+// Timer based movement functions
+`________________________________________________________________________________________
+Function SyS_ResetTimer()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Timer based mozgasokhoz. Helyezd el a Do után közvetlenül.                      *
+//***************************************************************************************
+	If Sys_NewTime>0 then SyS_OldTime=SyS_Newtime
+	SyS_NewTime=timer()
+Endfunction
+
+
+Function SyS_CountPTA()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Timer based mozgasokhoz. Helyezd el a Loop elé közvetlenül.                     *
+//***************************************************************************************
+	SyS_ElapsedTime=SyS_newtime-SyS_Oldtime
+	SyS_PTA=SyS_ElapsedTime*0.06:` minden timer based mozgast és forgatást szorozz be SyS_PTA-val.
+Endfunction
+`________________________________________________________________________________________
+
+
+// Ian tickers for effects, mousefade timing and introscrolling (And later on for ai hartbeats)
+`----------------------------------------------------------------------------------------------------------------
+Function SyS_SetBasicTimers()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Az alap timereket beállítja és elkészíti. (Ian tickers)                         *
+//***************************************************************************************
+	SyS_Heartbeat=FIND FREE TICKER():	MAKE TICKER SyS_heartbeat,1000
+	SyS_halfbeat=FIND FREE TICKER() :	MAKE TICKER SyS_halfbeat,500
+	SyS_fivebeat=FIND FREE TICKER() :	MAKE TICKER SyS_fivebeat,200
+Endfunction
+`----------------------------------------------------------------------------------------------------------------
+
+`----------------------------------------------------------------------------------------------------------------
+Function SyS_AskHeartBeat()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     1000 milisecundumonkent 1-el tér vissza elsõ hívásig, egyéb esetekben           *
+//*     a visszatérési értéke 0.                                                        *
+//***************************************************************************************
+	Local tickresult as integer
+	tickresult=ticker(SyS_HeartBeat,1)
+Endfunction tickresult
+`----------------------------------------------------------------------------------------------------------------
+
+`----------------------------------------------------------------------------------------------------------------
+Function SyS_AskHalfBeat()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     500  milisecundumonkent 1-el tér vissza elsõ hívásig, egyéb esetekben           *
+//*     a visszatérési értéke 0.                                                        *
+//***************************************************************************************
+	Local tickresult as integer
+	tickresult=ticker(SyS_HalfBeat,1)
+Endfunction tickresult
+`----------------------------------------------------------------------------------------------------------------
+
+`----------------------------------------------------------------------------------------------------------------
+Function SyS_AskFiveBeat()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     200  milisecundumonkent 1-el tér vissza elsõ hívásig, egyéb esetekben           *
+//*     a visszatérési értéke 0.                                                        *
+//***************************************************************************************
+	Local tickresult as Integer
+	tickresult=ticker(SyS_FiveBeat,1)
+Endfunction tickresult
+`----------------------------------------------------------------------------------------------------------------
+
+`----------------------------------------------------------------------------------------------------------------
+Function SyS_CreateMouseFaderTicker()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Kézzel nem hívandó mousefadeleskor készül el, fade tevekenyseg vegeztevel       *
+//*     törli magát. Belsõ hívásokban van csak használva.                               *
+//***************************************************************************************
+	SyS_MouseFaderTimer=FIND FREE TICKER()
+	MAKE TICKER SyS_MouseFaderTimer,1
+Endfunction
+`----------------------------------------------------------------------------------------------------------------
+
+`----------------------------------------------------------------------------------------------------------------
+Function SyS_AskMouseFaderTicker()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Kézzel nem hívandó mousefadeleskor készül el, fade tevekenyseg vegeztevel       *
+//*     törli magát. Belsõ hívásokban a SyS_Mousehandle() fügvény hívja.                *
+//***************************************************************************************
+	Local tickresult as Integer
+	tickresult=TICKER(SyS_Mousefadertimer,1)
+Endfunction tickresult
+`----------------------------------------------------------------------------------------------------------------
+
+`----------------------------------------------------------------------------------------------------------------
+Function SyS_DestroyMouseFaderTicker()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Kézzel nem hívandó mousefadeleskor készül el, fade tevekenyseg vegeztevel       *
+//*     törli magát. SyS_Mousehandle függvény hívja, amikor már nincs rá tovább szükség.*
+//***************************************************************************************
+	DELETE TICKER SyS_MouseFaderTimer
+	SyS_mousefadertimer=0
+Endfunction
+`----------------------------------------------------------------------------------------------------------------
+
+
+`----------------------------------------------------------------------------------------------------------------
+Function SyS_CreateTextScrollTicker()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Kézzel nem hívandó, textscrollhoz  készül el, azon tevekenyseg vegeztevel       *
+//*     törli magát. Belsõ hívásokban van csak használva.                               *
+//***************************************************************************************
+	SyS_Textscrolltimer=FIND FREE TICKER()
+	MAKE TICKER SyS_TextscrollTimer,60
+Endfunction
+`----------------------------------------------------------------------------------------------------------------
+
+`----------------------------------------------------------------------------------------------------------------
+Function SyS_AskTextScrollTicker()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Kézzel nem hívandó, textscrollhoz  készül el, azon tevekenyseg vegeztevel       *
+//*     törli magát. Belsõ hívásokban a Credits használja.                              *
+//***************************************************************************************
+	Local tickresult as Integer
+	tickresult=TICKER(SyS_textscrolltimer,1)
+Endfunction tickresult
+`----------------------------------------------------------------------------------------------------------------
+
+`----------------------------------------------------------------------------------------------------------------
+Function SyS_DestroyTextScrollTicker()
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Kézzel nem hívandó textscrollhoz   készül el, azon tevekenyseg vegeztevel       *
+//*     törli magát. Credits menu inditja éds törli, amikor már nincs rá tovább szükség.*
+//***************************************************************************************
+	DELETE TICKER SyS_textscrollTimer
+	SyS_textscrolltimer=0
+Endfunction
+`----------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+

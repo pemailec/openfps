@@ -1,0 +1,289 @@
+Rem ***** Included Source File *****
+
+#constant c_nomenu=0
+#constant c_joinedmenu=1
+#constant c_menu_new=6
+#constant c_menu_join=7
+
+
+
+
+function showclientJOINmenu()
+local lda as integer
+	SyS_putwindow(16,40,37,16)
+	sys_putwindow(0,404,39,3)
+	SyS_Centertext(2,320,50,"OpenFPS Client v 0.1")
+	
+	if mouseclick()=1
+		for lda=1 to 24
+			if sys_mouseoveredgadget$=str$(LDA)
+				net_c_1(servers(LDA,2),net_mrport)
+			endif
+		next lda
+	endif
+endfunction
+	
+	
+function showclientmenu()
+local lda as integer
+	SyS_putwindow(16,40,37,16)
+	sys_putwindow(0,404,39,3)
+	SyS_Centertext(2,320,50,"OpenFPS Client v 0.1")
+Endfunction
+
+function activateservergadget(param_ip$)
+local lda as integer
+local x as integer
+local y as integer
+	for lda=1 to 24
+		if servers(LDA,2)=param_ip$
+			Servers(LDA,3)="ON"
+			// delete and remake gadget, if you are in server choose screen
+			if SyS_gadgetexist(str$(LDA))
+				x=SyS_GetGadgetX(str$(LDA))
+				y=SyS_GetGadgetY(str$(LDA))
+				SyS_DeleteGadget(str$(LDA))
+				SyS_Addgadgettoscreen(str$(LDA),x,y,"n_globe")
+				SyS_addmouseoverimagetogadget(str$(LDA),"o_globe")
+				SyS_Addtitletogadget(str$(LDA),2,320,10,"")
+				SyS_Addmouseovertitletogadget(str$(LDA),2,320,10,servers(lda,1)+" : "+servers(lda,2))
+			endif
+		endif
+	next lda
+endfunction
+
+
+function perform_checklist_for_servers()
+local var_ID as integer
+local var_a$ as string
+local LDA as integer
+	
+	var_id=SyS_Opentoread("masterservers.cfg")
+		for LDA=1 to 8
+			read string var_id,var_a$
+			servers(LDA,1)=first token$(var_a$,"=")
+			servers(LDA,2)=next token$("=")
+			SyS_Addgadgettoscreen(str$(LDA),16+64*LDA,108,"g_globe")
+			Net_C_15(servers(lda,2),net_mrport)
+		next LDA
+		
+		
+		
+		for LDA=1 to 8
+			read string var_id,var_a$
+			servers(8+LDA,1)=first token$(var_a$,"=")
+			servers(8+LDA,2)=next token$("=")
+			SyS_Addgadgettoscreen(str$(8+LDA),16+64*LDA,172,"g_globe")
+			Net_C_15(servers(8+lda,2),net_mrport)
+		next LDA
+		
+		for LDA=1 to 8
+			read string var_id,var_a$
+			servers(16+LDA,1)=first token$(var_a$,"=")
+			servers(16+LDA,2)=next token$("=")
+			SyS_Addgadgettoscreen(str$(16+LDA),16+64*LDA,236,"g_globe")
+			Net_C_15(servers(16+lda,2),net_mrport)
+		next LDA
+	SyS_Closefile(var_id)
+Endfunction
+
+
+
+Function Client_StartGUI()
+	SyS_Initcore():SyS_InitResource()
+	SyS_Initwindow(640,480,32,0,1,0,1,1)
+	set window layout 0,0,0
+	maximize window
+	SyS_Initmouse("data\cursors\testcursor.dds")
+	SyS_Initfonts()
+	SyS_Loadfont(1,"Data\fonts\courier16.dat",8)
+	SyS_Loadfont(2,"Data\fonts\newfont.dat",16)
+	SyS_Loadfont(3,"Data\fonts\smallgoldfont.dat",8)
+	
+	SyS_InitGuiGraphics()
+
+	//--preload background animation
+	TEST_preloadclntbackground()
+	SyS_Initandloadwindow("data\windows\windowuntitled2.dat")
+	
+	//button images	
+	SyS_LoadGUIGRAPHICS("data\buttons\button-normal.png","n_button")
+	SyS_LoadGUIGRAPHICS("data\buttons\button-hover.png","o_button")
+	
+	//icon images
+	SyS_LoadGUIGRAPHICS("data\buttons\ARROW32_REG.png","n_up")
+	SyS_LoadGUIGRAPHICS("data\buttons\ARROW32_CLK.png","o_up")
+
+	
+	//icon images
+	SyS_LoadGUIGRAPHICS("data\buttons\globe_2.png","g_globe")
+	SyS_LoadGUIGRAPHICS("data\buttons\globe_6.png","n_globe")
+	SyS_LoadGUIGRAPHICS("data\buttons\globe_1.png","o_globe")
+
+	perform_checklist_for_servers()
+	
+
+Endfunction
+
+
+Function TEST_preloadclntbackground()
+	dim serverframes(17) as integer
+	//--preload background animation
+	serverframes(1)=DXS CREATE SPRITE("media\client40001.png")
+	serverframes(2)=DXS CREATE SPRITE("media\Client40002.png")
+	serverframes(3)=DXS CREATE SPRITE("media\Client40003.png")
+	serverframes(4)=DXS CREATE SPRITE("media\Client40004.png")
+	serverframes(5)=DXS CREATE SPRITE("media\Client40005.png")
+	serverframes(6)=DXS CREATE SPRITE("media\Client40006.png")
+	serverframes(7)=DXS CREATE SPRITE("media\Client40007.png")
+	serverframes(8)=DXS CREATE SPRITE("media\Client40008.png")
+	serverframes(9)=DXS CREATE SPRITE("media\Client40009.png")
+	serverframes(10)=DXS CREATE SPRITE("media\Client40010.png")
+	serverframes(11)=DXS CREATE SPRITE("media\Client40011.png")
+	serverframes(12)=DXS CREATE SPRITE("media\Client40012.png")
+	serverframes(13)=DXS CREATE SPRITE("media\Client40013.png")
+	serverframes(14)=DXS CREATE SPRITE("media\Client40014.png")
+	serverframes(15)=DXS CREATE SPRITE("media\Client40015.png")
+	serverframes(16)=DXS CREATE SPRITE("media\Client40016.png")
+	
+	//--prescale images
+	for x=1 to 16
+		dxs set sprite scaling center serverframes(x),0,0
+		dxs set sprite scale serverframes(x),250,185
+		dxs update sprite serverframes(x)
+	next x
+	
+	//--make a timer ticker for changing frames
+	serverframes(0)=find free ticker()
+	make ticker serverframes(0),50
+	
+	//--sets the firs frame
+	serverframes(17)=1
+Endfunction
+
+Function TEST_updateclntbackground()
+	if ticker(serverframes(0),1)=1
+		serverframes(17)=serverframes(17)+1
+		if serverframes(17)>16 then serverframes(17)=1
+	Endif
+	
+	DXS BEGIN SPRITE RENDER serverframes(serverframes(17))
+		DXS DRAW SPRITE serverframes(serverframes(17)),0,0
+	DXS END SPRITE RENDER serverframes(serverframes(17))
+Endfunction
+
+Function createjoinedmenubuttons()
+	
+	posx=60:posy=20
+	SyS_Addcentergadgettoscreen("NEW",posx,posy,"n_button")
+	SyS_Addmouseoverimagetogadget("NEW","o_button")
+	SyS_Addtitletogadget("NEW",1,posx-10,posy-5,"CREATE NEW")
+	SyS_Addmouseovertitletogadget("NEW",1,posx-10,posy-5,"CREATE NEW")
+
+
+	posx=190
+	SyS_Addcentergadgettoscreen("JOIN",posx,posy,"n_button")
+	SyS_Addmouseoverimagetogadget("JOIN","o_button")
+	SyS_Addtitletogadget("JOIN",1,posx-10,posy-5,"JOIN")
+	SyS_Addmouseovertitletogadget("JOIN",1,posx-10,posy-5,"JOIN")
+
+	//posx=320
+	//SyS_Addcentergadgettoscreen("GAMES",posx,posy,"n_button")
+	//SyS_Addmouseoverimagetogadget("GAMES","o_button")
+	//SyS_Addtitletogadget("GAMES",1,posx-10,posy-5,"GAMES")
+	//SyS_Addmouseovertitletogadget("GAMES",1,posx-10,posy-5,"GAMES")
+
+
+
+	posx=450
+	SyS_Addcentergadgettoscreen("CHAT",posx,posy,"n_button")
+	SyS_Addmouseoverimagetogadget("CHAT","o_button")
+	SyS_Addtitletogadget("CHAT",1,posx-10,posy-5,"CHAT")
+	SyS_Addmouseovertitletogadget("CHAT",1,posx-10,posy-5,"CHAT")
+
+	posx=580
+	SyS_Addcentergadgettoscreen("QUIT",posx,posy,"n_button")
+	SyS_Addmouseoverimagetogadget("QUIT","o_button")
+	SyS_Addtitletogadget("QUIT",1,posx-10,posy-5,"SHUTDOWN")
+	SyS_Addmouseovertitletogadget("QUIT",1,posx-10,posy-5,"SHUTDOWN")
+
+	
+Endfunction
+
+
+function CLIENT_handlemenu()
+if mouseclick()=1
+	if  sys_mouseoveredgadget$="NEW" 
+		showclientmenu()
+		if runningmenu=srv_menu_shutdown then SyS_Deletegadget("SUREQUIT")
+		runningmenu=C_MENU_NEW
+	endif
+	
+	if  sys_mouseoveredgadget$="JOIN" 
+		showclientmenu()
+		if runningmenu=srv_menu_shutdown then SyS_Deletegadget("SUREQUIT")
+		runningmenu=C_menu_JOIN
+	endif
+	
+	
+	if  sys_mouseoveredgadget$="CHAT" 
+		if runningmenu=srv_menu_shutdown then SyS_Deletegadget("SUREQUIT")
+		runningmenu=srv_menu_chat
+	endif
+	
+	if  sys_mouseoveredgadget$="QUIT" 
+		if runningmenu<>srv_menu_shutdown
+			posx=320:POSY=300
+			SyS_Addcentergadgettoscreen("SUREQUIT",posx,posy,"n_button")
+			SyS_Addmouseoverimagetogadget("SUREQUIT","o_button")
+			SyS_Addtitletogadget("SUREQUIT",1,posx-10,posy-5,"DISCONNECT")
+			SyS_Addmouseovertitletogadget("SUREQUIT",1,posx-10,posy-5,"DISCONNECT")
+			runningmenu=srv_menu_shutdown
+		endif
+	endif
+	
+	if  sys_mouseoveredgadget$="SUREQUIT" 
+		Net_CloseWinsock()
+	endif
+
+Endif
+
+	
+	If runningmenu=srv_menu_chat
+		SyS_Centertext(2,320,50,"OpenFPS CHAT")	
+		SyS_putwindow(16,80,37,16)
+		msrv_display_chat()
+
+	endif
+
+	If runningmenu=srv_menu_shutdown
+		SyS_Centertext(2,320,50,"OpenFPS SERVER SHUTDOWN")	
+		SyS_putwindow(198,268,14,3)
+
+	endif
+
+
+	If runningmenu=0
+		SHOWCLIENTJOINMENU()
+	Endif
+
+
+endfunction
+
+Function CLIENT_createarrays()
+	//--Create user arrays
+	dim users_name(0) as string
+	dim users_ID(0) as word
+	dim users_IP(0) as string
+	dim users_port(0) as integer
+	
+	//--Create game arrays
+	dim games_name(0) as string
+	dim games_ID(0) as word
+	dim games_maxplayers(0) as byte
+	dim games_currentplayers(0) as byte
+	
+	//--create server event array
+	dim serverevents(4) as string
+	dim chat(200) as string
+Endfunction

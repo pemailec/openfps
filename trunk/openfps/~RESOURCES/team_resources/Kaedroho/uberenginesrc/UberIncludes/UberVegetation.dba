@@ -1,0 +1,198 @@
+type UberVegetation
+Vegtypes as dword
+Vegs as dword
+Regions as dword
+Vegposs as dword
+endtype
+
+type UberVegetation_Vegtype
+objnum as dword
+density as float
+mostvisibleregion as dword
+mostvisiblevisibility as float
+drawdist as float
+endtype
+
+type UberVegetation_Veg
+objnum as dword
+region as dword
+vegtype as dword
+endtype
+
+type UberVegetation_Region
+x as float
+y as float
+z as float
+radius as float
+zonenum as dword
+visibility as float
+vegpositions as dword
+filledvegpositions as dword
+firstvegposition as dword
+vegtype as dword
+endtype
+
+type UberVegetation_VegPos
+x as float
+y as float
+z as float
+vegtype as dword
+vegnum as dword
+region as dword
+endtype
+
+UberVegetation_Start:
+UberVegetation as UberVegetation
+dim UberVegetation_Vegtype(0) as UberVegetation_Vegtype
+dim UberVegetation_Veg(0) as UberVegetation_Veg
+dim UberVegetation_Region(0) as UberVegetation_Region
+dim UberVegetation_VegPos(0) as UberVegetation_VegPos
+return
+
+UberVegetation_Update:
+for i=1 to UberVegetation.regions
+    if UberVegetation_GetRegionFreeSpaces(i)
+        vegtype=UberVegetation_Region(i).vegtype
+        x1#=UberVegetation_Region(i).x
+        y1#=UberVegetation_Region(i).y
+        z1#=UberVegetation_Region(i).z
+        x2#=camera position x()
+        y2#=camera position y()
+        z2#=camera position z()
+        distsqr#=UberCalcs_GetDistanceSquared(x1#,y1#,z1#,x2#,y2#,z2#)
+        if distsqr#<UberVegetation_Vegtype(vegtype).drawdist^2
+            distance#=sqrt(distsqr#)
+            visible=1
+            UberVegetation_Region(i).visibility=visible/distance#
+            if UberVegetation_Region(i).visibility>UberVegetation_Vegtype(vegtype).mostvisiblevisibility
+                UberVegetation_Vegtype(vegtype).mostvisiblevisibility=UberVegetation_Region(i).visibility
+                UberVegetation_Vegtype(vegtype).mostvisibleregion=i
+            endif
+        endif
+    endif
+next i
+
+for i=1 to UberVegetation.Vegs
+    region=UberVegetation_Veg(i).region
+    if UberVegetation_Region(region).visibility=0
+        UberVegetation_PositionVeg(i)
+    endif
+next i
+
+return
+
+UberVegetation_End:
+UberVegetation.Vegtypes=0
+UberVegetation.Vegs=0
+UberVegetation.Vegposs=0
+UberVegetation.Regions=0
+undim UberVegetation_Vegtype(0)
+undim UberVegetation_Veg(0)
+undim UberVegetation_Region(0)
+undim UberVegetation_VegPos(0)
+return
+
+
+
+function UberVegetation_LoadVegetation(file$)
+
+endfunction ptr
+
+
+
+function UberVegetation_MakeRegion(vegtype,x#,y#,z#,radius#)
+
+inc UberVegetation.Regions
+array insert at bottom UberVegetation_Region(0)
+n=UberVegetation.Regions
+
+density#=UberVegetation_Vegtype(vegtype).density
+
+vegcount=int((pi()*radius#^2)*(density#/100.0))
+
+zonenum=UberZone_MakeSphereZone(x#,y#,z#,radius#)
+UberVegetation_Region(n).zonenum=zonenum
+UberVegetation_Region(n).vegtype=vegtype
+
+for i=1 to vegcount
+    anga#=rnd(359)
+    angb#=rnd(359)
+    dist#=sqrt(rnd(int(radius#^2)))
+    position object UberCore.checkobj,x#,y#,z#
+    rotate object UberCore.checkobj,anga#,angb#,0
+    move object UberCore.checkobj,dist#
+    vegx#=object position x(UberCore.checkobj)
+    vegz#=object position z(UberCore.checkobj)
+    vegy#=UberTerrain_GetGroundHeight(vegx#,vegz#)
+    
+    if UberZone_PointInZone(zonenum,vegx#,vegy#,vegz#)
+        inc UberVegetation_Region(n).vegpositions
+        inc UberVegetation.Vegposs
+        array insert at bottom UberVegetation_VegPos(0)
+        Vegpos=UberVegetation.Vegposs
+        
+        UberVegetation_VegPos(Vegpos).x=vegx#
+        UberVegetation_VegPos(Vegpos).y=vegy#
+        UberVegetation_VegPos(Vegpos).z=vegz#
+        UberVegetation_VegPos(Vegpos).vegtype=vegtype
+        UberVegetation_VegPos(Vegpos).region=n
+        
+        if UberVegetation_Region(n).vegpositions=1
+            UberVegetation_Region(n).firstvegposition=Vegpos
+        endif
+    endif
+next i
+ptr=n
+endfunction ptr
+
+function UberVegetation_PositionVeg(veg)
+vegtype=UberVegetation_Veg(veg).vegtype
+regionfound=0
+repeat
+    region=UberVegetation_Vegtype(vegtype).mostvisibleregion
+    if UberVegetation_GetRegionFreeSpaces(region)
+        regionfound=1
+        UberVegetation_MoveVegetationToRegion(veg,region)
+    else
+        UberVegetation_CalculateMostVisibleRegion(vegtype)
+    endif
+until regionfound=1
+endfunction
+
+
+function UberVegetation_GetRegionFreeSpaces(region)
+freespaces=UberVegetation_Region(region).vegpositions-UberVegetation_Region(region).filledvegpositions
+endfunction freespaces
+
+function UberVegetation_CalculateMostVisibleRegion(vegtype)
+for i=1 to regions
+    if UberVegetation_Region(i).vegtype=vegtype and UberVegetation_GetRegionFreeSpaces(i)
+        x1#=UberVegetation_Region(i).x
+        y1#=UberVegetation_Region(i).y
+        z1#=UberVegetation_Region(i).z
+        x2#=camera position x()
+        y2#=camera position y()
+        z2#=camera position z()
+        distsqr#=UberCalcs_GetDistanceSquared(x1#,y1#,z1#,x2#,y2#,z2#)
+        if distsqr#<UberVegetation_Vegtype(vegtype).drawdist^2
+            distance#=sqrt(distsqr#)
+            visible=1
+            UberVegetation_Region(i).visibility=visible/distance#
+            if UberVegetation_Region(i).visibility>UberVegetation_Vegtype(vegtype).mostvisiblevisibility
+                UberVegetation_Vegtype(vegtype).mostvisiblevisibility=UberVegetation_Region(i).visibility
+                UberVegetation_Vegtype(vegtype).mostvisibleregion=i
+            endif
+        endif
+    endif
+next i
+endfunction
+
+function UberVegetation_MoveVegetationToRegion(veg,region)
+vegposition=UberVegetation_Region(region).firstvegposition+UberVegetation_Region(region).filledvegpositions
+inc UberVegetation_Region(region).filledvegpositions
+n=vegposition
+UberVegetation_VegPos(n).vegnum=veg
+UberVegetation_Veg(veg).region=region
+position object UberVegetation_Veg(veg).objnum,UberVegetation_VegPos(n).x,UberVegetation_VegPos(n).y,UberVegetation_VegPos(n).z
+yrotate object UberVegetation_Veg(veg).objnum,rnd(359)
+endfunction

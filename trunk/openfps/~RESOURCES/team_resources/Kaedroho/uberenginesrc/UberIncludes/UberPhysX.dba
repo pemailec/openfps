@@ -1,0 +1,199 @@
+type UberPhysX
+objects as dword
+materials as dword
+bodies as dword
+endtype
+
+type UberPhysX_Object
+objnuma as dword
+objnumb as dword
+objnumc as dword
+objnumd as dword
+objnume as dword
+body as dword
+endtype
+
+type UberPhysX_Body
+objnum as dword
+radius as float
+oldlinxvel as float
+oldlinyvel as float
+oldlinzvel as float
+linxacc as float
+linyacc as float
+linzacc as float
+oldangxvel as float
+oldangyvel as float
+oldangzvel as float
+angxacc as float
+angyacc as float
+angzacc as float
+exists as boolean
+endtype
+
+UberPhysX_Start:
+phy start
+phy set gravity 0,-981,0
+UberPhysX as UberPhysX
+dim UberPhysX_Object(0) as UberPhysX_Object
+dim UberPhysX_Body(0) as UberPhysX_Body
+return
+
+UberPhysX_Update:
+UberTerrain_ResetCollision()
+phy set fixed timing UberCore.ElapsedTime
+phy update
+return
+
+UberPhysX_End:
+phy end
+undim UberPhysX_Object(0)
+undim UberPhysX_Body(0)
+UberPhysX.objects=0
+UberPhysX.materials=0
+return
+
+function UberPhysX_MakeObject(tipe)
+
+endfunction ptr
+
+function UberPhysX_LoadObject(file$)
+file=UberFile_LoadFile(file$)
+
+UberFile_LoadScript(file,"settings.txt")
+
+if lower$(lua string$("filetype"))="object"
+   select upper$(lua string$("engineversion"))
+      case "UB0.01"
+
+      endcase
+   endselect
+endif
+
+UberFile_CloseFile(file)
+endfunction ptr
+
+function SetObjectPosition(object,x#,y#,z#)
+UberPhysX_PositionBody(UberPhysX_Object(object).body,x#,y#,z#)
+endfunction
+
+function SetObjectRotation(object,x#,y#,z#)
+UberPhysX_RotateBody(UberPhysX_Object(object).body,x#,y#,z#)
+endfunction
+
+function UberPhysX_MakeMaterial(sfriction#,dfriction#,restitution#,name$)
+inc UberPhysX.materials
+phy make material UberPhysX.materials,name$
+   phy set material static friction UberPhysX.materials,sfriction#
+   phy set material dynamic friction UberPhysX.materials,dfriction#
+   phy set material restitution UberPhysX.materials,restitution#
+phy build material UberPhysX.materials
+ptr=UberPhysX.materials
+endfunction ptr
+
+function UberPhysX_MakeBody(tipe,objnum)
+inc UberPhysX.bodies
+array insert at bottom UberPhysX_Body(0)
+n=UberPhysX.bodies
+UberPhysX_Body(n).objnum=objnum
+UberPhysX_Body(n).radius=object size(objnum)
+UberPhysX_Body(n).exists=1
+ptr=n
+select tipe
+	case 1
+		phy make rigid body dynamic box objnum
+	endcase
+endselect
+endfunction ptr
+
+function UberPhysX_PositionBody(body,x#,y#,z#)
+if UberPhysX_Body(body).exists
+	phy set rigid body position UberPhysX_Body(body).objnum,x#,y#,z#
+	`phy sleep rigid body UberPhysX_Body(body).objnum
+	UberPhysX_Body(body).oldlinxvel=0
+	UberPhysX_Body(body).oldlinyvel=0
+	UberPhysX_Body(body).oldlinzvel=0
+	UberPhysX_Body(body).linxacc=0
+	UberPhysX_Body(body).linyacc=0
+	UberPhysX_Body(body).linzacc=0
+	UberPhysX_Body(body).oldangxvel=0
+	UberPhysX_Body(body).oldangyvel=0
+	UberPhysX_Body(body).oldangzvel=0
+	UberPhysX_Body(body).angxacc=0
+	UberPhysX_Body(body).angyacc=0
+	UberPhysX_Body(body).angzacc=0
+endif
+endfunction
+
+function UberPhysX_RotateBody(body,x#,y#,z#)
+if UberPhysX_Body(body).exists
+	phy set rigid body rotation UberPhysX_Body(body).objnum,x#,y#,z#
+	`phy sleep rigid body UberPhysX_Body(body).objnum
+	UberPhysX_Body(body).oldlinxvel=0
+	UberPhysX_Body(body).oldlinyvel=0
+	UberPhysX_Body(body).oldlinzvel=0
+	UberPhysX_Body(body).linxacc=0
+	UberPhysX_Body(body).linyacc=0
+	UberPhysX_Body(body).linzacc=0
+	UberPhysX_Body(body).oldangxvel=0
+	UberPhysX_Body(body).oldangyvel=0
+	UberPhysX_Body(body).oldangzvel=0
+	UberPhysX_Body(body).angxacc=0
+	UberPhysX_Body(body).angyacc=0
+	UberPhysX_Body(body).angzacc=0
+endif
+endfunction
+
+function UberPhysX_SetBodySleeping(body,sleeping)
+if UberPhysX_Body(body).exists
+	if sleeping
+		phy sleep rigid body UberPhysX_Body(body).objnum
+	else
+		phy wake up rigid body UberPhysX_Body(body).objnum
+	endif
+endif
+endfunction
+
+function UberPhysX_DeleteBody(body)
+if UberPhysX_Body(body).exists
+	phy delete rigid body UberPhysX_Body(body).objnum
+	delete object UberPhysX_Body(body).objnum
+	UberPhysX_Body(body).exists=0
+endif
+endfunction
+
+function UberPhysX_BodyPositionX(body)
+if UberPhysX_Body(body).exists
+	x#=object position x(UberPhysX_Body(body).objnum)
+endif
+endfunction x#
+
+function UberPhysX_BodyPositionY(body)
+if UberPhysX_Body(body).exists
+	y#=object position y(UberPhysX_Body(body).objnum)
+endif
+endfunction y#
+
+function UberPhysX_BodyPositionZ(body)
+if UberPhysX_Body(body).exists
+	z#=object position z(UberPhysX_Body(body).objnum)
+endif
+endfunction z#
+
+function UberPhysX_BodyRotationX(body)
+if UberPhysX_Body(body).exists
+	x#=object angle x(UberPhysX_Body(body).objnum)
+endif
+endfunction x#
+
+function UberPhysX_BodyRotationY(body)
+if UberPhysX_Body(body).exists
+	y#=object angle y(UberPhysX_Body(body).objnum)
+endif
+endfunction y#
+
+function UberPhysX_BodyRotationZ(body)
+if UberPhysX_Body(body).exists
+	z#=object angle z(UberPhysX_Body(body).objnum)
+endif
+endfunction z#

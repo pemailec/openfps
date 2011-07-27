@@ -1,0 +1,1276 @@
+type UberFX_staticparticle
+objnum as dword
+exists as boolean
+type as dword
+endtype
+
+type UberFX_light
+x as float
+y as float
+z as float
+range as float
+red as byte
+green as byte
+blue as byte
+on as boolean
+dbpro as dword
+objnum as dword
+endtype
+
+type UberFX_particleemitter
+type as byte
+id as dword
+exists as boolean
+active as boolean
+hidden as boolean
+endtype
+
+type UberFX_pointparticleemitter
+x as float
+y as float
+z as float
+xvel as float
+yvel as float
+zvel as float
+rate as float
+time as float
+particletype as dword
+exists as boolean
+endtype
+
+type UberFX_spherezoneparticleemitter
+x as float
+y as float
+z as float
+xvel as float
+yvel as float
+zvel as float
+rate as float
+time as float
+particletype as dword
+radius as float
+exists as boolean
+endtype
+
+type UberFX_boxzoneparticleemitter
+x as float
+y as float
+z as float
+xvel as float
+yvel as float
+zvel as float
+xx as float
+yy as float
+zz as float
+rate as float
+time as float
+particletype as dword
+exists as boolean
+endtype
+
+type UberFX
+ambientposx as float
+ambientposy as float
+ambientposz as float
+windx as float
+windy as float
+windz as float
+lights as dword
+particles as dword
+particletypes as dword
+bullets as dword
+checkobj as dword
+sparks as dword
+particleemitters as dword
+lightmasterobject as dword
+staticparticles as dword
+lightmasterobject as dword
+lightimage as dword
+muzzleflashobjnum as dword
+mflashimga as dword
+mflashimgb as dword
+explosionobjnum as dword
+explosionimgnum as dword
+ExplosionSmoke as dword
+endtype
+
+type UberFX_particle
+x as float
+y as float
+z as float
+xvel as float
+yvel as float
+zvel as float
+objnum as dword
+type as dword
+exists as boolean
+life as float
+step as dword
+emitter as dword
+endtype
+
+type UberFX_muzzleflash
+objnum as dword
+time as float
+inuse as boolean
+light as dword
+firstframe as boolean
+endtype
+
+type UberFX_particletype
+name as string
+damp as float
+startsize as float
+endsize as float
+weight as float
+collision as boolean
+tex as dword
+life as float
+expansion as float
+objnum as dword
+alpha as float
+step as dword
+light as boolean
+drawdist as float
+endtype
+
+type UberFX_bullet
+exists as boolean
+x as float
+y as float
+z as float
+xvel as float
+yvel as float
+zvel as float
+rec as boolean
+endtype
+
+type UberFX_explosion
+objnum as dword
+time as float
+inuse as boolean
+size as float
+light as dword
+endtype
+
+type UberFX_spark
+x as float
+y as float
+z as float
+xvel as float
+yvel as float
+zvel as float
+life as float
+exists as boolean
+endtype
+
+UberFX_Start:
+UberFX as UberFX
+dim UberFX_light(0) as UberFX_light
+dim UberFX_bullet(0) as UberFX_bullet
+dim UberFX_particle(0) as UberFX_particle
+dim UberFX_spark(0) as UberFX_spark
+dim UberFX_particletype(0) as UberFX_particletype
+dim UberFX_muzzleflash(5) as UberFX_muzzleflash
+dim UberFX_explosion(5) as UberFX_explosion
+dim UberFX_pointparticleemitter(0) as UberFX_pointparticleemitter
+dim UberFX_spherezoneparticleemitter(0) as UberFX_spherezoneparticleemitter
+dim UberFX_boxzoneparticleemitter(0) as UberFX_boxzoneparticleemitter
+dim UberFX_particleemitter(0) as UberFX_particleemitter
+dim UberFX_staticparticle(0) as UberFX_staticparticle
+
+
+UberFX.checkobj=UberCore_freeobject()
+make object box UberFX.checkobj,1,1,1
+exclude object on UberFX.checkobj
+
+
+UberFX.lightmasterobject=UberCore_freeobject()
+make object plain UberFX.lightmasterobject,100,100
+UberFX.lightimage=UberFile_ExtractImage(UberCore.mediafile,"light.png")
+texture object UberFX.lightmasterobject,UberFX.lightimage
+ghost object on UberFX.lightmasterobject
+set object light UberFX.lightmasterobject,0
+hide object UberFX.lightmasterobject
+
+
+UberFX.mflashimga=UberFile_ExtractImage(UberCore.mediafile,"mflasha.png")
+
+UberFX.mflashimgb=UberFile_ExtractImage(UberCore.mediafile,"mflashb.png")
+
+UberFX.muzzleflashobjnum=UberCore_freeobject()
+make object plain UberFX.muzzleflashobjnum,7.5,7.5
+
+
+rotate limb UberFX.muzzleflashobjnum,0,90,0,0
+
+set object light UberFX.muzzleflashobjnum,0
+texture limb UberFX.muzzleflashobjnum,0,UberFX.mflashimgb
+set object transparency UberFX.muzzleflashobjnum,1
+hide object UberFX.muzzleflashobjnum
+disable object zwrite UberFX.muzzleflashobjnum
+
+for i=1 to 5
+   UberFX_muzzleflash(i).objnum=UberCore_freeobject()
+
+   instance object UberFX_muzzleflash(i).objnum,UberFX.muzzleflashobjnum
+   scale object UberFX_muzzleflash(i).objnum,200,200,200
+   UberFX_muzzleflash(i).light=UberFX_makelight(0,0,0,50,rgb(255,255,255))
+   UberFX_setlightactive(UberFX_muzzleflash(i).light,0)
+   UberFX_setlightobject(UberFX_muzzleflash(i).light,0)
+next i
+
+UberFX.explosionobjnum=UberCore_freeobject()
+UberFX.explosionimgnum=UberFile_ExtractImage(UberCore.mediafile,"Explosion.jpg")
+make object plain UberFX.explosionobjnum,100,100
+texture object UberFX.explosionobjnum,UberFX.explosionimgnum
+set object transparency UberFX.explosionobjnum,1
+set object light UberFX.explosionobjnum,0
+hide object UberFX.explosionobjnum
+disable object zwrite UberFX.explosionobjnum
+for i=1 to 5
+   UberFX_explosion(i).objnum=UberCore_freeobject()
+
+   instance object UberFX_explosion(i).objnum,UberFX.explosionobjnum
+   UberFX_explosion(i).light=UberFX_makelight(0,0,0,200,rgb(255,255,255))
+   UberFX_setlightactive(UberFX_explosion(i).light,0)
+   UberFX_setlightobject(UberFX_explosion(i).light,0)
+next i
+
+UberFX.windx=10
+UberFX.windy=0
+UberFX.windz=0
+
+for i=1 to UberFile_GetFileCount()
+	`text 10,10,UberFile_GetFileType(i)
+`sync
+`wait key
+	if UberFile_GetFileType(i)="particletype"
+
+		if UberFile_GetFileEngineVersion(i)="UB0.04B"
+			file=UberFile_LoadFile("media/"+UberFile_GetFileName(i))
+			UberFile_LoadScript(file,"settings.txt")
+			parttype=UberFX_makeparticletype()
+			UberFX_setparticletypename(parttype,lua string$("name"))
+
+			UberFX_setparticletypeweight(parttype,lua float("weight"))
+			UberFX_setparticletypelife(parttype,lua float("life"))
+			UberFX_setparticletypedamp(parttype,lua float("damp"))
+			UberFX_setparticletypedrawdist(parttype,lua float("maxdrawdist"))
+			UberFX_setparticletypesize(parttype,lua float("startsize"),lua float("endsize"))
+			if lua string$("image")=""
+			else
+				partimg=UberFile_ExtractImage(file,lua string$("image"))
+				UberFX_setparticletypeimage(parttype,partimg)
+			endif
+			UberFX_setparticletypealpha(parttype,lua float("alpha"))
+			
+			UberFile_CloseFile(file)
+		endif
+	endif
+next i
+
+
+return
+
+UberFX_Update:
+gosub UberFX_updatebullets
+gosub UberFX_updateparticles
+gosub UberFX_updatemuzzleflashes
+gosub UberFX_updateexplosions
+gosub UberFX_updateparticleemitters
+gosub UberFX_updatelights
+gosub UberFX_updatesparks
+return
+
+UberFX_End:
+undim UberFX_light(0)
+undim UberFX_bullet(0)
+undim UberFX_particle(0)
+undim UberFX_spark(0)
+undim UberFX_particletype(0)
+undim UberFX_muzzleflash(5)
+undim UberFX_explosion(5)
+undim UberFX_pointparticleemitter(0)
+undim UberFX_spherezoneparticleemitter(0)
+undim UberFX_boxzoneparticleemitter(0)
+undim UberFX_particleemitter(0)
+undim UberFX_staticparticle(0)
+
+delete image UberFX.lightimage
+delete image UberFX.mflashimga
+delete image UberFX.mflashimgb
+delete image UberFX.explosionimgnum
+
+UberFX.ambientposx=0
+UberFX.ambientposy=0
+UberFX.ambientposz=0
+UberFX.windx=0
+UberFX.windy=0
+UberFX.windz=0
+UberFX.lights=0
+UberFX.particles=0
+UberFX.particletypes=0
+UberFX.bullets=0
+UberFX.checkobj=0
+UberFX.sparks=0
+UberFX.particleemitters=0
+UberFX.lightmasterobject=0
+UberFX.staticparticles=0
+UberFX.lightmasterobject=0
+UberFX.lightimage=0
+UberFX.muzzleflashobjnum=0
+UberFX.mflashimga=0
+UberFX.mflashimgb=0
+UberFX.explosionobjnum=0
+UberFX.explosionimgnum=0
+UberFX.ExplosionSmoke=0
+
+
+return
+
+function UberFX_makeparticle(x#,y#,z#,xvel#,yvel#,zvel#,parttype)
+n=UberFX_freeparticle(parttype)
+UberFX_particle(n).x=x#
+UberFX_particle(n).y=y#
+UberFX_particle(n).z=z#
+UberFX_particle(n).xvel=xvel#
+UberFX_particle(n).yvel=yvel#
+UberFX_particle(n).zvel=zvel#
+UberFX_particle(n).type=parttype
+UberFX_particle(n).emitter=0
+set object diffuse UberFX_particle(n).objnum,0
+endfunction
+
+function UberFX_makeparticlefromemitter(x#,y#,z#,xvel#,yvel#,zvel#,parttype,emitter)
+n=UberFX_freeparticle(parttype)
+UberFX_particle(n).x=x#
+UberFX_particle(n).y=y#
+UberFX_particle(n).z=z#
+UberFX_particle(n).xvel=xvel#
+UberFX_particle(n).yvel=yvel#
+UberFX_particle(n).zvel=zvel#
+UberFX_particle(n).type=parttype
+UberFX_particle(n).emitter=emitter
+set object diffuse UberFX_particle(n).objnum,0
+endfunction
+
+function UberFX_makestaticparticle(x#,y#,z#,parttype)
+UberFX.staticparticles=UberFX.staticparticles+1
+array insert at bottom UberFX_staticparticle(0)
+n=UberFX.staticparticles
+UberFX_staticparticle(n).type=parttype
+
+objnum=UberCore_freeobject()
+instance object objnum,UberFX_particletype(parttype).objnum
+UberFX_staticparticle(n).objnum=objnum
+UberFX_staticparticle(n).exists=1
+position object objnum,x#,y#,z#
+set alpha mapping on objnum,UberFX_particletype(parttype).alpha
+endfunction
+
+function UberFX_makeparticletype()
+UberFX.particletypes=UberFX.particletypes+1
+array insert at bottom UberFX_particletype(0)
+n=UberFX.particletypes
+UberFX_particletype(n).damp=1
+UberFX_particletype(n).startsize=30
+UberFX_particletype(n).endsize=30
+UberFX_particletype(n).expansion=0
+UberFX_particletype(n).collision=1
+UberFX_particletype(n).weight=-0.2
+UberFX_particletype(n).alpha=100
+UberFX_particletype(n).light=1
+UberFX_particletype(n).life=2
+UberFX_particletype(n).step=1
+UberFX_particletype(n).objnum=UberCore_freeobject()
+make object plain UberFX_particletype(n).objnum,UberFX_particletype(n).startsize,UberFX_particletype(n).startsize,1,1
+set object transparency UberFX_particletype(n).objnum,1
+set object light UberFX_particletype(n).objnum,0
+hide object UberFX_particletype(n).objnum
+disable object zwrite UberFX_particletype(n).objnum
+endfunction n
+
+function UberFX_GetParticletypeindex(name$)
+for i=1 to UberFX.particletypes
+	if UberFX_particletype(i).name=name$ then exitfunction i
+next i
+endfunction 0
+
+function UberFX_setparticletypedamp(parttype,damp#)
+UberFX_particletype(parttype).damp=damp#
+endfunction
+
+function UberFX_setparticletypename(parttype,name$)
+UberFX_particletype(parttype).name=name$
+endfunction
+
+function UberFX_setparticletypelife(parttype,life#)
+UberFX_particletype(parttype).life=life#
+endfunction
+
+function UberFX_setparticletypedrawdist(parttype,drawdist#)
+UberFX_particletype(parttype).drawdist=drawdist#
+endfunction
+
+function UberFX_setparticletypesize(parttype,startsize#,endsize#)
+UberFX_particletype(parttype).startsize=startsize#
+UberFX_particletype(parttype).endsize=endsize#
+delete object UberFX_particletype(parttype).objnum
+make object plain UberFX_particletype(parttype).objnum,UberFX_particletype(parttype).startsize,UberFX_particletype(parttype).startsize
+set object transparency UberFX_particletype(parttype).objnum,1
+set object light UberFX_particletype(parttype).objnum,0
+hide object UberFX_particletype(parttype).objnum
+disable object zwrite UberFX_particletype(parttype).objnum
+endfunction
+
+function UberFX_setparticletypeweight(parttype,weight#)
+UberFX_particletype(parttype).weight=weight#
+endfunction
+
+function UberFX_setparticletypealpha(parttype,alpha#)
+UberFX_particletype(parttype).alpha=alpha#
+endfunction
+
+function UberFX_setparticletypecollision(parttype,flag)
+UberFX_particletype(parttype).collision=flag
+endfunction
+
+function UberFX_setparticletypeimage(parttype,imgnum)
+UberFX_particletype(parttype).tex=imgnum
+texture object UberFX_particletype(parttype).objnum,imgnum
+endfunction
+
+function UberFX_makepointparticleemitter(x#,y#,z#,xvel#,yvel#,zvel#,rate#,parttype)
+UberFX.particleemitters=UberFX.particleemitters+1
+array insert at bottom UberFX_particleemitter(0)
+
+array insert at bottom UberFX_pointparticleemitter(0)
+id=array count(UberFX_pointparticleemitter(0))
+
+n=UberFX.particleemitters
+UberFX_particleemitter(n).type=1
+UberFX_particleemitter(n).id=id
+UberFX_particleemitter(n).exists=1
+UberFX_particleemitter(n).active=1
+
+UberFX_pointparticleemitter(id).x=x#
+UberFX_pointparticleemitter(id).y=y#
+UberFX_pointparticleemitter(id).z=z#
+UberFX_pointparticleemitter(id).xvel=xvel#
+UberFX_pointparticleemitter(id).yvel=yvel#
+UberFX_pointparticleemitter(id).zvel=zvel#
+UberFX_pointparticleemitter(id).rate=rate#
+UberFX_pointparticleemitter(id).particletype=parttype
+UberFX_pointparticleemitter(id).exists=1
+endfunction n
+
+function UberFX_makespherezoneparticleemitter(x#,y#,z#,xvel#,yvel#,zvel#,radius#,rate#,parttype)
+UberFX.particleemitters=UberFX.particleemitters+1
+array insert at bottom UberFX_particleemitter(0)
+
+array insert at bottom UberFX_spherezoneparticleemitter(0)
+id=array count(UberFX_spherezoneparticleemitter(0))
+
+n=UberFX.particleemitters
+UberFX_particleemitter(n).type=2
+UberFX_particleemitter(n).id=id
+UberFX_particleemitter(n).exists=1
+UberFX_particleemitter(n).active=1
+
+UberFX_spherezoneparticleemitter(id).x=x#
+UberFX_spherezoneparticleemitter(id).y=y#
+UberFX_spherezoneparticleemitter(id).z=z#
+UberFX_spherezoneparticleemitter(id).xvel=xvel#
+UberFX_spherezoneparticleemitter(id).yvel=yvel#
+UberFX_spherezoneparticleemitter(id).zvel=zvel#
+UberFX_spherezoneparticleemitter(id).radius=radius#
+UberFX_spherezoneparticleemitter(id).rate=rate#
+UberFX_spherezoneparticleemitter(id).particletype=parttype
+UberFX_spherezoneparticleemitter(id).exists=1
+endfunction n
+
+function UberFX_makeboxzoneparticleemitter(x#,y#,z#,xx#,yy#,zz#,xvel#,yvel#,zvel#,rate#,parttype)
+UberFX.particleemitters=UberFX.particleemitters+1
+array insert at bottom UberFX_particleemitter(0)
+
+array insert at bottom UberFX_boxzoneparticleemitter(0)
+id=array count(UberFX_boxzoneparticleemitter(0))
+
+n=UberFX.particleemitters
+UberFX_particleemitter(n).type=3
+UberFX_particleemitter(n).id=id
+UberFX_particleemitter(n).exists=1
+UberFX_particleemitter(n).active=1
+
+UberFX_boxzoneparticleemitter(id).x=x#
+UberFX_boxzoneparticleemitter(id).y=y#
+UberFX_boxzoneparticleemitter(id).z=z#
+UberFX_boxzoneparticleemitter(id).xx=xx#
+UberFX_boxzoneparticleemitter(id).yy=yy#
+UberFX_boxzoneparticleemitter(id).zz=zz#
+UberFX_boxzoneparticleemitter(id).xvel=xvel#
+UberFX_boxzoneparticleemitter(id).yvel=yvel#
+UberFX_boxzoneparticleemitter(id).zvel=zvel#
+UberFX_boxzoneparticleemitter(id).rate=rate#
+UberFX_boxzoneparticleemitter(id).particletype=parttype
+UberFX_boxzoneparticleemitter(id).exists=1
+endfunction n
+
+function UberFX_deleteparticleemitter(number)
+UberFX_particleemitter(number).exists=0
+id=UberFX_particleemitter(number).id
+select UberFX_particleemitter(number).type
+   case 1
+      UberFX_pointparticleemitter(id).exists=0
+   endcase
+   case 2
+      UberFX_spherezoneparticleemitter(id).exists=0
+   endcase
+   case 3
+      UberFX_boxzoneparticleemitter(id).exists=0
+   endcase
+endselect
+endfunction
+
+function UberFX_setparticleemitterposition(number,x#,y#,z#)
+id=UberFX_particleemitter(number).id
+select UberFX_particleemitter(number).type
+   case 1
+      UberFX_pointparticleemitter(id).x=x#
+      UberFX_pointparticleemitter(id).y=y#
+      UberFX_pointparticleemitter(id).z=z#
+   endcase
+   case 2
+      UberFX_spherezoneparticleemitter(id).x=x#
+      UberFX_spherezoneparticleemitter(id).y=y#
+      UberFX_spherezoneparticleemitter(id).z=z#
+   endcase
+   case 3
+      UberFX_boxzoneparticleemitter(id).x=x#
+      UberFX_boxzoneparticleemitter(id).y=y#
+      UberFX_boxzoneparticleemitter(id).z=z#
+   endcase
+endselect
+endfunction
+
+function UberFX_setparticleemittervelocity(number,x#,y#,z#)
+id=UberFX_particleemitter(number).id
+select UberFX_particleemitter(number).type
+   case 1
+      UberFX_pointparticleemitter(id).xvel=x#
+      UberFX_pointparticleemitter(id).yvel=y#
+      UberFX_pointparticleemitter(id).zvel=z#
+   endcase
+   case 2
+      UberFX_spherezoneparticleemitter(id).xvel=x#
+      UberFX_spherezoneparticleemitter(id).yvel=y#
+      UberFX_spherezoneparticleemitter(id).zvel=z#
+   endcase
+   case 3
+      UberFX_boxzoneparticleemitter(id).xvel=x#
+      UberFX_boxzoneparticleemitter(id).yvel=y#
+      UberFX_boxzoneparticleemitter(id).zvel=z#
+   endcase
+endselect
+endfunction
+
+function UberFX_setparticleemitteractive(number,flag)
+UberFX_particleemitter(number).active=flag
+endfunction
+
+function UberFX_setparticleemittervisible(number,flag)
+UberFX_particleemitter(number).hidden=flag
+endfunction
+
+function UberFX_makelight(x#,y#,z#,range#,colour)
+UberFX.lights=UberFX.lights+1
+array insert at bottom UberFX_light(0)
+
+n=UberFX.lights
+UberFX_light(n).x=x#
+UberFX_light(n).y=y#
+UberFX_light(n).z=z#
+UberFX_light(n).range=range#
+UberFX_light(n).red=rgbr(colour)
+UberFX_light(n).green=rgbg(colour)
+UberFX_light(n).blue=rgbb(colour)
+UberFX_light(n).on=1
+UberFX_light(n).dbpro=0
+UberFX_light(n).objnum=UberCore_freeobject()
+instance object UberFX_light(n).objnum,UberFX.lightmasterobject
+disable object zdepth UberFX_light(n).objnum
+endfunction n
+
+function UberFX_setlightposition(number,x#,y#,z#)
+UberFX_light(number).x=x#
+UberFX_light(number).y=y#
+UberFX_light(number).z=z#
+endfunction
+
+function UberFX_setlightobject(number,flag)
+if flag
+   exclude object off UberFX_light(number).objnum
+else
+   exclude object on UberFX_light(number).objnum
+endif
+endfunction
+
+
+function UberFX_setlightrange(number,range#)
+UberFX_light(number).range=range#
+endfunction
+
+function UberFX_setlightcolour(number,colour)
+UberFX_light(number).red=rgbr(colour)
+UberFX_light(number).green=rgbg(colour)
+UberFX_light(number).blue=rgbb(colour)
+endfunction
+
+function UberFX_setlightactive(number,flag)
+UberFX_light(number).on=flag
+endfunction
+
+function UberFX_setlightdbpro(number,light)
+UberFX_light(number).dbpro=light
+endfunction
+
+function UberFX_makestaticparticles(x#,y#,z#,xx#,yy#,zz#,number,parttype)
+for i=1 to number
+   width=abs(xx#-x#)
+   height=abs(yy#-y#)
+   depth=abs(zz#-z#)
+   partx#=min(x#,xx#)+rnd(width)
+   party#=min(y#,yy#)+rnd(height)
+   partz#=min(z#,zz#)+rnd(depth)
+   UberFX_makestaticparticle(partx#,party#,partz#,parttype)
+next i
+endfunction
+
+function UberFX_freeparticle(tipe)
+for i=1 to UberFX.particles
+   if UberFX_particle(i).exists=0 and UberFX_particle(i).type=tipe
+      show object UberFX_particle(i).objnum
+      UberFX_particle(i).exists=1
+      UberFX_particle(i).life=0
+      exitfunction i
+   endif
+next i
+UberFX.particles=UberFX.particles+1
+array insert at bottom UberFX_particle(0)
+objnum=UberCore_freeobject()
+instance object objnum,UberFX_particletype(tipe).objnum
+UberFX_particle(UberFX.particles).objnum=objnum
+UberFX_particle(UberFX.particles).exists=1
+returnval=UberFX.particles
+endfunction returnval
+
+
+function UberFX_makebullet(x#,y#,z#,xvel#,yvel#,zvel#)
+UberFX.bullets=UberFX.bullets+1
+array insert at bottom UberFX_bullet(0)
+n=UberFX.bullets
+UberFX_bullet(n).x=x#
+UberFX_bullet(n).y=y#
+UberFX_bullet(n).z=z#
+UberFX_bullet(n).xvel=xvel#
+UberFX_bullet(n).yvel=yvel#
+UberFX_bullet(n).zvel=zvel#
+UberFX_bullet(n).exists=1
+endfunction
+
+UberFX_updatebullets:
+for i=1 to UberFX.bullets
+   if UberFX_bullet(i).exists
+      oldx#=UberFX_bullet(i).x
+      oldy#=UberFX_bullet(i).y
+      oldz#=UberFX_bullet(i).z
+
+      UberFX_bullet(i).x=UberFX_bullet(i).x+UberFX_bullet(i).xvel*UberCore.elapsedtime*0.75
+      UberFX_bullet(i).y=UberFX_bullet(i).y+(UberFX_bullet(i).yvel-9.81)*UberCore.elapsedtime*0.75
+      UberFX_bullet(i).z=UberFX_bullet(i).z+UberFX_bullet(i).zvel*UberCore.elapsedtime*0.75
+
+      newx#=UberFX_bullet(i).x
+      newy#=UberFX_bullet(i).y
+      newz#=UberFX_bullet(i).z
+
+      UberFX_bullet(i).x=UberFX_bullet(i).x+UberFX_bullet(i).xvel*UberCore.elapsedtime*0.25
+      UberFX_bullet(i).y=UberFX_bullet(i).y+(UberFX_bullet(i).yvel-9.81)*UberCore.elapsedtime*0.25
+      UberFX_bullet(i).z=UberFX_bullet(i).z+UberFX_bullet(i).zvel*UberCore.elapsedtime*0.25
+
+      UberFX_bullet(i).xvel=(UberFX_bullet(i).x-oldx#)/UberCore.elapsedtime
+      UberFX_bullet(i).yvel=(UberFX_bullet(i).y-oldy#)/UberCore.elapsedtime
+      UberFX_bullet(i).zvel=(UberFX_bullet(i).z-oldz#)/UberCore.elapsedtime
+
+      xvel#=UberFX_bullet(i).xvel
+      yvel#=UberFX_bullet(i).yvel
+      zvel#=UberFX_bullet(i).zvel
+      rec=UberFX_bullet(i).rec
+
+      `dist#=abs(UberFX_bullet(i).x^2+UberFX_bullet(i).y^2+UberFX_bullet(i).z^2)
+      `if dist#>10000^2 then UberFX_bullet(i).exists=0
+
+      collision = SC_Raycast(0,oldx#, oldy#, oldz#, UberFX_bullet(i).x, UberFX_bullet(i).y, UberFX_bullet(i).z,0)
+
+      if collision
+         UberFX_bullet(i).exists=0
+         d3d_line3d oldx#,oldy#,oldz#,SC_GetStaticCollisionX(),SC_GetStaticCollisionY(),SC_GetStaticCollisionZ()
+
+         `makeexplosion(SC_GetStaticCollisionX(),SC_GetStaticCollisionY(),SC_GetStaticCollisionZ(),50,SC_GetCollisionNormalX(),SC_GetCollisionNormalY(),SC_GetCollisionNormalZ())
+         for i=1 to 10
+            UberFX_makespark(SC_GetStaticCollisionX(),SC_GetStaticCollisionY(),SC_GetStaticCollisionZ(),sin(atanfull(SC_GetCollisionNormalX(),SC_GetCollisionNormalY()))*500+rnd(500)-250,cos(atanfull(SC_GetCollisionNormalX(),SC_GetCollisionNormalY()))*500+rnd(500)-250,sin(atanfull(SC_GetCollisionNormalZ(),SC_GetCollisionNormalY()))*500+rnd(500)-250)
+         next i
+
+         if rec=0
+            `UberFX_makebullet(SC_GetStaticCollisionX(),SC_GetStaticCollisionY(),SC_GetStaticCollisionZ(),SC_GetCollisionBounceX()*10,SC_GetCollisionBounceY()*10,SC_GetCollisionBounceZ()*10)
+            `UberFX_bullet(bullets).rec=1
+         endif
+      else
+         d3d_line3d oldx#,oldy#,oldz#,newx#,newy#,newz#
+      endif
+   endif
+next i
+return
+
+
+UberFX_updateparticles:
+for i=1 to UberFX.particles
+   if UberFX_particle(i).exists
+   	updateparticle=1
+   	if UberFX_particle(i).emitter
+   		if UberFX_particleemitter(UberFX_particle(i).emitter).hidden
+            hide object UberFX_particle(i).objnum
+            updateparticle=0
+        endif
+   	endif
+   	if UberFX_particletype(UberFX_particle(i).type).drawdist
+   	    drawdist#=UberFX_particletype(UberFX_particle(i).type).drawdist
+       	x#=UberFX_particle(i).x
+       	y#=UberFX_particle(i).y
+       	z#=UberFX_particle(i).z
+       	camx#=camera position x()
+       	camy#=camera position y()
+       	camz#=camera position z()
+       	if UberCalcs_GetDistanceSquared(x#,y#,z#,camx#,camy#,camz#)>drawdist#^2
+         	UberFX_particle(i).exists=0
+         	hide object UberFX_particle(i).objnum
+       	endif
+   	endif
+   	if updateparticle
+      	if UberFX_particletype(UberFX_particle(i).type).life>0
+         	UberFX_particle(i).life=UberFX_particle(i).life+1*UberCore.elapsedtime
+      	endif
+      	if UberFX_particle(i).life>UberFX_particletype(UberFX_particle(i).type).life
+         	UberFX_particle(i).exists=0
+         	hide object UberFX_particle(i).objnum
+      	else
+            
+            show object UberFX_particle(i).objnum
+            
+         	oldx#=UberFX_particle(i).x
+         	oldy#=UberFX_particle(i).y
+         	oldz#=UberFX_particle(i).z
+         	
+	
+         	if UberFX_particle(i).step=>UberFX_particletype(UberFX_particle(i).type).step
+            	life#=1-(UberFX_particletype(UberFX_particle(i).type).life-UberFX_particle(i).life)/UberFX_particletype(UberFX_particle(i).type).life
+            	endscale#=UberFX_particletype(UberFX_particle(i).type).endsize/UberFX_particletype(UberFX_particle(i).type).startsize*100
+            	scale#=100+(endscale#-100)*life#
+            	scale object UberFX_particle(i).objnum,scale#,scale#,scale#
+	
+            	alpha#=(100-life#*100)/100*UberFX_particletype(UberFX_particle(i).type).alpha
+            	set alpha mapping on UberFX_particle(i).objnum,alpha#
+	
+            	if UberFX_particletype(UberFX_particle(i).type).light and object in screen(UberFX_particle(i).objnum)
+	
+               	light#=128
+               	redlight#=0
+               	greenlight#=0
+               	bluelight#=0
+               	`if SC_RaycastGroup(1,UberFX.ambientposx,UberFX.ambientposy,UberFX.ambientposz,UberFX_particle(i).x,UberFX_particle(i).y,UberFX_particle(i).z,0)=0 then light#=255
+               	for t=1 to UberFX.lights
+                  	if UberFX_light(t).on
+                     	distx#=(UberFX_particle(i).x-UberFX_light(t).x)
+                     	disty#=(UberFX_particle(i).y-UberFX_light(t).y)
+                     	distz#=(UberFX_particle(i).z-UberFX_light(t).z)
+                     	dist#=sqrt(abs(distx#^2+disty#^2+distz#^2))
+                     	addredlight#=(UberFX_light(t).range-dist#)/UberFX_light(t).range*UberFX_light(t).red
+                     	addgreenlight#=(UberFX_light(t).range-dist#)/UberFX_light(t).range*UberFX_light(t).green
+                     	addbluelight#=(UberFX_light(t).range-dist#)/UberFX_light(t).range*UberFX_light(t).blue
+                     	if addredlight#<0 then addredlight#=0
+                     	if addgreenlight#<0 then addgreenlight#=0
+                     	if addbluelight#<0 then addbluelight#=0
+                     	redlight#=redlight#+addredlight#
+                     	greenlight#=greenlight#+addgreenlight#
+                     	bluelight#=bluelight#+addbluelight#
+	
+                  	endif
+               	next t
+	
+               	redlight#=redlight#+light#
+               	greenlight#=greenlight#+light#
+               	bluelight#=bluelight#+light#
+               	if redlight#>255 then redlight#=255
+               	if greenlight#>255 then greenlight#=255
+               	if bluelight#>255 then bluelight#=255
+               	set object diffuse UberFX_particle(i).objnum,set alpha(rgb(int(redlight#),int(greenlight#),int(bluelight#)),int(alpha#/100.0*255))
+	
+            	endif
+            	UberFX_particle(i).step=0
+         	else
+            	inc UberFX_particle(i).step
+         	endif
+	
+	
+         	upthrust#=UberFX_particletype(UberFX_particle(i).type).weight*9.81
+	
+         	UberFX_particle(i).xvel=UberFX_particle(i).xvel-(UberFX_particle(i).xvel*UberFX_particletype(UberFX_particle(i).type).damp*UberCore.elapsedtime)+UberFX.windx*UberCore.elapsedtime
+         	UberFX_particle(i).yvel=UberFX_particle(i).yvel-(UberFX_particle(i).yvel*UberFX_particletype(UberFX_particle(i).type).damp*UberCore.elapsedtime)+upthrust#+UberFX.windy*UberCore.elapsedtime
+         	UberFX_particle(i).zvel=UberFX_particle(i).zvel-(UberFX_particle(i).zvel*UberFX_particletype(UberFX_particle(i).type).damp*UberCore.elapsedtime)+UberFX.windz*UberCore.elapsedtime
+	
+         	UberFX_particle(i).x=UberFX_particle(i).x+UberFX_particle(i).xvel*UberCore.elapsedtime
+         	UberFX_particle(i).y=UberFX_particle(i).y+UberFX_particle(i).yvel*UberCore.elapsedtime
+         	UberFX_particle(i).z=UberFX_particle(i).z+UberFX_particle(i).zvel*UberCore.elapsedtime
+	
+         	if UberFX_particletype(UberFX_particle(i).type).collision
+            	collision=SC_RaycastGroup(1,oldx#,oldy#,oldz#,UberFX_particle(i).x,UberFX_particle(i).y,UberFX_particle(i).z,0)
+            	if collision
+               	UberFX_particle(i).x=SC_GetStaticCollisionX()+SC_GetCollisionBounceX()
+               	UberFX_particle(i).y=SC_GetStaticCollisionY()+SC_GetCollisionBounceY()
+               	UberFX_particle(i).z=0
+            	endif
+         	endif
+	
+         	UberFX_particle(i).xvel=(UberFX_particle(i).x-oldx#)/UberCore.elapsedtime
+         	UberFX_particle(i).yvel=(UberFX_particle(i).y-oldy#)/UberCore.elapsedtime
+         	UberFX_particle(i).zvel=(UberFX_particle(i).z-oldz#)/UberCore.elapsedtime
+	
+         	position object UberFX_particle(i).objnum,UberFX_particle(i).x,UberFX_particle(i).y,UberFX_particle(i).z
+         	cam=UberPlayer_GetPlayerCamera()
+         	rotate object UberFX_particle(i).objnum,camera angle x(cam),camera angle y(cam),camera angle z(cam)
+			endif
+      endif
+   endif
+next i
+
+
+for i=1 to UberFX.staticparticles
+   if UberFX_staticparticle(i).exists
+      if UberFX_particletype(UberFX_staticparticle(i).type).light and object in screen(UberFX_staticparticle(i).objnum)
+
+         light#=0
+         redlight#=0
+         greenlight#=0
+         bluelight#=0
+         if SC_RaycastGroup(1,UberFX.ambientposx,UberFX.ambientposy,UberFX.ambientposz,object position x(UberFX_staticparticle(i).objnum),object position y(UberFX_staticparticle(i).objnum),object position z(UberFX_staticparticle(i).objnum),0)=0 then light#=255
+         for t=1 to UberFX.lights
+            if UberFX_light(t).on
+               distx#=(object position x(UberFX_staticparticle(i).objnum)-UberFX_light(t).x)
+               disty#=(object position y(UberFX_staticparticle(i).objnum)-UberFX_light(t).y)
+               distz#=(object position z(UberFX_staticparticle(i).objnum)-UberFX_light(t).z)
+               dist#=sqrt(abs(distx#^2+disty#^2+distz#^2))
+               addredlight#=(UberFX_light(t).range-dist#)/UberFX_light(t).range*UberFX_light(t).red
+               addgreenlight#=(UberFX_light(t).range-dist#)/UberFX_light(t).range*UberFX_light(t).green
+               addbluelight#=(UberFX_light(t).range-dist#)/UberFX_light(t).range*UberFX_light(t).blue
+               if addredlight#<0 then addredlight#=0
+               if addgreenlight#<0 then addgreenlight#=0
+               if addbluelight#<0 then addbluelight#=0
+               redlight#=redlight#+addredlight#
+               greenlight#=greenlight#+addgreenlight#
+               bluelight#=bluelight#+addbluelight#
+
+            endif
+         next t
+
+         redlight#=redlight#+light#
+         greenlight#=greenlight#+light#
+         bluelight#=bluelight#+light#
+         if redlight#>255 then redlight#=255
+         if greenlight#>255 then greenlight#=255
+         if bluelight#>255 then bluelight#=255
+         set object diffuse UberFX_staticparticle(i).objnum,rgb(int(redlight#),int(greenlight#),int(bluelight#))
+
+      endif
+   endif
+next i
+return
+
+function UberFX_makemuzzleflash(x#,y#,z#,xnorm#,ynorm#,znorm#)
+if UberFX_muzzleflash(1).inuse
+   if UberFX_muzzleflash(2).inuse
+      if UberFX_muzzleflash(3).inuse
+         if UberFX_muzzleflash(4).inuse
+            if UberFX_muzzleflash(5).inuse
+
+            else
+               position object UberFX_muzzleflash(5).objnum,x#,y#,z#
+               point object UberFX_muzzleflash(5).objnum,x#+xnorm#,y#+ynorm#,z#+znorm#
+               xrotate object UberFX_muzzleflash(5).objnum,object angle x(UberFX_muzzleflash(5).objnum)+90
+               UberFX_muzzleflash(5).inuse=1
+               UberFX_muzzleflash(5).time=1.0/60.0
+               UberFX_setlightactive(UberFX_muzzleflash(5).light,1)
+               UberFX_setlightposition(UberFX_muzzleflash(5).light,x#,y#,z#)
+               turn object right UberFX_muzzleflash(5).objnum,rnd(359)
+               show object UberFX_muzzleflash(5).objnum
+               UberFX_muzzleflash(5).firstframe=1
+               set alpha mapping on UberFX_muzzleflash(5).objnum,100.0
+            endif
+         else
+            position object UberFX_muzzleflash(4).objnum,x#,y#,z#
+            point object UberFX_muzzleflash(4).objnum,x#+xnorm#,y#+ynorm#,z#+znorm#
+            xrotate object UberFX_muzzleflash(4).objnum,object angle x(UberFX_muzzleflash(4).objnum)+90
+            UberFX_muzzleflash(4).inuse=1
+            UberFX_muzzleflash(4).time=1.0/60.0
+            UberFX_setlightactive(UberFX_muzzleflash(4).light,1)
+            UberFX_setlightposition(UberFX_muzzleflash(4).light,x#,y#,z#)
+            turn object right UberFX_muzzleflash(4).objnum,rnd(359)
+            show object UberFX_muzzleflash(4).objnum
+            UberFX_muzzleflash(4).firstframe=1
+            set alpha mapping on UberFX_muzzleflash(4).objnum,100.0
+         endif
+      else
+         position object UberFX_muzzleflash(3).objnum,x#,y#,z#
+         point object UberFX_muzzleflash(3).objnum,x#+xnorm#,y#+ynorm#,z#+znorm#
+         xrotate object UberFX_muzzleflash(3).objnum,object angle x(UberFX_muzzleflash(3).objnum)+90
+         UberFX_muzzleflash(3).inuse=1
+         UberFX_muzzleflash(3).time=1.0/60.0
+         UberFX_setlightactive(UberFX_muzzleflash(3).light,1)
+         UberFX_setlightposition(UberFX_muzzleflash(3).light,x#,y#,z#)
+         turn object right UberFX_muzzleflash(3).objnum,rnd(359)
+         show object UberFX_muzzleflash(3).objnum
+         UberFX_muzzleflash(3).firstframe=1
+         set alpha mapping on UberFX_muzzleflash(3).objnum,100.0
+      endif
+   else
+      position object UberFX_muzzleflash(2).objnum,x#,y#,z#
+      point object UberFX_muzzleflash(2).objnum,x#+xnorm#,y#+ynorm#,z#+znorm#
+      xrotate object UberFX_muzzleflash(2).objnum,object angle x(UberFX_muzzleflash(2).objnum)+90
+      UberFX_muzzleflash(2).inuse=1
+      UberFX_muzzleflash(2).time=1.0/60.0
+      UberFX_setlightactive(UberFX_muzzleflash(2).light,1)
+      UberFX_setlightposition(UberFX_muzzleflash(2).light,x#,y#,z#)
+      turn object right UberFX_muzzleflash(2).objnum,rnd(359)
+      show object UberFX_muzzleflash(2).objnum
+      UberFX_muzzleflash(2).firstframe=1
+      set alpha mapping on UberFX_muzzleflash(2).objnum,100.0
+   endif
+else
+   position object UberFX_muzzleflash(1).objnum,x#,y#,z#
+   point object UberFX_muzzleflash(1).objnum,x#+xnorm#,y#+ynorm#,z#+znorm#
+   xrotate object UberFX_muzzleflash(1).objnum,object angle x(UberFX_muzzleflash(1).objnum)+90
+   UberFX_muzzleflash(1).inuse=1
+   UberFX_muzzleflash(1).time=1.0/60.0
+   UberFX_setlightactive(UberFX_muzzleflash(1).light,1)
+   UberFX_setlightposition(UberFX_muzzleflash(1).light,x#,y#,z#)
+   turn object right UberFX_muzzleflash(1).objnum,rnd(359)
+   show object UberFX_muzzleflash(1).objnum
+   UberFX_muzzleflash(1).firstframe=1
+   set alpha mapping on UberFX_muzzleflash(1).objnum,100.0
+endif
+endfunction
+
+UberFX_updatemuzzleflashes:
+for i=1 to 5
+   if UberFX_muzzleflash(i).inuse
+      
+      if UberFX_muzzleflash(i).time<=0
+         UberFX_muzzleflash(i).time=0
+         UberFX_muzzleflash(i).inuse=0
+         UberFX_setlightactive(UberFX_muzzleflash(i).light,0)
+         hide object UberFX_muzzleflash(i).objnum
+      endif
+      
+      UberFX_muzzleflash(i).time=UberFX_muzzleflash(i).time-UberCore.elapsedtime
+   else
+      hide object UberFX_muzzleflash(i).objnum
+   endif
+next i
+return
+
+
+function UberFX_makebulletdecal(x#,y#,z#,xnorm#,ynorm#,znorm#)
+objnum=UberCore_freeobject()
+endfunction
+
+function UberFX_makeexplosion(x#,y#,z#,size#,xnorm#,ynorm#,znorm#)
+if UberFX_explosion(1).inuse
+   if UberFX_explosion(2).inuse
+      if UberFX_explosion(3).inuse
+         if UberFX_explosion(4).inuse
+            if UberFX_explosion(5).inuse
+
+            else
+               position object UberFX_explosion(5).objnum,x#,y#,z#
+               scale object UberFX_explosion(5).objnum,size#,size#,size#
+               UberFX_explosion(5).inuse=1
+               UberFX_explosion(5).time=0.1
+               UberFX_explosion(5).size=size#
+               UberFX_setlightactive(UberFX_explosion(5).light,1)
+               UberFX_setlightposition(UberFX_explosion(5).light,x#,y#,z#)
+            endif
+         else
+            position object UberFX_explosion(4).objnum,x#,y#,z#
+            scale object UberFX_explosion(4).objnum,size#,size#,size#
+            UberFX_explosion(4).inuse=1
+            UberFX_explosion(4).time=0.1
+            UberFX_explosion(4).size=size#
+            UberFX_setlightactive(UberFX_explosion(4).light,1)
+            UberFX_setlightposition(UberFX_explosion(4).light,x#,y#,z#)
+         endif
+      else
+         position object UberFX_explosion(3).objnum,x#,y#,z#
+         scale object UberFX_explosion(3).objnum,size#,size#,size#
+         UberFX_explosion(3).inuse=1
+         UberFX_explosion(3).time=0.1
+         UberFX_explosion(3).size=size#
+         UberFX_setlightactive(UberFX_explosion(3).light,1)
+         UberFX_setlightposition(UberFX_explosion(3).light,x#,y#,z#)
+      endif
+   else
+      position object UberFX_explosion(2).objnum,x#,y#,z#
+      scale object UberFX_explosion(2).objnum,size#,size#,size#
+      UberFX_explosion(2).inuse=1
+      UberFX_explosion(2).time=0.1
+      UberFX_explosion(2).size=size#
+      UberFX_setlightactive(UberFX_explosion(2).light,1)
+      UberFX_setlightposition(UberFX_explosion(2).light,x#,y#,z#)
+   endif
+else
+   position object UberFX_explosion(1).objnum,x#,y#,z#
+   scale object UberFX_explosion(1).objnum,size#,size#,size#
+   UberFX_explosion(1).inuse=1
+   UberFX_explosion(1).time=0.1
+   UberFX_explosion(1).size=size#
+   UberFX_setlightactive(UberFX_explosion(1).light,1)
+   UberFX_setlightposition(UberFX_explosion(1).light,x#,y#,z#)
+endif
+for i=1 to 30
+   ang#=rnd(179)+atanfull(xnorm#,znorm#)
+   dist#=rnd(int(size#))
+   UberFX_makeparticle(x#+sin(ang#-90)*dist#,y#+cos(ang#-90)*dist#,z#,xnorm#*size#,ynorm#*size#,znorm#*size#,UberFX.ExplosionSmoke)
+next i
+
+endfunction
+
+UberFX_updateexplosions:
+for i=1 to 5
+   if UberFX_explosion(i).inuse
+      show object UberFX_explosion(i).objnum
+      UberFX_explosion(i).time=UberFX_explosion(i).time-1*UberCore.elapsedtime
+      if UberFX_explosion(i).time<=0
+         UberFX_explosion(i).time=0
+         UberFX_explosion(i).inuse=0
+         UberFX_setlightactive(UberFX_explosion(i).light,0)
+      endif
+      life#=(0.5-UberFX_explosion(i).time)/0.5
+      `alpha#=100*(1-life#)
+      `set alpha mapping on explosion(i).objnum,alpha#
+      scale#=UberFX_explosion(i).size+UberFX_explosion(i).size*life#
+      scale object UberFX_explosion(i).objnum,scale#,scale#,scale#
+   else
+      hide object UberFX_explosion(i).objnum
+   endif
+next i
+return
+
+UberFX_updateparticleemitters:
+for i=1 to UberFX.particleemitters
+   if UberFX_particleemitter(i).exists and UberFX_particleemitter(i).active
+      id=UberFX_particleemitter(i).id
+      select UberFX_particleemitter(i).type
+         case 1
+            UberFX_pointparticleemitter(id).time=UberFX_pointparticleemitter(id).time+1*UberCore.elapsedtime
+            ratetime#=1/UberFX_pointparticleemitter(id).rate
+            if UberFX_pointparticleemitter(id).time>ratetime#
+
+               x#=UberFX_pointparticleemitter(id).x
+               y#=UberFX_pointparticleemitter(id).y
+               z#=UberFX_pointparticleemitter(id).z
+               xvel#=UberFX_pointparticleemitter(id).xvel+rnd(UberFX_pointparticleemitter(id).xvel/20)-UberFX_pointparticleemitter(id).xvel/40
+               yvel#=UberFX_pointparticleemitter(id).yvel+rnd(UberFX_pointparticleemitter(id).yvel/20)-UberFX_pointparticleemitter(id).yvel/40
+               zvel#=UberFX_pointparticleemitter(id).zvel+rnd(UberFX_pointparticleemitter(id).zvel/20)-UberFX_pointparticleemitter(id).zvel/40
+               parttype=UberFX_pointparticleemitter(id).particletype
+               UberFX_makeparticleFromEmitter(x#,y#,z#,xvel#,yvel#,zvel#,parttype,i)
+
+               UberFX_pointparticleemitter(id).time=0
+            endif
+         endcase
+         case 2
+            UberFX_spherezoneparticleemitter(id).time=UberFX_spherezoneparticleemitter(id).time+1*UberCore.elapsedtime
+            ratetime#=1/UberFX_spherezoneparticleemitter(id).rate
+            if UberFX_spherezoneparticleemitter(id).time>ratetime#
+               anga=rnd(359)
+               angb=rnd(359)
+               dist=rnd(int(UberFX_spherezoneparticleemitter(id).radius))
+               position object UberCore.checkobj,UberFX_spherezoneparticleemitter(id).x,UberFX_spherezoneparticleemitter(id).y,UberFX_spherezoneparticleemitter(id).z
+               rotate object UberCore.checkobj,anga,angb,0
+               move object UberCore.checkobj,dist
+               x#=object position x(UberCore.checkobj)
+               y#=object position y(UberCore.checkobj)
+               z#=object position z(UberCore.checkobj)
+               xvel#=UberFX_spherezoneparticleemitter(id).xvel
+               yvel#=UberFX_spherezoneparticleemitter(id).yvel
+               zvel#=UberFX_spherezoneparticleemitter(id).zvel
+               parttype=UberFX_spherezoneparticleemitter(id).particletype
+               UberFX_makeparticleFromEmitter(x#,y#,z#,xvel#,yvel#,zvel#,parttype,i)
+
+               UberFX_spherezoneparticleemitter(id).time=0
+            endif
+         endcase
+         case 3
+            UberFX_boxzoneparticleemitter(id).time=UberFX_boxzoneparticleemitter(id).time+1*UberCore.elapsedtime
+            ratetime#=1/UberFX_boxzoneparticleemitter(id).rate
+            if UberFX_boxzoneparticleemitter(id).time>ratetime#
+
+               width=abs(UberFX_boxzoneparticleemitter(id).xx-UberFX_boxzoneparticleemitter(id).x)
+               height=abs(UberFX_boxzoneparticleemitter(id).yy-UberFX_boxzoneparticleemitter(id).y)
+               depth=abs(UberFX_boxzoneparticleemitter(id).zz-UberFX_boxzoneparticleemitter(id).z)
+               x#=min(UberFX_boxzoneparticleemitter(id).x,UberFX_boxzoneparticleemitter(id).xx)+rnd(width)
+               y#=min(UberFX_boxzoneparticleemitter(id).y,UberFX_boxzoneparticleemitter(id).yy)+rnd(height)
+               z#=min(UberFX_boxzoneparticleemitter(id).z,UberFX_boxzoneparticleemitter(id).zz)+rnd(depth)
+               xvel#=UberFX_boxzoneparticleemitter(id).xvel
+               yvel#=UberFX_boxzoneparticleemitter(id).yvel
+               zvel#=UberFX_boxzoneparticleemitter(id).zvel
+               parttype=UberFX_boxzoneparticleemitter(id).particletype
+               UberFX_makeparticleFromEmitter(x#,y#,z#,xvel#,yvel#,zvel#,parttype,i)
+
+               UberFX_boxzoneparticleemitter(id).time=UberFX_boxzoneparticleemitter(id).time
+            endif
+         endcase
+      endselect
+   endif
+next i
+return
+
+UberFX_updatelights:
+for i=1 to UberFX.lights
+   if UberFX_light(i).dbpro
+      if light exist(UberFX_light(i).dbpro)
+         if UberFX_light(i).on
+            show light UberFX_light(i).dbpro
+            set light range UberFX_light(i).dbpro,UberFX_light(i).range
+            position light UberFX_light(i).dbpro,UberFX_light(i).x,UberFX_light(i).y,UberFX_light(i).z
+            color light UberFX_light(i).dbpro,rgb(UberFX_light(i).red,UberFX_light(i).green,UberFX_light(i).blue)
+            if UberFX_light(i).objnum
+               show object UberFX_light(i).objnum
+               scale object UberFX_light(i).objnum,UberFX_light(i).range/5,UberFX_light(i).range/5,UberFX_light(i).range/5
+               set object diffuse UberFX_light(i).objnum,rgb(UberFX_light(i).red,UberFX_light(i).green,UberFX_light(i).blue)
+               position object UberFX_light(i).objnum,UberFX_light(i).x,UberFX_light(i).y,UberFX_light(i).z
+            endif
+
+         else
+            hide light UberFX_light(i).dbpro
+            if UberFX_light(i).objnum
+               hide object UberFX_light(i).objnum
+            endif
+         endif
+      endif
+   endif
+next i
+return
+
+function UberFX_makespark(x#,y#,z#,xvel#,yvel#,zvel#)
+n=UberFX_freespark()
+UberFX_spark(n).x=x#
+UberFX_spark(n).y=y#
+UberFX_spark(n).z=z#
+UberFX_spark(n).xvel=xvel#
+UberFX_spark(n).yvel=yvel#
+UberFX_spark(n).zvel=zvel#
+UberFX_spark(n).life=0
+UberFX_spark(n).exists=1
+endfunction
+
+function UberFX_freespark()
+for i=1 to UberFX.sparks
+   if UberFX_spark(i).exists=0
+      UberFX_spark(i).exists=1
+      UberFX_spark(i).life=0
+      exitfunction i
+   endif
+next i
+UberFX.sparks=UberFX.sparks+1
+array insert at bottom UberFX_spark(0)
+UberFX_spark(sparks).exists=1
+returnval=UberFX.sparks
+endfunction returnval
+
+UberFX_updatesparks:
+for i=1 to UberFX.sparks
+   if UberFX_spark(i).exists
+      UberFX_spark(i).life=UberFX_spark(i).life+1*UberCore.elapsedtime
+      if UberFX_spark(i).life>0.1
+         UberFX_spark(i).exists=0
+      else
+         oldx#=UberFX_spark(i).x
+         oldy#=UberFX_spark(i).y
+         oldz#=UberFX_spark(i).z
+
+         `spark(i).xvel=spark(i).xvel*0.9
+         UberFX_spark(i).yvel=UberFX_spark(i).yvel-(981*2)*UberCore.elapsedtime^2
+         `spark(i).zvel=spark(i).zvel*0.9
+
+         UberFX_spark(i).x=UberFX_spark(i).x+UberFX_spark(i).xvel*UberCore.elapsedtime
+         UberFX_spark(i).y=UberFX_spark(i).y+UberFX_spark(i).yvel*UberCore.elapsedtime
+         UberFX_spark(i).z=UberFX_spark(i).z+UberFX_spark(i).zvel*UberCore.elapsedtime
+
+         collision=SC_RaycastGroup(1,oldx#,oldy#,oldz#,UberFX_spark(i).x,UberFX_spark(i).y,UberFX_spark(i).z,0)
+         if collision
+            UberFX_spark(i).x=SC_GetStaticCollisionX()+SC_GetCollisionBounceX()
+            UberFX_spark(i).y=SC_GetStaticCollisionY()+SC_GetCollisionBounceY()
+            UberFX_spark(i).z=SC_GetStaticCollisionZ()+SC_GetCollisionBounceZ()
+         endif
+
+         d3d_dot3d UberFX_spark(i).x,UberFX_spark(i).y,UberFX_spark(i).z,10
+
+         UberFX_spark(i).xvel=(UberFX_spark(i).x-oldx#)/UberCore.elapsedtime
+         UberFX_spark(i).yvel=(UberFX_spark(i).y-oldy#)/UberCore.elapsedtime
+         UberFX_spark(i).zvel=(UberFX_spark(i).z-oldz#)/UberCore.elapsedtime
+      endif
+   endif
+next i
+return
+
+function UberFX_GetPointLight(x#,y#,z#)
+light#=0
+redlight#=0
+greenlight#=0
+bluelight#=0
+for t=1 to UberFX.lights
+   if UberFX_light(t).on
+      distx#=(x#-UberFX_light(t).x)
+      disty#=(y#-UberFX_light(t).y)
+      distz#=(z#-UberFX_light(t).z)
+      dist#=sqrt(abs(distx#^2+disty#^2+distz#^2))
+      addredlight#=(UberFX_light(t).range-dist#)/UberFX_light(t).range*UberFX_light(t).red
+      addgreenlight#=(UberFX_light(t).range-dist#)/UberFX_light(t).range*UberFX_light(t).green
+      addbluelight#=(UberFX_light(t).range-dist#)/UberFX_light(t).range*UberFX_light(t).blue
+      if addredlight#<0 then addredlight#=0
+      if addgreenlight#<0 then addgreenlight#=0
+      if addbluelight#<0 then addbluelight#=0
+      redlight#=redlight#+addredlight#
+      greenlight#=greenlight#+addgreenlight#
+      bluelight#=bluelight#+addbluelight#
+   endif
+next t
+
+redlight#=redlight#+light#
+greenlight#=greenlight#+light#
+bluelight#=bluelight#+light#
+if redlight#>255 then redlight#=255
+if greenlight#>255 then greenlight#=255
+if bluelight#>255 then bluelight#=255
+light=rgb(int(redlight#),int(greenlight#),int(bluelight#))
+endfunction light
+
+function UberFX_MakeTrial()
+
+endfunction ptr
+
+function UberFX_SetTrialPosition()
+
+endfunction
+
+function UberFX_DeleteTrial()
+
+endfunction

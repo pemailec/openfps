@@ -1,0 +1,404 @@
+REM DEVELOPED BY: HELLFIRE TECHNOLOGY (www.turbodog.co.uk)
+REM PROGRAMMED BY: KARL HOBLEY (karl@turbodog.co.uk)
+
+REMSTART
+YOU MAY USE THIS CODE IN COMMERCIAL OR NON COMMERCIAL GAMES OR GAME ENGINES
+CREDIT TO THE AUTHOR (HELLFIRE TECHNOLOGY) IS REQUIRED IN COMMERCIAL GAMES AND GAME ENGINES
+YOU MAY NOT POST THIS CODE ON ANY WEBSITES WITHOUT PERMISSION FROM THE AUTHOR
+REMEND
+
+type SE_Main
+projectiles as dword
+checkobj as dword
+guns as dword
+projectiletypes as dword
+guntypes as dword
+collisions as dword
+endtype
+
+type freeType
+object as dword
+image as dword
+sound as dword
+emitter as dword
+endtype
+
+type SE_Projectile
+x as float
+y as float
+z as float
+xvel as float
+yvel as float
+zvel as float
+exists as boolean
+tipe as dword
+objnum as dword
+emitter as dword
+starttime as dword
+gun as dword
+endtype
+
+type SE_ProjectileType
+objnum as dword
+hasemitter as boolean
+img as dword
+freq as dword
+rad as float
+speed as float
+emitterx as float
+emittery as float
+emitterz as float
+scale as float
+life as dword
+endtype
+
+type SE_Gun
+objnum as dword
+ammo as dword
+tipe as dword
+endtype
+
+type SE_GunType
+objnum as dword
+startammo as dword
+Projectiletype as dword
+sound as dword
+muzx as float
+muzy as float
+muzz as float
+scale as float
+muzdir as boolean
+endtype
+
+type SE_Collision
+x as float
+y as float
+z as float
+xn as float
+yn as float
+zn as float
+projtype as dword
+gun as dword
+object as dword
+endtype
+
+SE_StartVars:
+SE_Main as SE_Main
+dim SE_Projectile(0) as SE_Projectile
+dim SE_ProjectileType(0) as SE_ProjectileType
+dim SE_Gun(0) as SE_Gun
+dim SE_GunType(0) as SE_GunType
+dim SE_Collision(0) as SE_Collision
+FreeType as FreeType
+return
+
+function SE_Start()
+gosub SE_StartVars
+checkobj=101
+make object cube checkobj,1
+exclude object on checkobj
+SE_Main.checkobj=checkobj
+endfunction
+
+
+function SE_MakeProjectile(projtype,x#,y#,z#,xvel#,yvel#,zvel#,gun)
+n=SE_FreeProjectile()
+SE_Projectile(n).x=x#
+SE_Projectile(n).y=y#
+SE_Projectile(n).z=z#
+SE_Projectile(n).xvel=xvel#
+SE_Projectile(n).yvel=yvel#
+SE_Projectile(n).zvel=zvel#
+SE_Projectile(n).starttime=timer()
+SE_Projectile(n).tipe=projtype
+SE_Projectile(n).gun=gun
+if SE_ProjectileType(projtype).objnum
+	SE_Projectile(n).objnum=430
+	instance object SE_Projectile(n).objnum,SE_ProjectileType(projtype).objnum
+	scale object SE_Projectile(n).objnum,SE_ProjectileType(projtype).scale,SE_ProjectileType(projtype).scale,SE_ProjectileType(projtype).scale
+endif
+if SE_ProjectileType(projtype).hasemitter
+	SE_Projectile(n).emitter=22
+	make particles SE_Projectile(n).emitter,SE_ProjectileType(projtype).img,SE_ProjectileType(projtype).freq,SE_ProjectileType(projtype).rad
+endif
+endfunction
+
+function SE_FreeProjectile()
+for i=1 to SE_Main.Projectiles
+	if SE_Projectile(i).exists=0
+		SE_Projectile(i).exists=1
+		exitfunction i
+	endif
+next i
+inc SE_Main.Projectiles
+n=SE_Main.Projectiles
+array insert at bottom SE_Projectile(0)
+SE_Projectile(n).exists=1
+endfunction n
+
+function SE_Update(elapsedtime#)
+SE_ClearCollisions()
+for i=1 to SE_Main.Projectiles
+	if SE_Projectile(i).exists
+		oldx#=SE_Projectile(i).x
+		oldy#=SE_Projectile(i).y
+		oldz#=SE_Projectile(i).z
+		
+		SE_Projectile(i).x=SE_Projectile(i).x+SE_Projectile(i).xvel*elapsedtime#
+		SE_Projectile(i).y=SE_Projectile(i).y+SE_Projectile(i).yvel*elapsedtime#
+		SE_Projectile(i).z=SE_Projectile(i).z+SE_Projectile(i).zvel*elapsedtime#
+
+		
+		if sc_raycast(0,oldx#,oldy#,oldz#,SE_Projectile(i).x,SE_Projectile(i).y,SE_Projectile(i).z,0)
+			
+			SE_Projectile(i).exists=0
+			if SE_Projectile(i).emitter
+				set particle emissions SE_Projectile(i).emitter,0
+				SE_Projectile(i).emitter=0
+			endif
+			if SE_Projectile(i).objnum
+				delete object SE_Projectile(i).objnum
+				SE_Projectile(i).objnum=0
+			else
+				d3d_line3d oldx#,oldy#,oldz#,sc_getstaticcollisionx(),sc_getstaticcollisiony(),sc_getstaticcollisionz()
+			endif
+			x#=sc_getstaticcollisionx()
+			y#=sc_getstaticcollisiony()
+			z#=sc_getstaticcollisionz()
+			xn#=sc_getcollisionnormalx()
+			yn#=sc_getcollisionnormaly()
+			zn#=sc_getcollisionnormalz()
+			projtype=SE_Projectile(i).tipe
+			gun=SE_Projectile(i).gun
+			object=sc_getobjecthit()
+			SE_AddCollision(x#,y#,z#,xn#,yn#,zn#,projtype,gun,object)
+		else
+		
+			if SE_Projectile(i).objnum
+				position object SE_Projectile(i).objnum,SE_Projectile(i).x,SE_Projectile(i).y,SE_Projectile(i).z
+				point object SE_Projectile(i).objnum,SE_Projectile(i).x+SE_Projectile(i).xvel,SE_Projectile(i).y+SE_Projectile(i).yvel,SE_Projectile(i).z+SE_Projectile(i).zvel
+			else
+				d3d_line3d oldx#,oldy#,oldz#,SE_Projectile(i).x,SE_Projectile(i).y,SE_Projectile(i).z
+			endif
+			if SE_Projectile(i).emitter
+				position object SE_Main.checkobj,SE_Projectile(i).x,SE_Projectile(i).y,SE_Projectile(i).z
+				rotate object SE_Main.checkobj,object angle x(SE_Projectile(i).objnum),object angle y(SE_Projectile(i).objnum),object angle z(SE_Projectile(i).objnum)
+				ex#=SE_ProjectileType(SE_Projectile(i).tipe).emitterx
+				ey#=SE_ProjectileType(SE_Projectile(i).tipe).emittery
+				ez#=SE_ProjectileType(SE_Projectile(i).tipe).emitterz
+				move object SE_Main.checkobj,ey#
+				move object right SE_Main.checkobj,ez#
+				move object down SE_Main.checkobj,ex#
+				
+				position particle emissions SE_Projectile(i).emitter,object position x(SE_Main.checkobj),object position y(SE_Main.checkobj),object position z(SE_Main.checkobj)
+			endif
+			
+			if SE_Projectile(i).starttime+SE_ProjectileType(SE_Projectile(i).tipe).life<timer()
+				SE_Projectile(i).exists=0
+				if SE_Projectile(i).emitter
+					delete particles SE_Projectile(i).emitter
+					SE_Projectile(i).emitter=0
+				endif
+				if SE_Projectile(i).objnum
+					delete object SE_Projectile(i).objnum
+					SE_Projectile(i).objnum=0
+				endif
+			endif
+			
+		endif
+	endif
+next i
+endfunction
+
+function SE_MakeGunType(objnum,projtype)
+inc SE_Main.guntypes
+array insert at bottom SE_GunType(0)
+n=SE_Main.guntypes
+SE_GunType(n).objnum=objnum
+SE_GunType(n).startammo=50
+SE_GunType(n).Projectiletype=projtype
+SE_GunType(n).scale=100
+ptr=n
+endfunction ptr
+
+function SE_ScaleGuntypeObject(guntype,scale#)
+SE_GunType(guntype).scale=scale#
+endfunction
+
+function SE_SetGunTypeSound(guntype,sound)
+SE_GunType(guntype).sound=sound
+endfunction
+
+function SE_SetGunTypeStartAmmo(guntype,ammo)
+SE_GunType(guntype).startammo=ammo
+endfunction
+
+function SE_SetGunTypeMuzzlePosition(guntype,x#,y#,z#)
+SE_GunType(guntype).muzx=x#
+SE_GunType(guntype).muzy=y#
+SE_GunType(guntype).muzz=z#
+endfunction
+
+function SE_SetGuntypeMuzzleDirection(guntype,direction)
+SE_GunType(guntype).muzdir=direction
+endfunction
+
+function SE_MakeGun(guntype)
+inc SE_Main.guns
+array insert at bottom SE_Gun(0)
+n=SE_Main.guns
+if object exist(400) then delete object 400
+SE_Gun(n).objnum=400
+SE_Gun(n).ammo=SE_GunType(guntype).startammo
+SE_Gun(n).tipe=guntype
+
+instance object SE_Gun(n).objnum,SE_GunType(guntype).objnum
+scale object SE_Gun(n).objnum,SE_GunType(guntype).scale,SE_GunType(guntype).scale,SE_GunType(guntype).scale
+ptr=n
+endfunction ptr
+
+function SE_PositionGun(gun,x#,y#,z#)
+position object SE_Gun(gun).objnum,x#,y#,z#
+endfunction
+
+function SE_RotateGun(gun,x#,y#,z#)
+rotate object SE_Gun(gun).objnum,x#,y#,z#
+endfunction
+
+function SE_OffsetGun(gun,forward#,right#,up#)
+move object SE_Gun(gun).objnum,forward#
+move object right SE_Gun(gun).objnum,right#
+move object up SE_Gun(gun).objnum,up#
+endfunction
+
+function SE_FireGun(gun)
+guntype=SE_Gun(gun).tipe
+if SE_GunType(guntype).Projectiletype
+	tipe=SE_GunType(guntype).Projectiletype
+	position object SE_Main.checkobj,object position x(SE_Gun(gun).objnum),object position y(SE_Gun(gun).objnum),object position z(SE_Gun(gun).objnum)
+	rotate object SE_Main.checkobj,object angle x(SE_Gun(gun).objnum),object angle y(SE_Gun(gun).objnum),object angle z(SE_Gun(gun).objnum)
+	move object left SE_Main.checkobj,SE_GunType(guntype).muzx
+	move object up SE_Main.checkobj,SE_GunType(guntype).muzy
+	move object SE_Main.checkobj,SE_GunType(guntype).muzz
+	x#=object position x(SE_Main.checkobj)
+	y#=object position y(SE_Main.checkobj)
+	z#=object position z(SE_Main.checkobj)
+	position object SE_Main.checkobj,0,0,0
+	rotate object SE_Main.checkobj,object angle x(SE_Gun(gun).objnum),object angle y(SE_Gun(gun).objnum),object angle z(SE_Gun(gun).objnum)
+	direction=1
+	if SE_GunType(guntype).muzdir then direction=-1
+	move object SE_Main.checkobj,SE_Projectiletype(SE_GunType(guntype).Projectiletype).speed*direction
+	xvel#=object position x(SE_Main.checkobj)
+	yvel#=object position y(SE_Main.checkobj)
+	zvel#=object position z(SE_Main.checkobj)
+	SE_MakeProjectile(tipe,x#,y#,z#,xvel#,yvel#,zvel#,gun)
+	if SE_GunType(guntype).sound
+		if sound type(SE_GunType(guntype).sound)
+			position sound SE_GunType(guntype).sound,x#,y#,z#
+		endif
+		play sound SE_GunType(guntype).sound
+	endif
+endif
+endfunction
+
+function SE_SetGunTypeProjectile(guntype,projectile)
+SE_GunType(guntype).Projectiletype=projectile
+endfunction
+
+function SE_MakeProjectiletype()
+inc SE_Main.projectiletypes
+array insert at bottom SE_ProjectileType(0)
+n=SE_Main.projectiletypes
+SE_Projectiletype(n).speed=1000
+SE_ProjectileType(n).scale=100
+SE_ProjectileType(n).life=5000
+ptr=n
+endfunction ptr
+
+function SE_SetProjectiletypeLife(projtype,life#)
+SE_ProjectileType(n).life=int(life#*1000)
+endfunction
+
+function SE_SetProjectiletypeProjectileObject(projtype,objnum)
+SE_ProjectileType(projtype).objnum=objnum
+endfunction
+
+function SE_SetProjectiletypeProjectileObjectScale(projtype,scale#)
+SE_ProjectileType(projtype).scale=scale#
+endfunction
+
+function SE_SetProjectiletypeEmitter(projtype,img,freq,rad#,x#,y#,z#)
+SE_ProjectileType(projtype).hasemitter=1
+SE_ProjectileType(projtype).img=img
+SE_ProjectileType(projtype).freq=freq
+SE_ProjectileType(projtype).rad=rad#
+SE_ProjectileType(projtype).emitterx=x#
+SE_ProjectileType(projtype).emittery=y#
+SE_ProjectileType(projtype).emitterz=z#
+endfunction
+
+function SE_SetProjectiletypeSpeed(progtype,speed#)
+SE_ProjectileType(projtype).speed=speed#
+endfunction
+
+function SE_GetCollisionCount()
+collisions=SE_Main.collisions
+endfunction collisions
+
+function SE_ClearCollisions()
+SE_Main.collisions=0
+undim SE_Collision(0)
+dim SE_Collision(0) as SE_Collision
+endfunction
+
+function SE_AddCollision(x#,y#,z#,xn#,yn#,zn#,projtype,gun,object)
+inc SE_Main.collisions
+array insert at bottom SE_Collision(0)
+n=SE_Main.collisions
+SE_Collision(n).x=x#
+SE_Collision(n).y=y#
+SE_Collision(n).z=z#
+SE_Collision(n).xn=xn#
+SE_Collision(n).yn=yn#
+SE_Collision(n).zn=zn#
+SE_Collision(n).projtype=projtype
+SE_Collision(n).gun=gun
+SE_Collision(n).object=object
+endfunction
+
+function SE_GetCollisionPositionX(collnum)
+returnval#=SE_Collision(collnum).x
+endfunction returnval#
+
+function SE_GetCollisionPositionY(collnum)
+returnval#=SE_Collision(collnum).y
+endfunction returnval#
+
+function SE_GetCollisionPositionZ(collnum)
+returnval#=SE_Collision(collnum).z
+endfunction returnval#
+
+function SE_GetCollisionNormalX(collnum)
+returnval#=SE_Collision(collnum).xn
+endfunction returnval#
+
+function SE_GetCollisionNormalY(collnum)
+returnval#=SE_Collision(collnum).yn
+endfunction returnval#
+
+function SE_GetCollisionNormalZ(collnum)
+returnval#=SE_Collision(collnum).zn
+endfunction returnval#
+
+function SE_GetCollisionProjectileType(collnum)
+returnval=SE_Collision(collnum).projtype
+endfunction returnval
+
+function SE_GetCollisionGun(collnum)
+returnval=SE_Collision(collnum).gun
+endfunction returnval
+
+function SE_GetCollisionObject(collnum)
+returnval=SE_Collision(collnum).object
+endfunction returnval
+

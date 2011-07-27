@@ -88,6 +88,8 @@ randomize timer()
 hide mouse
 disable escapekey
 
+make ticker 12,30,0
+
 `backdrop colour
 backdrop on 0
 
@@ -130,9 +132,11 @@ SyS_TimeMultiplier=1
 `run main loop
 while SyS_Event_Terminate<1
 
+	`if ticker(12):
+	
 	`Update System timer
 	SyS_TimeFactor=CORE_TimeFactor()*SyS_TimeMultiplier
-
+	
 	if VIS_UseNative<1 then draw to image UI_RenderTarget
 	
 	select SyS_LoopMode
@@ -147,7 +151,7 @@ while SyS_Event_Terminate<1
 			`GAME ENGINE LOOP
 			// Update game engine
 			MENU_Hide():hide object MENU_FGObject
-			CORE_update() 
+			CORE_update()
 		endcase
 		case "credits"
 			MENU_Hide()
@@ -187,6 +191,8 @@ while SyS_Event_Terminate<1
 	
 	`destroy temporary gui elements
 	MENU_DestroyButtons()
+	
+	`endif
 	
 endwhile
 

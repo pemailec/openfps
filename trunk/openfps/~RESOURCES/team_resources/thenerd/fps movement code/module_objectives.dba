@@ -1,0 +1,81 @@
+type Objective
+	name as string
+	pos_x as float
+	pos_y as float
+	pos_z as float 
+	complete as boolean
+	completion_type as integer
+endtype
+
+function Objectives_Init():
+	dim Objectives() as Objective
+	global Num_Objectives as integer
+	Num_Objectives=0
+	global Obj_marker_object
+	Obj_marker_object=240
+	make object plain 240,1,1
+	hide object 240
+	load image "media\objective.png",240
+	sprite 240,0,0,240
+	hide sprite 240
+endfunction
+
+function Objective_Add(name$,x,y,z):
+	array insert at bottom Objectives()
+	Objectives(Num_Objectives).name=name$
+	Objectives(Num_Objectives).pos_x=x
+	Objectives(Num_Objectives).pos_y=y
+	Objectives(Num_Objectives).pos_z=z
+	Objectives(Num_Objectives).complete=0
+	Objectives(Num_Objectives).completion_type=1
+	Num_Objectives=Num_Objectives+1
+endfunction
+
+function Objective_Complete(name):
+	`nothing yet
+endfunction 
+
+function Objectives_Update():
+	cam_x#=camera position x()
+	cam_y#=camera position y()
+	cam_z#=camera position z()
+	if Num_Objectives>0:
+	for n=0 to Num_Objectives-1
+		position object 240,Objectives(n).pos_x,Objectives(n).pos_y,Objectives(n).pos_z
+		if object in screen(240):
+			dist#=distcheck(Objectives(n).pos_x,Objectives(n).pos_y,Objectives(n).pos_z,cam_x#,cam_y#,cam_z#)
+			set sprite alpha 240,clamp(dist#-50,0.0,255.0)
+			possx=object screen x(240)
+			possy=object screen y(240)
+			paste sprite 240,possx-24,possy-30
+		endif
+		if Objectives(n).complete<1:
+			if Objectives(n).pos_x>cam_x#-100 and Objectives(n).pos_x<cam_x#+100:
+			if Objectives(n).pos_y>cam_y#-100 and Objectives(n).pos_y<cam_y#+100:
+			if Objectives(n).pos_z>cam_z#-100 and Objectives(n).pos_z<cam_z#+100:
+				Objectives(n).complete=1
+			endif : endif : endif
+			center text possx,possy,Objectives(n).name
+			center text possx,possy+16,str$(dist#)
+		else : 
+			center text possx,possy,Objectives(n).name
+			center text possx,possy+16,"Complete!"
+		endif
+	next n
+	endif
+endfunction
+
+function distcheck( x1 as float, y1 as float, z1 as float, x2 as float, y2 as float, z2 as float )
+   local distx as float
+   local disty as float
+   local distz as float
+
+   local distance as float
+
+   distx = ( x2 - x1 ) * ( x2 - x1 )
+   disty = ( y2 - y1 ) * ( y2 - y1 )
+   distz = ( z2 - z1 ) * ( z2 - z1 )
+
+   distance  = sqrt( distx + disty + distz )
+
+endFunction distance

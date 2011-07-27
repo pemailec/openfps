@@ -135,15 +135,17 @@ function LVL_Load(level_file$):
     	    Wait 2000	
 	
 	Rem BEGIN LOADING THE 3D WORLD >>>>
-    	SyS_LoopMode="menu" `Temporary, as cannot proceed
-    	UI_WriteLog(UI_BLUE,"Halted until code module coded.")
-    	MENU_state="NONE"
-    ExitFunction
+    	SyS_LoopMode="engine" `Temporary, as cannot proceed
+    	`UI_WriteLog(UI_BLUE,"Halted until code module coded.")
+    	`MENU_state="NONE"
+    `ExitFunction
 	
     	`normal commence>>
-		ENT_DeleteAllEntities()
-		ENT_LoadEntities(LVL_Current.entityfile)
+		`ENT_DeleteAllEntities()
+		`ENT_LoadEntities(LVL_Current.entityfile)
 		UI_WriteLog(UI_Yellow,"* level loaded.")
+		
+		ExitFunction
 		
 		rem on error
 		LVL_UnLoad()

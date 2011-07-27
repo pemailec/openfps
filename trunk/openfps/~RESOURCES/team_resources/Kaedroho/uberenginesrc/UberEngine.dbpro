@@ -1,0 +1,61 @@
+; **** DarkBASIC Professional Project ****
+; Created by CodeSurge IDE
+version=DBP1.00
+project name=UberEngine
+
+; ****Source file information****
+main=UberEngine.dba
+include1=UberIncludes\UberCore.dba
+include2=UberIncludes\UberScript.dba
+include3=UberIncludes\UberFX.dba
+include4=UberIncludes\UberFile.dba
+include5=UberIncludes\UberWeapons.dba
+include6=UberIncludes\UberPlayer.dba
+include7=UberIncludes\UberUI.dba
+include8=UberIncludes\UberTerrian.dba
+include9=UberIncludes\UberSound.dba
+include10=UberIncludes\UberPhysX.dba
+include11=UberIncludes\UberCalcs.dba
+include12=UberIncludes\FPSCLoader.dba
+include13=UberIncludes\UberInteligence.dba
+include14=UberIncludes\UberMaterials.dba
+include15=UberIncludes\UberZone.dba
+include16=UberIncludes\HellfireTechnology.dba
+include17=UberIncludes\UberWorld.dba
+include18=UberIncludes\UberAnimation.dba
+include19=UberIncludes\UberVegetation.dba
+final source=_Temp.dbsource
+
+;***Executable filename***
+executable=Temp.exe
+build type=media
+
+compression=NO
+encryption=NO
+card options window=NO
+
+; Debugger
+CLI=NO
+
+; *****Display Settings*****
+app title=UberEngine
+graphics mode=fulldesktop
+fullscreen resolution=640x480x32
+window resolution=640x480
+
+
+;*****Media files, icons, cursors*****
+media root path=F:\UberEngineOld\
+media1=UberIncludes\RequiredMedia.zip
+
+;****Version Information****
+VerComments=
+VerCompany=HellFire Technology
+VerFileDesc=UberEngine
+VerFileNumber=
+VerInternal=v1.0
+VerCopyright=
+VerTrademark=
+VerFilename=
+VerProduct=UberEngine
+VerProductNumber=v0.04B

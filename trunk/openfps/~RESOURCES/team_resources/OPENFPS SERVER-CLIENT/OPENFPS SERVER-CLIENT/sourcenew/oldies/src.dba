@@ -1,0 +1,81 @@
+sync on
+sync rate 0
+backdrop on
+color backdrop 0
+
+UDP_Init()
+global pkg_word as word
+global pkg_byte as byte
+
+MAKE TICKER 1,(1000/20)
+
+do
+	UDP_Update()
+	set cursor 0,0
+	forward=KEYSTATE(17)
+	backward=KEYSTATE(31)
+	left=KEYSTATE(30)
+	right=KEYSTATE(32)
+	binary0$=str$(forward)+str$(backward)+str$(left)+str$(right)
+	binary1$="0000"
+	binary_word$=binary1$+binary0$
+	pkg_word=bin to decimal(binary_word$)
+	print "W:",forward
+	print "S:",backward
+	print "A:",left
+	print "D:",right
+	print "binary 4-bit:",binary0$
+	print "2^16-bit binary:",binary_word$
+	print "2^16-bit word:",pkg_word
+	print "--------------"
+	print "tick rate (1000/20)"
+	if TICKER(1)=1:
+		print "Sending UDP Message!"
+		UDP_Send(pkg_word)
+	endif
+    sync
+LOOP
+
+//////////////////////////
+// Functions
+//////////////////////////
+
+function UDP_Init()
+	winsock make
+	global channel
+	channel = winsock create udp channel()
+	winsock set channel target channel,"98.118.103.151",5900
+endfunction
+
+function UDP_Update()
+	winsock refresh channel channel
+endfunction
+
+function UDP_Send(send)
+	WINSOCK MAKE PACKET
+	pkg_byte=send
+	WINSOCK ADD BYTE pkg_byte
+	WINSOCK SEND UDP PACKET channel
+endfunction
+
+function write_memblock_string(memblock_nr as INTEGER, position as INTEGER, a_string as STRING)
+      `writes a string into a memblock. careful make sure the memblock has enough space from position to its end!
+   for i = 0 to len(a_string)-1
+      write memblock byte memblock_nr, position + i, asc(mid$(a_string, i+1))
+   next i
+   `terminate string with a 0-character.
+   write memblock byte memblock_nr, position + i, 0
+endfunction
+
+function memblock_string(memblock_nr as INTEGER, position as INTEGER)
+      `reads a null terminated string from a memblock. make sure position is within memblock size!
+   result$ = ""
+   i = position
+   char_val = memblock byte(memblock_nr, i)
+   inc i
+   while char_val <> 0 and i < get memblock size(memblock_nr)
+      result$ = result$ + chr$(char_val)
+      char_val = memblock byte(memblock_nr, i)
+      inc i
+   endwhile
+endfunction result$

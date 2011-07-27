@@ -1,0 +1,54 @@
+//////////////////////////////////////////
+// OpenFPS Server List
+//////////////////////////////////////////
+
+sync on
+sync rate 0
+backdrop on
+
+//////////////////////////////////////////
+
+load image "..\..\..\media\panels\tab_game.png",1
+
+//////////////////////////////////////////
+
+type Server
+	name as string
+	ip as string
+endtype
+
+dim ServerList() as Server
+empty array ServerList()
+global numServers=0
+
+AddServer("Test Server","localhost")
+
+//////////////////////////////////////////
+
+list_x=158
+list_x2=342
+list_y=132
+
+do
+	paste image 1,0,0,1
+	if numServers>0:
+		for x=0 to numServers:
+			text list_x,list_y,ServerList(x).name
+			text list_x2,list_y,ServerList(x).ip
+		next x
+	endif
+	set cursor 0,0
+	print Mousex()
+	print mousey()
+	sync
+loop
+
+
+function AddServer(name$,ip$):
+	array insert at bottom ServerList()
+	ServerList(numServers).name=name$
+	ServerList(numServers).ip=ip$
+	numServers=numServers+1
+endfunction
+
+//////////////////////////////////////////
