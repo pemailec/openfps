@@ -1,0 +1,38 @@
+# Created with Anim8or 0.97d beta
+# Object "object01":
+
+newmtl Main_Box
+Ka 0.988 0.808 0.757
+Kd 0.988 0.808 0.757
+Ks 1 1 1
+d 1.0
+Ns 752.6
+
+newmtl Corner
+Ka 0.835 0.769 0.98
+Kd 0.835 0.769 0.98
+Ks 1 1 1
+d 1.0
+Ns 752.6
+
+newmtl Roof_Floor
+Ka 0.851 0.949 0.796
+Kd 0.851 0.949 0.796
+Ks 1 1 1
+d 1.0
+Ns 752.6
+
+newmtl DoorBars
+Ka 0.988 0.961 0.757
+Kd 0.988 0.961 0.757
+Ks 1 1 1
+d 1.0
+Ns 752.6
+
+newmtl Lock
+Ka 0.878 0.878 0.878
+Kd 0.878 0.878 0.878
+Ks 1 1 1
+d 1.0
+Ns 752.6
+

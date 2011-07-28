@@ -1,0 +1,3 @@
+mode engine
+start server
+scale 3
