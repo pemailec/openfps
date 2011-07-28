@@ -1,41 +1,27 @@
 ; **** Dark BASIC Professional Project File ****
-; **** Written by Synergy Editor ****
+; **** Written by DarkBASIC Professional Editor ****
 version=DBP1.00
 project name=OpenFPS
 
 ; **** source file information ****
-main=module_main.dba
-LineMain=74
-include1=module_resource.dba
-LineInclude1=253
-include2=module_menu.dba
-LineInclude2=257
-include3=module_ui.dba
-LineInclude3=549
-include4=module_ui_console.dba
-LineInclude4=152
-include5=module_ui_chatbox.dba
-LineInclude5=128
-include6=module_ui_options.dba
-LineInclude6=0
-include7=module_ui_credits.dba
-LineInclude7=0
-include8=module_engine.dba
-LineInclude8=0
-include9=module_physics.dba
-LineInclude9=0
-include10=module_movement.dba
-LineInclude10=0
-include11=module_level.dba
-LineInclude11=0
-include12=module_entity.dba
-LineInclude12=0
-include13=module_sound.dba
-LineInclude13=0
-include14=module_visuals.dba
-LineInclude14=0
-include15=module_network.dba
-LineInclude15=476
+main=Includes\module_main.dba
+include1=Includes\module_menu.dba
+include2=Includes\module_ui.dba
+include3=Includes\module_ui_console.dba
+include4=Includes\module_ui_chatbox.dba
+include5=Includes\module_ui_options.dba
+include6=Includes\module_ui_credits.dba
+include7=Includes\module_engine.dba
+include8=Includes\module_physics.dba
+include9=Includes\module_movement.dba
+include10=Includes\module_level.dba
+include11=Includes\module_entity.dba
+include12=Includes\module_sound.dba
+include13=Includes\module_visuals.dba
+include14=Includes\module_network.dba
+include15=Includes\module_resource.dba
+LineInclude15=0
+final source=_Temp.dbsource
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
@@ -68,7 +54,7 @@ window resolution=1024x768
 
 ; **** Media ****
 ; Example entries: media1=graphics\*.jpg
-media root path=C:\==Darkbasic Pro==\Dark Basic Professional\Projects\=SVN=\=OpenFPS=\
+media root path=J:\openfps\
 
 ; **** Icons ****
 icon1=media\images\OpenFPS.ico
@@ -90,10 +76,3 @@ VerProductNumber=v1.0
 ; **** To Do ****
 
 ; **** Comments ****
-comments1=
-
-; **** Advanced (setup.ini) configuration ****
-RemoveSafetyCode=NO
-SafeArrays=YES
-LocalTempFolder=NO
-ExternaliseDLLS=NO

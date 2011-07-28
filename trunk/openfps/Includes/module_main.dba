@@ -74,7 +74,7 @@ Global CORE_DebugScreen as Boolean    : `Debug setting
 
 `return to proper directory (safeguard)
 set dir DIR EXE()
-
+set dir ".."
 
 `set up display
 VIS_Setup_LoadSettings() `Replaces set display mode 1024,768,screen depth()
