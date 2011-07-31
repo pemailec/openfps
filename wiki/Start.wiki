@@ -1,13 +1,12 @@
 #summary One-sentence summary of this page.
 
-= Introduction =
+= Vision =
 
-Add your content here.
+OpenFPS is an open source multiplayer FPS game.
+
+= Storyboard =
 
 
-= Details =
+= Game design =
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+
