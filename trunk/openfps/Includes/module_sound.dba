@@ -12,6 +12,7 @@ remstart
 
 ----- Changelog:
 (27/February/2011) - JRH     - Created
+(20/August/2011)   - JRH     - Ported To OpenAL using DarkAL
 
 
 ----- To-Do:
@@ -45,7 +46,7 @@ players will be heard by all other players, relative to distance.
 remend
 
 `==========Constants========`
-#constant SND_LoadCap        500
+#constant SND_LoadCap        500    `Set this to the maximum number of sounds possible to load
 #constant SND_ControlFreq    100
 `===========================`
 
@@ -79,6 +80,11 @@ Function SND_Init()
             SND_MuteSound = 0
             Global SND_UpdateController as Integer
             SND_UpdateController = 0
+            
+            `Start Open AL
+            AL Start
+            AL Set Master Volume 50
+            
         UI_WriteLog(UI_Green,"=== Sound module started.")                      
 ENDFUNCTION
 
@@ -100,24 +106,26 @@ Function SND_Update()
             SND_CurrentResource = SoundData(Counter).ResourceNo
             
             // Update all values.
-            If Sound Playing(SND_CurrentResource) = 1 then SoundData(Counter).Active = 1
-            If Sound Playing(SND_CurrentResource) = 0 then SoundData(Counter).Active = 0
-            SoundData(Counter).Volume = Sound Volume(SND_CurrentResource)
-            SoundData(Counter).Speed = Sound Speed(SND_CurrentResource)
+            If AL Get Sound Playing(SND_CurrentResource) = 1 then SoundData(Counter).Active = 1
+            If AL Get Sound Playing(SND_CurrentResource) = 0 then SoundData(Counter).Active = 0
+            SoundData(Counter).Volume = AL Get Sound Volume(SND_CurrentResource)
+            SoundData(Counter).Speed = AL Get Sound Speed(SND_CurrentResource)
          
             // Play 'ToPlay' items.
             If SoundData(Counter).ToPlay = 1 and SoundData(Counter).Active = 0
                 SoundData(Counter).ToPlay = 0
                 SoundData(Counter).Active = 1
                 If SoundData(Counter).Looping = 1
-                    Loop Sound SoundData(Counter).ResourceNo
+                    AL Play Sound SoundData(Counter).ResourceNo
+                    AL Set Sound Looping SoundData(Counter).ResourceNo,1
                 Else
-                    Play Sound SoundData(Counter).ResourceNo
+                    AL Play Sound SoundData(Counter).ResourceNo
+                    AL Set Sound Looping SoundData(Counter).ResourceNo,0
                 EndIf
             EndIf
             
             // Stop 'ToStop' items.
-            If SoundData(Counter).ToStop = 1 and SoundData(Counter).Active = 1 then Stop Sound SoundData(Counter).ResourceNo
+            If SoundData(Counter).ToStop = 1 and SoundData(Counter).Active = 1 then AL Stop Sound SoundData(Counter).ResourceNo
             
             // Delete 'ToDelete' items
             If SoundData(Counter).ToDelete = 1 and SoundData(Counter).Active = 0
@@ -125,9 +133,10 @@ Function SND_Update()
             EndIf
              
             // If sound is not looping when it should, reset it
-            If SoundData(Counter).Looping = 1 and Sound Looping (SoundData(Counter).ResourceNo) = 0
-                If SoundData(Counter).Active = 1 then Stop Sound SoundData(Counter).ResourceNo
-                Loop Sound SoundData(Counter).ResourceNo
+            If SoundData(Counter).Looping = 1 and AL Get Sound Looping (SoundData(Counter).ResourceNo) = 0
+                If SoundData(Counter).Active = 1 then AL Stop Sound SoundData(Counter).ResourceNo
+                    AL Play Sound SoundData(Counter).ResourceNo
+                    AL Set Sound Looping SoundData(Counter).ResourceNo,1
             ENDIF
             
             // Use update controller on fades/slides
@@ -148,9 +157,9 @@ Function SND_Update()
             EndIf
             
             // Apply all changes to the sound.
-            If SND_MuteSound = -1 then Set Sound Volume SoundData(Counter).ResourceNo, 0
-            If SND_MuteSound = 0 then Set Sound Volume SoundData(Counter).ResourceNo, SoundData(Counter).Volume
-            Set Sound Speed SoundData(Counter).ResourceNo, SoundData(Counter).Speed           
+            If SND_MuteSound = -1 then AL Set Sound Volume SoundData(Counter).ResourceNo, 0
+            If SND_MuteSound = 0 then AL Set Sound Volume SoundData(Counter).ResourceNo, SoundData(Counter).Volume
+            AL Set Sound Speed SoundData(Counter).ResourceNo, SoundData(Counter).Speed           
                                 
     NEXT    
     
@@ -179,12 +188,12 @@ Function SND_LoadSound(SoundFile$)
     SoundData(SND_SoundCount).ResourceNo = Result
     
     // Load the sound file
-    Load Sound SoundFile$, SoundData(SND_SoundCount).ResourceNo
+    AL Load Sound SoundFile$, SoundData(SND_SoundCount).ResourceNo
     SoundData(SND_SoundCount).File = SoundFile$
     
     // Get default values for the sound file
-    SoundData(SND_SoundCount).Volume = Sound Volume(SoundData(SND_SoundCount).ResourceNo)
-    SoundData(SND_SoundCount).Speed = Sound Speed(SoundData(SND_SoundCount).ResourceNo)
+    SoundData(SND_SoundCount).Volume = AL Get Sound Volume(SoundData(SND_SoundCount).ResourceNo)
+    SoundData(SND_SoundCount).Speed = AL Get Sound Speed(SoundData(SND_SoundCount).ResourceNo)
     SoundData(SND_SoundCount).TargetVolume = SoundData(SND_SoundCount).Volume
     SoundData(SND_SoundCount).TargetSpeed = SoundData(SND_SoundCount).Speed
                    
@@ -194,7 +203,7 @@ Function SND_DeleteSound(SoundNumber)
 // Unload a sound file.
    
     // Stop playing.
-    If Sound Playing(SoundNumber) = 1 then Stop Sound SoundNumber
+    If Sound Playing(SoundNumber) = 1 then AL Stop Sound SoundNumber
     
     // Remove all variable references
     res_free(SoundData(SoundNumber).ResourceNo, res_Sound) `ALSO DELETES SOUND!
@@ -383,8 +392,8 @@ Function SND_Terminate()
     // Delete all existing sounds
     For Counter = 1 to SND_SoundCount
         // Ensure it exists and is not playing        
-        If Sound Exist(SoundData(Counter).ResourceNo) = 1         
-            If Sound Playing(SoundData(Counter).ResourceNo) = 1 then Stop Sound SoundData(Counter).ResourceNo
+        If AL Sound Exist(SoundData(Counter).ResourceNo) = 1         
+            If AL Get Sound Playing(SoundData(Counter).ResourceNo) = 1 then AL Stop Sound SoundData(Counter).ResourceNo
             res_free(SoundData(Counter).ResourceNo,res_Sound)
         EndIf        
     NEXT
