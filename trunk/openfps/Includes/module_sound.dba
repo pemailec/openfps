@@ -82,8 +82,7 @@ Function SND_Init()
             SND_UpdateController = 0
             
             `Start Open AL
-            AL Start
-            AL Set Master Volume 50
+            AL Start 1
             
         UI_WriteLog(UI_Green,"=== Sound module started.")                      
 ENDFUNCTION
@@ -188,7 +187,7 @@ Function SND_LoadSound(SoundFile$)
     SoundData(SND_SoundCount).ResourceNo = Result
     
     // Load the sound file
-    AL Load Sound SoundFile$, SoundData(SND_SoundCount).ResourceNo
+    AL Load Sound SoundData(SND_SoundCount).ResourceNo, SoundFile$, 0
     SoundData(SND_SoundCount).File = SoundFile$
     
     // Get default values for the sound file
