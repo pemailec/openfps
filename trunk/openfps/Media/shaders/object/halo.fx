@@ -12,7 +12,7 @@ float MinLimit
 	float UIMax = 1.0;
 	float UIMin = 0.0;
 	float UIStep = 0.01;
-> = 0.2;
+> = 0.4;
 
 float MaxLimit
 <
@@ -20,7 +20,7 @@ float MaxLimit
 	float UIMax = 1.0;
 	float UIMin = 0.0;
 	float UIStep = 0.01;
-> = 0.6;
+> = 0.8;
 
 texture BaseTex
 <
@@ -78,9 +78,9 @@ float4 DefaultPixelShader( vs_out IN ) : COLOR
 	angle = smoothstep( MinLimit, MaxLimit, angle );
 	
 	//use this value to produce a color
-	float4 color = lerp( float4( 0.8,0.8,0.8,0), float4(0.2,0.2,0.2,0), angle );
+	float4 color = lerp( float4( 0.6,0.6,0.6,0), float4(0.2,0.2,0.2,0), angle );
 	
-	return float4(color.xyz,1) + float4(color.xyz,1)*tex2D( BaseSmp, IN.uv );
+	return tex2D( BaseSmp, IN.uv ) * (float4(color.xyz,1)*tex2D( BaseSmp, IN.uv )*3)*12;
 }
 
 technique MyShader

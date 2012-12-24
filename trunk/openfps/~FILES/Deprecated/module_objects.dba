@@ -1,0 +1,106 @@
+remstart
+/////////////////////////////////////////////////////
+//
+// OpenFPS VISUALS Module         
+//
+// Created by thenerd
+//                           
+/////////////////////////////////////////////////////
+
+----- Changelog:
+(04/17/11) - thenerd     - Created
+
+----- To-Do:
+*NONE*
+
+----- Purpose:
+Handles the visual representation of game objects:
+-loading models
+-displaying models
+
+----- Dependancies and Conflicts (IMPORTANT STUFF):
+*NONE*
+
+----- Conflicts
+*NONE*
+
+----- Notes:
+All functions in this module use the prefix OBJ.
+
+----- Function List:
+
+OBJ_LoadObject(filename$) - Loads an object from a file.
+OBJ_SetObjectName(id,name$) - Sets the object's name.
+OBJ_PositionObject(id,x,y,z) - Positions the object.
+OBJ_RotateObject(id,x,y,z) - Rotates the object.
+OBJ_ScaleObject(id,x,y,z) - Scales the object.
+OBJ_UpdateBounds(id) - Updates the object data.
+OBJ_HideObject(id) - Hides the object.
+OBJ_ShowObject(id) - Shows the object.
+OBJ_DeleteObject(id) - Deletes an object.
+
+OBJ_UpdateObjects() - Updates the object module (for culling and such)
+
+remend
+/////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////
+// TYPES
+/////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////
+// INIT
+/////////////////////////////////////////////////////
+
+function OBJ_LoadObject(filename$):
+	resource_id = RES_Grab(RES_Object)
+	load object filename,resource_id
+endfunction resource_id
+
+function OBJ_SetObjectName(id,name$):
+	`does nothing for now
+endfunction
+
+/////////////////////////////////////////////////////
+// MAIN
+/////////////////////////////////////////////////////
+
+function OBJ_PositionObject(id,x,y,z):
+	position object id,x,y,z
+endfunction
+
+function OBJ_RotateObject(id,x,y,z):
+	rotate object id,x,y,z
+endfunction
+
+function OBJ_ScaleObject(id,x,y,z):
+	scale object id,x,y,z
+endfunction
+
+function OBJ_UpdateBounds(id):
+	`does nothing yet
+endfunction
+
+function OBJ_HideObject(id):
+	hide object id
+endfunction
+
+function OBJ_ShowObject(id):
+	show object id
+endfunction
+
+function OBJ_UpdateObjects():
+	`does nothing yet
+endfunction
+
+/////////////////////////////////////////////////////
+// TERMINATE
+/////////////////////////////////////////////////////
+
+function OBJ_DeleteObject(id):
+	RES_free(id,RES_Object)
+endfunction
+
+/////////////////////////////////////////////////////
+// END OF MODULE CODE
+/////////////////////////////////////////////////////

@@ -1,0 +1,640 @@
+remstart
+/////////////////////////////////////////////////////
+//
+// OpenFPS MENU Module
+//
+// Created by thenerd
+// Maintained by thenerd, miso
+//
+/////////////////////////////////////////////////////
+
+----- Changelog:
+
+(11/19/09) - BMacZero       - Adapted to existing code.
+(2/7/10) - BMacZero         - Fixed issue with buttons highlighting incorrectly
+(2/7/10) - thenerd          - Updating and changing menu system, adding gui functions
+(2/8/10) - BMacZero         - Polished RenderWindow function, prefixed global vars with "menu"
+(2/9/10) - thenerd          - Finished RenderWindow function with fill
+(6/27/10)  - thenerd        - Added some effects to the menu background.
+(6/27/10)  - miso           - Changed 2 mouseX() mouseY() commands to UI_MouseX() and UI_MouseY()
+(6/27/10)  - thenerd        - Added color parameter to button function
+(7/01/10)  - miso           - Hides ui_mouse before entering game mode
+                              Creates a stamina bar, before jumping to game mode (won't crash the game if we delete this part)
+(07/04/10) - miso           - Changed an end command to SyS_Event_Terminate=1
+(07/06/10) - thenerd, miso  - Started to rewrite with user interface commands
+(07/07/10) - thenerd        - Recoding menu, working on chat lobby and server list.
+(07/08/10) - thenerd        - Added windows to go along with each button.
+(7/20/10)  - thenerd        - Added Lobby window.
+(7/29/10)  - thenerd        - New menu layout, loading screen for game engine.
+(8/13/10)  - thenerd        - Finished menu.
+(11/28/10) - thenerd 		- Restructured code to use new module layout
+
+----- To-Do:
+-None-
+
+----- Purpose:
+Runs the menu.
+
+----- Dependancies and Conflicts:
+-None-
+
+----- Other Notes:
+* For now, to access the game engine part of the project, click on the training button and start training.
+* The menu module functions and resources are prefixed with MENU_
+
+remend
+
+/////////////////////////////////////////////////////////
+// INIT                                                //
+/////////////////////////////////////////////////////////
+
+function MENU_init():
+	// -----------------------
+	// Init function
+	// -----------------------
+	`write debug
+	UI_WriteLog(UI_Yellow,"=== Starting Menu module")
+	
+	`set up menu variables
+	`very disorganized, eventually this will all go into types
+	
+	global MENU_CurrentWindow$			`Current Menu window
+	global MENU_lobby_current_tab$		`Current Menu tab
+	global MENU_lobby_no_servers		`Lobby server list variable
+	global MENU_icon_lock				`Lock icon
+	global MENU_ui_mouse_wait			`Mouse hourglass cursor
+	global MENU_Feather					`Edge of screen feather image
+	global MENU_LoopStartup				`First loop variable
+	global MENU_ForegroundImage			`Menu foreground
+	global MENU_ForegroundSprite		`Menu foreground sprite
+	global MENU_BackgroundImage			`Menu background object image
+	global MENU_BackgroundObject		`Menu background object 
+	global MENU_BackgroundObject2		`Menu background object 2
+	global MENU_BackgroundSphereImg		`Menu background sphere texture
+	global MENU_music					`Menu music
+	global MENU_buttons_image			`Menu buttons image
+	global MENU_menusubimage			`Menu subtitle image
+	global MENU_FGObject
+	
+	global MENU_credits					`Menu credits image
+	global MENU_creditsPolish			`Menu credits polish
+	global MENU_creditsFader			`fader sprite
+	global MENU_FaderAlpha as float 	`fader alpha
+	global MENU_FaderSpeed as float 	`fader speed
+	global MENU_FaderTarget as string 	`fader target
+	global MENU_creditsPolishBG			`Menu credits polish bg
+	global MENU_credits_Y as float 		`Menu credits scroll
+	global MENU_creditsmusic			`Menu credits music
+	
+	global MENU_CampaignCamera			`Campaign camera
+	global MENU_CampaignCameraImage 	`Campaign camera image
+	global MENU_CampaignCameraCube		`test cube
+	
+	MENU_CampaignCameraImage=RES_grab(res_Image)
+	make image MENU_CampaignCameraImage,600,180
+	
+	global MENU_state as string 		`Menu status
+	global MENU_stateDEBUG as string 	`Menu status debug
+	MENU_state="NONE"
+	
+	global MENU_Cuff					`Menu cuff image
+	MENU_Cuff=RES_grab(res_Image)
+	`load image "media\menu\cuff.png",MENU_Cuff
+	
+	`set variables
+	MENU_LoopStartup=			1
+	MENU_lobby_current_tab$=	"UI_lobby_tab_game"
+	MENU_menu_lobby_no_servers=	RES_grab(res_Image)
+	MENU_icon_lock=				RES_grab(res_Image)
+	MENU_ui_mouse_wait=			RES_grab(res_Image)
+	MENU_Feather=				RES_grab(res_Image)
+	MENU_ForegroundImage=		RES_grab(res_Image)
+	MENU_BackgroundImage=		RES_grab(res_Image)
+	MENU_ForegroundSprite=		RES_grab(res_Sprite)
+	MENU_BackgroundObject=		RES_grab(res_Object)
+	MENU_BackgroundObject2=		RES_grab(res_Object)
+	MENU_BackgroundSphereImg=	RES_grab(res_Image)
+`	MENU_music=					RES_grab(res_Music) Automated in sound module
+	MENU_buttons_image= 		RES_grab(res_Image)
+	MENU_menusubimage= 			RES_grab(res_Image)
+	MENU_FGObject=				RES_grab(res_Object)
+	
+	`credits
+	MENU_credits=RES_grab(res_Image)
+	MENU_creditsPolish=RES_grab(res_Image)
+	MENU_creditsPolishBG=RES_grab(res_Image)
+	MENU_creditsmusic=RES_grab(res_Music)
+	MENU_creditsFader=RES_grab(res_Sprite)
+	load image "media\menu\credits\credits-scroller.png",MENU_credits
+	load image "media\menu\credits\bg.png",MENU_creditsPolishBG
+	load image "media\menu\black.png",MENU_creditsPolish
+	load music "media\audio\isolate.mp3",MENU_creditsmusic
+	
+	sprite MENU_creditsFader,0,0,MENU_creditsPolish
+	MENU_FaderAlpha=0
+	set sprite alpha MENU_creditsFader,MENU_FaderAlpha
+	
+	`load media
+	UI_WriteLog(UI_Yellow,"* Loading Media")
+	load image "media\menu\menu_lobby_no_servers.png",	MENU_menu_lobby_no_servers
+	load image "media\menu\lock.png",					MENU_icon_lock
+	load image "media\cursors\waitcursor.dds",			MENU_ui_mouse_wait
+	load image "media\menu\feather.png",				MENU_Feather
+	load image "media\menu\main.png",					MENU_ForegroundImage
+	load image "media\menu\menu_bgimg.png",				MENU_BackgroundImage
+	load image "media\menu\grid.png",					MENU_BackgroundSphereImg
+	load image "media\menu\menu_buttons.png",			MENU_buttons_image,1
+	load image "media\menu\menu_subtitle.png",			MENU_menusubimage
+	`load music "media\audio\The Awakening.mp3",			MENU_music
+ 
+ 	UI_WriteLog(UI_Green,"* Media Loaded.")
+	
+	UI_TyperInit()
+	
+	make object plain MENU_FGObject,UI_Display.Width+2,UI_Display.Height
+	lock object on MENU_FGObject
+	disable object zdepth MENU_FGObject
+	set object light MENU_FGObject,0
+	set object transparency MENU_FGObject,1
+	
+	xsize=UI_Display.Width:ysize=UI_Display.Height
+	xpos=0:ypos=0
+	dist#=(UI_Display.MiddleHeight)/tan(camera fov()/2)
+	xpos=(xpos-UI_Display.MiddleWidth)+xsize/2         `Adjust position relative to screen pixels
+	ypos=((ypos*-1)+UI_Display.MiddleHeight)-ysize/2
+	position object MENU_FGObject,xpos,ypos,dist#
+	
+	`Create objects
+	UI_WriteLog(UI_Yellow,"Creating Menu Backdrop")
+	make object plain MENU_BackgroundObject,1024,768
+	texture object MENU_BackgroundObject,MENU_BackgroundImage
+	position object MENU_BackgroundObject,0,0,512
+	lock object on MENU_BackgroundObject
+	point object MENU_BackgroundObject,0,0,0
+	
+	make object sphere MENU_BackgroundObject2,40
+	position object MENU_BackgroundObject2,18,-10,36
+	disable object zdepth MENU_BackgroundObject2
+	lock object on MENU_BackgroundObject2
+	texture object MENU_BackgroundObject2,MENU_BackgroundSphereImg
+	set object transparency MENU_BackgroundObject2,1
+	set alpha mapping on MENU_BackgroundObject2,20
+	`set object filter MENU_BackgroundObject2,0
+	
+	global tickbox_select
+	global MENU_MouseClicked
+	
+	global MENU_MouseClickSND
+	
+	MENU_MouseClickSND = RES_grab(res_Sound)
+rem 	Load Sound "media\cursors\stab.wav",MENU_MouseClickSND
+	
+	UI_WriteLog(UI_Green,"Menu Backdrop Created")
+	
+	
+	// -----------------------
+endfunction
+
+/////////////////////////////////////////////////////////
+// CORE                                                //
+/////////////////////////////////////////////////////////
+
+function MENU_update()
+	// -----------------------
+	// Update function
+	// -----------------------
+	
+	`handle loop startup
+	if MENU_LoopStartup>0:
+		MENU_Show()
+		MENU_LoopStartup=0
+	endif
+	
+	`paste backdrop
+	paste image MENU_buttons_image,168-(178/2),(UI_Display.Height*0.3)-25,1
+	if UI_Display.Height>600 then paste image MENU_menusubimage,0,0,1
+	`handle buttons
+	MENU_CreateButtons()
+	
+	If mouseclick()=1 and MENU_MouseClicked=0
+		Select UI_MouseOveredGadget$
+			case "button_lobby"
+				MENU_state="LOBBY"
+			endcase
+		 	case "button_campaign"
+		 		MENU_state="CAMPAIGN"
+		 	endcase
+			case "button_training"
+				MENU_state="TRAINING"
+			endcase
+			case "button_credits"
+				MENU_StartCredits()
+			endcase
+			case "button_startgame"
+				MENU_StartCampaign()
+			endcase
+			case "button_options"
+				MENU_state="OPTIONS"
+			endcase
+		 	case "button_quit"
+		 		MENU_state="QUIT"
+		 	endcase
+		 	case "button_yesquit"
+		 		SyS_Event_Terminate=1
+		 	endcase
+		 	case "button_backtomain"
+		 		MENU_state="NONE"
+		 	endcase
+		 	case "button_yestrain"
+     		    MENU_state="HIDDEN"
+       			LVL_Load("media\maps\Test\level.dat")
+	    	endcase
+	    	`game options buttons
+	    	case "tickbox_test"
+	    		UI_ToggleGadget("tickbox_test")
+				UI_PlayMouseClickSND()
+				tickbox_select=UI_GetGadgetSelection("tickbox_test")
+	    	endcase
+		endselect
+	endif
+	
+	`handle loading fade
+	if sprite alpha(NetConnectSprite)>10:
+		set sprite alpha NetConnectSprite,sprite alpha(NetConnectSprite)-10
+	else
+		hide sprite NetConnectSprite
+	endif
+	
+	`scroll background texture
+	scroll object texture MENU_BackgroundObject,0.0005*SyS_TimeFactor,0
+	scroll object texture MENU_BackgroundObject2,0.0001*SyS_TimeFactor,0
+	
+	texture object MENU_FGObject,MENU_ForegroundImage
+			
+	`debug
+	if CORE_DebugScreen=1:
+		X=UI_MouseX()+16:Y=UI_MouseY()
+		UI_Text(1,X,Y,"Debug Mode====="):Y=Y+18
+		UI_Text(1,X,Y,"Screen rate "+str$(screen fps())):Y=Y+18
+		UI_Text(1,X,Y,"TimeFactor#="+str$(SyS_TimeFactor)):Y=Y+18
+		UI_Text(1,X,Y,"MENU_stateDEBUG="+MENU_stateDEBUG):Y=Y+18
+		UI_Text(1,X,Y,"UI_Mouseclicked="+str$(UI_Mouseclicked)):Y=Y+18
+	endif
+	
+	if KEYSTATE(20)=1:
+		UI_Typer("TEXT TYPING TEST...",300,300,10)
+	else:
+		UI_TyperReset()
+	endif
+	
+	MENU_MouseClicked=mouseclick()
+	
+endfunction
+
+function MENU_Show():
+	show object MENU_BackgroundObject
+	show object MENU_BackgroundObject2
+	show object MENU_FGObject
+	`show the mouse
+	MVM_ShowMouse()
+	CORE_CleanUp()
+endfunction
+
+function MENU_ShowPaused():
+	show object MENU_BackgroundObject2
+endfunction 
+
+function MENU_StartCredits():
+	MENU_state="none"
+	MENU_credits_Y=0
+	Credits_FadeIn()
+endfunction
+
+function Credits_FadeIn():
+	MENU_FaderAlpha=0
+	MENU_FaderSpeed=2
+	MENU_FaderTarget="credits"
+endfunction
+
+function Fader_Update():
+	MENU_FaderAlpha=MENU_FaderAlpha+(MENU_FaderSpeed*SyS_TimeFactor)
+	if MENU_FaderAlpha>255:
+		if MENU_FaderSpeed>0:
+			SyS_LoopMode=MENU_FaderTarget
+			if MENU_FaderTarget="menu" then Credits_FadeTo()
+			MENU_FaderAlpha=255
+			MENU_FaderSpeed=-2
+		endif
+	else:
+		if MENU_FaderAlpha<0:
+			if MENU_FaderSpeed<0:
+				SyS_LoopMode=MENU_FaderTarget
+				MENU_FaderSpeed=0
+				MENU_FaderAlpha=0
+			endif			
+		else:
+			set sprite alpha MENU_creditsFader,MENU_FaderAlpha
+		endif
+	endif
+endfunction
+
+function UI_TyperInit():
+	global UI_TyperTime as float
+	global UI_TyperStarted
+	global UI_TyperFinished 
+	global UI_TyperLetter
+	UI_TyperLetter=0
+endfunction
+
+function UI_Typer(text$,x,y,time):
+	UI_TyperTime=UI_TyperTime+(0.1*SyS_TimeFactor)
+	timeperstring#=(time*1.0)/len(text$)
+	if UI_TyperTime>timeperstring#:
+		UI_TyperTime=0
+		UI_TyperLetter=UI_TyperLetter+1
+	endif
+	scrstring$=left$(text$,UI_TyperLetter)
+	if scrstring$=text$ then UI_TyperFinished=1
+	UI_Text(3,x,y,scrstring$)
+endfunction
+
+function UI_TyperReset():
+	UI_TyperTime=0
+	UI_TyperStarted=0
+	UI_TyperFinished=0
+	UI_TyperLetter=0
+endfunction
+
+function Credits_FadeOut():
+	MENU_FaderSpeed=2
+	MENU_FaderTarget="menu"
+endfunction
+
+function Credits_FadeTo():
+	MENU_FaderSpeed=-2
+	MENU_FaderTarget="menu"
+	MENU_state="NONE"
+endfunction
+
+function MENU_Hide():
+	hide object MENU_BackgroundObject
+	hide object MENU_BackgroundObject2
+	MENU_state="HIDDEN"
+endfunction
+
+function MENU_CreateButtons():
+	select MENU_state
+	case "NONE"
+		local x as integer: local y as integer
+		x=168:y=(UI_Display.Height*0.3)
+		UI_AddCenterGadgettoScreen("button_lobby",x,y,"UI_button_gray")
+		`UI_AddMouseoverImageToGadget("button_lobby","UI_button")
+		UI_AddtitleToGadget("button_lobby",3,x-8,y-14,"Lobby")
+		x=168:y=y+60
+		UI_AddCenterGadgettoScreen("button_campaign",x,y,"UI_button")
+		UI_AddMouseoverImageToGadget("button_campaign","UI_buttonhover")
+		UI_AddtitleToGadget("button_campaign",3,x-8,y-14,"Campaign")
+		x=168:y=y+60
+		UI_AddCenterGadgettoScreen("button_training",x,y,"UI_button")
+		UI_AddMouseoverImageToGadget("button_training","UI_buttonhover")
+		UI_AddtitleToGadget("button_training",3,x-8,y-14,"Training")
+		x=168:y=y+60
+		UI_AddCenterGadgettoScreen("button_options",x,y,"UI_button")
+		UI_AddMouseoverImageToGadget("button_options","UI_buttonhover")
+		UI_AddtitleToGadget("button_options",3,x-8,y-14,"Options")
+		x=168:y=y+60
+		UI_AddCenterGadgettoScreen("button_credits",x,y,"UI_button_gray")
+		`UI_AddMouseoverImageToGadget("button_credits","UI_buttonhover")
+		UI_AddtitleToGadget("button_credits",3,x-8,y-14,"Credits")
+		x=168:y=y+60
+		UI_AddCenterGadgettoScreen("button_quit",x,y,"UI_button")
+		UI_AddMouseoverImageToGadget("button_quit","UI_buttonhover")
+		UI_AddtitleToGadget("button_quit",3,x-8,y-14,"Quit")
+	endcase
+	case "TRAINING"
+		Menu_CreateTrainingQuestion()
+	endcase
+	case "LOBBY"
+		Menu_JoinServerTemp()
+	endcase
+	case "CAMPAIGN"
+		Menu_ChooseCampaign()
+	endcase
+	case "OPTIONS"
+		Menu_MakeOptionsDiag()
+	endcase
+	case "APPLIED"
+		Menu_OptionsApplyAtStart()
+	endcase
+	case "QUIT"
+		Menu_CreateQuitQuestion()
+	endcase
+	endselect
+endfunction
+
+function MENU_DestroyButtons():
+	`clear all for now
+	UI_ClearAllGuis()
+	
+	`old code
+	remstart
+	if UI_GadgetExist("button_lobby") then UI_DeleteGadget("button_lobby")
+	if UI_GadgetExist("button_campaign") then UI_DeleteGadget("button_campaign")
+	if UI_GadgetExist("button_training") then UI_DeleteGadget("button_training")
+	if UI_GadgetExist("button_options") then UI_DeleteGadget("button_options")
+	if UI_GadgetExist("button_quit") then UI_DeleteGadget("button_quit")
+	remend
+endfunction
+
+function MENU_LoadingScreen()
+	`Load resource for loading screen
+	global NetConnectImg
+	global NetConnectSprite
+	NetConnectImg = RES_grab(res_Image)
+	NetConnectSprite = RES_grab(res_Sprite)
+	load image "media\menu\loadblur.png",NetConnectImg
+	`do a short sync loop to avoid display corruption, or something.
+	for x=0 to 10
+	box 0,0,1024,768,0,0,0,0
+	sprite NetConnectSprite,UI_Display.Width-1024,UI_Display.Height-768,NetConnectImg
+	sync
+	next x
+endfunction
+
+function Menu_ChooseCampaign():
+	ui_putwindow(UI_Display.Middlewidth-324,UI_Display.Middleheight-90,40,22)
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-70
+	UI_CenterText(3,x,y,"Campaign Missions")
+	y=y+46
+	ink rgb(100,100,100),0
+	draw=DRAW TARGET()
+	DRAW TO IMAGE MENU_CampaignCameraImage
+	cls 0
+	set cursor 10,10
+	print "No campaign levels to load!"
+	if VIS_UseNative:
+		DRAW TO BITMAP 0
+	else :
+		draw to image UI_RenderTarget
+	endif
+	
+	paste image MENU_CampaignCameraImage,x-300,y
+	line x-300,y,x+300,y
+	line x-300,y,x-300,y+180
+	line x-300,y+180,x+300,y+180
+	line x+300,y,x+300,y+180
+	y=y+180
+	y=y+44
+	x=x+200
+	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Back")	
+	`add start game button
+	x=x+-200
+	UI_AddCenterGadgettoScreen("button_startgame",x,y,"UI_button")
+	UI_AddtitleToGadget("button_startgame",3,x-8,y-14,"Start")	
+	UI_AddMouseoverImageToGadget("button_startgame","UI_buttonhover")
+endfunction
+
+function MENU_StartCampaign():
+ 
+	MENU_state="none"
+	SyS_LoopMode="engine"
+endfunction
+
+function Menu_MakeOptionsDiag()
+	ui_putwindow(UI_Display.Middlewidth-320,UI_Display.Middleheight-90,40,24)
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-70
+	UI_CenterText(3,x,y,"Game Options")
+	X=UI_Display.Middlewidth-294
+	Y=UI_Display.Middleheight-16
+	UI_AddGadgetToScreen("tickbox_test",x,y,"skull32_1")
+	select tickbox_select
+		case 1
+			UI_AddMouseOverImageToGadget("tickbox_test","skull32_2")
+		endcase
+		case 0
+			UI_AddMouseOverImageToGadget("tickbox_test","skull32_1")
+		endcase
+	endselect
+	UI_AddSelectedImageToGadget("tickbox_test","skull32_2")
+	if tickbox_select then UI_SelectGadget("tickbox_test")
+
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-70
+	y=y+46
+	ink rgb(120,120,120),0
+	line x-300,y,x+300,y
+	y=y+240
+	line x-300,y,x+300,y
+	y=y+44
+	x=x+200
+	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Cancel")	
+	`add apply button
+	x=x+-200
+	MENU_OptionsChanged=0
+	if KEYSTATE(23)=1 then MENU_OptionsChanged=1
+	if MENU_OptionsChanged
+		UI_AddCenterGadgettoScreen("button_apply",x,y,"UI_button")
+		UI_AddtitleToGadget("button_apply",3,x-8,y-14,"Apply")	
+		UI_AddMouseoverImageToGadget("button_apply","UI_buttonhover")
+	else
+		UI_AddCenterGadgettoScreen("button_apply",x,y,"UI_buttongray")
+		UI_AddtitleToGadget("button_apply",3,x-8,y-14,"Apply")	
+	endif
+endfunction
+
+function Menu_JoinServerTemp()
+	ui_putwindow(UI_Display.Middlewidth-280,UI_Display.Middleheight-10,35,15)
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight+40
+	UI_AddTextLine(3,x,y,"Server IP to join:")
+	Y=Y+40
+	UI_AddTextLine(3,x,y,left$(entry$(1),16))
+	Y=Y+20
+	UI_AddTextLine(3,x,y,"_______________")
+	X=x-150:Y=Y+80
+	UI_AddCenterGadgettoScreen("button_joingame",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_joingame","UI_buttonhover")
+	UI_AddtitleToGadget("button_joingame",3,x-8,y-14,"Join")	
+	X=x+300
+	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Cancel")	
+endfunction
+
+Function Menu_OptionsApplyAtStart()
+	ui_putwindow(UI_Display.Middlewidth-350,UI_Display.Middleheight-10,44,15)
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight+50
+	UI_AddTextLine(3,x,y,"Some changes will not apply until restart!")
+	Y=Y+100
+	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Ok")
+EndFunction
+
+Function Menu_CreateQuitQuestion()
+	ui_putwindow(UI_Display.Middlewidth-280,UI_Display.Middleheight-10,35,15)
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight+50
+	UI_AddTextLine(3,x,y,"Are you sure you want to quit?")
+	X=x-150 : Y=Y+100
+	UI_AddCenterGadgettoScreen("button_yesquit",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_yesquit","UI_buttonhover")
+	UI_AddtitleToGadget("button_yesquit",3,x-8,y-14,"Yes")	
+	X=x+300
+	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"No")
+EndFunction
+
+Function Menu_CreateTrainingQuestion()
+	ui_putwindow(UI_Display.Middlewidth-280,UI_Display.Middleheight-50,35,15)
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight+20
+	UI_AddTextLine(3,x,y-20,"Begin Training?")
+	UI_AddTextLine(1,x,y+20,"Training allows you to familiarize yourself with the controls")
+	UI_AddTextLine(1,x,y+34,"and techniques of the game before entering the field.")
+	X=x-150 : Y=Y+110
+	UI_AddCenterGadgettoScreen("button_yestrain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_yestrain","UI_buttonhover")
+	UI_AddtitleToGadget("button_yestrain",3,x-8,y-14,"Start")	
+	X=x+300
+	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Cancel")	
+EndFunction
+
+/////////////////////////////////////////////////////////
+// USER INTERFACE FUNCTIONS                            //
+/////////////////////////////////////////////////////////
+
+function UI_SetRenderTarget(target as string):
+	select target
+		case "screen"
+			draw to bitmap 0
+		endcase
+		case "ui_target"
+			draw to image UI_RenderTarget
+		endcase
+	endselect
+endfunction
+
+/////////////////////////////////////////////////////////
+// MATH FUNCTIONS                                      //
+/////////////////////////////////////////////////////////
+
+function IMG_SET_PIXEL2(memblock as byte, x as integer, y as integer, width as integer, height as integer, colour as dword)
+	if x>-1 and x<width
+		if y>-1 and y<height
+			n as double integer
+			n = (4*((y*width)+x))+12
+			write memblock dword memblock,n,colour
+		endif
+	endif
+endfunction 
+
+
+/////////////////////////////////////////////////////////
+// TERMINATE                                           //
+/////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////

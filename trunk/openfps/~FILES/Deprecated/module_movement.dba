@@ -1,0 +1,198 @@
+remstart
+/////////////////////////////////////////////////////
+//
+// OpenFPS MOVEMENT Module
+//
+// Created by Monk
+// Maintained by Monk and BMacZero
+//
+/////////////////////////////////////////////////////
+
+----- Changelog:
+(07/26/09) - BMacZero - Modularized
+                      - Switched crouch and prone to individual
+                        toggles.
+(11/23/09) - BMacZero - Brought in line with R/M module.
+(11/24/09) - BMacZero - [Starting position changed to origin]
+(2/12/10)  - BMacZero - Brought in line w/ new R/M values.
+(2/16/10)  - BMacZero - Made the player less like a super-ninja
+                      - Added stamina
+(2/25/10)  - BMacZero - Globalized timer-based system.
+(3/01/10)  - Kaedroho - Limited camera x angle to stop player from turning upside down!
+(3/7/10)   - BMacZero - Worked on player collision.
+(3/16/10)  - BMacZero - Reworking Sparky's system.
+(6/25/10)  - Miso     - Replaced every mousemovex() calls with SyS_MouseMoveX variable
+                      - Calling the above commands clears the mouse movement buffers, and other modules
+                        can't get proper results. Using these variables in all modules solves this problem.
+						User interface module refreshes the values of both variable with every loop.
+(7/4/10)   - miso     - placed four log commands when initiate and terminate module
+(11/28/10) - thenerd  - Restructured module with functions to fit the new module layout
+
+----- To-Do:
+-Apply different speeds and jump heights for different classes.
+-Add more realism:
+	camera bobs slightly when walking, more when running. 
+	Camera bobs down before jumping. 
+	Camera dips after landing from a jump - more if it was a hard landing.
+-Have stamina based on health - low health?  Low max stamina.
+
+----- Purpose:
+Handles player input as it applies to moving about the world.
+This includes FPS player movement, Vehicle movement, and 
+spectator fly modes.
+
+
+----- Dependancies and Conflicts:
+-None-
+
+----- Configurable Keys: 
+Keystates should be stored in the following global integers:
+    KEY_sprint
+    KEY_jump
+    KEY_left
+    KEY_right
+    KEY_forward
+    KEY_backward
+    KEY_crouch
+    KEY_prone
+
+
+----- Other Notes:
+All movement module functions are prefixed with MVM_
+
+----- Functions:
+-MVM_init()			-inits the movement module
+-MVM_update()		-updates the movement module
+-MVM_terminate()	-terminates the movement module
+-MVM_HideMouse()	-Hides the mouse
+-MVM_ShowMouse() 	-Shows the mouse
+
+/////////////////////////////////////////////////////
+remend
+
+`Player stances
+#constant stance_SPRINT 0
+#constant stance_WALK   1
+#constant stance_CROUCH 2
+#constant stance_PRONE  3
+
+`Vector type
+type vector
+   x as float
+   y as float
+   z as float
+endtype
+
+/////////////////////////////////////////////////////////
+// INIT                                                //
+/////////////////////////////////////////////////////////
+
+
+function MVM_init()
+	// -----------------------
+	// Init function
+	// -----------------------
+	`write debug
+	UI_WriteLog(UI_Yellow,"=== Starting Movement module")
+	`Initiate controls
+	if KEY_sprint=0
+    	global KEY_sprint   as integer
+    	KEY_sprint=42
+	endif
+	if KEY_jump=0
+    	global KEY_jump     as integer
+    	KEY_jump=57
+	endif
+	if KEY_left=0
+    	global KEY_left     as integer
+    	KEY_left=30
+	endif
+	if KEY_right=0 
+    	global KEY_right    as integer
+    	KEY_right=32
+	endif
+	if KEY_forward=0
+    	global KEY_forward  as integer
+    	KEY_forward=17
+	endif
+	if KEY_backward=0
+    	global KEY_backward as integer
+    	KEY_backward=31
+	endif
+	if KEY_crouch=0
+    	global KEY_crouch   as integer
+    	KEY_crouch=29
+	endif
+	if KEY_prone=0
+    	global KEY_prone    as integer
+    	KEY_prone=46
+	endif
+	// -----------------------
+	`Various globals
+	global MVM_MouseLook as boolean:MVM_MouseLook=0
+	
+    global ncr#
+    global ncf#
+    global cx#
+    global cy#
+    global ncx#
+    global ncy#
+    
+	// -----------------------
+	UI_WriteLog(UI_Green,"=== Movement module started.")
+	// -----------------------
+endfunction
+
+/////////////////////////////////////////////////////////
+// MAIN                                                //
+/////////////////////////////////////////////////////////
+
+function MVM_update()
+	// -----------------------
+	// Update movement
+	// -----------------------
+	if MVM_MouseLook>0:
+		UI_SetMousePosition(UI_Display.MiddleWidth,UI_Display.MiddleHeight)
+		cr#=0:cf#=0
+      	if KEYSTATE(KEY_right)=1 then cr#=-0.6*SyS_TimeFactor
+     	if KEYSTATE(KEY_left)=1 then cr#=0.6*SyS_TimeFactor
+      	if KEYSTATE(KEY_forward)=1 then cf#=0.6*SyS_TimeFactor
+      	if KEYSTATE(KEY_backward)=1 then cf#=-0.6*SyS_TimeFactor
+        ncr#=curvevalue(cr#,ncr#,5)
+        ncf#=curvevalue(cf#,ncf#,5)
+        cx#=cx#+Sys_MouseMoveY*0.2
+        cy#=cy#+Sys_MouseMoveX*0.2
+      	if cx#>80 then cx#=80
+      	if cx#<-80  then cx#=-80
+        ncx#=curveangle(cx#,ncx#,2)
+        ncy#=curveangle(cy#,ncy#,2)
+      	move camera ncf#
+        rotate camera 0,wrapvalue(ncy#-90),0
+        move camera ncr#
+        rotate camera 0,wrapvalue(ncy#+90),0
+     	rotate camera ncx#,ncy#,0
+     	
+	endif
+endfunction
+
+function MVM_ShowMouse()
+	MVM_MouseLook=0
+	UI_FadeInMouse()
+endfunction
+
+function MVM_HideMouse()
+	MVM_MouseLook=1
+	UI_FadeOutMouse()
+endfunction
+
+/////////////////////////////////////////////////////////
+// TERMINATE                                           //
+/////////////////////////////////////////////////////////
+
+function MVM_terminate()
+	// -----------------------
+	// NOTHING TO SEE HERE
+	// -----------------------
+endfunction
+
+/////////////////////////////////////////////////////////

@@ -1,15 +1,15 @@
-; **** Dark BASIC Professional Project File ****
-; **** Written by DarkBASIC Professional Editor ****
 version=DBP1.00
+;--> DarkBASIC Professional Project <--
+;--> Created with Indigo 1.3.2.11 <--
+;--> Basic project details <--
 project name=tpu
+project comments=
 
-; **** source file information ****
+;--> Files <--
+final source=_Temp.dbsource
 main=ui_tutorial.dba
-LineMain=152
 include1=module_ui.dba
-LineInclude1=1168
 include2=module_resource.dba
-LineInclude2=8
 include3=module_menu.dba
 include4=module_ui_chatbox.dba
 include5=module_ui_console.dba
@@ -20,57 +20,45 @@ include9=module_movement.dba
 include10=module_level.dba
 include11=module_network.dba
 include12=module_entity.dba
-final source=_Temp.dbsource
-
-; **** Executable Information  ***
-; build types: exe, media, installer, alone
 executable=new.exe
 build type=exe
-; ** Media file compression **
-compression=NO
 
-; ** Media file encryption **
-encryption=NO
-; ** Display the card options screen window? **
-card options window=NO
-
-; **** debugger information ****
-; If the editor sets this to yes, it is running in debug mode
+;--> Debug Mode YES/NO <--
 CLI=NO
-CommandLineArguments=
 
-; **** display mode information ****
+;--> Media Settings <--
+compression=NO
+encryption=NO
+media root path=C:\Users\Chris\Desktop\Game Dev\openfps\openfps\~FILES\Deprecated\
+
+;--> Included Media <--
+
+;--> Cursors <--
+
+;--> Icons <--
+
+;--> Other Settings <--
 app title=new
-
-; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
 graphics mode=fullscreen
-fullscreen resolution=640x480x32
-
-; arbitrary sizes are valid for windowed mode
+fullscreen resolution=1024x768x32
 window resolution=640x480
 
-; **** External Files Information ****
+;--> Version Information <--
+verfilename=
+verfiledesc=
+vercompany=
+verfilenumber=v1.0
+verproduct=
+verproductnumber=v1.0
+vercopyright=
+vercomments=
+verinternal=v1.0
+vertrademark=
 
-; **** Media ****
-; Example entries: media1=graphics\*.jpg
-media root path=C:\Program Files (x86)\The Game Creators\Dark Basic Professional\Projects\OpenFPS\
+;--> Config/setup.ini values <--
+RemoveSafetyCode=NO
+SafeArrays=YES
+LocalTempFolder=NO
+ExternaliseDLLS=NO
 
-; **** Icons ****
-
-; **** Cursors ****
-
-; **** Version Info ****
-VerComments=
-VerCompany=
-VerFileDesc=
-VerFileNumber=v1.0
-VerInternal=v1.0
-VerCopyright=
-VerTrademark=
-VerFilename=
-VerProduct=
-VerProductNumber=v1.0
-
-; **** To Do ****
-
-; **** Comments ****
+;--> Project Organization <--

@@ -516,11 +516,11 @@ if VIS_Setup_UseWindow=1 then set window on
 if VIS_Setup_UseWindow=0 then set window off
 `if VIS_Setup_UseMotionBlur then VIS_Setup_MotionBlur()
 
-if VIS_Setup_Width=1024 and VIS_Setup_Height=768:
+`if VIS_Setup_Width=1024 and VIS_Setup_Height=768:
 	VIS_UseNative=1
-else :
-	ik set filters 2,2,1
-endif
+`else :
+`	ik set filters 2,2,1
+`endif
 
 rem Set the settings into action
 Set Display Mode VIS_Setup_Width, VIS_Setup_Height, VIS_Setup_Depth, VIS_Setup_UseVsync, VIS_Setup_Antialiasing, VIS_Setup_UseMultimonitorMode

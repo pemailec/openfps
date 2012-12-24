@@ -182,7 +182,7 @@ while SyS_Event_Terminate<1
 	if VIS_UseNative<1:
 		draw to bitmap 0
 		ik paste image UI_RenderTarget,0,0,screen width(),screen height()
-		ik create target image UI_RenderTarget,1024,768
+		ik create render target UI_RenderTarget,1024,768
 	endif
 	
 	`sync to the screen

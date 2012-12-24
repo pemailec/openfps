@@ -1,0 +1,411 @@
+remstart
+***** Included Source File *****
+/////////////////////////
+//
+// OpenFPS Sound Module         
+//
+// Created by JRH
+//                           
+/////////////////////////////////////////////////////
+
+***** Included Source File *****
+
+----- Changelog:
+(27/February/2011) - JRH     - Created
+(20/August/2011)   - JRH     - Ported To OpenAL using DarkAL
+
+
+----- To-Do:
+* Everything
+
+----- Purpose:
+This module will han dle the loading and playing of sound including;
+* Footsteps (Including sounds of other players)
+* Weapon Sounds
+* Player Sounds (Jump, hurt,etc...)
+* Music
+
+Basically, a code will be created that will be sent as a string between players, and then
+the appropriate sound will be played based on position. This way the sounds of all
+players will be heard by all other players, relative to distance.
+
+----- Dependancies and Conflicts (IMPORTANT STUFF):
+
+
+----- Conflicts
+*NONE*
+
+----- Other Notes:
+*NONE*
+
+----- Function List:
+
+--MAIN COMMANDS
+
+ 
+remend
+
+`==========Constants========`
+#constant SND_LoadCap        500    `Set this to the maximum number of sounds possible to load
+#constant SND_ControlFreq    100
+`===========================`
+
+`===========TYPES===========`
+Type SoundProfile
+    ResourceNo as integer
+    Name as String
+    File as String
+    Active as Integer
+    ToPlay as Integer
+    ToDelete as Integer
+    ToStop as Integer
+    Volume as Integer    
+    TargetVolume as Integer
+    Speed as Integer
+    TargetSpeed as Integer
+    Looping as Integer
+ENDTYPE
+`===========================`
+
+
+/////////////////////////////////////////////////////
+// INIT
+/////////////////////////////////////////////////////
+Function SND_Init()
+        UI_WriteLog(UI_Yellow,"=== Starting sound module.")
+            Global Dim SoundData(SND_LoadCap) as SoundProfile
+            Global SND_SoundCount as Integer
+            SND_SoundCount = 0         
+            Global SND_MuteSound as Integer   
+            SND_MuteSound = 0
+            Global SND_UpdateController as Integer
+            SND_UpdateController = 0
+            
+            `Start Open AL
+            AL Start 1
+            
+        UI_WriteLog(UI_Green,"=== Sound module started.")                      
+ENDFUNCTION
+
+
+/////////////////////////////////////////////////////
+// MAIN FUNCTIONS
+/////////////////////////////////////////////////////
+
+Function SND_Update()
+// Update All Sounds (to be called every loop)
+    
+    //If no sounds loaded then skip
+    If SND_SoundCount = 0 then ExitFunction
+    
+    // Main sound update loop
+    For Counter = 1 to SND_SoundCount
+                
+            // Temporary read variables
+            SND_CurrentResource = SoundData(Counter).ResourceNo
+            
+            // Update all values.
+            If AL Get Sound Playing(SND_CurrentResource) = 1 then SoundData(Counter).Active = 1
+            If AL Get Sound Playing(SND_CurrentResource) = 0 then SoundData(Counter).Active = 0
+            SoundData(Counter).Volume = AL Get Sound Volume(SND_CurrentResource)
+            SoundData(Counter).Speed = AL Get Sound Speed(SND_CurrentResource)
+         
+            // Play 'ToPlay' items.
+            If SoundData(Counter).ToPlay = 1 and SoundData(Counter).Active = 0
+                SoundData(Counter).ToPlay = 0
+                SoundData(Counter).Active = 1
+                If SoundData(Counter).Looping = 1
+                    AL Play Sound SoundData(Counter).ResourceNo
+                    AL Set Sound Looping SoundData(Counter).ResourceNo,1
+                Else
+                    AL Play Sound SoundData(Counter).ResourceNo
+                    AL Set Sound Looping SoundData(Counter).ResourceNo,0
+                EndIf
+            EndIf
+            
+            // Stop 'ToStop' items.
+            If SoundData(Counter).ToStop = 1 and SoundData(Counter).Active = 1 then AL Stop Sound SoundData(Counter).ResourceNo
+            
+            // Delete 'ToDelete' items
+            If SoundData(Counter).ToDelete = 1 and SoundData(Counter).Active = 0
+                SND_DeleteSound(SoundData(Counter).ResourceNo)
+            EndIf
+             
+            // If sound is not looping when it should, reset it
+            If SoundData(Counter).Looping = 1 and AL Get Sound Looping (SoundData(Counter).ResourceNo) = 0
+                If SoundData(Counter).Active = 1 then AL Stop Sound SoundData(Counter).ResourceNo
+                    AL Play Sound SoundData(Counter).ResourceNo
+                    AL Set Sound Looping SoundData(Counter).ResourceNo,1
+            ENDIF
+            
+            // Use update controller on fades/slides
+            Inc SND_UpdateController
+            If SND_UpdateController = SND_ControlFreq
+                
+                // Reset Update value
+                SND_UpdateController = 0
+                                    
+                // Update Target Volume
+                If SoundData(Counter).TargetVolume > SoundData(Counter).Volume then Inc SoundData(Counter).Volume
+                If SoundData(Counter).TargetVolume < SoundData(Counter).Volume then Dec SoundData(Counter).Volume
+                
+                // Update Target Speed
+                If SoundData(Counter).TargetSpeed > SoundData(Counter).Speed then Inc SoundData(Counter).Speed
+                If SoundData(Counter).TargetSpeed < SoundData(Counter).Speed then Dec SoundData(Counter).Speed
+            
+            EndIf
+            
+            // Apply all changes to the sound.
+            If SND_MuteSound = -1 then AL Set Sound Volume SoundData(Counter).ResourceNo, 0
+            If SND_MuteSound = 0 then AL Set Sound Volume SoundData(Counter).ResourceNo, SoundData(Counter).Volume
+            AL Set Sound Speed SoundData(Counter).ResourceNo, SoundData(Counter).Speed           
+                                
+    NEXT    
+    
+ENDFUNCTION
+
+Function SND_LoadSound(SoundFile$)
+// Load a sound from a file.
+    
+    UI_WriteLog(UI_Yellow,"Loading Sound File: <i>"+SoundFile$+"</i>.")
+    
+    // Create ouput variable
+    Local Result as Integer
+    
+    //If it does not exist exit before changing variables
+    If File Exist(SoundFile$) = 0
+        UI_WriteLog(UI_Red,"Could not find sound file: <i>"+SoundFile$+"</i> not found.")
+        Result = -1
+        ExitFunction
+    ENDIF
+    
+    // Increase Soundcount
+    Inc SND_SoundCount 
+    
+    // Create variables for loading
+    Result = res_grab(res_Sound)
+    SoundData(SND_SoundCount).ResourceNo = Result
+    
+    // Load the sound file
+    AL Load Sound SoundData(SND_SoundCount).ResourceNo, SoundFile$, 0
+    SoundData(SND_SoundCount).File = SoundFile$
+    
+    // Get default values for the sound file
+    SoundData(SND_SoundCount).Volume = AL Get Sound Volume(SoundData(SND_SoundCount).ResourceNo)
+    SoundData(SND_SoundCount).Speed = AL Get Sound Speed(SoundData(SND_SoundCount).ResourceNo)
+    SoundData(SND_SoundCount).TargetVolume = SoundData(SND_SoundCount).Volume
+    SoundData(SND_SoundCount).TargetSpeed = SoundData(SND_SoundCount).Speed
+                   
+ENDFUNCTION Result
+
+Function SND_DeleteSound(SoundNumber)
+// Unload a sound file.
+   
+    // Stop playing.
+    If Sound Playing(SoundNumber) = 1 then AL Stop Sound SoundNumber
+    
+    // Remove all variable references
+    res_free(SoundData(SoundNumber).ResourceNo, res_Sound) `ALSO DELETES SOUND!
+    SoundData(SoundNumber).ResourceNo = 0
+    SoundData(SoundNumber).Name = ""
+    SoundData(SoundNumber).File = "" 
+    SoundData(SoundNumber).Active = 0 
+    SoundData(SoundNumber).ToPlay = 0 
+    SoundData(SoundNumber).ToDelete = 0
+    SoundData(SoundNumber).ToStop = 0
+    SoundData(SoundNumber).Volume = 0
+    SoundData(SoundNumber).TargetVolume = 0
+    SoundData(SoundNumber).Speed = 0
+    SoundData(SoundNumber).TargetSpeed = 0
+    SoundData(SoundNumber).Looping = 0
+            
+ENDFUNCTION
+
+Function SND_GetSoundNumber(SoundNumber)
+
+    Local Result as Integer
+    
+    // If no sounds loaded
+    If SND_SoundCount = 0
+        Result = -1
+        ExitFunction
+    EndIf
+    
+    // Check the sound is loaded, and if it is playing, duplicate it 
+    For Counter = 1 to SND_SoundCount
+        // If a match found...
+        If SoundData(Counter).ResourceNo = SoundNumber
+            Result = Counter
+        // Do not find any more matches
+        ExitFunction
+        EndIf
+    NEXT 
+      
+ENDFUNCTION Result
+
+/////////////////////////////////////////////////////
+// USER COMMANDS
+/////////////////////////////////////////////////////
+
+Function PlaySound(SoundNumber)
+// Basic function for play sound
+
+    // Result, if new sound made.
+    Local Result as Integer
+    Result = 0
+
+    // If no sounds loaded quit
+    If SND_SoundCount = 0 then ExitFunction
+
+    // Check the sound is loaded, and if it is playing, duplicate it 
+    For Counter = 1 to SND_SoundCount
+        // If a match found...
+        If SoundData(Counter).ResourceNo = SoundNumber
+            // If the sound is not playing, set it to play.
+            If SoundData(Counter).Active = 0 and SoundData(Counter).ToPlay = 0
+                SoundData(Counter).ToPlay = 1
+                Result = SoundNumber
+            Else
+                // Load the sound again, and when it finishes delete it.
+                UI_WriteLog(UI_Yellow,"<i>Creating temporary duplicate sound file for dual-play.</i>")
+                NewSoundNo = SND_LoadSound(SoundData(Counter).File)
+                SoundData(NewSoundNo).ToPlay = 1
+                SoundData(NewSoundNo).ToDelete = 1
+                Result = NewSoundNo
+            EndIf
+        // Do not find any more matches
+        ExitFunction
+        EndIf
+    NEXT 
+    
+ENDFUNCTION Result
+
+Function LoopSound(SoundNumber)
+// Basic function for looping sound
+
+    // Result, if new sound made.
+    Local Result as Integer
+    Result = 0
+
+    // If no sounds loaded quit
+    If SND_SoundCount = 0 then ExitFunction
+
+    // Check the sound is loaded, and if it is playing, duplicate it 
+    For Counter = 1 to SND_SoundCount
+        // If a match found...
+        If SoundData(Counter).ResourceNo = SoundNumber
+            // If the sound is not playing, set it to play.
+            If SoundData(Counter).Active = 0
+                SoundData(Counter).ToPlay = 1
+                SoundData(Counter).Looping = 1
+                Result = SoundNumber
+            Else
+                // Load the sound again, and when it finishes delete it.
+                NewSoundNo = SND_LoadSound(SoundData(Counter).File)
+                SoundData(NewSoundNo).ToPlay = 1
+                SoundData(NewSoundNo).ToDelete = 1
+                SoundData(Counter).Looping = 1
+                Result = NewSoundNo
+            EndIf
+        // Do not find any more matches
+        ExitFunction
+        EndIf
+    NEXT Counter
+     
+ENDFUNCTION Result
+
+Function StopSound(SoundNumber)
+// Stop a sound from playing
+
+    // If no sounds loaded quit
+    If SND_SoundCount = 0 then ExitFunction
+    
+    // Check the sound exists and is playing
+    For Counter = 1 to SND_SoundCount
+        // If a match found...
+        If SoundData(Counter).ResourceNo = SoundNumber
+            // If the sound is playing, set it stop.
+            If SoundData(Counter).Active = 1
+                SoundData(SoundNumber).ToStop = 1             
+            EndIf
+        // Do not find any more matches
+        ExitFunction
+        EndIf
+    NEXT 
+    
+ENDFUNCTION
+
+Function MuteSound()
+// Allow ability to mute sounds
+
+    SND_MuteSound = -1  
+     
+ENDFUNCTION
+
+Function UnMuteSound()
+// Allow ability to unmute sounds
+
+    SND_MuteSound = 0  
+     
+ENDFUNCTION
+
+Function SetSoundVolume(SoundNumber, Volume)
+// Set volume of a sound
+
+    TempSound = SND_GetSoundNumber(SoundNumber)
+    SoundData(TempSound).Volume = Volume
+   
+EndFunction
+
+Function SetSoundVolumeTarget(SoundNumber, VolumeTarget)
+// Set target volume of a sound
+
+    TempSound = SND_GetSoundNumber(SoundNumber)
+    SoundData(TempSound).TargetVolume = VolumeTarget
+    
+EndFunction
+
+Function SetSoundSpeed(SoundNumber, Speed)
+// Set speed of a sound
+
+    TempSound = SND_GetSoundNumber(SoundNumber)
+    SoundData(TempSound).Speed = Speed
+    
+EndFunction
+
+Function SetSoundSpeedTarget(SoundNumber, SpeedTarget)
+// Set target speed of a sound
+
+    TempSound = SND_GetSoundNumber(SoundNumber)
+    SoundData(TempSound).TargetSpeed = SpeedTarget
+    
+EndFunction
+
+/////////////////////////////////////////////////////
+// TERMINATE
+/////////////////////////////////////////////////////
+
+Function SND_Terminate()
+    UI_WriteLog(UI_Yellow,"=== Terminating the sound module.")
+    
+    // Delete all existing sounds
+    For Counter = 1 to SND_SoundCount
+        // Ensure it exists and is not playing        
+        If AL Sound Exist(SoundData(Counter).ResourceNo) = 1         
+            If AL Get Sound Playing(SoundData(Counter).ResourceNo) = 1 then AL Stop Sound SoundData(Counter).ResourceNo
+            res_free(SoundData(Counter).ResourceNo,res_Sound)
+        EndIf        
+    NEXT
+    UI_WriteLog(UI_Green,"Removed " + Str$(SND_SoundCount) + " sound items.")
+    
+    // Wipe variables
+    Undim SoundData()
+    SND_SoundCount = 0
+    SND_MuteSound = 0
+    
+    UI_WriteLog(UI_Yellow,"=== Sound module terminated.")
+ENDFUNCTION
+
+/////////////////////////////////////////////////////
+// End of code.
+/////////////////////////////////////////////////////

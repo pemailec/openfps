@@ -401,7 +401,7 @@ Function UI_Init()
 	global UI_RenderTargetMEM
 	UI_RenderTarget=RES_grab(RES_image)
 	UI_RenderTargetMEM=RES_grab(RES_memblock)
-	ik create target image UI_RenderTarget,1024,768
+	ik create render target UI_RenderTarget,1024,768
 
 	
 // creates 8 blank ascii font
