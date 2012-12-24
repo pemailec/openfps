@@ -1,5 +1,0 @@
-name=Test
-music=1
-entityfile=media\maps\Test\entities.xml
-loadimage=media\maps\Test\loading.jpg
-mapfile=media\maps\Test\test.dbo

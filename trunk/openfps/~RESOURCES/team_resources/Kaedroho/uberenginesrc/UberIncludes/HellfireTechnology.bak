@@ -1,9 +1,0 @@
-REM HELLFIRE TECHNOLOGY INCLUDE BY KARL HOBLEY CREATED: 25th OCTOBER 2008
-
-function HT_ShowStartScreen(projectname$,year)
-hellfireimage=UberFile_ExtractImage(UberCore.mediafile,"HELLFIRELOGO.png")
-paste image hellfireimage,screen width()/2-image width(hellfireimage)/2,screen height()/2-image height(hellfireimage)/2
-UberUI_DrawText(screen width()/2,screen height()/2+image height(hellfireimage)/2+20,projectname$,1,rgb(255,255,255),UberCore.mainlayer)
-sync
-wait 10000
-endfunction

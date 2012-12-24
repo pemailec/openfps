@@ -1,2 +1,0 @@
-/openfps/~RESOURCES/:
-General resource folder for all various files not linked to or dependant on the main code.

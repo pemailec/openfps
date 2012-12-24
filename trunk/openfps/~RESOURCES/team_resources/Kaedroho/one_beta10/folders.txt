@@ -1,9 +1,0 @@
---As of UberEngine V0.04, this file is no longer used
-
-Folders_weapons="media/"
-Folders_images="media/"
-Folders_missions="media/"
-Folders_environments="media/"
-Folders_models="media/"
-Folders_sounds="media/"
-Folders_actors="media/"

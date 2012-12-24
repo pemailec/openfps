@@ -1,5 +1,0 @@
-2010 - Philip Lewis "Mobiius"
-
-Both objects have 44 faces
-
-Includes 2 objects. One with a chain link texture, and one with a barb wire texture. Both have transparency within the Png file.
