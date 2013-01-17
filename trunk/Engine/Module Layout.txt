@@ -12,5 +12,15 @@ Player
 Weapon
 Physics
 Effects
+Model
+Material
+Animation
 Audio
 AI
+
+Media folders:
+Scripts
+Sounds
+Images
+Materials
+Models
