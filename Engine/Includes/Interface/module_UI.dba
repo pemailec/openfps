@@ -1,87 +1,99 @@
-Rem ***** Included Source File *****
-/////////////////////////
-//
-// OpenFPS USER INTERFACE module
-//
-// Created by miso    
-//                           
-//
-/////////////////////////////////////////////////////
 remstart
-***** Included Source File *****
+//////////////////////////////////////////////////////////////
+//
+// OpenFPS USER INTERFACE MODULE
+// Created by miso
+// This stuff's genius.
+//
+//////////////////////////////////////////////////////////////
 
+//////////////////////////////////////////////////////////////
 ----- Changelog:
-(06/23/10) - miso     - Created
-                      - Implemented the basic text and bitmap font commands
-(06/26/10) - miso     - Implemented the Graphic Cursor commands
-(06/26/10) - miso     - Added Globals SyS_MouseMoveX, SyS_MouseMoveY
-(06/26/10) - miso     - Updated UI_Terminate() to clear the mouse image too
-(06/26/10) - miso     - Modified UI_Mousehandle() not to move cursor when faded out
-(06/27/10) - miso     - Added some basic debug commands for internal use, its works only 1 function deep yet,
-                        no need to bother with it.
-(06/27/10) - miso     - Added basic input commands and window commands.
-                        						Added console, can be called pressing TAB key.
-                        						Added 2 test console commands, show mouse, hide mouse.
-						(Be patient, I will add the comments soon, and reorganize the whole)
-(06/27/10) - miso     - Added new internal timer commands. (uses Ian's matrix1)
-                        Implementing the hard part, panel, button, checkbox, bar and slider gadgets. 
-                        UI_Init loads 2 sound for mouseover and mouseclick, setup the gadget commands
-                        UI_Handle now handles gadgets too.
-(06/30/10) - miso     - Removed a testbutton.                                    
-(07/01/10) - miso     - Adding 2 new function UI_EnableNonGuiMouse() and UI_DisableNonGuiMouse()
-                        Adding stamina bar update to UI_handle()
-(07/02/10) - miso     - Modified Code looks, hoping to be a bit more readable.
-                        If there are spelling mistakes in my comments, please feel free to correct them.
-                      - Added new command to delete a single gadget if exists. Nothing happens if theres no 
-                        such gadget.
-                      - Added new command to delete a single image. Will crash game if image is in use.
-(07/03/10) - miso     - Linked the the information window to the console bar.
-                      - Updated the function list
-                      - fixed a serious possible bug source. (correctly using grabbing resource for res_file now)
-(7/6/10)   - miso     - changed log commands to write .html format log
-(7/10/10)  - miso     - added 3 new mouse commands to solve gadget dragging artifacts.
-                        Dragging now works well using Chris's code.
-(7/20/10)  - thenerd  - Added sprites for lobby window, changed debug HTML file layout.
-(7/29/10)  - thenerd  - Removed unneeded menu code in UI_Handle(), fixed chat text layering.
-(8/13/10)  - thenerd  - Added close button.
+//////////////////////////////////////////////////////////////
 
+(06/23/10) - miso    - Created
+							- Implemented the basic text and bitmap font commands
+(06/26/10) - miso    - Implemented the Graphic Cursor commands
+(06/26/10) - miso    - Added Globals SyS_MouseMoveX, SyS_MouseMoveY
+(06/26/10) - miso    - Updated UI_Terminate() to clear the mouse image too
+(06/26/10) - miso    - Modified UI_Mousehandle() not to move cursor when faded out
+(06/27/10) - miso    - Added some basic debug commands for internal use, its works only 1 function deep yet,
+                       no need to bother with it.
+(06/27/10) - miso    - Added basic input commands and window commands.
+                     - Added console, can be called pressing TAB key.
+                     - Added 2 test console commands, show mouse, hide mouse.
+						   (Be patient, I will add the comments soon, and reorganize the whole)
+(06/27/10) - miso    - Added new internal timer commands. (uses Ian's matrix1)
+                     - Implementing the hard part, panel, button, checkbox, bar and slider gadgets. 
+                     - UI_Init loads 2 sound for mouseover and mouseclick, setup the gadget commands
+                     - UI_Handle now handles gadgets too.
+(06/30/10) - miso    - Removed a testbutton.                                    
+(07/01/10) - miso    - Adding 2 new function UI_EnableNonGuiMouse() and UI_DisableNonGuiMouse()
+                     - Adding stamina bar update to UI_handle()
+(07/02/10) - miso    - Modified Code looks, hoping to be a bit more readable.
+                     - If there are spelling mistakes in my comments, please feel free to correct them.
+                     - Added new command to delete a single gadget if exists. Nothing happens if theres no 
+                       such gadget.
+                     - Added new command to delete a single image. Will crash game if image is in use.
+(07/03/10) - miso    - Linked the the information window to the console bar.
+                     - Updated the function list
+                     - fixed a serious possible bug source. (correctly using grabbing resource for res_file now)
+(7/6/10)   - miso    - changed log commands to write .html format log
+(7/10/10)  - miso    - added 3 new mouse commands to solve gadget dragging artifacts.
+                       Dragging now works well using Chris's code.
+(7/20/10)  - thenerd - Added sprites for lobby window, changed debug HTML file layout.
+(7/29/10)  - thenerd - Removed unneeded menu code in UI_Handle(), fixed chat text layering.
+(8/13/10)  - thenerd - Added close button.
+(1/17/13)  - thenerd - Added commenting / formatting, cleaned up code.
+
+//////////////////////////////////////////////////////////////
 ----- To-Do:
+//////////////////////////////////////////////////////////////
+
 Comment the rest, create a tutorial how to build a menu system using these commands.
 
-
+//////////////////////////////////////////////////////////////
 ----- Purpose:
+//////////////////////////////////////////////////////////////
+
 Shows information on screen for players. Handle graphic fonts, mouse, buttons, sliders.
 Includes text, centertext, input, console and window functions.
 
-
+//////////////////////////////////////////////////////////////
 ----- Dependancies and Conflicts (IMPORTANT STUFF):
+//////////////////////////////////////////////////////////////
+
 Needs the free plugin Advanced Sprites.
 http://forum.thegamecreators.com/?m=forum_view&t=113378&b=5
 
 With the mouse commands, it also needs Ian's matrix utils too.
 http://forum.thegamecreators.com/?m=forum_view&t=85209&b=18
 
-
+//////////////////////////////////////////////////////////////
 ----- Conflicts
+//////////////////////////////////////////////////////////////
 
 SOLVED-
 Conflicts with the movement module, because mouse commands and movement module both use
 the mousemovex() and mousemovey() commands, and calling it clears the mousemove buffers.
 Need a Global variable, that knows who may control these commands first.
--------
 
+//////////////////////////////////////////////////////////////
 ----- Other Notes:
+//////////////////////////////////////////////////////////////
+
 Usage (IMPORTANT***):
 
 This module loads graphic fonts, can be used in any of the other modules. It does not load the usual media type
 like Db images, it handles its own resources. Variables here are hidden, no need to modify or watch them.
 
-
+//////////////////////////////////////////////////////////////
 ----- Function List:
+//////////////////////////////////////////////////////////////
 
 ----------MAIN  COMMANDS
 UI_Init()     - no parameters, start all gui functions
-UI_Handle()   - no parameters, handle all gui functions, must be before sync
+UI_Update()   - no parameters, handle all gui functions, must be before sync
 UI_Terminate()- no parameters, unload all gui media, free used arrays
 TerminateUI() - no params, just the same as before, made this one just to be similar to the other terminate functions
 
