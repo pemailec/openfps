@@ -61,7 +61,12 @@ Function SYS_Init():
 	
 	Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,Screen.AA,0
    if Screen.Fullscreen=1 then set window off
-	if Screen.Fullscreen=0 then set window on
+	If Screen.Fullscreen=0 Then Set Window On
+	
+	//center window
+	window = Get Dbpro Window ()
+	Position Window window,(desktop width()/2)-(GET WINDOW CLIENT width(window)/2),(desktop height()/2)-(GET WINDOW CLIENT HEIGHT(window)/2)
+
 	
 	//////////////////////////////////////
 	// Do standard Dbpro setup
