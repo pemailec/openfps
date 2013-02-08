@@ -11,6 +11,8 @@ main=Includes\Core\module_Core.dba
 include1=Includes\System\module_System.dba
 include2=Includes\Timer\module_Timer.dba
 include3=Includes\Interface\module_UI.dba
+include4=Includes\Interface\module_UI_console.dba
+include5=Includes\Input\module_Input.dba
 executable=OpenFPS.exe
 build type=exe
 

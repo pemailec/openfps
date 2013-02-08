@@ -1,0 +1,79 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - UI CONSOLE MODULE
+//  Concept and code by thenerd, Summer 2012!
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  UDTS
+//////////////////////////////////////////////////////////////
+
+Type t_Console
+	active as boolean
+	height As float
+	bgcolor As Integer
+	maxchatlines As Integer
+Endtype
+
+Type t_ConsoleLine
+	prefix as string
+	prefixcolormodifier As String
+	Messagetext As String
+	timestamp as integer
+endtype
+
+//////////////////////////////////////////////////////////////
+//  FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+Function UI_Console_Init():
+	Global Console As t_Console
+	Console.active=1
+	Console.height=160
+	Console.bgcolor=d3d_rgba(60,60,60,150)
+	Console.maxchatlines=Console.height/16
+	Dim Consolelines(8) As t_ConsoleLine
+	Global cursor_toggle As Integer
+	global input_toggler as boolean
+Endfunction
+
+Function UI_Console_AddLine(prefix as string, messagestring As string):
+	Array Delete Element Consolelines(),0
+	array insert at bottom ConsoleLines()
+	Consolelines(7).prefix=prefix
+	Consolelines(7).prefixcolormodifier="~b"
+	Consolelines(7).Messagetext=messagestring
+	Consolelines(7).timestamp=hitimer(1)
+Endfunction
+
+Function UI_Console_RunCMD(commandstring As string):
+	if len(commandstring)>3:
+	functionptr=Get Ptr To Function(commandstring)
+	if functionptr>0:
+		Call Function Ptr (functionptr)
+		UI_Console_AddLine("Engine",commandstring)
+	else:
+		UI_Console_AddLine("ERR","Command does not exist.")
+	Endif
+	endif
+endfunction
+
+Function UI_Console_Update():
+	If Keystate(15) And input_toggler=0 Then Console.active=1-Console.active:input_toggler=1:clear entry buffer
+	If Keystate(15)=0 Then input_toggler=0
+	
+	ui_putwindow(0-ui_mywindow.xwidth,0-(ui_mywindow.yrow*3),(Screen.Width/ui_mywindow.xwidth)+1,(Console.height/Ui_mywindow.yrow)+1)
+	If Console.active=1:
+		Console.height=clamp(Console.height+(20*TBM),0,200)
+		For i = 1 To 8:
+			UI_AlphaText(1,4,-200+Console.height+i*16,ConsoleLines(i-1).prefixcolormodifier+"["+Consolelines(i-1).prefix+"]~w "+ConsoleLines(i-1).Messagetext,250)
+		Next i
+		If Ticker(QtrSecondTicker) then cursor_toggle=1-cursor_toggle
+		If cursor_toggle=1 Then cursor$="_"
+		if cursor_toggle=0 then cursor$=" "
+		UI_AlphaText(1,4,-200+Console.height+9*16,"~rOPENFPS Console >>>~w "+currentinput$+cursor$,255)
+		if returnkey() then UI_Console_RunCMD(currentinput$):clear entry buffer
+	else:
+		Console.height=clamp(Console.height-(20*TBM),0,200)
+	Endif
+	`d3d_box 0,0,Screen.Width,Console.Height,Console.bgcolor
+Endfunction
