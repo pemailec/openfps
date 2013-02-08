@@ -188,7 +188,11 @@ UI_LoadAndSetMouseClickSND(snd$)         - Loads a sound for gadget mouseclick e
 UI_PlayMouseClickSND()                   - Plays mouseclick sound, and set some variables to disable 
                                            multiple clicks if we change gadgets on the background.
 remend
-`=========Constants=========`
+
+//////////////////////////////////////////////////////////////
+//----- Constants
+//////////////////////////////////////////////////////////////
+
 #Constant UI_False     = 0          :` mania
 #Constant UI_True      = 1          :` mania
 #Constant UI_Maxfonts  = 8          :` maximum fonts, that can be loaded, 8 should be more than enough
@@ -201,15 +205,15 @@ remend
 #Constant UI_YELLOW    = 2          :` debug message importance
 #Constant UI_GREEN     = 1          :` debug message importance
 #Constant UI_BLUE     = 0          :` debug message importance
-`===========================`
 
 #Constant UI_FADEIN 1
 #Constant UI_FADEOUT 2
 #Constant UI_NORMAL 0
 
+//////////////////////////////////////////////////////////////
+//----- Globals
+//////////////////////////////////////////////////////////////
 
-
-`==========Globals==========`
 Global UI_TempFileID            as Integer      : `for file resource
 //-----Display Globals
 Global UI_Display               as MyScreenType : `for basic display data
@@ -261,9 +265,11 @@ Global UI_MouseOverSND              as Integer  :` DBPro sound ID for mousover s
 Global UI_MouseClickSND             as Integer  :` DBPro sound ID for mouseclick sound   
 Global UI_GuiFaded                  as Boolean  :` 1 if we faded out all gui gadget, otherwise 0        
 Global UI_NonGuiMouseDisabled       as Boolean  :` true if we disabled the nongui mousemoves
-`===========================`
 
-`===========Types===========`
+//////////////////////////////////////////////////////////////
+//----- UDT Types
+//////////////////////////////////////////////////////////////
+
 //will hold basic ascii data for bitmap fonts
 Type MyStringmapType
    Ascii  	 as Byte                   : `ascii code table refined to the bitmap font image. Saves memory if remains byte.
@@ -291,8 +297,8 @@ Type MouseType
 	Hidden        as  Boolean          : `true if mouse is hidden     
 	X             as  Integer          : `mouse x coord    
 	Y             as  Integer          : `mouse y coord    
-	CurveX             as  Integer          : `mouse curve x coord    
-	CurveY             as  Integer          : `mouse curve y coord    
+	CurveX        As  Integer          : `mouse Curve X coord    
+	CurveY        As  Integer          : `mouse Curve Y coord    
 	Smooth        as  Boolean          : `true=smoothmouse on
 	Smoothvalue   as  Integer          : `smoothing value 
 	XMoveBuffer   as  Integer          : `smooth puffer                                   
@@ -385,7 +391,6 @@ Type t_GlobalFadeManager
 	target as byte
 Endtype
 
-
 //--Will hold the gadget image's pointers
 Type MyGuiImageType
 	GadgetImagePointer      as Integer    :` advanced sprite pointers to gadget images             
@@ -401,9 +406,11 @@ Type MytextoutputType
 	Title            		as   String   :` Text
 EndType
 `--------------------------------------------------------------------------------------------------------------------
-`===========================`
 
-`=========Functions=========`
+//////////////////////////////////////////////////////////////
+//----- Functions
+//////////////////////////////////////////////////////////////
+
 /////////////////////////////////////////////////////
 //MAIN COMMANDS
 /////////////////////////////////////////////////////
@@ -416,6 +423,7 @@ Function UI_Init()
 //***************************************************************************************
 
 // Start Debugmode
+	UI_Console_Init()
 	UI_StartDebugmode(UI_LogON)    :`change parameter to UI_Logon to do logfile
 	UI_WriteLog(UI_Green,"=== Starting to initiate User Interface module.")
 // Setup basic data
@@ -435,6 +443,13 @@ Function UI_Init()
 	UI_RenderTargetMEM=reserve free memblock()
 	ik create render target UI_RenderTarget,1024,768
 
+	Global UI_featherimage As Integer
+	UI_featherimage = reserve free image()
+	Load Image "Media\Images\Interface\feather.png",UI_featherimage
+	
+	Global UI_bgimage As Integer
+	UI_bgimage = reserve free image()
+	Load Image "Media\Images\Interface\camo.jpg",UI_bgimage
 	
 	UI_WriteLog(UI_Yellow,"// ui // line 427")
 // creates 8 blank ascii font
@@ -495,10 +510,21 @@ Function UI_Init()
 	UI_FadeManager.state=UI_NORMAL
 	UI_FadeManager.current=0
 	
+	
 // Disable escapekey
 	Disable Escapekey
 	UI_WriteLog(UI_Green,"=== User Interface module succesfully initialized")
 Endfunction
+
+Function UI_DrawBackground():
+	//draw a background
+	`d3d_box 0,0,Screen.Width,Screen.Height,rgb(128,128,128)
+	For x = 0 To (Screen.Width/512)+1:
+		For y = 0 To (Screen.Height/512)+1:
+			paste image UI_bgimage,x*512,y*512
+		Next y
+	Next x
+endfunction
 
 function AddDiffuseManager(Gadgetname as string):
 	
@@ -590,8 +616,10 @@ Function UI_Update()
 	Endselect
 	If Temp_AlphaSlider>0 Then D3d_Box 0,0,ScreenWidth,ScreenHeight,D3d_Rgba(0,0,0,Temp_AlphaSlider)
 	
+	UI_Console_Update()
 //-Handle all the mouse
 	UI_HandleMouse()
+	
 	
 //-Do Debug
 	if DebugScreen=1:
@@ -606,7 +634,7 @@ Function UI_Update()
 // Update staminabar
 	UI_SetGadgetValue("UI_stamina",Floor(PLR_Curstam/2.0)-1)
 	UI_SetGadgetValue("UI_fatigue",50-Floor(PLR_Curstam/2.0)-1)
-
+	
 
 //- If pressed esc then quit
 	`If Keystate(1)=1 then SyS_Event_Terminate=1
@@ -3441,6 +3469,7 @@ Local var_colorizer$  as string
 		Endif
 	Endif
 	`AddtoDisplay("~pLOGTEXT~w ",param_log$)
+	UI_Console_AddLine("UI",param_log$)
 EndFunction
 
 

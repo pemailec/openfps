@@ -13,43 +13,83 @@
 //////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////
+// Setup program chunks
+// This serves as organization. Each chunk is a list of functions.
+// The function CORE_Run_Chunk() will run the list of functions
+// within the specified chunk. In the future, options will be
+// created allowing a function chunk to be run in multithreaded
+// or debug mode.
+//////////////////////////////////////////////////////////////
+
+Dim Chunk_Init() as string
+Dim Chunk_Update() as string
+Dim Chunk_Terminate() As String
+
+Global Chunk_Init_PTR as dword : Chunk_Init_PTR = get arrayptr(Chunk_Init()) : unlink array Chunk_Init()
+Global Chunk_Update_PTR as dword : Chunk_Update_PTR = get arrayptr(Chunk_Update()) : unlink array Chunk_Update()
+global Chunk_Terminate_PTR as dword : Chunk_Terminate_PTR = get arrayptr(Chunk_Terminate()) : unlink array Chunk_Terminate()
+
+Chunk_Init_PTR = CORE_Chunk_Add(Chunk_Init_PTR,"SYS_Init")
+Chunk_Init_PTR = CORE_Chunk_Add(Chunk_Init_PTR,"TBM_Init")
+Chunk_Init_PTR = CORE_Chunk_Add(Chunk_Init_PTR,"UI_Init")
+Chunk_Init_PTR = CORE_Chunk_Add(Chunk_Init_PTR,"IO_Input_Init")
+
+Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"TBM_Update")
+Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"UI_DrawBackground")
+Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"IO_Input_Update")
+Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"UI_Update")
+Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"SYS_Sync")
+
+Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"TBM_Terminate")
+Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"UI_Terminate")
+Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"SYS_Terminate")
+
+//////////////////////////////////////////////////////////////
 // Init
 //////////////////////////////////////////////////////////////
 
-//Init modules. See function at bottom of file.
-OpenFPS_Init()
+//runs the init set of functions
+CORE_Chunk_Run(Chunk_Init_PTR)
 
 //////////////////////////////////////////////////////////////
 // Main loop
 //////////////////////////////////////////////////////////////
 
 Do
-	TBM_Update()
-	UI_Update()
-	SYS_Sync()
-	if escapekey() then exit
+	//runs the update set of functions
+	CORE_Chunk_Run(Chunk_Update_PTR)
 loop
 
 //////////////////////////////////////////////////////////////
 // Terminate
 //////////////////////////////////////////////////////////////
 
-TBM_Terminate()
-UI_Terminate()
-SYS_Terminate()
-End
+//runs the terminate set of functions and then exits
+CORE_Chunk_Run(Chunk_Terminate_PTR) : End
 
 //////////////////////////////////////////////////////////////
-// Functions
+// CHUNK Functions
 //////////////////////////////////////////////////////////////
 
-Function OpenFPS_Init():
-	SYS_Init()
-	TBM_Init()
-	UI_Init()
-Endfunction
+Function CORE_Chunk_Add(chunkptr As dword,functionname as string):
+	local newchunkptr as dword
+   local dim temp_chunk() as string
+   Link Array temp_chunk(),chunkptr
+	Array Insert At Bottom temp_chunk()
+	newchunkptr = get arrayptr(temp_chunk())
+	temp_chunk()=functionname
+   unlink array temp_chunk()
+Endfunction newchunkptr
 
-Function OpenFPS_Terminate():
+Function CORE_Chunk_Run(chunkptr As dword):
+   Local Dim temp_chunk() As String
+   Link Array temp_chunk(),chunkptr
+	For func = 0 To Array Count(temp_chunk()):
+		//execute function string for Chunk(func)
+		Call Function Ptr (Get Ptr To Function(temp_chunk(func)))
+	Next func
+   unlink array temp_chunk()
+   Undim temp_chunk()
 endfunction
 
 //////////////////////////////////////////////////////////////
