@@ -1619,13 +1619,13 @@ If UI_Mouse.Initialized = UI_True
 			If  UI_Mouse.smooth              = UI_False
 				
 				If UI_Mouse.reposXoffset= UI_False 
-					UI_Mouse.x                   = UI_Mouse.X+SyS_MouseMoveX
+					UI_Mouse.x                   = UI_Mouse.X+(SyS_MouseMoveX*1.2)
 				Else
 					UI_Mouse.reposXOffset = UI_False
 				Endif
 				
 				If UI_Mouse.reposYoffset= UI_False 
-					UI_Mouse.y                   = UI_Mouse.Y+SyS_MouseMoveY
+					UI_Mouse.y                   = UI_Mouse.Y+(SyS_MouseMoveY*1.2)
 				Else
 					UI_Mouse.reposYOffset = UI_False
 				Endif

@@ -79,7 +79,8 @@ Function SYS_Init():
 	// Do plugin setup
 	//////////////////////////////////////
 	
-	d3d_init
+	D3d_Init
+	d3d_font 1,"16",24,1,0,1
 	
 Endfunction
 
@@ -89,6 +90,10 @@ Function SYS_Sync():
 	// Sync function. called once per loop.
 	// Modify to add sync-limiter.
 	//////////////////////////////////////
+	
+	D3d_Starttext
+	D3d_Text 1,screen.width/2,screen.height/2,1,"OpenFPS Engine: "+str$(screen fps())+" FPS"
+	D3d_Endtext
 	
 	Sync
 	
