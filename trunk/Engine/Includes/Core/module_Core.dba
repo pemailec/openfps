@@ -29,14 +29,16 @@ Global Chunk_Init_PTR as dword : Chunk_Init_PTR = get arrayptr(Chunk_Init()) : u
 Global Chunk_Update_PTR as dword : Chunk_Update_PTR = get arrayptr(Chunk_Update()) : unlink array Chunk_Update()
 global Chunk_Terminate_PTR as dword : Chunk_Terminate_PTR = get arrayptr(Chunk_Terminate()) : unlink array Chunk_Terminate()
 
-Chunk_Init_PTR = CORE_Chunk_Add(Chunk_Init_PTR,"SYS_Init")
-Chunk_Init_PTR = CORE_Chunk_Add(Chunk_Init_PTR,"TBM_Init")
-Chunk_Init_PTR = CORE_Chunk_Add(Chunk_Init_PTR,"UI_Init")
-Chunk_Init_PTR = CORE_Chunk_Add(Chunk_Init_PTR,"IO_Input_Init")
+Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"SYS_Init")
+Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"TBM_Init")
+Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"UI_Init")
+`Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"UI_Menu_Init")
+Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"IO_Input_Init")
 
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"TBM_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"UI_DrawBackground")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"IO_Input_Update")
+`Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"UI_Menu_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"UI_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"SYS_Sync")
 
