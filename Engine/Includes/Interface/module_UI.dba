@@ -596,6 +596,7 @@ Function UI_Update()
 	`UI_SUB_HandlecreditsDrag()
 
 // UI fader (credits mostly)
+	`if UI_FadeManager.target=MenuUI.mode then UI_FadeManager.state=UI_NORMAL
 	local Temp_AlphaSlider as float
 	Select UI_FadeManager.state
 		Case UI_FADEIN
@@ -603,7 +604,7 @@ Function UI_Update()
 			Temp_AlphaSlider=Clamp(UI_FadeManager.current,0,255)
 			If UI_FadeManager.current>255:
 				UI_FadeManager.state=UI_FADEOUT
-				`UI_Menu_SetMode(UI_FadeManager.target)
+				UI_Menu_SetMode(UI_FadeManager.target)
 			endif
 		Endcase
 		Case UI_FADEOUT
@@ -612,9 +613,10 @@ Function UI_Update()
 			if UI_FadeManager.current<0 then UI_FadeManager.state=UI_NORMAL
 		Endcase
 		Case UI_NORMAL
+			`Temp_AlphaSlider=0
 		endcase
 	Endselect
-	If Temp_AlphaSlider>0 Then D3d_Box 0,0,ScreenWidth,ScreenHeight,D3d_Rgba(0,0,0,Temp_AlphaSlider)
+	If Temp_AlphaSlider>0 Then D3d_Box 0,0,Screen.Width,Screen.Height,D3d_Rgba(0,0,0,Temp_AlphaSlider)
 	
 	UI_Console_Update()
 //-Handle all the mouse
@@ -3108,8 +3110,8 @@ If UI_GuiInitialized=UI_True
 	UI_SetDebugPosition("UI_HandleGadgets()","module_ui.dba")
 		UI_CheckDxSprites()
 		
+		UI_MouseOveredGadget$=" "
 		If UI_Gadgetnumbers>0
-			UI_MouseOveredGadget$=" "
 				for x=1 to UI_GadgetNumbers
 					if UI_Gadgets(x).Target > 0:
 						draw to image UI_Gadgets(x).Target

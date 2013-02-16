@@ -28,6 +28,7 @@ Type t_Screen
 	Vsync As Boolean
 	Fullscreen As Boolean
 	AA As Integer
+	ShowFPS as boolean
 endtype
 
 //////////////////////////////////////////////////////////////
@@ -80,7 +81,9 @@ Function SYS_Init():
 	//////////////////////////////////////
 	
 	D3d_Init
-	d3d_font 1,"16",24,1,0,1
+	D3d_Font 1,"16",24,1,0,1
+	
+	global TERMINATE_FLAG as boolean
 	
 Endfunction
 
@@ -91,13 +94,19 @@ Function SYS_Sync():
 	// Modify to add sync-limiter.
 	//////////////////////////////////////
 	
+	if Screen.ShowFPS:
 	D3d_Starttext
-	D3d_Text 1,screen.width/2,screen.height/2,1,"OpenFPS Engine: "+str$(screen fps())+" FPS"
+	d3d_text 1,Screen.Width-10,10,2,str$(screen fps())
 	D3d_Endtext
+	Endif
 	
 	Sync
 	
 Endfunction
+
+Function Sys_ToggleFPS():
+	Screen.ShowFPS = 1 - Screen.ShowFPS
+endfunction
 
 Function SYS_Terminate():
 Endfunction

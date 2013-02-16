@@ -46,7 +46,8 @@ Function UI_Console_AddLine(prefix as string, messagestring As string):
 Endfunction
 
 Function UI_Console_RunCMD(commandstring As string):
-	if len(commandstring)>3:
+	If Len(commandstring)>3:
+	commandstring=remove$(commandstring,chr$(13))
 	functionptr=Get Ptr To Function(commandstring)
 	if functionptr>0:
 		Call Function Ptr (functionptr)
@@ -77,3 +78,15 @@ Function UI_Console_Update():
 	Endif
 	`d3d_box 0,0,Screen.Width,Console.Height,Console.bgcolor
 Endfunction
+
+//////////////////////////////////////////////////////////////
+//  CONSOLE FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+Function quit():
+	TERMINATE_FLAG = 1
+Endfunction
+
+//////////////////////////////////////////////////////////////
+//  End of code.
+//////////////////////////////////////////////////////////////

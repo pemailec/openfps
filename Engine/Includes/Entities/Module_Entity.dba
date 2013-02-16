@@ -1,0 +1,471 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - ENTITY MODULE
+//  Concept and code by thenerd, Summer 2012!
+//////////////////////////////////////////////////////////////
+
+type ArrayPTR
+    arraysize as integer
+    ptr as dword
+endtype
+
+type EntReference
+    name as string
+    attributes as arrayptr
+    values as arrayptr
+endtype
+
+function EntInit():
+    //Init entity system
+    global NumEntities
+    dim Entities() as EntReference
+ENDFUNCTION
+
+function DeleteAllEntities():
+    for i = 0 to NumEntities-1:
+        local dim tempattributes() as string
+        local dim tempvalues() as string
+        link array tempattributes(),Entities(i).attributes.ptr
+        link array tempvalues(),Entities(i).values.ptr
+        undim tempattributes()
+        undim tempvalues()
+        Entities(i).attributes.ptr=0
+        Entities(i).values.ptr=0
+        clear array item Entities(),i
+        array delete element Entities(),i
+        dec NumEntities,1
+    next i
+	 undim Entities()
+    NumEntities=0
+	 EntInit()
+ENDFUNCTION
+
+function GetNumEntities():
+    //get number of entities
+ENDFUNCTION NumEntities
+
+function EntAdd(name as string):
+    //Add entity
+    array insert at bottom Entities()
+    Entities().name = name
+    
+    local dim tempattributes(32) as string : Entities().attributes.ptr = get arrayptr(tempattributes())
+    local dim tempvalues(32) as string : Entities().values.ptr = get arrayptr(tempvalues())
+    Entities().attributes.arraysize = 0
+    Entities().values.arraysize = 0
+    unlink array tempattributes()
+    unlink array tempvalues()
+    undim tempattributes()
+    undim tempvalues()
+    
+    inc NumEntities,1
+ENDFUNCTION
+
+function EntDelete(name as string):
+    //Delete entity
+    for i = 0 to NumEntities-1:
+        if Entities(i).name = name:
+            local dim tempattributes() as string
+            local dim tempvalues() as string
+            link array tempattributes(),Entities(i).attributes.ptr
+            link array tempvalues(),Entities(i).values.ptr
+            undim tempattributes()
+            undim tempvalues()
+            Entities(i).attributes.ptr=0
+            Entities(i).values.ptr=0
+            clear array item Entities(),i
+            array delete element Entities(),i
+            dec NumEntities,1
+        endif
+    next i
+ENDFUNCTION
+
+function GetEntExist(name as string):
+    local return_exist as boolean : return_exist = 0
+    //get entity id
+    for i = 0 to NumEntities-1:
+        if Entities(i).name = name then return_exist = 1
+    next i
+endfunction return_exist
+
+function EntGetName(id):
+    //Get entity name
+   local name as string
+   name = Entities(id).name
+ENDFUNCTION name
+
+function EntSetName(id,new_name as string):
+    //set entity name
+    Entities(id).name = new_name
+ENDFUNCTION
+
+function EntGetReference(name as string):
+    local return_reference as integer
+    //get entity id
+    for i = 0 to NumEntities-1:
+        if Entities(i).name = name then return_reference = i
+    next i
+ENDFUNCTION return_reference
+
+function EntAddAttribute(id,attribute_name as string, attribute_value as string):
+    // add attribute to entity
+    local dim tempattributes() as string
+    local dim tempvalues() as string
+    
+    link array tempattributes(),Entities(id).attributes.ptr
+    link array tempvalues(),Entities(id).values.ptr
+    
+    `array insert at bottom tempattributes()
+    `array insert at bottom tempvalues()
+    tempattributes(Entities(id).attributes.arraysize)=attribute_name
+    tempvalues(Entities(id).values.arraysize)=attribute_value
+    inc Entities(id).attributes.arraysize,1
+    inc Entities(id).values.arraysize,1
+    
+    unlink array tempattributes()
+    unlink array tempvalues()
+    undim tempattributes()
+    undim tempvalues()
+ENDFUNCTION
+
+function EntSetAttribute(id, attribute_name as string, attribute_value as string):
+    // set entity attribute
+    local dim tempattributes() as string
+    local dim tempvalues() as string
+    link array tempattributes(),Entities(id).attributes.ptr
+    link array tempvalues(),Entities(id).values.ptr
+    
+    `array insert at bottom tempattributes()
+    for i = 0 to Entities(id).attributes.arraysize-1:
+        if tempattributes(i)=attribute_name:
+            tempvalues(i)=attribute_value
+        endif
+    next i
+    
+    unlink array tempattributes()
+    unlink array tempvalues()
+    undim tempattributes()
+    undim tempvalues()
+ENDFUNCTION
+
+function Ent_GetExists(name as string):
+    local returnint as integer
+    //get entity id
+    for i = 0 to NumEntities-1:
+        if Entities(i).name = name then returnint = 1
+    next i
+ENDFUNCTION returnint
+
+function Ent_GetInt(id, attribute_name as string):
+    local returnint as integer
+    returnint=val(EntGetAttribute(id,attribute_name))
+ENDFUNCTION returnint
+
+function Ent_GetDword(id, attribute_name as string):
+    local returndword as dword
+    returndword=val(EntGetAttribute(id,attribute_name))
+ENDFUNCTION returndword
+
+function Ent_GetFloat(id, attribute_name as string):
+    local returnfloat as float
+    returnfloat=val(EntGetAttribute(id,attribute_name))
+ENDFUNCTION returnfloat
+
+function EntGetAttribute(id, attribute_name as string):
+    // get entity attribute
+    local dim tempattributes() as string
+    local dim tempvalues() as string
+    link array tempattributes(),Entities(id).attributes.ptr
+    link array tempvalues(),Entities(id).values.ptr
+    local return_string as string : return_string = "0"
+    
+    for i = 0 to Entities(id).attributes.arraysize-1:
+        if tempattributes(i)=attribute_name:
+            return_string = tempvalues(i)
+        endif
+    next i
+    
+    unlink array tempattributes()
+    unlink array tempvalues()
+    undim tempattributes()
+    undim tempvalues()
+ENDFUNCTION return_string
+
+function EntUpdate():
+    //update entity system
+	 EntHandleEntities()
+	 
+	y=60 : x= 10
+	 `UI_Text(1,x,y,"OpenFPS Entities - "+str$(NumEntities)+" Current") : y=y+12
+	
+    for i = 0 to NumEntities-1:
+    Entityname$=Entities(i).name
+    Entityptr$=str$(Entities(i).attributes.ptr)
+	entitytext$=""
+	if Entities(i).attributes.arraysize>0:
+		 // list entity attributes
+		 local dim tempattributes() as string
+		 local dim tempvalues() as string
+		 link array tempattributes(),Entities(i).attributes.ptr
+		 link array tempvalues(),Entities(i).values.ptr
+		 for ii = 0 to Entities(i).attributes.arraysize-1:
+			  if array index valid(tempattributes(ii)):
+			  entitytext$=entitytext$+tempattributes(ii)+"="+tempvalues(ii)+";"
+			  endif
+		 next ii
+		 
+		 unlink array tempattributes()
+		 unlink array tempvalues()
+		 undim tempattributes()
+		 undim tempvalues()  
+    endif
+	 `UI_Text(1,x,y,str$(i)+") "+Entityname$+", values "+entitytext$) : y=y+12
+    next i
+ENDFUNCTION
+
+function EntHandleEntities():
+	//handle some entities
+	// 3d / engine entities handled in module_engine!!
+	for i=0 to NumEntities-1:
+		type_attrib$="null"
+		type_attrib$=EntGetAttribute(i,"type")
+		//moved to engine
+		Select type_attrib$
+		endselect
+	next i
+Endfunction
+
+//////////////////////////////////////////////////////////////////////////
+// server instance of entity module
+// does all the same thing, but this is on the server side
+// this and the networking module will allow syncing between a server-side
+// entity system and a client-side entity system. essential for multiplayer!
+// just adds the SV_ prefix to everything. Use these commands for server!
+//////////////////////////////////////////////////////////////////////////
+
+
+function SV_EntInit():
+    //Init entity system
+    global SV_NumEntities
+    dim SV_Entities() as EntReference
+ENDFUNCTION
+
+function SV_DeleteAllEntities():
+    for i = 0 to SV_NumEntities-1:
+        local dim SV_tempattributes() as string
+        local dim SV_tempvalues() as string
+        link array SV_tempattributes(),SV_Entities(i).attributes.ptr
+        link array SV_tempvalues(),SV_Entities(i).values.ptr
+        undim SV_tempattributes()
+        undim SV_tempvalues()
+        SV_Entities(i).attributes.ptr=0
+        SV_Entities(i).values.ptr=0
+        clear array item SV_Entities(),i
+        array delete element SV_Entities(),i
+        dec SV_NumEntities,1
+    next i
+	 undim SV_Entities()
+    SV_NumEntities=0
+	 SV_EntInit()
+	 `NetworkAddCacheElement(SERVER_FUNC_CLEARALL,"","","")
+ENDFUNCTION
+
+function SV_GetNumEntities():
+    //get number of entities
+ENDFUNCTION SV_NumEntities
+
+function SV_EntAdd(name as string):
+    //Add entity
+    array insert at bottom SV_Entities()
+    SV_Entities().name = name
+    
+    local dim SV_tempattributes(32) as string : SV_Entities().attributes.ptr = get arrayptr(SV_tempattributes())
+    local dim SV_tempvalues(32) as string : SV_Entities().values.ptr = get arrayptr(SV_tempvalues())
+    SV_Entities().attributes.arraysize = 0
+    SV_Entities().values.arraysize = 0
+    unlink array SV_tempattributes()
+    unlink array SV_tempvalues()
+    undim SV_tempattributes()
+    undim SV_tempvalues()
+   
+    Inc SV_NumEntities,1
+	 `NetworkAddCacheElement(SERVER_FUNC_ADDENT,name,"","")
+ENDFUNCTION
+
+function SV_EntDelete(name as string):
+    //Delete entity
+    for i = 0 to SV_NumEntities-1:
+        if SV_Entities(i).name = name:
+            local dim SV_tempattributes() as string
+            local dim SV_tempvalues() as string
+            link array SV_tempattributes(),SV_Entities(i).attributes.ptr
+            link array SV_tempvalues(),SV_Entities(i).values.ptr
+            undim SV_tempattributes()
+            undim SV_tempvalues()
+            SV_Entities(i).attributes.ptr=0
+            SV_Entities(i).values.ptr=0
+            clear array item SV_Entities(),i
+            array delete element SV_Entities(),i
+            Dec SV_NumEntities,1
+				`NetworkAddCacheElement(SERVER_FUNC_DELENT,name,"","")
+        endif
+    next i
+ENDFUNCTION
+
+function SV_GetEntExist(name as string):
+    local return_exist as boolean : return_exist = 0
+    //get entity id
+    for i = 0 to SV_NumEntities-1:
+        if SV_Entities(i).name = name then return_exist = 1
+    next i
+endfunction return_exist
+
+function SV_EntGetName(id):
+    //Get entity name
+   local name as string
+   name = SV_Entities(id).name
+ENDFUNCTION name
+
+function SV_EntSetName(id,new_name as string):
+    //set entity name
+    SV_Entities(id).name = new_name
+ENDFUNCTION
+
+function SV_EntGetReference(name as string):
+    local return_reference as integer
+    //get entity id
+    for i = 0 to SV_NumEntities-1:
+        if SV_Entities(i).name = name then return_reference = i
+    next i
+ENDFUNCTION return_reference
+
+function SV_EntAddAttribute(id,attribute_name as string, attribute_value as string):
+    // add attribute to entity
+    local dim SV_tempattributes() as string
+    local dim SV_tempvalues() as string
+    
+    link array SV_tempattributes(),SV_Entities(id).attributes.ptr
+    link array SV_tempvalues(),SV_Entities(id).values.ptr
+    
+    `array insert at bottom tempattributes()
+    `array insert at bottom tempvalues()
+    SV_tempattributes(SV_Entities(id).attributes.arraysize)=attribute_name
+    SV_tempvalues(SV_Entities(id).values.arraysize)=attribute_value
+    inc SV_Entities(id).attributes.arraysize,1
+    inc SV_Entities(id).values.arraysize,1
+    
+    unlink array SV_tempattributes()
+    unlink array SV_tempvalues()
+    undim SV_tempattributes()
+    Undim SV_tempvalues()
+	 `NetworkAddCacheElement(SERVER_FUNC_ADDENTATTRIB,SV_EntGetname(id),attribute_name, attribute_value)
+ENDFUNCTION
+
+function SV_EntSetAttribute(id, attribute_name as string, attribute_value as string):
+    // set entity attribute
+    local dim SV_tempattributes() as string
+    local dim SV_tempvalues() as string
+    link array SV_tempattributes(),SV_Entities(id).attributes.ptr
+    link array SV_tempvalues(),SV_Entities(id).values.ptr
+    
+    `array insert at bottom tempattributes()
+    for i = 0 to SV_Entities(id).attributes.arraysize-1:
+        if SV_tempattributes(i)=attribute_name:
+            SV_tempvalues(i)=attribute_value
+        endif
+    next i
+    
+    unlink array SV_tempattributes()
+    unlink array SV_tempvalues()
+    undim SV_tempattributes()
+    Undim SV_tempvalues()
+	 `NetworkAddCacheElement(SERVER_FUNC_SETENT,SV_EntGetname(id),attribute_name, attribute_value)
+ENDFUNCTION
+
+function SV_Ent_GetExists(name as string):
+    local returnint as integer
+    //get entity id
+    for i = 0 to SV_NumEntities-1:
+        if SV_Entities(i).name = name then returnint = 1
+    next i
+ENDFUNCTION returnint
+
+function SV_Ent_GetInt(id, attribute_name as string):
+    local returnint as integer
+    returnint=val(SV_EntGetAttribute(id,attribute_name))
+ENDFUNCTION returnint
+
+function SV_Ent_GetDword(id, attribute_name as string):
+    local returndword as dword
+    returndword=val(SV_EntGetAttribute(id,attribute_name))
+ENDFUNCTION returndword
+
+function SV_Ent_GetFloat(id, attribute_name as string):
+    local returnfloat as float
+    returnfloat=val(SV_EntGetAttribute(id,attribute_name))
+ENDFUNCTION returnfloat
+
+function SV_EntGetAttribute(id, attribute_name as string):
+    // get entity attribute
+    local dim SV_tempattributes() as string
+    local dim SV_tempvalues() as string
+    link array SV_tempattributes(),SV_Entities(id).attributes.ptr
+    link array SV_tempvalues(),SV_Entities(id).values.ptr
+    local return_string as string : return_string = "0"
+    
+    for i = 0 to SV_Entities(id).attributes.arraysize-1:
+        if SV_tempattributes(i)=attribute_name:
+            return_string = SV_tempvalues(i)
+        endif
+    next i
+    
+    unlink array SV_tempattributes()
+    unlink array SV_tempvalues()
+    undim SV_tempattributes()
+    undim SV_tempvalues()
+ENDFUNCTION return_string
+
+function SV_EntUpdate():
+    //update entity system
+	 SV_EntHandleEntities()
+	 
+	 //debug parts
+	 y=60 : x= 400
+	 UI_Text(1,x,y,"OpenFPS SV_Entities - "+str$(SV_NumEntities)+" Current") : y=y+12
+	
+    for i = 0 to SV_NumEntities-1:
+    Entityname$=SV_Entities(i).name
+    Entityptr$=str$(SV_Entities(i).attributes.ptr)
+	 entitytext$=""
+	if SV_Entities(i).attributes.arraysize>0:
+		 // list entity attributes
+		 local dim SV_tempattributes() as string
+		 local dim SV_tempvalues() as string
+		 link array SV_tempattributes(),SV_Entities(i).attributes.ptr
+		 link array SV_tempvalues(),SV_Entities(i).values.ptr
+		 for ii = 0 to SV_Entities(i).attributes.arraysize-1:
+			  if array index valid(SV_tempattributes(ii)):
+			  entitytext$=entitytext$+SV_tempattributes(ii)+"="+SV_tempvalues(ii)+";"
+			  endif
+		 next ii
+		 
+		 unlink array SV_tempattributes()
+		 unlink array SV_tempvalues()
+		 undim SV_tempattributes()
+		 undim SV_tempvalues()  
+    endif
+	UI_Text(1,x,y,str$(i)+") "+Entityname$+", values "+entitytext$) : y=y+12
+    next i
+Endfunction
+
+function SV_EntHandleEntities():
+	//handle some entities
+	// 3d / engine entities handled in module_engine!!
+	for i=0 to SV_NumEntities-1:
+		type_attrib$="null"
+		type_attrib$=SV_EntGetAttribute(i,"type")
+		Select type_attrib$
+		endselect
+	next i
+Endfunction
+
+
