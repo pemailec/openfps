@@ -3431,9 +3431,9 @@ var_time$=var_time$+"_"+var_hour$+"h "+var_minutes$+"m "+var_seconds$+" s.log"
 		var_time$="openfps_log.html"
   		If File Exist(var_time$) = UI_True Then Delete File var_time$
   		Open to Write UI_LogFileID,var_time$
-		Write String UI_LogfileID,"<html><body background="+chr$(34)+"media\textures\ui\camo.jpg"+chr$(34)+">"
-		Write String UI_LogfileID,"<img src="+chr$(34)+"media\textures\ui\logo.png"+chr$(34)+"alt="+chr$(34)+"OpenFPS"+chr$(34)+"><br><br>"
-		Write String UI_LogfileID,"<img src="+chr$(34)+"media\textures\ui\email000.png"+chr$(34)+"alt="+chr$(34)+"Debug File"+chr$(34)+"><u> OpenFps Logfile</u><br>"
+		Write String UI_LogfileID,"<html><body background="+chr$(34)+"media\images\interface\camo.jpg"+chr$(34)+">"
+		Write String UI_LogfileID,"<img src="+chr$(34)+"media\images\interface\logo.png"+chr$(34)+"alt="+chr$(34)+"OpenFPS"+chr$(34)+"><br><br>"
+		Write String UI_LogfileID,"<img src="+chr$(34)+"media\images\interface\email000.png"+chr$(34)+"alt="+chr$(34)+"Debug File"+chr$(34)+"><u> OpenFps Logfile</u><br>"
 		Write String UI_LogFileID,"<br>"
   	else
   		UI_Logmode   = UI_False
