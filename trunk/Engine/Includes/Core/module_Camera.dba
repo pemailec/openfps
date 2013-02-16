@@ -1,0 +1,155 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - INPUT MODULE
+//  Concept and code by thenerd, Summer 2012!
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  CONSTANTS
+//////////////////////////////////////////////////////////////
+
+#Constant CAM_FREE 1
+#Constant CAM_SPECTATOR 2
+#Constant CAM_PLAYER 3
+#Constant CAM_VEHICLE 4
+
+//////////////////////////////////////////////////////////////
+//  UDTS
+//////////////////////////////////////////////////////////////
+
+Type t_CameraVector
+	x As Float
+	y As Float
+	z As Float
+endtype
+
+Type t_Camera
+	id As Integer
+	Width As Integer
+	Height As Integer
+	Imageid As Integer
+	FOV as float
+	position As t_CameraVector
+	rotation As t_CameraVector
+Endtype
+
+Type t_PointCameraList
+	position As t_CameraVector
+	rotation As t_CameraVector
+	FOV As Float
+	name as string
+endtype
+
+//////////////////////////////////////////////////////////////
+//  FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+Function CameraSystem_Init():
+	UI_WriteLog(UI_GREEN,"Starting up camera system.")
+	dim CameraArray() As t_Camera
+	Global NumCameras As Integer
+	Global RootCamera As Integer : RootCamera = 0
+	Array Insert At Bottom CameraArray()
+	CameraArray(0).id = 0
+	CameraArray(0).width = Screen.Width
+	CameraArray(0).height = Screen.Height
+	CameraArray(0).FOV = 80 //test this later
+	CameraArray(0).imageid = reserve free image()
+	Set Camera To Image CameraArray(0).id,CameraArray(0).imageid,CameraArray(0).width,CameraArray(0).height
+	color backdrop CameraArray(0).id,rgb(255,255,0)
+	NumCameras = NumCameras + 1
+	
+	remstart
+	Global Skyboxcamera As Integer : Skyboxcamera = Camera_Make(Screen.Width,Screen.Height)
+	Camera_SetBackdrop(RootCamera,Camera_GetRenderImage(Skyboxcamera))
+	Camera_SetPosMatrix(SkyboxCamera,0,-10000,0)
+	remend
+	
+	Global CameraMode As Integer
+	CameraMode = CAM_SPECTATOR
+	Global NumSpectatorCameras As Integer
+	global CurSpectatorCamera as integer
+	dim SpectatorCameras() as t_PointCameraList
+	
+	Global SkyboxObject As Integer : SkyboxObject = reserve free object()
+	Global SkyboxImage As Integer : SkyboxImage = reserve free image()
+	Global SkyboxShader As Integer : SkyboxShader = Reserve Free Effect()
+	
+	make object sphere SkyBoxObject,-1000,5,5
+	Load Image "Media\Materials\Cubemaps\Cube0.dds",SkyboxImage,2
+   load effect "Media\Shaders\SkyBox.fx",SkyboxShader,0
+	texture object SkyBoxObject,0,SkyboxImage
+	Set Object Effect SkyboxObject,SkyboxShader
+Endfunction
+
+Function ClearSpectatorArray():
+	Clear Array SpectatorCameras()
+	NumSpectatorCameras = 0
+	CurSpectatorCamera = 0
+endfunction
+
+Function CameraSystem_Update():
+	`Camera_SetRotMatrix(SkyboxCamera,CameraArray(RootCamera).rotation.x,CameraArray(RootCamera).rotation.y,CameraArray(RootCamera).rotation.z)
+	Position Object SkyboxObject,CameraArray(RootCamera).position.x,CameraArray(RootCamera).position.y,CameraArray(RootCamera).position.z
+	
+	if NumSpectatorCameras>0 and CameraMode = CAM_SPECTATOR:
+	//spectator cameras
+	CurSpectatorCamera = CurSpectatorCamera + __mouse.leftButton.clicked - __mouse.rightButton.clicked
+	If CurSpectatorCamera < 0 Then CurSpectatorCamera = NumSpectatorCameras - 1
+	If CurSpectatorCamera > NumSpectatorCameras - 1 Then CurSpectatorCamera = 0
+	Camera_SetPosMatrix(RootCamera,SpectatorCameras(CurSpectatorCamera).position.x,SpectatorCameras(CurSpectatorCamera).position.y,SpectatorCameras(CurSpectatorCamera).position.z)
+	Camera_SetRotMatrix(RootCamera,SpectatorCameras(CurSpectatorCamera).rotation.x,SpectatorCameras(CurSpectatorCamera).rotation.y,SpectatorCameras(CurSpectatorCamera).rotation.z)
+	Endif
+	
+	For cam = 0 To NumCameras - 1:
+		//handle data
+		Local locpos As t_CameraVector
+		Local locrot As t_CameraVector
+		locpos.x = CameraArray(cam).position.x
+		locpos.y = CameraArray(cam).position.y
+		locpos.z = CameraArray(cam).position.z
+		locrot.x = CameraArray(cam).rotation.x
+		locrot.y = CameraArray(cam).rotation.y
+		locrot.z = CameraArray(cam).rotation.z
+		Position Camera CameraArray(cam).id,locpos.x,locpos.y,locpos.z
+		Rotate Camera CameraArray(cam).id,locrot.x,locrot.y,locrot.z
+		set camera fov CameraArray(caM).id,CameraArray(cam).FOV
+	next cam
+Endfunction
+
+Function Camera_Make(width As integer, height as integer):
+	Local CurrentCamera As Integer
+	CurrentCamera = NumCameras
+	Array Insert At Bottom CameraArray()
+	CameraArray(NumCameras).id = Find Free Camera() : Make Camera CameraArray(NumCameras).id
+	CameraArray(NumCameras).width = width
+	CameraArray(NumCameras).height = height
+	CameraArray(NumCameras).FOV = 80 //test this later
+	CameraArray(NumCameras).imageid = reserve free image()
+	set camera to image CameraArray(NumCameras).id,CameraArray(NumCameras).imageid,width,height
+	NumCameras = NumCameras + 1
+Endfunction CurrentCamera
+
+Function Camera_SetPosMatrix(id as integer,x as float,y as float,z as float):
+	CameraArray(id).position.x = x
+	CameraArray(id).position.y = y
+	CameraArray(id).position.z = z
+Endfunction
+
+Function Camera_SetRotMatrix(id as integer,x as float,y as float,z as float):
+	CameraArray(id).rotation.x = x
+	CameraArray(id).rotation.y = y
+	CameraArray(id).rotation.z = z
+Endfunction
+
+Function Camera_GetRenderImage(id as integer):
+	Local renderimage As Integer
+	renderimage = CameraArray(id).imageid
+Endfunction renderimage
+
+Function Camera_SetBackdrop(id,image As integer):
+	texture backdrop CameraArray(id).id, image
+endfunction
+
+//////////////////////////////////////////////////////////////
+//  End of code
+//////////////////////////////////////////////////////////////

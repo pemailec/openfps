@@ -1,0 +1,24 @@
+<world>
+	<info>
+		<var name="name" value="Training"/>
+		<var name="description" value="This training ground serves as a tutorial for new players."/>
+	</info>
+	<spectatorcamera>
+		<name name="Sun View"/>
+		<position x="0" y="0" z="0"/>
+		<rotation x="-28" y="0" z="0"/>
+		<fov value="80"/>
+	</spectatorcamera>
+	<spectatorcamera>
+		<name name="Clouds"/>
+		<position x="0" y="0" z="0"/>
+		<rotation x="-28" y="90" z="0"/>
+		<fov value="80"/>
+	</spectatorcamera>
+	<spectatorcamera>
+		<name name="More Clouds"/>
+		<position x="0" y="0" z="0"/>
+		<rotation x="-28" y="180" z="0"/>
+		<fov value="80"/>
+	</spectatorcamera>
+</world>

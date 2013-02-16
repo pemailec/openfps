@@ -32,13 +32,18 @@ global Chunk_Terminate_PTR as dword : Chunk_Terminate_PTR = get arrayptr(Chunk_T
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"SYS_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"TBM_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"UI_Init")
-`Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"UI_Menu_Init")
+Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"UI_Menu_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"IO_Input_Init")
+Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"EntInit")
+Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"World_Init")
+Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"CameraSystem_Init")
 
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"TBM_Update")
-Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"UI_DrawBackground")
+`Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"UI_DrawBackground")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"IO_Input_Update")
-`Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"UI_Menu_Update")
+Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"World_Update")
+Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"CameraSystem_Update")
+Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"UI_Menu_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"UI_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"SYS_Sync")
 
@@ -60,6 +65,9 @@ CORE_Chunk_Run(Chunk_Init_PTR)
 Do
 	//runs the update set of functions
 	CORE_Chunk_Run(Chunk_Update_PTR)
+	
+	if TERMINATE_FLAG then exit
+	
 loop
 
 //////////////////////////////////////////////////////////////

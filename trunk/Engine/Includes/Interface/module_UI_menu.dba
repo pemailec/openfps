@@ -23,7 +23,16 @@
 //////////////////////////////////////////////////////////////
 
 #Constant M_MENU_MAIN 1
-#Constant M_MENU_SPLASH 2
+#Constant M_MENU_SINGLEPLAYER 2
+#Constant M_MENU_TRAININGPROMPT 3
+#Constant M_MENU_QUITPROMPT 4
+#Constant M_MENU_GENERICPROMPT 5
+#Constant M_MENU_OPTIONS 6
+#Constant M_MENU_CREDITS 7
+#Constant M_ENGINE_LOADING 8
+#Constant M_ENGINE_DEFAULT 9
+#Constant M_MENU_SPLASH 10
+#Constant M_MENU_JOINGAME 11
 
 //////////////////////////////////////////////////////////////
 //  UDTS
@@ -67,6 +76,7 @@ Function UI_Menu_CreateResources():
 	Load Image "Media\Images\Interface\feather.png",MenuImage8
 	Load Image "Media\Images\Interface\menu-background-metal.png",MenuImage9
 	Load Image "Media\Images\Interface\button-menu.png",MenuImage10
+	Load Image "Media\Images\Interface\menu-red-line.png",MenuImage13
 	
 	UI_WriteLog(UI_Yellow,"// MENU MODULE //: UI_Menu_CreateResources:Make Render Targets")
 	Ik Create Render Target MenuImage3,600,240,0
@@ -118,12 +128,13 @@ function UI_Menu_SetVariables():
 	Global MenuImage8 : MenuImage8 = Reserve Free Image()
 	global MenuImage9 : MenuImage9 = Reserve Free Image()
 	Global MenuImage10 : MenuImage10 = Reserve Free Image()
+	Global MenuImage13 : MenuImage13 = Reserve Free Image()
 	
 	global MapPlaceHolderImg : MapPlaceHolderImg = Reserve Free Image()
 	global FirstTimeTraining as boolean : FirstTimeTraining= 1
 	global ButtonSinCurve as float 		: ButtonSinCurve = 0
-	Global MenuSidebarHeight : MenuSidebarHeight = (ScreenHeight/UI_mywindow.yrow)+12
-	Global MenuSidebarWidth : MenuSidebarWidth = (ScreenWidth/UI_mywindow.yrow)+12
+	Global MenuSidebarHeight : MenuSidebarHeight = (Screen.Height/UI_mywindow.yrow)+12
+	Global MenuSidebarWidth : MenuSidebarWidth = (Screen.Width/UI_mywindow.yrow)+12
 	Global Menu3dCam As Integer			: Menu3dCam = Reserve Free Camera()
 	Global Menu3dImg As Integer 		: Menu3dImg = Reserve Free Image()
 	Global Menu3dObj As Integer : Menu3dObj = Reserve Free Object()
@@ -132,14 +143,33 @@ function UI_Menu_SetVariables():
 	Global loadingpercent As Integer : loadingpercent = 0
 	Global prompttextone$
 	global prompttexttwo$
-	global prompttitle$
-	
+	Global prompttitle$
+	Global joingamearg$
+
 	dim MenuUI_DrawCalls(1,64) as string
 	MenuUI_DrawCalls(0,M_MENU_MAIN)="UI_Render_M_MENU_MAIN"
+	MenuUI_DrawCalls(0,M_MENU_SINGLEPLAYER)="UI_Render_M_MENU_SINGLEPLAYER"
+	MenuUI_DrawCalls(0,M_MENU_TRAININGPROMPT)="UI_Render_M_MENU_TRAININGPROMPT"
+	MenuUI_DrawCalls(0,M_MENU_QUITPROMPT)="UI_Render_M_MENU_QUITPROMPT"
+	MenuUI_DrawCalls(0,M_MENU_GENERICPROMPT)="UI_Render_M_MENU_GENERICPROMPT"
+	MenuUI_DrawCalls(0,M_MENU_OPTIONS)="UI_Render_M_MENU_OPTIONS"
+	MenuUI_DrawCalls(0,M_MENU_CREDITS)="UI_Render_M_MENU_CREDITS"
+	MenuUI_DrawCalls(0,M_ENGINE_LOADING)="UI_Render_M_ENGINE_LOADING"
+	MenuUI_DrawCalls(0,M_ENGINE_DEFAULT)="UI_Render_M_ENGINE_DEFAULT"
 	MenuUI_DrawCalls(0,M_MENU_SPLASH)="UI_Render_M_MENU_SPLASH"
+	MenuUI_DrawCalls(0,M_MENU_JOINGAME)="UI_Render_M_MENU_JOINGAME"
 	
 	MenuUI_DrawCalls(1,M_MENU_MAIN)="UI_Render_U_MENU_MAIN"
+	MenuUI_DrawCalls(1,M_MENU_SINGLEPLAYER)="UI_Render_U_MENU_SINGLEPLAYER"
+	MenuUI_DrawCalls(1,M_MENU_TRAININGPROMPT)="UI_Render_U_MENU_TRAININGPROMPT"
+	MenuUI_DrawCalls(1,M_MENU_QUITPROMPT)="UI_Render_U_MENU_QUITPROMPT"
+	MenuUI_DrawCalls(1,M_MENU_GENERICPROMPT)="UI_Render_U_MENU_GENERICPROMPT"
+	MenuUI_DrawCalls(1,M_MENU_OPTIONS)="UI_Render_U_MENU_OPTIONS"
+	MenuUI_DrawCalls(1,M_MENU_CREDITS)="UI_Render_U_MENU_CREDITS"
+	MenuUI_DrawCalls(1,M_ENGINE_LOADING)="UI_Render_U_ENGINE_LOADING"
+	MenuUI_DrawCalls(1,M_ENGINE_DEFAULT)="UI_Render_U_ENGINE_DEFAULT"
 	MenuUI_DrawCalls(1,M_MENU_SPLASH)="UI_Render_U_MENU_SPLASH"
+	MenuUI_DrawCalls(1,M_MENU_JOINGAME)="UI_Render_U_MENU_JOINGAME"
 	
 	UI_WriteLog(UI_Green,"// MENU MODULE //: Menu Variables Setup")
 Endfunction
@@ -163,12 +193,57 @@ Endfunction
 
 Function UI_Menu_CheckGadgets():
 	If mouseclick()=1 and MenuUI.mouseclickflag=0
+		UI_WriteLog(UI_Yellow,"// MENU MODULE //: Clicked mouse on "+UI_MouseOveredGadget$)
 		Select UI_MouseOveredGadget$
+			Case "button_quit"
+				UI_Menu_SetMode(M_MENU_QUITPROMPT)
+			Endcase
+			Case "button_backtomain"
+				if MenuUI.mode=M_MENU_CREDITS:
+				UI_FadeManager.state=UI_FADEIN
+				UI_FadeManager.target=M_MENU_MAIN
+				else:
+				UI_Menu_SetMode(M_MENU_MAIN)
+				endif
+			Endcase
+			Case "button_confirmquit"
+				TERMINATE_FLAG = 1
+			Endcase
+			Case "button_singleplayer"
+				UI_Menu_SetMode(M_MENU_GENERICPROMPT)
+				prompttextone$="Sorry, singleplayer isn't ready in this version of OpenFPS."
+				prompttexttwo$="Try out multiplayer, and keep on the lookout for upcoming updates!"
+				prompttitle$="Singleplayer Not Available"
+			endcase
+			Case "button_multiplayer"
+				UI_Menu_SetMode(M_MENU_GENERICPROMPT)
+				prompttextone$="Sorry, multiplayer isn't ready in this version of OpenFPS."
+				prompttexttwo$="Try out singleplayer, and keep on the lookout for upcoming updates!"
+				prompttitle$="Multiplayer Not Available"
+			endcase
+			Case "button_options"
+				UI_Menu_SetMode(M_MENU_OPTIONS)
+			endcase
+			Case "button_training"
+				UI_Menu_SetMode(M_MENU_TRAININGPROMPT)
+			endcase
+			Case "button_yestrain"
+				`UI_Menu_SetMode(M_MENU_JOINGAME)
+				`joingamearg$ = "training"
+				UI_FadeManager.state=UI_FADEIN
+				UI_FadeManager.target=M_ENGINE_LOADING
+				WorldCacheTarget = "Media\Levels\training.xml"
+			Endcase
+			Case "button_credits"
+				UI_FadeManager.state=UI_FADEIN
+				UI_FadeManager.target=M_MENU_CREDITS
+			endcase
 		Endselect
 	endif
 	MenuUI.mouseclickflag=mouseclick()
-endfunction
+Endfunction
 
+// M_MENU_MAIN
 Function UI_Render_M_MENU_MAIN():
 	y=360
 	x=120:y=y-60
@@ -192,14 +267,10 @@ Function UI_Render_M_MENU_MAIN():
 	UI_AddTitleToGadget("button_multiplayer",3,x-8,y-14,"Multi "+chr$(230)+chr$(230))
 	UI_AddInfoToGadget("button_multiplayer",1,"Join/start a multiplayer game.",1)
 	x=120:y=y-60
-	
 	UI_AddCenterGadgetToScreen("button_singleplayer",x,y,"UI_button")`gray")
 	UI_AddMOuseOverImageToGadget("button_singleplayer","UI_buttonhover")
 	UI_AddTitleToGadget("button_singleplayer",3,x-8,y-14,"Single "+chr$(230))
 	UI_AddInfoToGadget("button_singleplayer",1,"Play the singleplayer campaign.",1)
-	
-	UI_AddGadgetToScreen("button_dev",ScreenWidth-40,ScreenHeight-40,"skull32_1")
-	UI_AddMOuseOverImageToGadget("button_dev","skull32_2")
 Endfunction
 
 Function UI_Render_U_MENU_MAIN():
@@ -208,14 +279,151 @@ Function UI_Render_U_MENU_MAIN():
 	`UI_SetGadgetDiffuse("button_training",215+(sin(ButtonSinCurve)*40),215+(sin(ButtonSinCurve)*40),215+(sin(ButtonSinCurve)*40))
 Endfunction
 
-Function ui_RenderBackdrop():
-	paste image MenuImage4,0,0,1
-	`texture object MenuScreenObject,MenuImage4
-	UI_PutWindow(-24,-24,16,MenuSidebarHeight)
-	Paste Image MenuImage5,31,35,1
+// M_MENU_SINGLEPLAYER
+Function UI_Render_M_MENU_SINGLEPLAYER():
 Endfunction
 
+Function UI_Render_U_MENU_SINGLEPLAYER():
+	ui_RenderBackdrop()
+Endfunction
 
+// M_MENU_TRAININGPROMPT
+Function UI_Render_M_MENU_TRAININGPROMPT():
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-50
+	UI_AddTextLine(3,x,y-20,"Begin Training?")
+	UI_AddTextLine(1,x,y+20,"Training allows you to familiarize yourself with the controls")
+	UI_AddTextLine(1,x,y+34,"and techniques of the game before entering the field.")
+	X=x-150 : Y=Y+110
+	UI_AddCenterGadgettoScreen("button_yestrain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_yestrain","UI_buttonhover")
+	UI_AddtitleToGadget("button_yestrain",3,x-8,y-14,"Start")	
+	X=x+300
+	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Cancel")	
+Endfunction
+
+Function UI_Render_U_MENU_TRAININGPROMPT():
+	ui_RenderBackdrop()
+	ui_putwindow(UI_Display.Middlewidth-((UI_mywindow.xwidth*35)/2),UI_Display.Middleheight-((UI_mywindow.yrow*15)/2),35,15)
+Endfunction
+
+// M_MENU_QUITPROMPT
+Function UI_Render_M_MENU_QUITPROMPT():
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-50
+	UI_AddTextLine(3,x,y,"Are you sure you want to quit?")
+	X=x-150 : Y=Y+100
+	UI_AddCenterGadgettoScreen("button_confirmquit",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_confirmquit","UI_buttonhover")
+	UI_AddtitleToGadget("button_confirmquit",3,x-8,y-14,"Yes")	
+	X=x+300
+	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"No")
+Endfunction
+
+Function UI_Render_U_MENU_QUITPROMPT():
+	ui_RenderBackdrop()
+	ui_putwindow(UI_Display.Middlewidth-((UI_mywindow.xwidth*35)/2),UI_Display.Middleheight-((UI_mywindow.yrow*15)/2),35,15)
+Endfunction
+
+// M_MENU_GENERICPROMPT
+Function UI_Render_M_MENU_GENERICPROMPT():
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-50
+	UI_AddTextLine(3,x,y-20,prompttitle$)
+	UI_AddTextLine(1,x,y+20,prompttextone$)
+	UI_AddTextLine(1,x,y+34,prompttexttwo$)
+	Y=Y+100
+	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Okay")
+Endfunction
+
+Function UI_Render_U_MENU_GENERICPROMPT():
+	ui_RenderBackdrop()
+	ui_putwindow(UI_Display.Middlewidth-((UI_mywindow.xwidth*35)/2),UI_Display.Middleheight-((UI_mywindow.yrow*15)/2),35,13)
+Endfunction
+
+//M_MENU_OPTIONS
+Function UI_Render_M_MENU_OPTIONS():
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-170
+	y=y+46
+	y=y+240:y=y+44:x=x+200
+	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Cancel")	
+	x=x+-200
+	if MENU_OptionsChanged
+		UI_AddCenterGadgettoScreen("button_apply",x,y,"UI_button")
+		UI_AddtitleToGadget("button_apply",3,x-8,y-14,"Apply")	
+		UI_AddMouseoverImageToGadget("button_apply","UI_buttonhover")
+	else
+		UI_AddCenterGadgettoScreen("button_apply",x,y,"UI_buttongray")
+		UI_AddtitleToGadget("button_apply",3,x-8,y-14,"Apply")	
+	Endif
+	x=x-200
+	//UI_AddCenterGadgettoScreen("button_credits",x,y,"UI_button")
+	//UI_AddMouseoverImageToGadget("button_credits","UI_buttonhover")
+	//UI_AddtitleToGadget("button_credits",3,x-8,y-14,"Credits")	
+Endfunction
+
+Function UI_Render_U_MENU_OPTIONS():
+	ui_RenderBackdrop()
+	ui_putwindow(UI_Display.Middlewidth-((UI_mywindow.xwidth*41)/2),UI_Display.Middleheight-((UI_mywindow.yrow*24)/2),41,24)
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-170
+	UI_CenterText(3,x,y,"Game Options")
+Endfunction
+
+// M_MENU_CREDITS
+Function UI_Render_M_MENU_CREDITS():
+	Global CreditsStartTime As Integer : CreditsStartTime=hitimer(1)
+Endfunction
+
+Function UI_Render_U_MENU_CREDITS():
+	Ik Paste Image MenuImage9,0,0,Screen.Width,Screen.Height
+	paste image MenuImage2,Screen.Width-image width(MenuImage2),0,1
+	If (hitimer(1)-CreditsStartTime)>2:
+		UI_CenterText(1,Screen.Width/2,Screen.Height-20,"<M1> to return to menu.")
+		if mouseclick():
+		UI_FadeManager.state=UI_FADEIN
+		UI_FadeManager.target=M_MENU_MAIN
+		endif
+	endif
+Endfunction
+
+// M_ENGINE_LOADING
+Function UI_Render_M_ENGINE_LOADING():
+Endfunction
+
+Function UI_Render_U_ENGINE_LOADING():
+	`paste image MenuImage9,0,0
+	`UI_PutWindow(-24,-24,(Screen.Width/UI_mywindow.yrow)+2,(Screen.Height/UI_mywindow.yrow)+2)
+	d3d_box 0,0,screen.width,screen.height,rgb(0,0,0)
+	UI_CenterText(3,Screen.Width/2,(Screen.Height/2)-40,"Loading...")
+	if UI_FadeManager.state = UI_Normal then WorldCacheState = 1
+Endfunction
+
+// M_ENGINE_DEFAULT
+Function UI_Render_M_ENGINE_DEFAULT():
+Endfunction
+
+Function UI_Render_U_ENGINE_DEFAULT():
+	UI_CenterText(3,Screen.Width/2,(Screen.Height/2)-40,"Engine Running")
+	ik paste image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height
+	Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
+	d3d_box 0,0,Screen.Width,120,rgb(0,0,0),rgb(0,0,0),d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200)
+	Ik Paste Image MenuImage13,0,120,Screen.Width,124
+	
+	d3d_box 0,Screen.Height-120,Screen.Width,Screen.Height,d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200),rgb(0,0,0),rgb(0,0,0)
+	Ik Paste Image MenuImage13,0,Screen.Height-124,Screen.Width,Screen.Height-120
+	
+	UI_AlphaText(3,Screen.Width/2-(UI_stringmap(3,258).ascii*5),48,"~bSPECTATING "+chr$(230),250)
+	UI_CenterText(3,Screen.Width/2,Screen.Height-100,World.name)
+	UI_CenterText(1,Screen.Width/2,Screen.Height-65,World.description)
+	if NumSpectatorCameras > 0 Then UI_CenterText(1,Screen.Width/2,130,SpectatorCameras(CurSpectatorCamera).name)
+Endfunction
+
+// M_MENU_SPLASH
 Function UI_Render_M_MENU_SPLASH():
 	Global SplashTicker : Splashticker = 0
 	Global Splashalpha as float: Splashalpha = 0
@@ -237,14 +445,14 @@ Function UI_Render_U_MENU_SPLASH():
 	Dxs Draw Sprite MenuImage11,(Screen.Width/2)-128,(Screen.Height/2)-280+(TBM_StandardSin*16.0)
 	Dxs End Sprite Render MenuImage11
 	
-	`UI_CenterIconText(3,ScreenWidth/2,(ScreenHeight/2)+64,str$((Hitimer()-SplashStartTime)/1000),1)
+	`UI_CenterIconText(3,ScreenWidth/2,(ScreenHeight/2)+64,str$(seconds),1)
 	
 	If seconds>160 or mouseclick():
 		if SplashTicker=0:
 		UI_FadeManager.state=UI_FADEIN
 		Splashticker=1
 		If Screen.Width<800 And Screen.Height<600:
-			UI_FadeManager.target=M_MENU_GENERICPROMPT
+			UI_FadeManager.target=M_MENU_MAIN
 			prompttextone$="The game isn't designed to run at a low resolution."
 			prompttexttwo$="Playing at this resolution may cause accessibility problems."
 			prompttitle$="Low Resolution Warning"
@@ -254,3 +462,32 @@ Function UI_Render_U_MENU_SPLASH():
 		endif
 	endif
 Endfunction
+
+// M_MENU_JOINGAME
+Function UI_Render_M_MENU_JOINGAME():
+	global JoinGameStartTime as integer : JoinGameStartTime = hitimer(1)
+Endfunction
+
+Function UI_Render_U_MENU_JOINGAME():
+	ui_RenderBackdrop()
+	UI_PutWindow(UI_Display.Middlewidth-((UI_mywindow.xwidth*24)/2),UI_Display.Middleheight-((UI_mywindow.yrow*8)/2),24,8)
+	UI_CenterIconText(3,Screen.Width/2,Screen.Height/2,chr$(136)+" Joining Game...",1)
+	If hitimer(1)-JoinGameStartTime>1:
+		Select joingamearg$
+			Case "training"
+				UI_FadeManager.state=UI_FADEIN
+				UI_FadeManager.target=M_ENGINE_LOADING
+				WorldCacheTarget = "training"
+			endcase
+		endselect
+	endif
+Endfunction
+
+//Standard render backdrop
+Function ui_RenderBackdrop():
+	paste image MenuImage4,0,0,1
+	`texture object MenuScreenObject,MenuImage4
+	UI_PutWindow(-24,-24,16,MenuSidebarHeight)
+	Paste Image MenuImage5,31,35,1
+Endfunction
+

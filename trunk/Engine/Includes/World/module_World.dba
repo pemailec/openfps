@@ -1,0 +1,157 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - INPUT MODULE
+//  Concept and code by thenerd, Summer 2012!
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  CONSTANTS
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  UDTS
+//////////////////////////////////////////////////////////////
+
+Type t_WorldInstance
+	enabled As Boolean
+	file as string
+	name As String
+	description as string
+Endtype
+
+//////////////////////////////////////////////////////////////
+//  FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+Function World_Init():
+	Global World As t_WorldInstance
+	Global WorldCacheState As Boolean
+	Global WorldCacheTarget As String
+	Global WorldAutoRefresh As Boolean
+	WorldAutoRefresh = 1
+Endfunction
+
+Function World_LoadFile(file$):
+	If World.enabled = 0:
+			If File Exist(file$):
+			World.file = file$
+			//load world
+			//this will load everything into the entity module
+			//World_Update() will use the entity system to
+			//loop through all the world entities and update
+			//them. 
+			//IMPORTANT: ONLY WORLD ENTITIES ARE STORED IN THE ENTITY
+			//SYSTEM. HOWEVER, TO CONFIRM THIS, ALL WORLD ENTITIES ARE
+			//GIVEN A TAG: "var" = "world"
+			XMLID=KD LoadXML(file$)
+			If Kd Getxmlfirstchildnode(XMLID,"world")
+				CurrentNode = Kd Getxmlfirstchildnode(XMLID)
+				While CurrentNode:
+					Select Kd Getxmlnodevalue(XMLID)
+						Case "info"
+							ChildNode = Kd Getxmlfirstchildnode(XMLID)
+							While ChildNode
+								If Kd Getxmlnodevalue(XMLID)="var":
+									Select Kd Getxmlnodeattribute(XMLID,"name")
+									Case "name"
+									World.name = Kd Getxmlnodeattribute(XMLID,"value")
+									Endcase
+									Case "description"
+									World.description = Kd Getxmlnodeattribute(XMLID,"value")
+									endcase
+									endselect
+								Endif
+								ChildNode = Kd Getxmlnextsiblingnode(XMLID)
+							Endwhile
+							KD GETXMLPARENTNODE XMLID
+						Endcase
+						Case "spectatorcamera"
+							//position the root camera
+							//simple debug script
+							Array Insert At Bottom SpectatorCameras()
+							ChildNode = Kd Getxmlfirstchildnode(XMLID)
+							While ChildNode
+								Select Kd Getxmlnodevalue(XMLID)
+									Case "name"
+										SpectatorCameras(NumSpectatorCameras).name=Kd Getxmlnodeattribute(XMLID,"name")
+									endcase
+									Case "position"
+										x#=val(Kd Getxmlnodeattribute(XMLID,"x"))
+										y#=val(Kd Getxmlnodeattribute(XMLID,"y"))
+										z#=val(Kd Getxmlnodeattribute(XMLID,"z"))
+										SpectatorCameras(NumSpectatorCameras).position.x = x#
+										SpectatorCameras(NumSpectatorCameras).position.y = y#
+										SpectatorCameras(NumSpectatorCameras).position.z = z#
+									Endcase
+									Case "rotation"
+										x#=val(Kd Getxmlnodeattribute(XMLID,"x"))
+										y#=val(Kd Getxmlnodeattribute(XMLID,"y"))
+										z#=val(Kd Getxmlnodeattribute(XMLID,"z"))
+										SpectatorCameras(NumSpectatorCameras).rotation.x = x#
+										SpectatorCameras(NumSpectatorCameras).rotation.y = y#
+										SpectatorCameras(NumSpectatorCameras).rotation.z = z#
+									Endcase
+									Case "fov"
+										fov#=val(Kd Getxmlnodeattribute(XMLID,"value"))
+										SpectatorCameras(NumSpectatorCameras).fov = fov#
+									endcase
+								endselect
+								ChildNode = Kd Getxmlnextsiblingnode(XMLID)
+							Endwhile
+							KD GETXMLPARENTNODE XMLID
+							NumSpectatorCameras = NumSpectatorCameras + 1
+						endcase
+					endselect
+					UI_WriteLog(UI_YELLOW,"Level:"+Kd Getxmlnodevalue(XMLID))
+					CurrentNode=KD GetXMLNextSiblingNode(XMLID)
+				endwhile
+				World.enabled = 1
+				UI_WriteLog(UI_RED,"Level file '"+file$+"' loaded.")
+			else
+				UI_WriteLog(UI_RED,"Level file error.")
+			Endif
+			KD CLOSEXML XMLID
+		else:
+			UI_WriteLog(UI_RED,"Level file '"+file$+"' does not exist.")
+		endif
+	endif
+Endfunction
+
+Function World_Unload():
+	//flush out all the shit
+	//everything needs to be deleted here
+	DeleteAllEntities()
+	ClearSpectatorArray()
+	world.enabled = 0
+endfunction
+
+Function World_GetEnabled():
+	Local enabled As Boolean
+	enabled = World.enabled
+Endfunction enabled
+
+Function World_Update():
+	If WorldCacheState = 1:
+		World_LoadFile(WorldCacheTarget)
+		WorldCacheState = 0
+		//do interface sub-code from loading
+		UI_FadeManager.state=UI_FADEIN
+		UI_FadeManager.target=M_ENGINE_DEFAULT
+	Endif
+	If World.enabled = 1
+		//do world update
+	endif
+Endfunction
+
+//console command
+Function reloadlevel():		
+	If WorldAutoRefresh = 1:
+		If World.enabled = 1:
+			World_Unload()
+			World_LoadFile(World.file)
+		Endif
+	endif
+endfunction
+
+//////////////////////////////////////////////////////////////
+//  End of code
+//////////////////////////////////////////////////////////////
