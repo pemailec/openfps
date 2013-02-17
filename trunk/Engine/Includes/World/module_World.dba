@@ -7,9 +7,20 @@
 //  CONSTANTS
 //////////////////////////////////////////////////////////////
 
+#Constant WorldMODEL_STATIC 0
+#Constant WorldMODEL_DYNAMIC 1
+#Constant WorldMODEL_PHYSICS 2
+#Constant WorldMODEL_DETAIL 3
+
 //////////////////////////////////////////////////////////////
 //  UDTS
 //////////////////////////////////////////////////////////////
+
+Type t_WorldVector
+	x As Float
+	y As Float
+	z As Float
+Endtype
 
 Type t_WorldInstance
 	enabled As Boolean
@@ -17,6 +28,22 @@ Type t_WorldInstance
 	name As String
 	description as string
 Endtype
+
+Type t_WorldObject
+	name As String
+	modelfile As String
+	texturefile As String
+	mdlid As Integer
+	texid as integer
+	position As t_WorldVector
+	rotation As t_WorldVector
+	scale As t_WorldVector
+	modeflag As Integer
+	needsupdate As Boolean
+	shaderfile As String
+	shaderid As integer
+	shaderenabled As Boolean
+endtype
 
 //////////////////////////////////////////////////////////////
 //  FUNCTIONS
@@ -28,6 +55,14 @@ Function World_Init():
 	Global WorldCacheTarget As String
 	Global WorldAutoRefresh As Boolean
 	WorldAutoRefresh = 1
+	
+	//world arrays
+	Dim WORLD_STATICOBJECTS() As t_WorldObject
+	Global WORLD_NUMSTATICOBJECTS As Integer
+	
+	Global World_LM_Shader : World_LM_Shader = Reserve Free Effect()
+	load effect "Media\Shaders\LightMap.fx",World_LM_Shader,0
+
 Endfunction
 
 Function World_LoadFile(file$):
@@ -99,13 +134,85 @@ Function World_LoadFile(file$):
 							Endwhile
 							KD GETXMLPARENTNODE XMLID
 							NumSpectatorCameras = NumSpectatorCameras + 1
-						endcase
+						Endcase
+						Case "object"
+							//load object data
+							Array Insert At Bottom WORLD_STATICOBJECTS()
+							WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).name=Kd Getxmlnodeattribute(XMLID,"name")
+							WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).mdlid = Reserve Free Object()
+							WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).texid = Reserve Free Image()
+							WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).scale.x = 100
+							WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).scale.y = 100
+							WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).scale.z = 100
+							ChildNode = Kd Getxmlfirstchildnode(XMLID)
+							While ChildNode
+								Select Kd Getxmlnodevalue(XMLID)
+									Case "model"
+										WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).modelfile=Kd Getxmlnodeattribute(XMLID,"file")
+									Endcase
+									case "texture"
+										WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).texturefile=Kd Getxmlnodeattribute(XMLID,"file")
+									Endcase
+									Case "position"
+										WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).position.x =val(Kd Getxmlnodeattribute(XMLID,"x"))
+										WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).position.y =val(Kd Getxmlnodeattribute(XMLID,"y"))
+										WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).position.z =val(Kd Getxmlnodeattribute(XMLID,"z"))
+									Endcase
+									Case "rotation"
+										WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).rotation.x =val(Kd Getxmlnodeattribute(XMLID,"x"))
+										WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).rotation.y =val(Kd Getxmlnodeattribute(XMLID,"y"))
+										WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).rotation.z =val(Kd Getxmlnodeattribute(XMLID,"z"))
+									Endcase
+									Case "scale"
+										WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).scale.x =val(Kd Getxmlnodeattribute(XMLID,"x"))
+										WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).scale.y =val(Kd Getxmlnodeattribute(XMLID,"y"))
+										WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).scale.z =val(Kd Getxmlnodeattribute(XMLID,"z"))
+									Endcase
+									Case "shader"
+										WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).shaderenabled = 1
+										WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).shaderid = reserve free effect()
+										WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).shaderfile = Kd Getxmlnodeattribute(XMLID,"file")
+									endcase
+								endselect
+								ChildNode = Kd Getxmlnextsiblingnode(XMLID)
+							Endwhile
+							Kd Getxmlparentnode XMLID
+							WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).modeflag = WorldMODEL_STATIC
+							WORLD_STATICOBJECTS(WORLD_NUMSTATICOBJECTS).needsupdate = 1
+							WORLD_NUMSTATICOBJECTS = WORLD_NUMSTATICOBJECTS + 1
+						Endcase
+						
 					endselect
 					UI_WriteLog(UI_YELLOW,"Level:"+Kd Getxmlnodevalue(XMLID))
 					CurrentNode=KD GetXMLNextSiblingNode(XMLID)
 				endwhile
 				World.enabled = 1
 				UI_WriteLog(UI_RED,"Level file '"+file$+"' loaded.")
+				if WORLD_NUMSTATICOBJECTS>0:
+				UI_WriteLog(UI_RED,"///////////////MODEL LIST/////////////////////")
+				For staticobj = 0 To WORLD_NUMSTATICOBJECTS - 1:
+				UI_WriteLog(UI_RED,"// ("+str$(staticobj)+") Name: "+WORLD_STATICOBJECTS(staticobj).name)
+				UI_WriteLog(UI_RED,"// ("+str$(staticobj)+") MDLID:"+str$(WORLD_STATICOBJECTS(staticobj).mdlid))
+				UI_WriteLog(UI_RED,"// ("+str$(staticobj)+") TEXID:"+str$(WORLD_STATICOBJECTS(staticobj).texid))
+				UI_WriteLog(UI_RED,"// ("+str$(staticobj)+") MDLFILE:"+WORLD_STATICOBJECTS(staticobj).modelfile)
+				UI_WriteLog(UI_RED,"// ("+str$(staticobj)+") TEXFILE:"+WORLD_STATICOBJECTS(staticobj).texturefile)
+				UI_WriteLog(UI_RED,"// ("+str$(staticobj)+") Position matrix:")
+				x#=WORLD_STATICOBJECTS(staticobj).position.x
+				y#=WORLD_STATICOBJECTS(staticobj).position.y
+				z#=WORLD_STATICOBJECTS(staticobj).position.Z
+				UI_WriteLog(UI_RED,"// ("+str$(staticobj)+") ["+str$(x#)+","+str$(y#)+","+str$(z#)+"]")
+				x#=WORLD_STATICOBJECTS(staticobj).rotation.x
+				y#=WORLD_STATICOBJECTS(staticobj).rotation.y
+				z#=WORLD_STATICOBJECTS(staticobj).rotation.z
+				UI_WriteLog(UI_RED,"// ("+str$(staticobj)+") ["+str$(x#)+","+str$(y#)+","+str$(z#)+"]")
+				x#=WORLD_STATICOBJECTS(staticobj).scale.x
+				y#=WORLD_STATICOBJECTS(staticobj).scale.y
+				z#=WORLD_STATICOBJECTS(staticobj).scale.z
+				UI_WriteLog(UI_RED,"// ("+str$(staticobj)+") ["+str$(x#)+","+str$(y#)+","+str$(z#)+"]")
+				UI_WriteLog(UI_RED,"//------------------------------")
+				Next staticobj
+				UI_WriteLog(UI_RED,"///////////END OF MODEL LIST//////////////////")
+				endif
 			else
 				UI_WriteLog(UI_RED,"Level file error.")
 			Endif
@@ -119,7 +226,12 @@ Endfunction
 Function World_Unload():
 	//flush out all the shit
 	//everything needs to be deleted here
-	DeleteAllEntities()
+	if WORLD_NUMSTATICOBJECTS>0:
+		For staticobj = 0 To WORLD_NUMSTATICOBJECTS - 1:
+			If Image Exist(WORLD_STATICOBJECTS(staticobj).texid) Then Delete Image WORLD_STATICOBJECTS(staticobj).texid
+			if object exist(WORLD_STATICOBJECTS(staticobj).mdlid) then delete object WORLD_STATICOBJECTS(staticobj).mdlid
+		Next staticobj
+	endif
 	ClearSpectatorArray()
 	world.enabled = 0
 endfunction
@@ -139,6 +251,43 @@ Function World_Update():
 	Endif
 	If World.enabled = 1
 		//do world update
+		//handle WORLD_STATICOBJECTS
+		if WORLD_NUMSTATICOBJECTS>0:
+		For staticobj = 0 To WORLD_NUMSTATICOBJECTS - 1:
+			If Object Exist(WORLD_STATICOBJECTS(staticobj).mdlid)=0:
+				Load Object WORLD_STATICOBJECTS(staticobj).modelfile,WORLD_STATICOBJECTS(staticobj).mdlid
+				If WORLD_STATICOBJECTS(staticobj).shaderenabled = 1
+					If Effect Exist(WORLD_STATICOBJECTS(staticobj).shaderid)=0:
+						load effect WORLD_STATICOBJECTS(staticobj).shaderfile,WORLD_STATICOBJECTS(staticobj).shaderid,0
+					endif
+					set object effect WORLD_STATICOBJECTS(staticobj).mdlid,WORLD_STATICOBJECTS(staticobj).shaderid
+					WORLD_STATICOBJECTS(staticobj).texid = -1
+				Endif
+				If WORLD_STATICOBJECTS(staticobj).texid>0:
+					If Image Exist(WORLD_STATICOBJECTS(staticobj).texid)=0:
+						Load Image WORLD_STATICOBJECTS(staticobj).texturefile,WORLD_STATICOBJECTS(staticobj).texid
+					Endif
+					Texture Object WORLD_STATICOBJECTS(staticobj).mdlid,WORLD_STATICOBJECTS(staticobj).texid
+				endif
+			Endif
+			x#=WORLD_STATICOBJECTS(staticobj).position.x
+			y#=WORLD_STATICOBJECTS(staticobj).position.y
+			z#=WORLD_STATICOBJECTS(staticobj).position.Z
+			position object WORLD_STATICOBJECTS(staticobj).mdlid,x#,y#,z#
+			x#=WORLD_STATICOBJECTS(staticobj).rotation.x
+			y#=WORLD_STATICOBJECTS(staticobj).rotation.y
+			z#=WORLD_STATICOBJECTS(staticobj).rotation.z
+			rotate object WORLD_STATICOBJECTS(staticobj).mdlid,x#,y#,z#
+			x#=WORLD_STATICOBJECTS(staticobj).scale.x
+			y#=WORLD_STATICOBJECTS(staticobj).scale.y
+			z#=WORLD_STATICOBJECTS(staticobj).scale.z
+			Scale Object WORLD_STATICOBJECTS(staticobj).mdlid,x#,y#,z#
+			
+			If Object In Screen(WORLD_STATICOBJECTS(staticobj).mdlid):
+				mdlid=WORLD_STATICOBJECTS(staticobj).mdlid
+			Endif
+		Next staticobj
+		endif
 	endif
 Endfunction
 

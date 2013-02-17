@@ -16,7 +16,7 @@ include5=Includes\Input\module_Input.dba
 include6=Includes\Interface\module_UI_menu.dba
 include7=Includes\World\module_World.dba
 include8=Includes\Core\module_Camera.dba
-include9=Includes\Entities\Module_Entity.dba
+include9=Includes\Terrain\module_Terrain.dba
 executable=OpenFPS.exe
 build type=exe
 

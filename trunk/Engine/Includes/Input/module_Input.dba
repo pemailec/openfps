@@ -86,6 +86,7 @@ Function IO_Input_SetVariables():
 	Global KEY_RELOAD as integer : KEY_RELOAD = 19
 
 	//ACTIVE CONSTANTS
+	global KEY_ZOOM as integer : KEY_ZOOM = 44
 	Global KEY_VIEWOBJECTIVES as integer : KEY_VIEWOBJECTIVES = 6
 	Global KEY_USE as integer : KEY_USE = 18
 	Global KEY_CHAT as integer : KEY_CHAT = 21
