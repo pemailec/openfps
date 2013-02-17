@@ -31,8 +31,9 @@
 #Constant M_MENU_CREDITS 7
 #Constant M_ENGINE_LOADING 8
 #Constant M_ENGINE_DEFAULT 9
-#Constant M_MENU_SPLASH 10
-#Constant M_MENU_JOINGAME 11
+#Constant M_ENGINE_PLAYER 10
+#Constant M_MENU_SPLASH 11
+#Constant M_MENU_JOINGAME 12
 
 //////////////////////////////////////////////////////////////
 //  UDTS
@@ -77,6 +78,7 @@ Function UI_Menu_CreateResources():
 	Load Image "Media\Images\Interface\menu-background-metal.png",MenuImage9
 	Load Image "Media\Images\Interface\button-menu.png",MenuImage10
 	Load Image "Media\Images\Interface\menu-red-line.png",MenuImage13
+	Load Image "media\images\interface\Crosshair.png",CrosshairIMG
 	
 	UI_WriteLog(UI_Yellow,"// MENU MODULE //: UI_Menu_CreateResources:Make Render Targets")
 	Ik Create Render Target MenuImage3,600,240,0
@@ -88,6 +90,12 @@ Function UI_Menu_CreateResources():
 	Ik Resize Image MenuImage4,Screen.Width,Screen.Height,1
 	Ik Resize Image MenuImage6,Screen.Width,Screen.Height,1
 
+	Global SplashSound As Integer : SplashSound = Find Free Sound()
+	Load Sound "Media\Sounds\Interface\Jungle_01.wav",SplashSound
+	play sound SplashSound
+	
+	global cc_Shader as integer : cc_Shader = 2
+	Ik Load Effect "Media\Shaders\cc.fx",cc_Shader
 	
 	//character wave animation for button
 	Global CharacterWaveIcon
@@ -130,6 +138,8 @@ function UI_Menu_SetVariables():
 	Global MenuImage10 : MenuImage10 = Reserve Free Image()
 	Global MenuImage13 : MenuImage13 = Reserve Free Image()
 	
+	Global CrosshairIMG : CrosshairIMG = Reserve Free Image()
+	
 	global MapPlaceHolderImg : MapPlaceHolderImg = Reserve Free Image()
 	global FirstTimeTraining as boolean : FirstTimeTraining= 1
 	global ButtonSinCurve as float 		: ButtonSinCurve = 0
@@ -156,6 +166,7 @@ function UI_Menu_SetVariables():
 	MenuUI_DrawCalls(0,M_MENU_CREDITS)="UI_Render_M_MENU_CREDITS"
 	MenuUI_DrawCalls(0,M_ENGINE_LOADING)="UI_Render_M_ENGINE_LOADING"
 	MenuUI_DrawCalls(0,M_ENGINE_DEFAULT)="UI_Render_M_ENGINE_DEFAULT"
+	MenuUI_DrawCalls(0,M_ENGINE_PLAYER)="UI_Render_M_ENGINE_PLAYER"
 	MenuUI_DrawCalls(0,M_MENU_SPLASH)="UI_Render_M_MENU_SPLASH"
 	MenuUI_DrawCalls(0,M_MENU_JOINGAME)="UI_Render_M_MENU_JOINGAME"
 	
@@ -168,6 +179,7 @@ function UI_Menu_SetVariables():
 	MenuUI_DrawCalls(1,M_MENU_CREDITS)="UI_Render_U_MENU_CREDITS"
 	MenuUI_DrawCalls(1,M_ENGINE_LOADING)="UI_Render_U_ENGINE_LOADING"
 	MenuUI_DrawCalls(1,M_ENGINE_DEFAULT)="UI_Render_U_ENGINE_DEFAULT"
+	MenuUI_DrawCalls(1,M_ENGINE_PLAYER)="UI_Render_U_ENGINE_PLAYER"
 	MenuUI_DrawCalls(1,M_MENU_SPLASH)="UI_Render_U_MENU_SPLASH"
 	MenuUI_DrawCalls(1,M_MENU_JOINGAME)="UI_Render_U_MENU_JOINGAME"
 	
@@ -408,11 +420,13 @@ Function UI_Render_M_ENGINE_DEFAULT():
 Endfunction
 
 Function UI_Render_U_ENGINE_DEFAULT():
-	UI_CenterText(3,Screen.Width/2,(Screen.Height/2)-40,"Engine Running")
+	`UI_CenterText(3,Screen.Width/2,(Screen.Height/2)-40,"Engine Running")
 	ik paste image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height
 	Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
 	d3d_box 0,0,Screen.Width,120,rgb(0,0,0),rgb(0,0,0),d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200)
 	Ik Paste Image MenuImage13,0,120,Screen.Width,124
+	
+	paste image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
 	
 	d3d_box 0,Screen.Height-120,Screen.Width,Screen.Height,d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200),rgb(0,0,0),rgb(0,0,0)
 	Ik Paste Image MenuImage13,0,Screen.Height-124,Screen.Width,Screen.Height-120
@@ -420,7 +434,35 @@ Function UI_Render_U_ENGINE_DEFAULT():
 	UI_AlphaText(3,Screen.Width/2-(UI_stringmap(3,258).ascii*5),48,"~bSPECTATING "+chr$(230),250)
 	UI_CenterText(3,Screen.Width/2,Screen.Height-100,World.name)
 	UI_CenterText(1,Screen.Width/2,Screen.Height-65,World.description)
-	if NumSpectatorCameras > 0 Then UI_CenterText(1,Screen.Width/2,130,SpectatorCameras(CurSpectatorCamera).name)
+	if CameraMode = CAM_SPECTATOR:
+	If NumSpectatorCameras > 0 Then UI_CenterText(1,Screen.Width/2,130,SpectatorCameras(CurSpectatorCamera).name+" - Press [return] to join.")
+	else:
+		If CameraMode = CAM_SPECTATOR_FREE:
+			UI_CenterText(1,Screen.Width/2,130,"Freecam - Press [return] to join.")
+			if returnkey() then UI_Menu_SetMode(M_ENGINE_PLAYER)
+		endif
+	endif
+Endfunction
+
+Function UI_Render_M_ENGINE_PLAYER():
+	exclude object off testgun
+Endfunction
+
+Function UI_Render_U_ENGINE_PLAYER():
+	ik paste image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height,cc_Shader
+	Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
+	//second vignette will vary alpha based on health and other factors
+	paste image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
+	`UI_PutWindow(UI_mywindow.yrow*2,Screen.Height-(UI_mywindow.yrow*8),10,6)
+	`ui_putwindow(Screen.Width-(UI_mywindow.yrow*12),Screen.Height-(UI_mywindow.yrow*8),10,6)
+	CameraZoom=clamp(CameraZoom+__mouse.scrollButton.scrollUp - __mouse.scrollButton.scrollDown,0,1)
+	If keystate(KEY_ZOOM) or CameraZoom = 1:
+		Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
+		Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
+		CameraArray(cam).FOV = 30
+	else:
+		CameraArray(cam).FOV = 80
+	endif
 Endfunction
 
 // M_MENU_SPLASH

@@ -9,8 +9,9 @@
 
 #Constant CAM_FREE 1
 #Constant CAM_SPECTATOR 2
-#Constant CAM_PLAYER 3
-#Constant CAM_VEHICLE 4
+#Constant CAM_SPECTATOR_FREE 3
+#Constant CAM_PLAYER 4
+#Constant CAM_VEHICLE 5
 
 //////////////////////////////////////////////////////////////
 //  UDTS
@@ -27,7 +28,8 @@ Type t_Camera
 	Width As Integer
 	Height As Integer
 	Imageid As Integer
-	FOV as float
+	FOV As Float
+	CurvedFOV as float
 	position As t_CameraVector
 	rotation As t_CameraVector
 Endtype
@@ -64,21 +66,39 @@ Function CameraSystem_Init():
 	Camera_SetPosMatrix(SkyboxCamera,0,-10000,0)
 	remend
 	
+	//spectator freecamera variables
+	Global cr#
+	Global cf#
+	Global ncr#
+	Global ncf#
+	Global cx#
+	Global cy#
+	Global ncx#
+	Global ncy#
+	global pcy#
+	
 	Global CameraMode As Integer
-	CameraMode = CAM_SPECTATOR
+	CameraMode = CAM_SPECTATOR_FREE
 	Global NumSpectatorCameras As Integer
 	global CurSpectatorCamera as integer
 	dim SpectatorCameras() as t_PointCameraList
+	Global Paused As Boolean
+	Global CameraZoom As integer
 	
 	Global SkyboxObject As Integer : SkyboxObject = reserve free object()
 	Global SkyboxImage As Integer : SkyboxImage = reserve free image()
 	Global SkyboxShader As Integer : SkyboxShader = Reserve Free Effect()
 	
-	make object sphere SkyBoxObject,-1000,5,5
+	make object sphere SkyBoxObject,-2000,5,5
 	Load Image "Media\Materials\Cubemaps\Cube0.dds",SkyboxImage,2
    load effect "Media\Shaders\SkyBox.fx",SkyboxShader,0
 	texture object SkyBoxObject,0,SkyboxImage
 	Set Object Effect SkyboxObject,SkyboxShader
+	
+	Fog On
+	Fog Distance 256*2
+	Fog Color Rgb(220,220,220)
+	
 Endfunction
 
 Function ClearSpectatorArray():
@@ -89,9 +109,8 @@ endfunction
 
 Function CameraSystem_Update():
 	`Camera_SetRotMatrix(SkyboxCamera,CameraArray(RootCamera).rotation.x,CameraArray(RootCamera).rotation.y,CameraArray(RootCamera).rotation.z)
-	Position Object SkyboxObject,CameraArray(RootCamera).position.x,CameraArray(RootCamera).position.y,CameraArray(RootCamera).position.z
-	
-	if NumSpectatorCameras>0 and CameraMode = CAM_SPECTATOR:
+	If World.enabled = 1:
+	If NumSpectatorCameras>0 And CameraMode = CAM_SPECTATOR:
 	//spectator cameras
 	CurSpectatorCamera = CurSpectatorCamera + __mouse.leftButton.clicked - __mouse.rightButton.clicked
 	If CurSpectatorCamera < 0 Then CurSpectatorCamera = NumSpectatorCameras - 1
@@ -99,6 +118,47 @@ Function CameraSystem_Update():
 	Camera_SetPosMatrix(RootCamera,SpectatorCameras(CurSpectatorCamera).position.x,SpectatorCameras(CurSpectatorCamera).position.y,SpectatorCameras(CurSpectatorCamera).position.z)
 	Camera_SetRotMatrix(RootCamera,SpectatorCameras(CurSpectatorCamera).rotation.x,SpectatorCameras(CurSpectatorCamera).rotation.y,SpectatorCameras(CurSpectatorCamera).rotation.z)
 	Endif
+	
+	If CameraMode = CAM_SPECTATOR_FREE and Paused = 0
+		//based off of evolved's camera movement system
+		ui_hidemouse()
+		cr#=0:cf#=0
+      If Keystate(KEY_RIGHT)=1 Then cr#=-0.2*TBM : CameraZoom=0
+      If Keystate(KEY_LEFT)=1 Then cr#=0.2*TBM : CameraZoom=0
+      If Keystate(KEY_FORWARD)=1 Then cf#=0.2*TBM : CameraZoom=0
+      if KEYSTATE(KEY_BACKWARD)=1 then cf#=-0.2*TBM : CameraZoom=0
+		ncr#=tbm_curvevalue(cr#,ncr#,10)
+      ncf#=tbm_curvevalue(cf#,ncf#,10)
+      cx#=cx#+sys_mousemovey*0.2
+      cy#=cy#+sys_mousemovex*0.2
+      if cx#>80 then cx#=80
+      if cx#<-80  then cx#=-80
+      ncx#=tbm_curveangle(cx#,ncx#,4)
+      ncy#=tbm_curveangle(cy#,ncy#,4)
+      move camera CameraArray(RootCamera).id,ncf#
+      rotate camera CameraArray(RootCamera).id,0,wrapvalue(ncy#-90),0
+      move camera CameraArray(RootCamera).id,ncr#
+		rotate camera CameraArray(RootCamera).id,0,wrapvalue(ncy#+90),0
+      Rotate Camera CameraArray(RootCamera).id,ncx#,ncy#,0
+		x#=Camera Position X(CameraArray(RootCamera).id)
+		y#=Camera Position Y(CameraArray(RootCamera).id)
+		z#=Camera Position Z(CameraArray(RootCamera).id)
+		
+		collide=SC_rayCast(0,x#,256,z#,x#,0,z#,0)
+		If collide>0:
+			yy#=SC_getStaticCollisionY()+3.5
+		endif
+		if y#<yy# then y#=yy#
+		if y#>Terrain_HighestValue then y#=Terrain_HighestValue
+		CameraArray(RootCamera).position.x = x#
+		CameraArray(RootCamera).position.y = y#
+		CameraArray(RootCamera).position.z = z#
+		CameraArray(RootCamera).rotation.x = Camera Angle X(CameraArray(RootCamera).id)
+		CameraArray(RootCamera).rotation.y = Camera Angle Y(CameraArray(RootCamera).id)
+		CameraArray(RootCamera).rotation.z = Camera Angle Z(CameraArray(RootCamera).id)
+	Endif
+	
+	Position Object SkyboxObject,CameraArray(RootCamera).position.x,CameraArray(RootCamera).position.y,CameraArray(RootCamera).position.z
 	
 	For cam = 0 To NumCameras - 1:
 		//handle data
@@ -110,10 +170,12 @@ Function CameraSystem_Update():
 		locrot.x = CameraArray(cam).rotation.x
 		locrot.y = CameraArray(cam).rotation.y
 		locrot.z = CameraArray(cam).rotation.z
+		CameraArray(cam).CurvedFOV = tbm_curvevalue(CameraArray(cam).FOV,CameraArray(cam).CurvedFOV,20)
 		Position Camera CameraArray(cam).id,locpos.x,locpos.y,locpos.z
 		Rotate Camera CameraArray(cam).id,locrot.x,locrot.y,locrot.z
-		set camera fov CameraArray(caM).id,CameraArray(cam).FOV
-	next cam
+		set camera fov CameraArray(caM).id,CameraArray(cam).CurvedFOV
+	Next cam
+	Endif
 Endfunction
 
 Function Camera_Make(width As integer, height as integer):

@@ -106,7 +106,12 @@ Endfunction
 
 Function Sys_ToggleFPS():
 	Screen.ShowFPS = 1 - Screen.ShowFPS
-endfunction
+	If Screen.ShowFPS = 1:
+		Sync Rate 60
+	else:
+		Sync Rate 0
+	endif
+Endfunction
 
 Function SYS_Terminate():
 Endfunction

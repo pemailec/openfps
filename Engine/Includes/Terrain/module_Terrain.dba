@@ -1,0 +1,124 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - TERRAIN MODULE
+//  Concept and code by thenerd, Summer 2012!
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  CONSTANTS
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  UDTS
+//////////////////////////////////////////////////////////////
+
+Type t_TerrainGridTile
+	object As integer
+	heightmapchunk As Integer
+	texturechunk As Integer
+endtype
+
+//////////////////////////////////////////////////////////////
+//  FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+Function Terrain_Init():
+	global MasterHeightmap : MasterHeightmap = reserve free image()
+	Global MasterTexture : MasterTexture = Reserve Free Image()
+	Global MasterDetail : MasterDetail = Reserve Free Image()
+	Global MasterGridObject : MasterGridObject = Reserve Free mesh()
+	Load Image "Media\Materials\Heightmaps\Generic\heightmap.bmp",MasterHeightmap
+	Load Image "Media\Materials\Heightmaps\Generic\texture.jpg",MasterTexture
+	Load Image "Media\Materials\Heightmaps\Generic\detail.tga",MasterDetail
+	Load Mesh "Media\Models\grid.x",MasterGridObject
+	
+	Global TerrainSizeX : TerrainSizeX = 15 //actually 16
+	Global TerrainSizeZ : TerrainSizeZ = 15 //actually 16
+	Global TerrainUnitSizeX : TerrainUnitSizeX = 16 //world chunk scale
+	Global TerrainUnitSizeZ : TerrainUnitSizeZ = 16 //world chunk scale
+	Dim TerrainArray(TerrainSizeX,TerrainSizeZ) As t_TerrainGridTile
+	global Terrain_HighestValue as float
+	
+	For TZ = 0 To TerrainSizeX:
+		For TX = 0 To TerrainSizeZ:
+			TerrainArray(TX,TZ).object = reserve free object()
+			TerrainArray(TX,TZ).heightmapchunk = reserve free image()
+			TerrainArray(TX,TZ).texturechunk = Reserve Free Image()
+			Make Object Plain TerrainArray(TX,TZ).object,TerrainUnitSizeX,TerrainUnitSizeZ,16,16
+			convert object fvf TerrainArray(TX,TZ).object,0x002||0x010||0x040||0x000||0x100
+			`make object TerrainArray(TX,TZ).object,MasterGridObject,MasterTexture
+			`Set Object Wireframe TerrainArray(TX,TZ).object,1
+			
+			//setup heightmap and textures
+			`testcolor=rgb(tx*16,0,tz*16)
+			ik create image TerrainArray(TX,TZ).heightmapchunk,(image width(MasterHeightmap)/(TerrainSizeX+1))+1,(image height(MasterHeightmap)/(TerrainSizeZ+1))+1`,testcolor
+			ik paste image on image MasterHeightmap,TerrainArray(TX,TZ).heightmapchunk,0-(TX*16),0-(TZ*16)
+			`Ik Flip Image Vertically TerrainArray(TX,TZ).heightmapchunk
+			`Ik Flip Image Horizontally TerrainArray(TX,TZ).heightmapchunk
+			Texture Object TerrainArray(TX,TZ).object,MasterDetail
+			Scale Object Texture TerrainArray(TX,TZ).object,2,2
+			
+			`Texture Object TerrainArray(TX,TZ).object,MasterTexture
+			`scale object texture TerrainArray(TX,TZ).object,1/16,1/16
+			`scroll object texture TerrainArray(TX,TZ).object,TX,TZ
+			
+			//scale vertices to a (0,0),(16,16) size
+			// the plain function generates starting with 0,
+			// adding vertexdata for a full x row, then z=z+1
+			// until the end
+			Lock Vertexdata For Limb TerrainArray(TX,TZ).object,0,0
+			current_vertex = 0
+			For Vz = 0 To TerrainUnitSizeZ:
+				For Vx = 0 To TerrainUnitSizeX:
+					vertx#=get vertexdata position x(current_vertex)
+					vertz#=get vertexdata position z(current_vertex)
+					//pixel height calculations
+					calculatedpixel=ik point(TerrainArray(TX,TZ).heightmapchunk,Vx,Vz)
+					calculatedheight#=(rgbr(calculatedpixel)+rgbg(calculatedpixel)+rgbb(calculatedpixel))/3
+					Set Vertexdata Position current_vertex,vertx#,(calculatedheight#/255.0)*40.0,vertz#
+					//pixel color calculations
+					calculatedcolor=ik point(MasterTexture,(TX*16)+Vx,(TZ*16)+Vz)
+					Set Vertexdata Diffuse current_vertex,calculatedcolor
+					//calc normals
+					y#=get vertexdata position y(current_vertex)
+					if y#>Terrain_HighestValue then Terrain_HighestValue=y#
+					`set vertexdata normals current_vertex,rnd(100)/100.0 +50,rnd(100)/100.0 +50,rnd(100)/100.0 +50
+					current_vertex = current_vertex + 1
+				Next Vx
+			Next Vz
+			Unlock Vertexdata
+			
+			`ui_writelog(ui_yellow,"terrain debug - "+str$(current_vertex))
+			
+			//do positioning
+			Position Object TerrainArray(TX,TZ).object,TX*TerrainUnitSizeX,0,(15-TZ)*TerrainUnitSizeZ
+			
+			//setup sparkies collision
+			Sc_Setupcomplexobject TerrainArray(TX,TZ).object,0,32
+			Sc_Updateobject TerrainArray(TX,TZ).object
+			
+			Lock Vertexdata For Limb TerrainArray(TX,TZ).object,0,0
+			For current_vertex = 0 To Get Vertexdata Vertex Count()-1
+				x#=get vertexdata position x(current_vertex)+object position x(TerrainArray(TX,TZ).object)
+				z#=get vertexdata position z(current_vertex)+object position z(TerrainArray(TX,TZ).object)
+				collide=SC_rayCastGroup(0,x#,256,z#,x#,0.0,z#,0)
+				If collide>0:
+					normx#=SC_getCollisionNormalX()
+					normy#=SC_getCollisionNormalY()
+					normz#=SC_getCollisionNormalZ()
+					set vertexdata normals current_vertex,normx#,normy#,normz#
+				endif
+			next normal
+			Unlock Vertexdata
+			
+		Next TZ
+	next TX
+Endfunction
+
+Function Terrain_Update():
+	If World.enabled = 1:
+	endif
+endfunction
+
+//////////////////////////////////////////////////////////////
+//  End of code
+//////////////////////////////////////////////////////////////
