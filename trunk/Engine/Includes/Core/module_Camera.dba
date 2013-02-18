@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////
-//  Game Engine Standard Modules - INPUT MODULE
+//  Game Engine Standard Modules - CAMERA MODULE
 //  Concept and code by thenerd, Summer 2012!
 //////////////////////////////////////////////////////////////
 
@@ -31,6 +31,9 @@ Type t_Camera
 	FOV As Float
 	CurvedFOV as float
 	position As t_CameraVector
+	smoothing as boolean
+	smoothpos As t_CameraVector
+	smoothrot as t_CameraVector
 	rotation As t_CameraVector
 Endtype
 
@@ -108,6 +111,7 @@ Function ClearSpectatorArray():
 endfunction
 
 Function CameraSystem_Update():
+	CameraArray(RootCamera).smoothing = 0
 	`Camera_SetRotMatrix(SkyboxCamera,CameraArray(RootCamera).rotation.x,CameraArray(RootCamera).rotation.y,CameraArray(RootCamera).rotation.z)
 	If World.enabled = 1:
 	If NumSpectatorCameras>0 And CameraMode = CAM_SPECTATOR:
@@ -119,14 +123,14 @@ Function CameraSystem_Update():
 	Camera_SetRotMatrix(RootCamera,SpectatorCameras(CurSpectatorCamera).rotation.x,SpectatorCameras(CurSpectatorCamera).rotation.y,SpectatorCameras(CurSpectatorCamera).rotation.z)
 	Endif
 	
-	If CameraMode = CAM_SPECTATOR_FREE and Paused = 0
+	If CameraMode = CAM_SPECTATOR_FREE and Paused = 0 and chatenabled = 0
 		//based off of evolved's camera movement system
 		ui_hidemouse()
 		cr#=0:cf#=0
-      If Keystate(KEY_RIGHT)=1 Then cr#=-0.2*TBM : CameraZoom=0
-      If Keystate(KEY_LEFT)=1 Then cr#=0.2*TBM : CameraZoom=0
-      If Keystate(KEY_FORWARD)=1 Then cf#=0.2*TBM : CameraZoom=0
-      if KEYSTATE(KEY_BACKWARD)=1 then cf#=-0.2*TBM : CameraZoom=0
+      If Keystate(KEY_RIGHT)=1 Then cr#=-0.2*TBM
+      If Keystate(KEY_LEFT)=1 Then cr#=0.2*TBM
+      If Keystate(KEY_FORWARD)=1 Then cf#=0.2*TBM
+      if KEYSTATE(KEY_BACKWARD)=1 then cf#=-0.2*TBM
 		ncr#=tbm_curvevalue(cr#,ncr#,10)
       ncf#=tbm_curvevalue(cf#,ncf#,10)
       cx#=cx#+sys_mousemovey*0.2
@@ -149,7 +153,6 @@ Function CameraSystem_Update():
 			yy#=SC_getStaticCollisionY()+3.5
 		endif
 		if y#<yy# then y#=yy#
-		if y#>Terrain_HighestValue then y#=Terrain_HighestValue
 		CameraArray(RootCamera).position.x = x#
 		CameraArray(RootCamera).position.y = y#
 		CameraArray(RootCamera).position.z = z#
@@ -158,18 +161,37 @@ Function CameraSystem_Update():
 		CameraArray(RootCamera).rotation.z = Camera Angle Z(CameraArray(RootCamera).id)
 	Endif
 	
+	If CameraMode = CAM_PLAYER:
+		CameraArray(RootCamera).smoothing = 1
+	Endif
+	
 	Position Object SkyboxObject,CameraArray(RootCamera).position.x,CameraArray(RootCamera).position.y,CameraArray(RootCamera).position.z
 	
 	For cam = 0 To NumCameras - 1:
 		//handle data
 		Local locpos As t_CameraVector
 		Local locrot As t_CameraVector
+		if CameraArray(cam).smoothing = 0:
 		locpos.x = CameraArray(cam).position.x
 		locpos.y = CameraArray(cam).position.y
 		locpos.z = CameraArray(cam).position.z
 		locrot.x = CameraArray(cam).rotation.x
 		locrot.y = CameraArray(cam).rotation.y
 		locrot.z = CameraArray(cam).rotation.z
+		else:
+		CameraArray(cam).smoothpos.x=tbm_curvevalue(CameraArray(cam).position.x,CameraArray(cam).smoothpos.x,2)
+		CameraArray(cam).smoothpos.y=tbm_curvevalue(CameraArray(cam).position.y,CameraArray(cam).smoothpos.y,2)
+		CameraArray(cam).smoothpos.z=tbm_curvevalue(CameraArray(cam).position.z,CameraArray(cam).smoothpos.z,2)
+		CameraArray(cam).smoothrot.x=tbm_curveangle(CameraArray(cam).rotation.x,CameraArray(cam).smoothrot.x,2)
+		CameraArray(cam).smoothrot.y=tbm_curveangle(CameraArray(cam).rotation.y,CameraArray(cam).smoothrot.y,2)
+		CameraArray(cam).smoothrot.z=tbm_curveangle(CameraArray(cam).rotation.z,CameraArray(cam).smoothrot.z,2)
+		locpos.x = CameraArray(cam).smoothpos.x
+		locpos.y = CameraArray(cam).smoothpos.y
+		locpos.z = CameraArray(cam).smoothpos.z
+		locrot.x = CameraArray(cam).smoothrot.x
+		locrot.y = CameraArray(cam).smoothrot.y
+		locrot.z = CameraArray(cam).smoothrot.z
+		endif
 		CameraArray(cam).CurvedFOV = tbm_curvevalue(CameraArray(cam).FOV,CameraArray(cam).CurvedFOV,20)
 		Position Camera CameraArray(cam).id,locpos.x,locpos.y,locpos.z
 		Rotate Camera CameraArray(cam).id,locrot.x,locrot.y,locrot.z

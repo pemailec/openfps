@@ -60,7 +60,7 @@ function TBM_Update():
 		  TBM = TBM * TBM_timer_scale
 		  TBM_StandardSinR = TBM_StandardSinR + (3 * TBM)
 		  TBM_StandardSin = Sin(TBM_StandardSinR)
-		  `if TBM>10 then TBM=10
+		  if TBM>10 then TBM=10
 endfunction
 
 //////////////////////////////////////////////////////////////

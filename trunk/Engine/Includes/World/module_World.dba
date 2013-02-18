@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////
-//  Game Engine Standard Modules - INPUT MODULE
+//  Game Engine Standard Modules - WORLD MODULE
 //  Concept and code by thenerd, Summer 2012!
 //////////////////////////////////////////////////////////////
 
@@ -56,12 +56,16 @@ Function World_Init():
 	Global WorldAutoRefresh As Boolean
 	WorldAutoRefresh = 1
 	
+	global FLAG_WAITINGFORNETWORK as boolean
+	FLAG_WAITINGFORNETWORK = 0
+	
 	//world arrays
 	Dim WORLD_STATICOBJECTS() As t_WorldObject
 	Global WORLD_NUMSTATICOBJECTS As Integer
 	
 	Global World_LM_Shader : World_LM_Shader = Reserve Free Effect()
 	load effect "Media\Shaders\LightMap.fx",World_LM_Shader,0
+	ui_writelog(UI_Green,"World module init'd")
 
 Endfunction
 
@@ -219,7 +223,13 @@ Function World_LoadFile(file$):
 			KD CLOSEXML XMLID
 		else:
 			UI_WriteLog(UI_RED,"Level file '"+file$+"' does not exist.")
-		endif
+		Endif
+		//do extra world setup
+		Terrain_Init()
+		
+		`if NetworkServerFlag then Network_StartServer(NET_REMOTE)
+		`Network_StartClient(NET_REMOTE)
+		LoadingString = "Connecting to Server..."
 	endif
 Endfunction
 
@@ -233,6 +243,7 @@ Function World_Unload():
 		Next staticobj
 	endif
 	ClearSpectatorArray()
+	Terrain_Destroy()
 	world.enabled = 0
 endfunction
 
@@ -245,22 +256,24 @@ Function World_Update():
 	If WorldCacheState = 1:
 		World_LoadFile(WorldCacheTarget)
 		WorldCacheState = 0
-		//do interface sub-code from loading
+		FLAG_WAITINGFORNETWORK = 0
+		LoadingString = "Connected."
 		UI_FadeManager.state=UI_FADEIN
 		UI_FadeManager.target=M_ENGINE_DEFAULT
 	Endif
 	If World.enabled = 1
 		//do world update
+		
 		//handle WORLD_STATICOBJECTS
 		if WORLD_NUMSTATICOBJECTS>0:
 		For staticobj = 0 To WORLD_NUMSTATICOBJECTS - 1:
 			If Object Exist(WORLD_STATICOBJECTS(staticobj).mdlid)=0:
 				Load Object WORLD_STATICOBJECTS(staticobj).modelfile,WORLD_STATICOBJECTS(staticobj).mdlid
 				If WORLD_STATICOBJECTS(staticobj).shaderenabled = 1
-					If Effect Exist(WORLD_STATICOBJECTS(staticobj).shaderid)=0:
+					If Effect Exist(WORLD_STATICOBJECTS(staticobj).shaderid)=0 and file exist(WORLD_STATICOBJECTS(staticobj).shaderfile):
 						load effect WORLD_STATICOBJECTS(staticobj).shaderfile,WORLD_STATICOBJECTS(staticobj).shaderid,0
+						set object effect WORLD_STATICOBJECTS(staticobj).mdlid,WORLD_STATICOBJECTS(staticobj).shaderid
 					endif
-					set object effect WORLD_STATICOBJECTS(staticobj).mdlid,WORLD_STATICOBJECTS(staticobj).shaderid
 					WORLD_STATICOBJECTS(staticobj).texid = -1
 				Endif
 				If WORLD_STATICOBJECTS(staticobj).texid>0:
@@ -287,7 +300,12 @@ Function World_Update():
 				mdlid=WORLD_STATICOBJECTS(staticobj).mdlid
 			Endif
 		Next staticobj
-		endif
+		Endif
+		
+		//handle other things
+		CameraMode = CAM_SPECTATOR_FREE
+		
+		//end of world update code
 	endif
 Endfunction
 
@@ -299,6 +317,11 @@ Function reloadlevel():
 			World_LoadFile(World.file)
 		Endif
 	endif
+Endfunction
+
+Function unloadlevel():
+	World_Unload()
+	ui_menu_Setmode(M_MENU_MAIN)
 endfunction
 
 //////////////////////////////////////////////////////////////

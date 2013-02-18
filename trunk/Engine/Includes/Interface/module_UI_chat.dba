@@ -1,0 +1,113 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - OPENFPS CHAT MODULE
+//  Concept and code by thenerd, Summer 2012!
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  CONSTANTS
+//////////////////////////////////////////////////////////////
+
+Type t_ChatElement
+   strng As String
+	title as string
+   age as integer
+endtype
+
+//////////////////////////////////////////////////////////////
+//  UDTS
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+Function UI_Chat_Init():
+    global chatInited as integer : chatInited =1
+    dim Chat_display_text() as t_ChatElement
+    global numDisplaylines as integer
+    global MessageBoxWidth as integer
+    MessageBoxWidth=Screen.Width - (80+(Ui_mywindow.yrow*4))
+    global MessageBoxHeight as integer
+    MessageBoxHeight=((7)*20)+20
+    global DisplaylinesOffset as float
+    for i = 1 to 10: UI_Chat_AddText("  ","  ") : next i
+    Global MAX_STRING_LEN As Integer : MAX_STRING_LEN = 8192
+endfunction
+
+Function UI_Chat_AddText(titlestring$,msgstring$):
+if chatInited:
+tempstring$=""
+numlines=1
+for i=1 to len(msgstring$)
+    tempstring$=tempstring$+mid$(msgstring$,i)
+    if 32*0.6*len(titlestring$+": "+tempstring$)>(ScreenWidth-25):
+        array insert at bottom Chat_display_text(0)
+        Chat_display_text(numDisplaylines).strng=tempstring$
+        If numlines=1:
+				Chat_display_text(numDisplaylines).title=titlestring$
+			else:
+				temptitle$=""
+				For i=0 To Len(titlestring$)+2:
+				temptitle$=temptitle$+" "
+				next i
+				Chat_display_text(numDisplaylines).title=temptitle$
+			endif
+        Chat_display_text(numDisplaylines).age=timer()
+        tempstring$=""
+        inc numlines,1
+        inc numDisplaylines,1
+    Endif
+	 stringexists=1
+next i
+if len(tempstring$)>0:
+    array insert at bottom Chat_display_text(0)
+    Chat_display_text(numDisplaylines).strng=tempstring$        
+	 If numlines=1:
+				Chat_display_text(numDisplaylines).title=titlestring$
+			else:
+				temptitle$=""
+				For i=0 To Len(titlestring$)+2:
+				temptitle$=temptitle$+" "
+				next i
+				Chat_display_text(numDisplaylines).title=temptitle$
+			endif
+    Chat_display_text(numDisplaylines).age=timer()
+    tempstring$=""
+    inc numlines,1
+    Inc numDisplaylines,1
+	 stringexists=1
+Endif
+If stringexists:
+	DisplaylinesOffset=20*(numlines)
+endif
+endif
+Endfunction
+
+Function UI_Chat_Update():
+D3d_Box (40+(Ui_mywindow.yrow*2)),(Screen.Height-MessageBoxHeight-20)+(-120),(40+(Ui_mywindow.yrow*2))+MessageBoxWidth,(Screen.Height-20)+(-120),d3d_rgba(0,0,0,120)
+d3d_line (40+(Ui_mywindow.yrow*2)),(Screen.Height-20)+(-120),(40+(Ui_mywindow.yrow*2))+MessageBoxWidth-1,(Screen.Height-20)+(-120),d3d_rgba(0,0,0,255)
+d3d_line (40+(Ui_mywindow.yrow*2))+1,(Screen.Height-20)+1+(-120),(40+(Ui_mywindow.yrow*2))+MessageBoxWidth,(Screen.Height-20)+1+(-120),d3d_rgba(180,180,180,255)
+
+If DisplaylinesOffset>0 Then Dec DisplaylinesOffset,2*TBM
+
+if numDisplaylines>0:
+   If numDisplaylines>6:
+		while numDisplaylines>6:
+			ARRAY DELETE ELEMENT Chat_display_text(0),0
+			numDisplaylines=numDisplaylines-1
+		endwhile
+	endif
+	For i = 0 To numDisplaylines-1:
+		age_alpha=clamp( ( 255-((timer()-Chat_display_text(i).age)/4))+8000,100,255)
+		
+		textpos=(Screen.Height/2)+((i)*20)+DisplaylinesOffset
+		textmaxpos=(Screen.Height/2)+((6)*20)
+		if textpos>textmaxpos then age_alpha=0
+		UI_ScaledText(3,(40+(Ui_mywindow.yrow*2))+1,(Screen.Height-MessageBoxHeight-10)+((i)*20)+DisplaylinesOffset+(-120),Chat_display_text(i).title+": "+Chat_display_text(i).strng,60,age_alpha)
+	Next i
+Endif
+endfunction
+
+//////////////////////////////////////////////////////////////
+//  End of code.
+//////////////////////////////////////////////////////////////

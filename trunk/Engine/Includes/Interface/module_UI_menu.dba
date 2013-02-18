@@ -79,6 +79,9 @@ Function UI_Menu_CreateResources():
 	Load Image "Media\Images\Interface\button-menu.png",MenuImage10
 	Load Image "Media\Images\Interface\menu-red-line.png",MenuImage13
 	Load Image "media\images\interface\Crosshair.png",CrosshairIMG
+	Load Image "media\images\interface\black.png",MenuImageBlack
+	Load Image "media\images\interface\ingame-health-energy.png",menuImage14
+	Load Image "media\images\interface\ingame-fixedchat.png",menuImage15
 	
 	UI_WriteLog(UI_Yellow,"// MENU MODULE //: UI_Menu_CreateResources:Make Render Targets")
 	Ik Create Render Target MenuImage3,600,240,0
@@ -92,7 +95,10 @@ Function UI_Menu_CreateResources():
 
 	Global SplashSound As Integer : SplashSound = Find Free Sound()
 	Load Sound "Media\Sounds\Interface\Jungle_01.wav",SplashSound
-	play sound SplashSound
+	`Play Sound SplashSound
+	
+	Global MenuLoop As Integer :MenuLoop = Find Free Music()
+	Load Music "Media\Sounds\Loops\Beyond_the_Stars.mp3",MenuLoop
 	
 	global cc_Shader as integer : cc_Shader = 2
 	Ik Load Effect "Media\Shaders\cc.fx",cc_Shader
@@ -137,6 +143,10 @@ function UI_Menu_SetVariables():
 	global MenuImage9 : MenuImage9 = Reserve Free Image()
 	Global MenuImage10 : MenuImage10 = Reserve Free Image()
 	Global MenuImage13 : MenuImage13 = Reserve Free Image()
+	Global MenuImage14 : menuImage14 = Reserve Free Image()
+	Global MenuImage15 : menuImage15 = Reserve Free Image()
+	
+	Global MenuImageBlack : MenuImageBlack = Reserve Free Image()
 	
 	Global CrosshairIMG : CrosshairIMG = Reserve Free Image()
 	
@@ -196,6 +206,7 @@ Function UI_Menu_SetMode(mode_new As byte):
 endfunction
 
 function UI_Menu_Update():
+	if sound playing(splashsound)=0 and music playing(menuloop)=0 then play music menuloop
 	If MenuUI.initialized = 0 Then UI_Menu_Init()
 	`UI_CenterText(3,ScreenWidth/2,100,"Menu Initialized and Running! *Debug*")
 	If MenuUI.setflag=1 Then Call Function Ptr (Get Ptr To Function(MenuUI_DrawCalls(0,MenuUI.mode))):MenuUI.setflag=0
@@ -405,13 +416,16 @@ Endfunction
 
 // M_ENGINE_LOADING
 Function UI_Render_M_ENGINE_LOADING():
+	Global LoadingString As String
+	LoadingString = "Loading..."
+	ui_hidemouse()
 Endfunction
 
 Function UI_Render_U_ENGINE_LOADING():
 	`paste image MenuImage9,0,0
 	`UI_PutWindow(-24,-24,(Screen.Width/UI_mywindow.yrow)+2,(Screen.Height/UI_mywindow.yrow)+2)
-	d3d_box 0,0,screen.width,screen.height,rgb(0,0,0)
-	UI_CenterText(3,Screen.Width/2,(Screen.Height/2)-40,"Loading...")
+	ik paste image MenuImageBlack,0,0,screen.width,screen.height
+	UI_CenterText(3,Screen.Width/2,(Screen.Height/2)-40,LoadingString)
 	if UI_FadeManager.state = UI_Normal then WorldCacheState = 1
 Endfunction
 
@@ -421,7 +435,7 @@ Endfunction
 
 Function UI_Render_U_ENGINE_DEFAULT():
 	`UI_CenterText(3,Screen.Width/2,(Screen.Height/2)-40,"Engine Running")
-	ik paste image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height
+	ik paste image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height,cc_Shader
 	Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
 	d3d_box 0,0,Screen.Width,120,rgb(0,0,0),rgb(0,0,0),d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200)
 	Ik Paste Image MenuImage13,0,120,Screen.Width,124
@@ -431,6 +445,9 @@ Function UI_Render_U_ENGINE_DEFAULT():
 	d3d_box 0,Screen.Height-120,Screen.Width,Screen.Height,d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200),rgb(0,0,0),rgb(0,0,0)
 	Ik Paste Image MenuImage13,0,Screen.Height-124,Screen.Width,Screen.Height-120
 	
+	//render chat
+	`UI_Chat_Update()
+	
 	UI_AlphaText(3,Screen.Width/2-(UI_stringmap(3,258).ascii*5),48,"~bSPECTATING "+chr$(230),250)
 	UI_CenterText(3,Screen.Width/2,Screen.Height-100,World.name)
 	UI_CenterText(1,Screen.Width/2,Screen.Height-65,World.description)
@@ -439,30 +456,58 @@ Function UI_Render_U_ENGINE_DEFAULT():
 	else:
 		If CameraMode = CAM_SPECTATOR_FREE:
 			UI_CenterText(1,Screen.Width/2,130,"Freecam - Press [return] to join.")
-			if returnkey() then UI_Menu_SetMode(M_ENGINE_PLAYER)
+			If Returnkey():
+				UI_Menu_SetMode(M_ENGINE_PLAYER)
+				CameraMode = CAM_PLAYER
+				`Player_SetPosition(CameraArray(RootCamera).position.x,CameraArray(RootCamera).position.y,CameraArray(RootCamera).position.z)
+			endif
+			CameraZoom=clamp(CameraZoom+__mouse.scrollButton.scrollUp - __mouse.scrollButton.scrollDown,0,1)
+			If keystate(KEY_ZOOM) or CameraZoom = 1:
+				Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
+				Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
+				CameraArray(cam).FOV = 30
+			else:
+				CameraArray(cam).FOV = 80
+			endif
 		endif
 	endif
 Endfunction
 
 Function UI_Render_M_ENGINE_PLAYER():
-	exclude object off testgun
+	UI_AddBarGadgetToScreen("healthbar",70,Screen.Height-110,"UI_redbar",100)
+	UI_AddBarGadgetToScreen("energybar",70,Screen.Height-70,"UI_bluebar",100)
 Endfunction
 
 Function UI_Render_U_ENGINE_PLAYER():
-	ik paste image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height,cc_Shader
+	Ik Paste Image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height,cc_Shader
+	`if spacekey() then ik paste image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height
 	Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
 	//second vignette will vary alpha based on health and other factors
 	paste image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
 	`UI_PutWindow(UI_mywindow.yrow*2,Screen.Height-(UI_mywindow.yrow*8),10,6)
 	`ui_putwindow(Screen.Width-(UI_mywindow.yrow*12),Screen.Height-(UI_mywindow.yrow*8),10,6)
 	CameraZoom=clamp(CameraZoom+__mouse.scrollButton.scrollUp - __mouse.scrollButton.scrollDown,0,1)
-	If keystate(KEY_ZOOM) or CameraZoom = 1:
+	If Keystate(KEY_ZOOM)+CameraZoom>0 and Player.sprinting < 2:
 		Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
 		Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
 		CameraArray(cam).FOV = 30
 	else:
+		If Player.sprinting = 2:
+		CameraArray(cam).FOV = 90
+		else:
 		CameraArray(cam).FOV = 80
-	endif
+		endif
+	Endif
+	//paste ui layer
+	Paste Image MenuImage14,0,Screen.Height-image height(menuimage14),1
+	
+	//render chat
+	`UI_Chat_Update()
+	
+	UI_SetGadgetValue("healthbar",Player.health/2)
+	UI_SetGadgetValue("energybar",Player.energy/2)
+	ui_text(1,70+(5*(Player.health/2)),Screen.Height-104,str$(int(Player.health)))
+	UI_Text(1,70+(5*(Player.energy/2)),Screen.Height-64,str$(int(Player.energy)))
 Endfunction
 
 // M_MENU_SPLASH
@@ -473,7 +518,7 @@ Function UI_Render_M_MENU_SPLASH():
 Endfunction
 
 Function UI_Render_U_MENU_SPLASH():
-	D3d_Box 0,0,Screen.Width,Screen.Height,Rgb(0,0,0)
+	ik paste image MenuImageBlack,0,0,screen.width,screen.height
 	
 	seconds=(Hitimer()-SplashStartTime)/(125/2)
 	line1$=Left$("The Game Creators",seconds-4)

@@ -1,0 +1,431 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - OPENFPS NETWORKING MODULE
+//  Concept and code by thenerd, Summer 2012!
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  DOCUMENTATION
+//////////////////////////////////////////////////////////////
+//
+//////////////////////////////////////////////////////////////
+Remstart
+
+end of day on december 23rd 2012 - thoughts:
+The UI system will pass three variables along in its code:
+	Global UI_JoinServerName as string
+	Global UI_JoinServerIP as string
+	global UI_JoinServerPort as integer
+these variables should store everything necessary to connect
+to the server. In the UI mode "M_MENU_JOINGAME", the menu will
+call the Network_Connect() function using these options and 
+then switch to the ingame mode. From there, the server will
+take command of the client to load the game.
+If the server is local, the ui module will call the 
+Network_CreateServer() function before starting the game. It
+will then set the variables to the proper options for a local
+game. this will be used in singleplayer too!
+
+	If LocalClient.inited=1:
+		Winsock Make Packet
+		Winsock Add String "msg"
+		winsock add string console_result$
+		Winsock Send Tcp Packet LocalClient.tcp
+	endif
+	
+	
+	####PORTS
+	Server recieves TCP on 25565
+	Server recieves UDP on 25565
+	Server sends TCP response via established connection.
+	Server sends UDP response to 20187.
+	Client recieves TCP on 25565.
+	Client recieves UDP on 20187.
+	
+	Port forwarding needed:
+	Server hosting - 25565
+	General client - 20187
+	
+	LOOK UP AUTOMATIC PORT FORWARDING SOLUTION
+	
+	//server system
+	server has master list of entities
+	every tick, sends out a list (one packet) of data on udp
+	this contains the NAMES of all the entities ingame currently
+	
+	client uses this list to update its entity system, adding
+	or removing entities as necessary.
+	
+	^too hard
+	
+	server sends packets with headers on udp
+	client uses this to update its system
+	
+	example architecture:
+	
+	CLIENT:
+	Hi, I'm connecting to your server.
+	SERVER:
+	Sure! Here, have a tcp connection. We'll send you a packet
+	when we're ready for a UDP connection.
+	*or* Go away. We're full.
+	CLIENT:
+	Thanks, I got the UDP packet! Now I'll send my address so
+	you can establish ongoing TCP and UDP connections!
+	SERVER:
+	Great, the connection is established. Time to sync up the
+	initial data from my game. I'll send you important gamestate
+	messages on TCP, because that's more reliable. I'm sending:
+		-map loading data
+		-current player list
+		-current map data
+		-motd
+		
+	CLIENT:
+	Cool, I have the same version of my files as you do! Now I'll
+	load the map, and set up all of the data for the players and map.
+	*or* Darn, I have an outdated Client. goodbye!
+	CLIENT:
+	Now I'll show a welcome message using your motd.
+	SERVER: Phew, finally we're done the initialization stage!
+	now we can go into the main section of the communication.
+	
+	This is what a standard section of gameplay looks like:
+	
+	CLIENT: 
+	I'm sending you my input data and authentication over udp!
+		-keyboard data
+		-mouseclick data
+		-camera angle
+		-timed chunk of voice chat audio
+	I'm also sending you any new chatter over TCP.
+	SERVER: 
+	Thanks, I'll just take this player data and set the values
+	on your player in my server simulation as soon as I get them!
+	
+	Every once and a while, every 33 ms actually, I'm going to
+	send all my clients a snapshot of the world over UDP.
+	Every few seconds I'll also send a syncing TCP packet with
+	the map data.
+remend
+//////////////////////////////////////////////////////////////
+//  CONSTANTS
+//////////////////////////////////////////////////////////////
+
+#Constant DEFAULT_FILTER "0.0.0.0"
+#Constant DEFAULT_PORT 25565
+
+#Constant NET_LOCALHOST 0
+#Constant NET_GLOBALHOST 1
+#Constant NET_REMOTE 2
+
+/////////////////////////////////////////////////////////////
+//  UDTS
+//////////////////////////////////////////////////////////////
+
+Type t_Server
+	enabled As Boolean
+	channel_listen As Dword
+	channel_udp as dword
+Endtype
+
+Type t_Client
+	enabled As Boolean
+	channel_tcp As Dword
+	channel_udp As Dword
+	target_ip As String
+	target_port As Integer
+	local_port as integer
+Endtype
+
+Type t_ClientReference
+	name as string
+	tcp As Dword
+	udp as dword
+	ip As String
+	port As Integer
+	localport as integer
+endtype
+
+
+//////////////////////////////////////////////////////////////
+//  FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+Function Network_Init():
+	Winsock Make
+	Global Client As t_Client : Client.enabled = 0
+	Global Server As t_Server : Server.enabled = 0
+	Global NetworkServerFlag As Boolean
+Endfunction
+
+Function Network_Update():
+   Winsock Refresh Channels
+	
+	if Client.Enabled =1 then Network_UpdateClient()
+	if Server.Enabled =1 then Network_UpdateServer()
+	
+	//check for errors
+	If Winsock Error() then UI_WriteLog(UI_RED,"WINSOCK ERROR - "+winsock error msg$()) : end
+Endfunction
+
+Function Network_StartClient(mode as integer):
+	If Client.Enabled =0:
+		Client.Enabled =1
+		//set ip based on mode
+		Select mode
+			Case NET_LOCALHOST
+				Client.target_ip="127.0.0.1"
+				Client.target_port=DEFAULT_PORT
+			Endcase
+			Case NET_GLOBALHOST
+				Client.target_ip=Network_GetIP()
+				Client.target_port=DEFAULT_PORT
+			Endcase
+			Case NET_REMOTE
+				Client.target_ip="192.168.1.2" `Network_GetIP()
+				Client.target_port=DEFAULT_PORT
+			Endcase
+		Endselect
+	
+		//setup tcp channel
+		Client.channel_tcp = Winsock Connect(Client.target_ip, Client.target_port)
+		
+		Client.local_port = 20000+rnd(200)
+		
+		//send init packet
+		Winsock Make Packet
+		Winsock Add String "init"
+		Winsock Add String NetworkName
+		winsock add int Client.local_port
+		Winsock Send Tcp Packet Client.channel_tcp
+		
+		//setup udp channel - INCOMING PORT USES PORT 20187
+		Client.channel_udp = Winsock Create Udp Channel()
+		Winsock Set Channel Target Client.channel_udp,Client.target_ip, Client.target_port
+		Winsock Bind Channel Client.channel_udp,"0.0.0.0", Client.local_port`20187
+		
+		UI_WriteLog(UI_Green,"Started client.")
+	Endif
+Endfunction
+
+Function Network_StartServer(mode as integer):
+	If Server.Enabled=0:
+		dim ServerClients(0) As t_ClientReference
+		Global NumClients : NumClients = 0
+		
+		Local Server_filter As String
+		Local Server_port As Integer
+		
+		Select mode
+			Case NET_LOCALHOST
+				Server_filter = "127.0.0.1"
+				server_port = DEFAULT_PORT
+			Endcase
+			Case NET_GLOBALHOST
+				Server_filter = DEFAULT_FILTER
+				server_port = DEFAULT_PORT
+			Endcase
+			Case NET_REMOTE
+				Server_filter = DEFAULT_FILTER
+				server_port = DEFAULT_PORT
+			Endcase
+		endselect
+		
+		//tcp listen channel
+		Server.channel_listen=Winsock Listen(server_filter,server_port)
+		
+		//udp recieving channel
+		Server.channel_udp=WINSOCK CREATE UDP CHANNEL()
+		Winsock Bind Channel Server.channel_udp,server_filter,server_port
+		
+		Server.Enabled=1
+		UI_WriteLog(UI_Green,"Started server.")
+	endif
+Endfunction
+
+Function Network_UpdateClient():
+	If Client.enabled=1:
+		//handle server system here
+		
+		//udp channel
+		If Winsock Channel Data Waiting(Client.channel_udp):
+			Winsock Recv Udp Message Client.channel_udp
+			Winsock Split Data Client.channel_udp
+			While Winsock Packet Count(Client.channel_udp)>0:
+				Winsock Fetch Packet Client.channel_udp
+				Local packet_header As String
+				packet_header = Winsock Read String$()
+				Select packet_header
+					Case "response"
+						if FLAG_WAITINGFORNETWORK = 1:
+							UI_WriteLog(UI_YELLOW,"Received server response.")
+							UI_WriteLog(UI_YELLOW,"Connection to server is ongoing.")
+							UI_WriteLog(UI_YELLOW,"Client/server ready for game.")
+							//do interface sub-code from loading
+							`ui_menu_Setmode(M_ENGINE_DEFAULT)
+							LoadingString = "Connected."
+							UI_FadeManager.state=UI_FADEIN
+							UI_FadeManager.target=M_ENGINE_DEFAULT
+							FLAG_WAITINGFORNETWORK = 0
+						endif
+					Endcase
+					Case "posrot"
+						If Winsock Read String$()=Networkname:
+						newage = Winsock Read int()
+						If newage > Player.possyncage:
+							Player.possyncage=newage
+							CameraArray(RootCamera).position.x = winsock read float()
+							CameraArray(RootCamera).position.y = winsock read float()
+							CameraArray(RootCamera).position.z = Winsock Read Float()
+							CameraArray(RootCamera).rotation.x = winsock read float()
+							CameraArray(RootCamera).rotation.y = winsock read float()
+							CameraArray(RootCamera).rotation.z = Winsock Read Float()
+						endif
+						endif
+						remstart
+						CameraArray(RootCamera).rotation.x = Player.ncx
+						CameraArray(RootCamera).rotation.y = Player.ncy
+						CameraArray(RootCamera).rotation.z = Player.shake
+						remend
+					Endcase
+				endselect
+			Endwhile
+		endif
+		
+		//tcp channel
+		if Winsock Channel Data Waiting(Client.channel_tcp):
+			//check incoming data from server (TCP)
+			Winsock recv message Client.channel_tcp
+			Winsock Split Data Client.channel_tcp
+			While Winsock Packet Count(Client.channel_tcp)>0:
+				Winsock Fetch Packet Client.channel_tcp
+				Local packet_header As String
+				packet_header = Winsock Read String$()
+				Select packet_header
+					Case "udpinit"
+						//signal to start up the udp connection after tcp is successful
+						Winsock Make Packet
+						Winsock add String "connect"
+						Winsock Send udp Packet Client.channel_udp
+					endcase
+				Endselect
+			endwhile
+		Endif
+	endif
+Endfunction
+
+
+
+Function Network_UpdateServer():
+	If Server.enabled=1:
+		Player_Update()
+		
+		//check UDP connection
+		If Winsock Channel Data Waiting(Server.channel_udp):
+			Winsock Recv Udp Message Server.channel_udp
+			Winsock Split Data Server.channel_udp
+			While Winsock Packet Count(Server.channel_udp)>0:
+				Winsock Fetch Packet Server.channel_udp
+				Local packet_header As String
+				packet_header = Winsock Read String$()
+				Select packet_header
+					
+					Case "connect"
+						//get connect packet
+						//and send response packet
+						ip$=winsock remote host$(Server.channel_udp)
+						//scan through all the client ids and identify
+						success=0
+						For CurrentClientid = 0 To NumClients-1:
+							If ServerClients(CurrentClientid).ip=ip$:
+								success=1
+								ServerClients(CurrentClientid).udp=winsock create udp channel()
+								Winsock Set Channel Target ServerClients(CurrentClientid).udp,ip$,ServerClients(CurrentClient).localport
+								Winsock Make Packet
+								Winsock add String "response"
+								Winsock Send Udp Packet ServerClients(CurrentClientid).udp
+							endif
+						Next CurrentClientid
+					Endcase
+					
+				endselect
+			Endwhile
+		endif
+
+		
+		//Check TCP listen port
+		//Do this to add new clients
+		If (winsock channel Data waiting(Server.channel_listen)):
+			ServerClients(NumClients).name="newclient"
+			ServerClients(NumClients).tcp=winsock accept(Server.channel_listen)
+			NumClients=NumClients+1
+			Array Insert At Bottom ServerClients()
+			UI_WriteLog(UI_Green,"New client connected to server.")
+		Endif
+		
+		//Check TCP client ports
+		If NumClients>0:
+			For CurrentClient = 0 To NumClients-1:
+				If Winsock Channel Data Waiting(ServerClients(CurrentClient).tcp):
+					Winsock recv message ServerClients(CurrentClient).tcp
+					Winsock Split Data ServerClients(CurrentClient).tcp
+					While Winsock Packet Count(ServerClients(CurrentClient).tcp)>0:
+						Winsock Fetch Packet ServerClients(CurrentClient).tcp
+						Local packet_header As String
+						packet_header = Winsock Read String$()
+						Select packet_header
+							
+							Case "init"
+								//recieved tcp init packet
+								//now send the udp init packet
+								ServerClients(CurrentClient).name = Winsock Read String$()
+								ServerClients(CurrentClient).localport = winsock read int()
+								ServerClients(CurrentClient).ip = Winsock Remote Host$(ServerClients(CurrentClient).tcp)
+								Winsock Make Packet
+								Winsock Add String "udpinit"
+								Winsock Send Tcp Packet ServerClients(CurrentClient).tcp
+							Endcase
+							
+							Case "msg"
+								//chat message
+								username$=ServerClients(CurrentClient).name
+								message$=Winsock Read String$()
+								ui_writelog(UI_Green,username$+": "+message$)
+							Endcase
+							
+						Endselect
+					endwhile
+				endif
+			Next CurrentClient
+		endif
+		
+		//end of server update code
+	endif
+Endfunction
+
+Function Network_SendTestMessage():
+	Winsock Make Packet
+	Winsock Add String "msg"
+	winsock add string "I'm "+NetworkName+" and my ip is "+Network_GetIP()+"."
+	Winsock Send Tcp Packet Client.channel_tcp
+endfunction
+
+Function Network_SetAsServer():
+	NetworkServerFlag = 1
+endfunction
+
+Function Network_GetIP():
+	ip$="error"
+	port=443 : access=0x00800000
+	http connect "www.fpscreator.com",port
+	action$="" : return$=HTTP REQUEST DATA("POST", "gamehost/whatismyip.php",action$,access)
+	If return$<>""
+		ip$=return$
+	endif
+	Http Disconnect
+	ui_writelog(UI_Green,"Looked up IP for local machine: "+ip$)
+Endfunction ip$
+
+//////////////////////////////////////////////////////////////
+//  END OF CODE
+//////////////////////////////////////////////////////////////

@@ -485,6 +485,7 @@ Function UI_Init()
 	UI_LoadGuiGraphics("Media\Images\Interface\redbar.png","UI_redbar")
 	UI_LoadGuiGraphics("Media\Images\Interface\redbar2.png","UI_redbar2")
 	UI_LoadGuiGraphics("Media\Images\Interface\orangebar.png","UI_orangebar")
+	UI_LoadGuiGraphics("Media\Images\Interface\bluebar.png","UI_bluebar")
 		
 	UI_LoadGuiGraphics("Media\Images\Interface\button-normal.png","UI_button")
 	UI_LoadGuiGraphics("Media\Images\Interface\button-hover.png","UI_buttonhover")
@@ -3471,6 +3472,7 @@ Local var_colorizer$  as string
 		Endif
 	Endif
 	`AddtoDisplay("~pLOGTEXT~w ",param_log$)
+	`UI_Chat_AddText("UI",param_log$)
 	UI_Console_AddLine("UI",param_log$)
 EndFunction
 
