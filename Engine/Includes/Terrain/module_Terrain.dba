@@ -20,8 +20,10 @@ endtype
 //////////////////////////////////////////////////////////////
 //  FUNCTIONS
 //////////////////////////////////////////////////////////////
-
+	
 Function Terrain_Init():
+	if TerrainExists=0:
+	global TerrainExists as boolean: terrainexists = 1
 	global MasterHeightmap : MasterHeightmap = reserve free image()
 	Global MasterTexture : MasterTexture = Reserve Free Image()
 	Global MasterDetail : MasterDetail = Reserve Free Image()
@@ -29,14 +31,13 @@ Function Terrain_Init():
 	Load Image "Media\Materials\Heightmaps\Generic\heightmap.bmp",MasterHeightmap
 	Load Image "Media\Materials\Heightmaps\Generic\texture.jpg",MasterTexture
 	Load Image "Media\Materials\Heightmaps\Generic\detail.tga",MasterDetail
-	Load Mesh "Media\Models\grid.x",MasterGridObject
+	`Load Mesh "Media\Models\grid.x",MasterGridObject
 	
 	Global TerrainSizeX : TerrainSizeX = 15 //actually 16
 	Global TerrainSizeZ : TerrainSizeZ = 15 //actually 16
 	Global TerrainUnitSizeX : TerrainUnitSizeX = 16 //world chunk scale
 	Global TerrainUnitSizeZ : TerrainUnitSizeZ = 16 //world chunk scale
 	Dim TerrainArray(TerrainSizeX,TerrainSizeZ) As t_TerrainGridTile
-	global Terrain_HighestValue as float
 	
 	For TZ = 0 To TerrainSizeX:
 		For TX = 0 To TerrainSizeZ:
@@ -65,7 +66,7 @@ Function Terrain_Init():
 			// the plain function generates starting with 0,
 			// adding vertexdata for a full x row, then z=z+1
 			// until the end
-			Lock Vertexdata For Limb TerrainArray(TX,TZ).object,0,0
+			Lock Vertexdata For Limb TerrainArray(TX,TZ).object,0,2
 			current_vertex = 0
 			For Vz = 0 To TerrainUnitSizeZ:
 				For Vx = 0 To TerrainUnitSizeX:
@@ -80,7 +81,6 @@ Function Terrain_Init():
 					Set Vertexdata Diffuse current_vertex,calculatedcolor
 					//calc normals
 					y#=get vertexdata position y(current_vertex)
-					if y#>Terrain_HighestValue then Terrain_HighestValue=y#
 					`set vertexdata normals current_vertex,rnd(100)/100.0 +50,rnd(100)/100.0 +50,rnd(100)/100.0 +50
 					current_vertex = current_vertex + 1
 				Next Vx
@@ -95,7 +95,17 @@ Function Terrain_Init():
 			//setup sparkies collision
 			Sc_Setupcomplexobject TerrainArray(TX,TZ).object,0,32
 			Sc_Updateobject TerrainArray(TX,TZ).object
+			Calculate Object Bounds TerrainArray(TX,TZ).object
 			
+			tempobject = find free object()
+			Clone Object tempobject,TerrainArray(TX,TZ).object
+			Col1 = NDB_NewtonCreateTreeCollision( tempobject )
+			terrain = NDB_NewtonCreateBody( Col1 )
+			NDB_BuildMatrix 0.0, 0.0, 0.0, TX*TerrainUnitSizeX,0,(15-TZ)*TerrainUnitSizeZ
+			NDB_NewtonBodySetMatrix terrain
+			Ndb_Newtonreleasecollision Col1
+			delete object tempobject
+
 			Lock Vertexdata For Limb TerrainArray(TX,TZ).object,0,0
 			For current_vertex = 0 To Get Vertexdata Vertex Count()-1
 				x#=get vertexdata position x(current_vertex)+object position x(TerrainArray(TX,TZ).object)
@@ -111,12 +121,32 @@ Function Terrain_Init():
 			Unlock Vertexdata
 			
 		Next TZ
-	next TX
+	Next TX
+	endif
 Endfunction
 
 Function Terrain_Update():
+	if TerrainExists=1:
 	If World.enabled = 1:
+	else:
+	Endif
 	endif
+Endfunction
+
+Function Terrain_Destroy():
+	Delete Image MasterHeightmap
+	Delete Image MasterTexture
+	Delete Image MasterDetail
+
+	For TZ = 0 To TerrainSizeX:
+			For TX = 0 To TerrainSizeZ:
+				delete object TerrainArray(TX,TZ).object
+				delete image TerrainArray(TX,TZ).heightmapchunk
+			Next TX
+	Next TZ
+
+	Undim TerrainArray()
+	TerrainExists = 0
 endfunction
 
 //////////////////////////////////////////////////////////////

@@ -3,28 +3,4 @@
 		<var name="name" value="Training"/>
 		<var name="description" value="This training ground serves as a tutorial for new players."/>
 	</info>
-	<spectatorcamera>
-		<name name="Couch View"/>
-		<position x="0" y="180" z="0"/>
-		<rotation x="-90" y="0" z="0"/>
-		<fov value="80"/>
-	</spectatorcamera>
-	<spectatorcamera>
-		<name name="Clouds"/>
-		<position x="0" y="0" z="0"/>
-		<rotation x="-28" y="90" z="0"/>
-		<fov value="80"/>
-	</spectatorcamera>
-	<spectatorcamera>
-		<name name="More Clouds"/>
-		<position x="0" y="0" z="0"/>
-		<rotation x="-28" y="180" z="0"/>
-		<fov value="80"/>
-	</spectatorcamera>
-	<oobject name="object1">
-		<model file="Media\models\DirtySofa\sofa.x"/>
-		<texture file="Media\models\DirtySofa\sofa_d2.dds"/>
-		<position x="0" y="0" z="0"/>
-		<rotation x="0" y="0" z="0"/>
-	</oobject>
 </world>

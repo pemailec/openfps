@@ -60,6 +60,9 @@ Function SYS_Init():
 	Screen.Fullscreen =  lua Int("Fullscreen")
    Screen.AA = 			lua Int("AA")
 	
+	global NetworkName as string
+   NetworkName = 			lua string$("NetworkName")
+	
 	Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,Screen.AA,0
    if Screen.Fullscreen=1 then set window off
 	If Screen.Fullscreen=0 Then Set Window On

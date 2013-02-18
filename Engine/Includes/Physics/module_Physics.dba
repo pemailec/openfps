@@ -1,0 +1,58 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - PHYSICS MODULE
+//  Concept and code by thenerd, Summer 2012!
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  CONSTANTS
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  UDTS
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+Function Physics_Init():
+	NDB_NewtonCreate
+	NDB_SetVector 0.0, -48.0, 0.0
+	Ndb_Setstandardgravity
+	Ndb_Setvector 1, -256.0, -256.0, -256.0
+	Ndb_Setvector 2, 256.0, 256.0, 256.0
+	Ndb_Newtonsetworldsize
+	Global Newtontime As Float
+	Newtontime = NDB_GetElapsedTimeInSec()
+	Newtontime = Ndb_Getelapsedtimeinsec()
+	Global NDBDebug As Boolean : NDBDebug = 0
+	Global NDBDebugobj As Integer
+	Global DefaultMaterial As Integer
+	DefaultMaterial = Ndb_Newtonmaterialgetdefaultgroupid()
+	ui_writelog(UI_Green,"Physics module init'd")
+Endfunction
+
+Function Physics_Update():
+	If World.enabled = 1:
+		if NDBDebugobj <> 0
+			delete object NDBDebugobj
+		Endif	
+		
+		Newtontime = NDB_GetElapsedTimeInSec()
+		Ndb_Newtonupdate Newtontime
+		If NDBDebug=1:
+			NDBDebugobj = NDB_DebugMakeNewtonObject()
+			set object light NDBDebugobj, 0
+		else
+			NDBDebugobj = 0
+		endif
+	Endif
+Endfunction
+
+Function Physics_ToggleDebug():
+	NDBDebug = 1 - NDBDebug
+Endfunction
+
+//////////////////////////////////////////////////////////////
+//  End of code.
+//////////////////////////////////////////////////////////////

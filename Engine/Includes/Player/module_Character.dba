@@ -1,0 +1,202 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - PLAYER MODULE
+//  Concept and code by thenerd, Summer 2012!
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  CONSTANTS
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  UDTS
+//////////////////////////////////////////////////////////////
+
+Type t_Player
+	enabled as boolean
+	cx As Float
+	cy As Float
+	ncx As Float
+	ncy As Float
+	shake As Float
+	eyepos As t_WorldVector
+	eyerot As t_WorldVector
+	sphere As Dword
+	Player As Dword
+	upvector As Dword
+	Playerid As Dword
+	speed As Float
+	SPACEPRESSED As Boolean
+	health As Float
+	energy As Float
+	energydelta As Float
+	sprinting As Integer
+	ticker1 As Integer
+	possyncage As Integer
+	rotsyncage as integer
+Endtype
+
+//////////////////////////////////////////////////////////////
+//  FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+Function Player_Init():
+	Global Player As t_Player
+	Player.enabled = 1
+	Player.Sphere = NDB_NewtonCreateSphere( 0.5, 5.0,0.5 )
+	Player.Player = Ndb_Newtoncreatebody( Player.Sphere )
+	Player.speed = 5
+	Player.health = 100
+	Player.ticker1 = Find Free Ticker()
+	make ticker Player.ticker1,33
+	`setting the initial starting position.
+	NDB_BuildMatrix 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+	NDB_NewtonBodySetMatrix Player.Player
+	`setting the mass...
+	NDB_SetVector 6.0, 8.0, 6.0
+	Ndb_Calculatemiboxsolid 12.0
+	NDB_NewtonBodySetMassMatrix Player.player, 12.0
+	`turn off auto freeze
+	NDB_NewtonBodySetAutoFreeze Player.player, 0
+	`turn on gravity
+	NDB_BodySetGravity Player.player, 1
+	`keep upright
+	NDB_SetVector 0.0, 1.0, 0.0
+	Player.UpVector = NDB_NewtonConstraintCreateUpVector( Player.player )
+	`make player group
+	Default = NDB_NewtonMaterialGetDefaultGroupID()
+	Player.PlayerID = NDB_NewtonMaterialCreateGroupID()
+	NDB_NewtonMaterialSetDefaultFriction Default, Player.PlayerID, 0.01, 0.01
+	NDB_NewtonMaterialSetDefaultElasticity Default, Player.PlayerID, 0.01
+	`set controller to proper group
+	NDB_NewtonBodySetMaterialGroupID Player.player, Player.PlayerID
+	Ndb_Newtonmaterialsetcontinuouscollisionmode DefaultMaterial, Player.PlayerID, 1
+	ui_writelog(UI_Green,"Player module init'd")
+Endfunction
+
+Function Player_SetPosition(x As float,y as float,z as float):
+	NDB_BuildMatrix 0.0, 0.0, 0.0, x, y, z
+	NDB_NewtonBodySetMatrix Player.Player
+Endfunction
+
+Function Player_Update():
+	if Server.enabled = 1:
+	//do mouse rotation
+	Player.cx=Player.cx+(sys_mousemovey)*0.2
+   Player.cy=Player.cy+(sys_mousemovex)*0.2
+   if Player.cx>80 then Player.cx=80
+   if Player.cx<-80  then Player.cx=-80
+   Player.ncx=tbm_curveangle(Player.cx,Player.ncx,2)
+   Player.ncy=tbm_curveangle(Player.cy,Player.ncy,2)
+	
+	//START MOVEMENT CODE
+	
+	//move vector
+	MoveX# = 0.0
+	MoveZ# = 0.0
+	if keystate(KEY_FORWARD) or keystate(KEY_BACKWARD)
+		dx# = sin(Player.ncy)
+		dz# = cos(Player.ncy)
+		inc MoveX#, dx# * (keystate(KEY_FORWARD)-keystate(KEY_BACKWARD))
+		inc MoveZ#, dz# * (keystate(KEY_FORWARD)-keystate(KEY_BACKWARD))
+	endif
+	if keystate(KEY_LEFT) or keystate(KEY_RIGHT)
+		dx# = sin(Player.ncy+90.0)
+		dz# = cos(Player.ncy+90.0)
+		inc MoveX#, dx# * (keystate(KEY_RIGHT)-keystate(KEY_LEFT))
+		inc MoveZ#, dz# * (keystate(KEY_RIGHT)-keystate(KEY_LEFT))
+	endif
+	length# = sqrt( (MoveX#^2)+(MoveZ#^2) )
+	MoveX# = MoveX# / length#
+	MoveZ# = MoveZ# / length#
+	NDB_NewtonBodyGetVelocity Player.player
+	CurrentVel_X# = NDB_GetVector_X()
+	CurrentVel_Y# = NDB_GetVector_Y()
+	CurrentVel_Z# = NDB_GetVector_Z()
+	`and our goal velocity is simply our move direction multiplied by the player's walking speed. (or 2x if running)
+	If Shiftkey()=1:
+		If Player.energy >0:
+			Player.sprinting = 2
+			Player.energydelta = -0.4
+		else:
+			Player.sprinting = 1
+			Player.energydelta = 0
+		Endif
+	else:
+		Player.sprinting = 1
+		Player.energydelta = 0.2
+	Endif
+	Player.energy = Clamp(Player.energy + (Player.energydelta*TBM),0,100)
+	
+	GoalVel_X# = MoveX# * (Player.speed * ((Player.sprinting)*2) )
+	GoalVel_Z# = MoveZ# * (Player.Speed * ((Player.sprinting)*2) )
+	`here we calculate the actual acceleration needed to reach our Goal_Velocity.  note that I multiply by 0.3, which
+	`is just a damper to keep the forces from getting too large too quickly.
+	AccelX# = 0.3 * ((GoalVel_X# - CurrentVel_X#) / Newtontime)
+	AccelZ# = 0.3 * ((GoalVel_Z# - CurrentVel_Z#) / Newtontime)
+	`also we want to limit how big the acceleration can be.  this keeps the player from being able to push
+	`really heavy objects, etc.
+	if AccelX# > 90.0 then AccelX# = 90
+	if AccelX# < -90.0 then AccelX# = -90.0
+	if AccelZ# > 90.0 then AccelZ# = 90.0
+	if AccelZ# < -90.0 then AccelZ# = -90.0
+	NDB_BodyGetPosition Player.player
+	`set temp vector 2 to force direction
+	NDB_SetVector 2, AccelX#, 0.0, AccelZ#
+	NDB_BodyAddForceGlobal Player.player
+	AccelY# = 0.0
+	if spacekey() and player.SPACEPRESSED = 0
+		Player.SPACEPRESSED = 1
+		`user has pressed the space bar, apparently they would like to jump :)
+		`cast a ray from the player location straight down, see if we hit something.
+		NDB_BodyGetPosition Player.player
+		px# = NDB_GetVector_X() : py# = NDB_GetVector_Y() : pz# = NDB_GetVector_Z()
+		NDB_SetVector 1, px#, py#, pz#
+		NDB_SetVector 2, px#, py# - 6.05, pz#
+		dist# = NDB_NewtonWorldRayCast()
+		if dist# < 1.0
+			`something has been found!  in this case, we don't care what, just let the player jump!
+			`the jump part is just a simple upward force..
+			AccelY# = ((20 - CurrentVel_Y#) / Newtontime)
+			
+			`add another force to the player, the jumping force!  this is just like above, using the
+			`new AddForceGlobal command!  easy, huh?
+			NDB_BodyGetPosition Player.player
+			NDB_SetVector 2, 0.0, AccelY#, 0.0
+			NDB_BodyAddForceGlobal Player.player
+		endif
+	endif
+	If Spacekey() = 0 Then Player.SPACEPRESSED = 0
+	//END MOVEMENT CODE
+	
+	Ndb_Bodygetposition Player.player
+	remstart
+	If Ticker(Player.ticker1)=1:
+		For CurrentClientid = 0 To NumClients-1:
+		Winsock Make Packet
+		Winsock add String "posrot"
+		Winsock add String NetworkName
+		Winsock add int timer()
+		Winsock add float NDB_GetVector_X()
+		Winsock add float NDB_GetVector_Y()
+		Winsock add float NDB_GetVector_Z()
+		Winsock add float Player.ncx  `NDB_GetVector_X()
+		Winsock add float Player.ncy  `NDB_GetVector_Y()
+		Winsock add float Player.shake `NDB_GetVector_Z()
+		Winsock Send Udp Packet ServerClients(CurrentClientid).udp
+		Next CurrentClientid
+	endif
+	remend
+	remstart
+	CameraArray(RootCamera).position.x = NDB_GetVector_X()
+	CameraArray(RootCamera).position.y = NDB_GetVector_Y()
+	CameraArray(RootCamera).position.z = NDB_GetVector_Z()
+	CameraArray(RootCamera).rotation.x = Player.ncx
+	CameraArray(RootCamera).rotation.y = Player.ncy
+	CameraArray(RootCamera).rotation.z = Player.shake
+	remend
+	endif
+Endfunction
+
+//////////////////////////////////////////////////////////////
+//  End of code.
+//////////////////////////////////////////////////////////////

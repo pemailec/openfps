@@ -1,0 +1,245 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - PLAYER MODULE
+//  Concept and code by thenerd, Summer 2012!
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  CONSTANTS
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  UDTS
+//////////////////////////////////////////////////////////////
+
+Type t_Client
+	name As String
+	enabled as boolean
+	authentication As Integer
+	udp_local_authorized As Boolean
+	udp_packet_ticker as integer
+	udp_local_channel As Integer
+	udp_local_port As Integer
+	udp_target_ip As String
+	udp_target_port as integer
+Endtype
+
+Type t_Server
+	name As String
+	enabled as boolean
+	udp_local_channel As Integer
+	udp_local_port As Integer
+	udp_local_ip As String
+	udp_local_filter as string
+	Client_array_num As integer
+Endtype
+
+Type t_ServerClient
+	name As String
+	authentication As Integer
+	ip As String
+	port As Integer
+	udp_channel As Integer
+endtype
+
+
+//////////////////////////////////////////////////////////////
+//  MAIN FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+Function Network_Init(): 
+	//only call this once at the beginning
+	//of the program.
+	Winsock Make
+	
+	Global Client As t_Client
+	Global Server As t_Server
+	
+	//start server for test.
+	`Network_Server_Start(25565)
+	
+	//start client for test.
+	`Network_Client_Connect()
+	
+	UI_WriteLog(UI_Green,"NETWORK: Started up network module.")
+Endfunction
+
+Function Network_Update():
+   Winsock Refresh Channels
+	if Server.enabled = 1 then Network_Server_Update()
+	if Client.enabled = 1 then Network_Client_Update()
+Endfunction
+
+Function Network_Reset():
+	UI_WriteLog(UI_Green,"NETWORK: Resetting:")
+	Network_Terminate()
+	Network_Init()
+	UI_WriteLog(UI_Green,"NETWORK: Done resetting.")
+Endfunction
+
+Function Network_Terminate():
+	//only call this once at the end
+	//of the program.
+	Winsock Clean Up
+	UI_WriteLog(UI_Green,"NETWORK: Terminated network module.")
+Endfunction
+
+Function Network_GetIP():
+	ip$="error"
+	port=443 : access=0x00800000
+	http connect "www.fpscreator.com",port
+	action$="" : return$=HTTP REQUEST DATA("POST", "gamehost/whatismyip.php",action$,access)
+	If return$<>""
+		ip$=return$
+	endif
+	Http Disconnect
+	if ip$="error" then UI_WriteLog(UI_RED,"IP RECV ERROR")
+Endfunction ip$
+
+//////////////////////////////////////////////////////////////
+//  CLIENT FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+Function Network_Client_Connect():
+	Local ip As String
+	Local port As Integer
+	ip = "96.233.35.5"
+	port = 25565
+	if Client.enabled = 0:
+	Client.name = NetworkName
+	Client.enabled = 1
+	//use the system time As an authentication
+	//this is pretty hard to replicate
+	Client.authentication = Hitimer(1) 
+	Client.udp_local_channel = Winsock Create Udp Channel()
+	Client.udp_local_port = 20000 + rnd(200) //find a free port, random for now
+	Client.udp_target_ip = ip
+	Client.udp_target_port = port
+	Client.udp_local_authorized = 0
+	Client.udp_packet_ticker = find free ticker() : make ticker Client.udp_packet_ticker,500
+	Winsock Set Channel Target Client.udp_local_channel,Client.udp_target_ip, Client.udp_target_port
+	Winsock Bind Channel Client.udp_local_channel,Client.udp_target_ip,Client.udp_local_port
+	Winsock Make Packet
+	Winsock Add String "auth"
+	Winsock Add String Client.name //name
+	winsock add int Client.authentication //auth
+	winsock add int Client.udp_local_port //port
+	Winsock Send udp Packet Client.udp_local_channel
+	UI_WriteLog(UI_Green,"NETWORK: Started client.")
+	else:
+		UI_WriteLog(UI_RED,"NETWORK: Client already enabled!")
+	endif
+Endfunction
+
+Function Network_Client_Disconnect():
+Endfunction
+
+Function Network_Client_Update():
+	
+	//attempt authorization
+	If Client.udp_local_authorized = 0:
+		If Ticker(Client.udp_packet_ticker):
+		endif
+	endif
+	
+	//udp channel
+	If Winsock Channel Data Waiting(Client.udp_local_channel):
+		Winsock Recv Udp Message Client.udp_local_channel
+		Winsock Split Data Client.udp_local_channel
+		While Winsock Packet Count(Client.udp_local_channel)>0:
+			Winsock Fetch Packet Client.udp_local_channel
+				Local packet_header As String
+				packet_header = Winsock Read String$()
+				Select packet_header
+					Case "auth_response"
+						local authorization as integer
+						authorization = Winsock Read Int()
+						UI_WriteLog(UI_Green,"Client got authorized."+str$(authorization))
+						Client.udp_local_authorized = 1
+					endcase
+				endselect
+		Endwhile
+	Endif
+	
+	//parse recieved udp data
+	
+Endfunction
+
+//////////////////////////////////////////////////////////////
+//  SERVER FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+Function Network_Server_Start():
+	port = 25565
+	if Server.enabled = 0:
+	Server.enabled = 1
+	Server.name = "OpenFPS Game Server"
+	Server.udp_local_channel=Winsock create udp channel()
+	Server.udp_local_filter = "0.0.0.0"
+	Server.udp_local_ip = Network_GetIP()
+	Server.udp_local_port = port
+	Winsock Bind Channel Server.udp_local_channel,Server.udp_local_filter,Server.udp_local_port
+	dim ServerClients() as t_ServerClient
+	UI_WriteLog(UI_Green,"NETWORK: Started server.")
+	else:
+		UI_WriteLog(UI_RED,"NETWORK: Server already enabled!")
+	endif
+Endfunction
+
+Function Network_Server_End():
+Endfunction
+
+Function Network_Server_Update():
+	
+	//check UDP connection
+	If Winsock Channel Data Waiting(Server.udp_local_channel):
+		Winsock Recv Udp Message Server.udp_local_channel
+		Winsock Split Data Server.udp_local_channel
+			While Winsock Packet Count(Server.udp_local_channel)>0:
+				Winsock Fetch Packet Server.udp_local_channel
+				Local packet_header As String
+				packet_header = Winsock Read String$()
+				Select packet_header
+					Case "auth"
+						ip$=winsock remote host$(Server.udp_local_channel)
+						new_client=1
+						if Server.client_array_num>0:
+							For CurrentClient = 0 To Server.Client_array_num-1:
+								If ServerClients(CurrentClient).ip=ip$:
+									//do nothing because the client is already registered in the server.
+									new_client = 0
+								endif	
+							Next CurrentClient
+						endif
+						If new_client = 1:
+							Array Insert At Bottom ServerClients()
+							ServerClients(Server.Client_array_num).name = winsock read string$()
+							ServerClients(Server.Client_array_num).authentication =  winsock read int()
+							ServerClients(Server.Client_array_num).ip = ip$
+							ServerClients(Server.Client_array_num).port = winsock read int()
+							ServerClients(Server.Client_array_num).udp_channel = winsock create udp channel()
+							Winsock Set Channel Target ServerClients(Server.Client_array_num).udp_channel,ServerClients(Server.Client_array_num).ip,ServerClients(Server.Client_array_num).port
+							Winsock Make Packet
+							Winsock add String "auth_response"
+							Winsock add int ServerClients(Server.Client_array_num).authentication
+							Winsock Send Udp Packet ServerClients(Server.Client_array_num).udp_channel
+							ui_writelog(UI_Green,"NETWORK: SERVER ADDED CLIENT")
+							ui_writelog(UI_Green,"Name: "+ServerClients(Server.Client_array_num).name)
+							ui_writelog(UI_Green,"Auth: "+str$(ServerClients(Server.Client_array_num).authentication))
+							ui_writelog(UI_Green,"IP: "+ServerClients(Server.Client_array_num).ip)
+							ui_writelog(UI_Green,"Port: "+str$(ServerClients(Server.Client_array_num).port))
+							Server.Client_array_num = Server.Client_array_num + 1
+						endif
+					Endcase
+				endselect
+			Endwhile
+		Endif
+		
+Endfunction
+
+Function Network_Server_UpdateCalculations():
+Endfunction
+
+//////////////////////////////////////////////////////////////
+//  End of code.
+//////////////////////////////////////////////////////////////
+
