@@ -155,6 +155,12 @@ Function Network_Client_Update():
 						authorization = Winsock Read Int()
 						UI_WriteLog(UI_Green,"Client got authorized."+str$(authorization))
 						Client.udp_local_authorized = 1
+					Endcase
+					Case "godmessage"
+						ui_Menu_Setmode(M_MENU_GENERICPROMPT)
+						prompttitle$=Winsock Read String$()
+						prompttextone$=Winsock Read String$()
+						prompttexttwo$=Winsock Read String$()
 					endcase
 				endselect
 		Endwhile
@@ -238,6 +244,19 @@ Endfunction
 
 Function Network_Server_UpdateCalculations():
 Endfunction
+
+Function Network_Server_SendGodMessage():
+	if Server.Client_array_num>0:
+		For CurrentClient = 0 To Server.Client_array_num-1:
+		Winsock Make Packet
+		Winsock add String "godmessage"
+		Winsock add string "Hello from chris"
+		Winsock add string "Hello, this is a prompt created by the server."
+		Winsock add string "Hello, this is a prompt created by the server."
+		Winsock Send Udp Packet ServerClients(CurrentClient).udp_channel
+		Next CurrentClient
+	endif
+endfunction
 
 //////////////////////////////////////////////////////////////
 //  End of code.
