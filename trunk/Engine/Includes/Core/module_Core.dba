@@ -21,9 +21,9 @@
 // or debug mode.
 //////////////////////////////////////////////////////////////
 
-Dim Chunk_Init() as string
-Dim Chunk_Update() as string
-Dim Chunk_Terminate() As String
+Dim Chunk_Init() As Dword `string
+Dim Chunk_Update() as dword `string
+Dim Chunk_Terminate() As dword `String
 
 Global Chunk_Init_PTR as dword : Chunk_Init_PTR = get arrayptr(Chunk_Init()) : unlink array Chunk_Init()
 Global Chunk_Update_PTR as dword : Chunk_Update_PTR = get arrayptr(Chunk_Update()) : unlink array Chunk_Update()
@@ -90,20 +90,20 @@ CORE_Chunk_Run(Chunk_Terminate_PTR) : End
 
 Function CORE_Chunk_Add(chunkptr As dword,functionname as string):
 	local newchunkptr as dword
-   local dim temp_chunk() as string
+   local dim temp_chunk() as dword
    Link Array temp_chunk(),chunkptr
 	Array Insert At Bottom temp_chunk()
 	newchunkptr = get arrayptr(temp_chunk())
-	temp_chunk()=functionname
+	temp_chunk()=Get Ptr To Function(functionname)
    unlink array temp_chunk()
 Endfunction newchunkptr
 
 Function CORE_Chunk_Run(chunkptr As dword):
-   Local Dim temp_chunk() As String
+   Local Dim temp_chunk() As dword
    Link Array temp_chunk(),chunkptr
 	For func = 0 To Array Count(temp_chunk()):
 		//execute function string for Chunk(func)
-		Call Function Ptr (Get Ptr To Function(temp_chunk(func)))
+		Call Function Ptr (temp_chunk(func))
 	Next func
    unlink array temp_chunk()
    Undim temp_chunk()

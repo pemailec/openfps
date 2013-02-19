@@ -74,7 +74,7 @@ Function Network_Update():
 	
 	//check port forwarding
 	If PortForwardDone = 0:
-		If Ticker(QtrSecondTicker) Then PortForwardProgress=PortForwardProgress+1
+		If Ticker(HalfSecondTicker) Then PortForwardProgress=PortForwardProgress+1
 		If PortForwardProgress>4 Then PortForwardProgress=1
 		local PortForwardProgressstr$ as string
 		For i = 1 To PortForwardProgress:

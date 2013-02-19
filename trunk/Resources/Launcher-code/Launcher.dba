@@ -18,7 +18,9 @@ Global clientport As Integer
 Lua Make : Lua Load File "Engine\config\game.cfg"
 clientport = Lua Int("Port")
 
-ip$=ip To string$(interface ip (1))
+//first of all, add firewall exceptions for the engine and port forwarder
+// use netsh.exe (windows utility)
+// netsh advfirewall set currentprofile state on
 
 Global OpenFpsMain As Dword
 Global PortForwardOpen As Dword
@@ -28,8 +30,10 @@ Map Shared Mem To Bank "PortForwardDone",1,4
 Write Bank integer 1,0,0
 Execute file "OpenFPS.exe",str$(clientport),"Engine",0
 
+ip$=ip To string$(interface ip (1))
 commandline$ = "-add -app OpenFPS -lanip "+ip$+" -udpport "+str$(clientport)+" -q"
 Execute File "piczo.exe",commandline$,"Resources\Launcher-code\Port-forward",1
+
 Write Bank integer 1,0,1
 
 While Bank Integer(1,0)=1:
