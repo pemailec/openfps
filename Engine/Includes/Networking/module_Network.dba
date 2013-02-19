@@ -20,7 +20,7 @@ Type t_Client
 	udp_local_channel As Integer
 	udp_local_port As Integer
 	udp_target_ip As String
-	udp_target_port as integer
+	udp_target_port As Integer
 Endtype
 
 Type t_Server
@@ -54,6 +54,10 @@ Function Network_Init():
 	Global Client As t_Client
 	Global Server As t_Server
 	
+	Global PortForwardDone As Boolean
+	global PortForwardProgress as integer
+	Map Shared Mem To Bank "PortForwardDone",1,512
+	
 	//start server for test.
 	`Network_Server_Start(25565)
 	
@@ -66,7 +70,22 @@ Endfunction
 Function Network_Update():
    Winsock Refresh Channels
 	if Server.enabled = 1 then Network_Server_Update()
-	if Client.enabled = 1 then Network_Client_Update()
+	If Client.enabled = 1 Then Network_Client_Update()
+	
+	//check port forwarding
+	If PortForwardDone = 0:
+		If Ticker(QtrSecondTicker) Then PortForwardProgress=PortForwardProgress+1
+		If PortForwardProgress>4 Then PortForwardProgress=1
+		local PortForwardProgressstr$ as string
+		For i = 1 To PortForwardProgress:
+		PortForwardProgressstr$=PortForwardProgressstr$+"."
+		next i
+		UI_CenterIconText(1,Screen.Width/2,Screen.Height - 16,"Waiting for port forwarding "+PortForwardProgressstr$,1)
+		if bank Boolean(1,0)=1:
+			PortForwardDone = 1
+		Endif
+	endif
+
 Endfunction
 
 Function Network_Reset():
@@ -80,6 +99,8 @@ Function Network_Terminate():
 	//only call this once at the end
 	//of the program.
 	Winsock Clean Up
+	//write done flag to delete port mapping
+	Write Bank integer 1,0,2
 	UI_WriteLog(UI_Green,"NETWORK: Terminated network module.")
 Endfunction
 
@@ -111,15 +132,31 @@ Function Network_Client_Connect():
 	//this is pretty hard to replicate
 	Client.authentication = Hitimer(1) 
 	Client.udp_local_channel = Winsock Create Udp Channel()
-	Client.udp_local_port = 20000 + rnd(200) //find a free port, random for now
+	Client.udp_local_port = NetworkPort `20000 + Rnd(200) //find a Free port, Random For now
+	UI_WriteLog(UI_Green,"NETWORK: local set port is="+str$(Client.udp_local_port))
+	remstart
+	Note from Chris, 2/18/13
+	The issue with using udp as opposed to tcp is that now
+	some routers will not allow a connection because of
+	the need to set up port forwarding.
+	There are a few ways we can get around this:
+	-Port triggering / mapping
+	-Software-based uPnP port forwarding
+	-Possibility of using Darknet plugin in Launcher to forward ports.
+	Darknet has commands that allow for port mapping.
+	This is a necessity in order to have universal clients!
+	remend
 	Client.udp_target_ip = ip
 	Client.udp_target_port = port
 	Client.udp_local_authorized = 0
 	Client.udp_packet_ticker = find free ticker() : make ticker Client.udp_packet_ticker,500
 	Winsock Set Channel Target Client.udp_local_channel,Client.udp_target_ip, Client.udp_target_port
-	Winsock Bind Channel Client.udp_local_channel,Client.udp_target_ip,Client.udp_local_port
+	Winsock Bind Channel Client.udp_local_channel,"0.0.0.0",Client.udp_local_port
 	Winsock Make Packet
 	Winsock Add String "auth"
+	ip$=ip to string$(interface ip (1))
+	UI_WriteLog(UI_Green,"NETWORK: ip="+ip$)
+	Winsock Add String ip$ //get local ip
 	Winsock Add String Client.name //name
 	winsock add int Client.authentication //auth
 	winsock add int Client.udp_local_port //port
@@ -149,6 +186,7 @@ Function Network_Client_Update():
 			Winsock Fetch Packet Client.udp_local_channel
 				Local packet_header As String
 				packet_header = Winsock Read String$()
+				UI_WriteLog(UI_Green,"Client got packet."+packet_header)
 				Select packet_header
 					Case "auth_response"
 						local authorization as integer
@@ -207,10 +245,16 @@ Function Network_Server_Update():
 				Select packet_header
 					Case "auth"
 						ip$=winsock remote host$(Server.udp_local_channel)
+						port=winsock remote port(Server.udp_local_channel)
+						If ip$ = Server.udp_local_ip:
+							ip$ = Winsock Read String$()
+						else:
+							nulls$ = Winsock Read String$()
+						endif
 						new_client=1
 						if Server.client_array_num>0:
 							For CurrentClient = 0 To Server.Client_array_num-1:
-								If ServerClients(CurrentClient).ip=ip$:
+								If ServerClients(CurrentClient).ip=ip$ and ServerClients(CurrentClient).port = port:
 									//do nothing because the client is already registered in the server.
 									new_client = 0
 								endif	
