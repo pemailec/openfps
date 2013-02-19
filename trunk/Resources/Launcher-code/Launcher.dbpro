@@ -29,7 +29,7 @@ media root path=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Resources\La
 app title=OpenFPS Launcher
 graphics mode=hidden
 fullscreen resolution=1024x768x16
-window resolution=640x480
+window resolution=640x400
 
 ;--> Version Information <--
 verfilename=

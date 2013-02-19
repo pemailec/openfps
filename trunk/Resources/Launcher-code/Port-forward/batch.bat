@@ -1,0 +1,1 @@
+piczo -delete -app OpenFPS -lanip 192.168.1.2 -udpport 23456 -q

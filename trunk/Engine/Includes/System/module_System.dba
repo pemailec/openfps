@@ -13,7 +13,7 @@
 // Constants
 //////////////////////////////////////////////////////////////
 
-#constant CONFIGFILE "Config\screen.cfg"
+#constant CONFIGFILE "Config\game.cfg"
 
 //////////////////////////////////////////////////////////////
 // Udts
@@ -41,7 +41,7 @@ Function SYS_Init():
 	//////////////////////////////////////	
 	
 	If File Exist(CONFIGFILE)=0:
-		open to write 1,"config\screen.cfg"
+		open to write 1,"config\game.cfg"
 		write string 1,"ScreenWidth=640"
 		write string 1,"ScreenHeight=480"
 		write string 1,"ScreenDepth=32"
@@ -62,6 +62,8 @@ Function SYS_Init():
 	
 	global NetworkName as string
    NetworkName = 			lua string$("NetworkName")
+	Global NetworkPort As Integer
+	NetworkPort = 			lua int("Port")
 	
 	Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,Screen.AA,0
    if Screen.Fullscreen=1 then set window off
