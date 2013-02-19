@@ -40,6 +40,8 @@ Function SYS_Init():
 	// Load lua config and set window mode
 	//////////////////////////////////////	
 	
+	if cl$()="" then exit prompt "OpenFPS.exe: Run without dependency. Use Launcher.exe!","Error":end
+	
 	If File Exist(CONFIGFILE)=0:
 		open to write 1,"config\game.cfg"
 		write string 1,"ScreenWidth=640"
