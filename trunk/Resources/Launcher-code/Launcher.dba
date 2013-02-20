@@ -28,7 +28,8 @@ global PortForwardClose as dword
 
 Map Shared Mem To Bank "PortForwardDone",1,4
 Write Bank integer 1,0,0
-Execute file "OpenFPS.exe",str$(clientport),"Engine",0
+
+OpenFpsMain=execute executable("Engine\OpenFPS.exe",str$(clientport),"Engine")
 
 ip$=ip To string$(interface ip (1))
 commandline$ = "-add -app OpenFPS -lanip "+ip$+" -udpport "+str$(clientport)+" -q"
@@ -36,7 +37,7 @@ Execute File "piczo.exe",commandline$,"Resources\Launcher-code\Port-forward",1
 
 Write Bank integer 1,0,1
 
-While Bank Integer(1,0)=1:
+While executable running(OpenFpsMain)=1:
 	Nice Wait 1000
 Endwhile
 
