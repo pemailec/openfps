@@ -1,0 +1,85 @@
+sync on
+sync rate 60
+
+dim x(3) : dim y(3) : dim z(3)
+x(1)=0 : y(1)=0 : z(1)=0
+x(2)=5 : y(2)=0 : z(2)=1
+x(3)=3 : y(3)=5 : z(3)=1
+
+Make Object Plain 1,16,16,16,16
+Convert Object Fvf 1,0x002||0x010||0x040||0x000||0x100
+`Set Object Wireframe 1,1
+Position Camera 0,8,16
+Point Camera 0,0,0
+
+Set Object Cull 1,0
+
+Lock Vertexdata For Limb 1,0,2
+for current_vertex=0 to Get Vertexdata Vertex Count()-18
+	vertx1#=get vertexdata position x(current_vertex)
+	vertz1#=get vertexdata position y(current_vertex)
+	vertz1#=get vertexdata position z(current_vertex)
+	Set Vertexdata Position current_vertex,vertx1#,rnd(100/100),vertz1#
+	vertx1#=get vertexdata position x(current_vertex)
+	vertz1#=get vertexdata position y(current_vertex)
+	vertz1#=get vertexdata position z(current_vertex)	
+	vertx2#=get vertexdata position x(current_vertex+1)
+	vertz2#=get vertexdata position y(current_vertex+1)
+	vertz2#=get vertexdata position z(current_vertex+1)
+	vertx3#=get vertexdata position x(current_vertex+17)
+	vertz3#=get vertexdata position y(current_vertex+17)
+	vertz3#=get vertexdata position z(current_vertex+17)
+	null = make vector3(1)
+	null = make vector3(2)
+	null = make vector3(3)
+	set vector3 1, vertx1#,verty1#,vertz1#
+	Set Vector3 2, vertx2#,verty2#,vertz2#
+	Set Vector3 3, vertx3#,verty3#,vertz3#
+	subtract vector3 2, 2, 1
+	subtract vector3 3, 3, 1   ` -- vector 3 and 1 are now directional vectors
+	normalize vector3 2,2      ` -- normalize em
+	normalize vector3 3,3
+	cross product vector3 1, 2,3  ` -- use the origin vector (1) to store the face normal
+	normalize vector3 1,1
+	
+   N1X# = x vector3(1)
+   N1Y#  = y vector3(1)
+   N1Z# = z vector3(1)
+
+	null = delete vector3(1)
+	null = delete vector3(2)
+	null = delete vector3(3)
+	set vertexdata normals current_vertex,n1x#,n1y#,n1z#
+	set vertexdata normals current_vertex+1,n1x#,n1y#,n1z#
+	set vertexdata normals current_vertex+17,n1x#,n1y#,n1z#
+next current_vertex
+Unlock Vertexdata
+
+remstart
+make object triangle 10,x(1),y(1),z(1),x(2),y(2),z(2),x(3),y(3),z(3)
+
+vx#=(x(2)-x(1))
+vy#=(y(2)-y(1))
+vz#=(z(2)-z(1))
+
+vvx#=(x(3)-x(1))
+vvy#=(y(3)-y(1))
+vvz#=(z(3)-z(1))
+
+Normalex# = ((Vy# * Vvz#) - (Vz# * Vvy#))
+Normaley# = ((Vz# * Vvx#) - (Vx# * Vvz#))
+Normalez# = ((Vx# * Vvy#) - (Vy# * Vvx#))
+
+Magnitude# = Sqrt(Normalex#*Normalex# + Normaley#*Normaley# + Normalez#*Normalez#)
+x#=Normalex# / Magnitude#
+y#=Normaley# / Magnitude#
+z#=Normalez# / Magnitude#
+remend
+
+
+do
+
+   sync
+loop`%Project Title%
+`vertextest.dba
+`======================

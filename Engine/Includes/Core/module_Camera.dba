@@ -1,237 +1,246 @@
 //////////////////////////////////////////////////////////////
-//  Game Engine Standard Modules - CAMERA MODULE
+//  OpenFPS Modules - CAMERA MODULE
 //  Concept and code by thenerd, Summer 2012!
 //////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////
-//  CONSTANTS
-//////////////////////////////////////////////////////////////
-
-#Constant CAM_FREE 1
-#Constant CAM_SPECTATOR 2
-#Constant CAM_SPECTATOR_FREE 3
-#Constant CAM_PLAYER 4
-#Constant CAM_VEHICLE 5
-
+// Documentation:
+// Handles calculation of curved camera values.
+// Handles camera render targets.
+// Handles camera smoothing and culling system.
 //////////////////////////////////////////////////////////////
 //  UDTS
 //////////////////////////////////////////////////////////////
 
-Type t_CameraVector
-	x As Float
-	y As Float
-	z As Float
-endtype
-
+//Camera UDT
 Type t_Camera
-	id As Integer
-	Width As Integer
-	Height As Integer
-	Imageid As Integer
-	FOV As Float
-	CurvedFOV as float
+	camera_id As Integer
+	camera_image As t_Image
+	camera_fov As t_CurvedVector
+	camera_nearrange As Integer
+	camera_farrange as Integer
 	position As t_CameraVector
-	smoothing as boolean
-	smoothpos As t_CameraVector
-	smoothrot as t_CameraVector
-	rotation As t_CameraVector
+	rotation as t_CameraVector
+	position_curved As t_CameraVector
+	rotation_curved as t_CameraVector
+	smoothing As Boolean
+	zoom as integer
 Endtype
-
-Type t_PointCameraList
-	position As t_CameraVector
-	rotation As t_CameraVector
-	FOV As Float
-	name as string
-endtype
 
 //////////////////////////////////////////////////////////////
 //  FUNCTIONS
 //////////////////////////////////////////////////////////////
 
-Function CameraSystem_Init():
-	UI_WriteLog(UI_GREEN,"Starting up camera system.")
-	dim CameraArray() As t_Camera
-	Global NumCameras As Integer
-	Global RootCamera As Integer : RootCamera = 0
-	Array Insert At Bottom CameraArray()
-	CameraArray(0).id = 0
-	CameraArray(0).width = Screen.Width
-	CameraArray(0).height = Screen.Height
-	CameraArray(0).FOV = 80 //test this later
-	CameraArray(0).imageid = reserve free image()
-	Set Camera To Image CameraArray(0).id,CameraArray(0).imageid,CameraArray(0).width,CameraArray(0).height
-	color backdrop CameraArray(0).id,rgb(255,255,0)
-	NumCameras = NumCameras + 1
+//Camera_Init() - Sets up the Camera system.
+Function Camera_Init():
 	
-	remstart
-	Global Skyboxcamera As Integer : Skyboxcamera = Camera_Make(Screen.Width,Screen.Height)
-	Camera_SetBackdrop(RootCamera,Camera_GetRenderImage(Skyboxcamera))
-	Camera_SetPosMatrix(SkyboxCamera,0,-10000,0)
-	remend
+	//Write debug log.
+	UI_WriteLog(UI_GREEN,"* Starting up camera system.")
+	UI_WriteLog(UI_GREEN,"* Screen.Width="+str$(Screen.Width))
+	UI_WriteLog(UI_GREEN,"* Screen.Height="+str$(Screen.Height))
 	
-	//spectator freecamera variables
-	Global cr#
-	Global cf#
-	Global ncr#
-	Global ncf#
-	Global cx#
-	Global cy#
-	Global ncx#
-	Global ncy#
-	global pcy#
+	//Set up the camera array
+	Dim CameraArray() As t_Camera
 	
-	Global CameraMode As Integer
-	CameraMode = CAM_SPECTATOR_FREE
-	Global NumSpectatorCameras As Integer
-	global CurSpectatorCamera as integer
-	dim SpectatorCameras() as t_PointCameraList
-	Global Paused As Boolean
-	Global CameraZoom As integer
-	
-	Global SkyboxObject As Integer : SkyboxObject = reserve free object()
-	Global SkyboxImage As Integer : SkyboxImage = reserve free image()
-	Global SkyboxShader As Integer : SkyboxShader = Reserve Free Effect()
-	
-	make object sphere SkyBoxObject,-2000,5,5
-	Load Image "Media\Materials\Cubemaps\Cube0.dds",SkyboxImage,2
-   load effect "Media\Shaders\SkyBox.fx",SkyboxShader,0
-	texture object SkyBoxObject,0,SkyboxImage
-	Set Object Effect SkyboxObject,SkyboxShader
-	
-	Fog On
-	Fog Distance 256*2
-	Fog Color Rgb(220,220,220)
+	//add the root camera to the scene
+	Global RootCamera As Integer : RootCamera = Camera_MakeRoot(Screen.Width,Screen.Height)
+	//Set up a skybox object for the root camera
+	Camera_Skybox_Setup()
+	//Setup lighting and fog for cameras.
+	Camera_Lighting_Setup()
 	
 Endfunction
 
-Function ClearSpectatorArray():
-	Clear Array SpectatorCameras()
-	NumSpectatorCameras = 0
-	CurSpectatorCamera = 0
+//Camera_Update() - Handles the camera system, including smoothing and culling.
+Function Camera_Update():
+	//loop through all the cameras
+	For Camera_Current = 0 To Game.num_cameras - 1:
+		//setup local variables first
+		Local local_position As t_3dvector
+		Local local_rotation As t_3dVector
+		//check if smoothing is turned on
+		If CameraArray(Camera_Current).smoothing = 0:
+			//if not, get the actual camera position values and use them to position camera.
+			local_position.x = CameraArray(Camera_Current).position.x
+			local_position.y = CameraArray(Camera_Current).position.y
+			local_position.z = CameraArray(Camera_Current).position.z
+			local_rotation.x = CameraArray(Camera_Current).rotation.x
+			local_rotation.y = CameraArray(Camera_Current).rotation.y
+			local_rotation.z = CameraArray(Camera_Current).rotation.z
+		else
+			//if smoothing is turned on, calculate smooth variables
+			CameraArray(Camera_Current).position_curved.x=tbm_curvevalue(CameraArray(Camera_Current).position.x,CameraArray(Camera_Current).position_curved.x,2)
+			CameraArray(Camera_Current).position_curved.y=tbm_curvevalue(CameraArray(Camera_Current).position.y,CameraArray(Camera_Current).position_curved.y,2)
+			CameraArray(Camera_Current).position_curved.z=tbm_curvevalue(CameraArray(Camera_Current).position.z,CameraArray(Camera_Current).position_curved.z,2)
+			CameraArray(Camera_Current).rotation_curved.x=tbm_curveangle(CameraArray(Camera_Current).rotation.x,CameraArray(Camera_Current).rotation_curved.x,2)
+			CameraArray(Camera_Current).rotation_curved.y=tbm_curveangle(CameraArray(Camera_Current).rotation.y,CameraArray(Camera_Current).rotation_curved.y,2)
+			CameraArray(Camera_Current).rotation_curved.z=tbm_curveangle(CameraArray(Camera_Current).rotation.z,CameraArray(Camera_Current).rotation_curved.z,2)
+			//grab the new values
+			local_position.x = CameraArray(Camera_Current).position_curved.x
+			local_position.y = CameraArray(Camera_Current).position_curved.y
+			local_position.z = CameraArray(Camera_Current).position_curved.z
+			local_rotation.x = CameraArray(Camera_Current).rotation_curved.x
+			local_rotation.y = CameraArray(Camera_Current).rotation_curved.y
+			local_rotation.z = CameraArray(Camera_Current).rotation_curved.z
+		Endif
+		//calculated curved FOV (always on regardless of smoothing variable)
+		CameraArray(Camera_Current).camera_fov.current = tbm_curvevalue(CameraArray(Camera_Current).camera_fov.destination,CameraArray(Camera_Current).camera_fov.current,20)
+		Position Camera CameraArray(Camera_Current).id,local_position.x,local_position.y,local_position.z
+		Rotate Camera CameraArray(Camera_Current).id,local_rotation.x,local_rotation.y,local_rotation.z
+		set camera fov CameraArray(Camera_Current).id,CameraArray(Camera_Current).camera_fov.current
+	Next Camera_Current
+Endfunction
+
+//Camera_Game_Zoom() - Zoom in function for game. Client-side only!
+Function Camera_Game_Zoom():
+
+	//check if zoom is active (KEY_ZOOM) or mouse scroll
+	Local scroll_diff As Integer
+	scroll_diff = __mouse.scrollButton.scrollUp - __mouse.scrollButton.scrollDown
+	CameraArray(RootCamera).zoom = Clamp(CameraArray(RootCamera).zoom+scroll_diff, 0, 1)
+	
+	If Keystate(KEY_ZOOM)+CameraArray(RootCamera).zoom>0:
+		//paste two vignette overlays (adds to vignette effect)
+		Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
+		Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
+		//set the camera fov to a zoomed value
+		CameraArray(cam).camera_fov.destination = 30
+	else
+		//set the camera fov to a nonzoomed value
+		CameraArray(cam).camera_fov.destination = 80
+	Endif
 endfunction
 
-Function CameraSystem_Update():
-	CameraArray(RootCamera).smoothing = 0
-	`Camera_SetRotMatrix(SkyboxCamera,CameraArray(RootCamera).rotation.x,CameraArray(RootCamera).rotation.y,CameraArray(RootCamera).rotation.z)
-	If World.enabled = 1:
-	If NumSpectatorCameras>0 And CameraMode = CAM_SPECTATOR:
-	//spectator cameras
-	CurSpectatorCamera = CurSpectatorCamera + __mouse.leftButton.clicked - __mouse.rightButton.clicked
-	If CurSpectatorCamera < 0 Then CurSpectatorCamera = NumSpectatorCameras - 1
-	If CurSpectatorCamera > NumSpectatorCameras - 1 Then CurSpectatorCamera = 0
-	Camera_SetPosMatrix(RootCamera,SpectatorCameras(CurSpectatorCamera).position.x,SpectatorCameras(CurSpectatorCamera).position.y,SpectatorCameras(CurSpectatorCamera).position.z)
-	Camera_SetRotMatrix(RootCamera,SpectatorCameras(CurSpectatorCamera).rotation.x,SpectatorCameras(CurSpectatorCamera).rotation.y,SpectatorCameras(CurSpectatorCamera).rotation.z)
-	Endif
-	
-	If CameraMode = CAM_SPECTATOR_FREE and Paused = 0 and chatenabled = 0
-		//based off of evolved's camera movement system
-		ui_hidemouse()
-		cr#=0:cf#=0
-      If Keystate(KEY_RIGHT)=1 Then cr#=-0.2*TBM
-      If Keystate(KEY_LEFT)=1 Then cr#=0.2*TBM
-      If Keystate(KEY_FORWARD)=1 Then cf#=0.2*TBM
-      if KEYSTATE(KEY_BACKWARD)=1 then cf#=-0.2*TBM
-		ncr#=tbm_curvevalue(cr#,ncr#,10)
-      ncf#=tbm_curvevalue(cf#,ncf#,10)
-      cx#=cx#+sys_mousemovey*0.2
-      cy#=cy#+sys_mousemovex*0.2
-      if cx#>80 then cx#=80
-      if cx#<-80  then cx#=-80
-      ncx#=tbm_curveangle(cx#,ncx#,4)
-      ncy#=tbm_curveangle(cy#,ncy#,4)
-      move camera CameraArray(RootCamera).id,ncf#
-      rotate camera CameraArray(RootCamera).id,0,wrapvalue(ncy#-90),0
-      move camera CameraArray(RootCamera).id,ncr#
-		rotate camera CameraArray(RootCamera).id,0,wrapvalue(ncy#+90),0
-      Rotate Camera CameraArray(RootCamera).id,ncx#,ncy#,0
-		x#=Camera Position X(CameraArray(RootCamera).id)
-		y#=Camera Position Y(CameraArray(RootCamera).id)
-		z#=Camera Position Z(CameraArray(RootCamera).id)
-		
-		collide=SC_rayCast(0,x#,256,z#,x#,0,z#,0)
-		If collide>0:
-			yy#=SC_getStaticCollisionY()+3.5
-		endif
-		if y#<yy# then y#=yy#
-		CameraArray(RootCamera).position.x = x#
-		CameraArray(RootCamera).position.y = y#
-		CameraArray(RootCamera).position.z = z#
-		CameraArray(RootCamera).rotation.x = Camera Angle X(CameraArray(RootCamera).id)
-		CameraArray(RootCamera).rotation.y = Camera Angle Y(CameraArray(RootCamera).id)
-		CameraArray(RootCamera).rotation.z = Camera Angle Z(CameraArray(RootCamera).id)
-	Endif
-	
-	If CameraMode = CAM_PLAYER:
-		CameraArray(RootCamera).smoothing = 1
-	Endif
-	
-	Position Object SkyboxObject,CameraArray(RootCamera).position.x,CameraArray(RootCamera).position.y,CameraArray(RootCamera).position.z
-	
-	For cam = 0 To NumCameras - 1:
-		//handle data
-		Local locpos As t_CameraVector
-		Local locrot As t_CameraVector
-		if CameraArray(cam).smoothing = 0:
-		locpos.x = CameraArray(cam).position.x
-		locpos.y = CameraArray(cam).position.y
-		locpos.z = CameraArray(cam).position.z
-		locrot.x = CameraArray(cam).rotation.x
-		locrot.y = CameraArray(cam).rotation.y
-		locrot.z = CameraArray(cam).rotation.z
-		else:
-		CameraArray(cam).smoothpos.x=tbm_curvevalue(CameraArray(cam).position.x,CameraArray(cam).smoothpos.x,2)
-		CameraArray(cam).smoothpos.y=tbm_curvevalue(CameraArray(cam).position.y,CameraArray(cam).smoothpos.y,2)
-		CameraArray(cam).smoothpos.z=tbm_curvevalue(CameraArray(cam).position.z,CameraArray(cam).smoothpos.z,2)
-		CameraArray(cam).smoothrot.x=tbm_curveangle(CameraArray(cam).rotation.x,CameraArray(cam).smoothrot.x,2)
-		CameraArray(cam).smoothrot.y=tbm_curveangle(CameraArray(cam).rotation.y,CameraArray(cam).smoothrot.y,2)
-		CameraArray(cam).smoothrot.z=tbm_curveangle(CameraArray(cam).rotation.z,CameraArray(cam).smoothrot.z,2)
-		locpos.x = CameraArray(cam).smoothpos.x
-		locpos.y = CameraArray(cam).smoothpos.y
-		locpos.z = CameraArray(cam).smoothpos.z
-		locrot.x = CameraArray(cam).smoothrot.x
-		locrot.y = CameraArray(cam).smoothrot.y
-		locrot.z = CameraArray(cam).smoothrot.z
-		endif
-		CameraArray(cam).CurvedFOV = tbm_curvevalue(CameraArray(cam).FOV,CameraArray(cam).CurvedFOV,20)
-		Position Camera CameraArray(cam).id,locpos.x,locpos.y,locpos.z
-		Rotate Camera CameraArray(cam).id,locrot.x,locrot.y,locrot.z
-		set camera fov CameraArray(caM).id,CameraArray(cam).CurvedFOV
-	Next cam
-	Endif
-Endfunction
-
+//Camera_make() - Creates a new camera
 Function Camera_Make(width As integer, height as integer):
 	Local CurrentCamera As Integer
-	CurrentCamera = NumCameras
+	CurrentCamera = Game.num_cameras
 	Array Insert At Bottom CameraArray()
-	CameraArray(NumCameras).id = Find Free Camera() : Make Camera CameraArray(NumCameras).id
-	CameraArray(NumCameras).width = width
-	CameraArray(NumCameras).height = height
-	CameraArray(NumCameras).FOV = 80 //test this later
-	CameraArray(NumCameras).imageid = reserve free image()
-	set camera to image CameraArray(NumCameras).id,CameraArray(NumCameras).imageid,width,height
-	NumCameras = NumCameras + 1
+	CameraArray(Game.num_cameras).camera_id = Find Free Camera()
+	Make Camera CameraArray(Game.num_cameras).camera_id
+	CameraArray(Game.num_cameras).camera_image.id = reserve free image()
+	CameraArray(Game.num_cameras).camera_image.width = width
+	CameraArray(Game.num_cameras).camera_image.height = height
+	CameraArray(Game.num_cameras).camera_fov.destination = 80
+	set camera to image CameraArray(Game.num_cameras).camera_id,CameraArray(Game.num_cameras).camera_image.id,width,height
+	Game.num_cameras = Game.num_cameras + 1
 Endfunction CurrentCamera
 
-Function Camera_SetPosMatrix(id as integer,x as float,y as float,z as float):
+//Camera_makeroot() - registers the root camera in the system
+Function Camera_MakeRoot(width As integer, height as integer):
+	Local CurrentCamera As Integer
+	CurrentCamera = Game.num_cameras
+	Array Insert At Bottom CameraArray()
+	CameraArray(Game.num_cameras).camera_id = 0
+	CameraArray(Game.num_cameras).camera_image.id = reserve free image()
+	CameraArray(Game.num_cameras).camera_image.width = width
+	CameraArray(Game.num_cameras).camera_image.height = height
+	CameraArray(Game.num_cameras).camera_fov.destination = 80
+	set camera to image CameraArray(Game.num_cameras).camera_id,CameraArray(Game.num_cameras).camera_image.id,width,height
+	Game.num_cameras = Game.num_cameras + 1
+Endfunction CurrentCamera
+
+//Camera_setposmatrix() - sets a camera's position.
+Function Camera_SetPosMatrix(id As integer,x as float,y as float,z as float):
 	CameraArray(id).position.x = x
 	CameraArray(id).position.y = y
 	CameraArray(id).position.z = z
 Endfunction
 
+//Camera_setrotmatrix() - sets a camera's rotation.
 Function Camera_SetRotMatrix(id as integer,x as float,y as float,z as float):
 	CameraArray(id).rotation.x = x
 	CameraArray(id).rotation.y = y
 	CameraArray(id).rotation.z = z
 Endfunction
 
+//Camera_GetPositionX() - gets the x position of a camera.
+Function Camera_GetPositionX(id As integer)
+	Local value As Float
+	value = CameraArray(id).position.x
+Endfunction value
+
+//Camera_GetPositionY() - gets the y position of a camera.
+Function Camera_GetPositionY(id As integer)
+	Local value As Float
+	value = CameraArray(id).position.y
+Endfunction value
+
+//Camera_GetPositionZ() - gets the z position of a camera.
+Function Camera_GetPositionZ(id As integer)
+	Local value As Float
+	value = CameraArray(id).position.z
+Endfunction value
+
+//Camera_GetRotationX() - gets the x rotation of a camera.
+Function Camera_GetRotationX(id As integer)
+	Local value As Float
+	value = CameraArray(id).rotation.x
+Endfunction value
+
+//Camera_GetRotationY() - gets the y rotation of a camera.
+Function Camera_GetRotationY(id As integer)
+	Local value As Float
+	value = CameraArray(id).rotation.y
+Endfunction value
+
+//Camera_GetRotationZ() - gets the z rotation of a camera.
+Function Camera_GetRotationZ(id As integer)
+	Local value As Float
+	value = CameraArray(id).rotation.z
+endfunction value
+
+//Camera_GetRenderImage() - gets the render image of a camera.
 Function Camera_GetRenderImage(id as integer):
 	Local renderimage As Integer
 	renderimage = CameraArray(id).imageid
 Endfunction renderimage
 
+//Camera_GetRenderImage() - Sets the camera's 2d backdrop.
 Function Camera_SetBackdrop(id,image As integer):
 	texture backdrop CameraArray(id).id, image
+endfunction
+
+//Camera_Lighting_Setup() - Sets up lighting and fog for cameras.
+Function Camera_Lighting_Setup():
+	//set up fog
+	Fog On
+	Fog Distance 256*2
+	Fog Color Rgb(220,220,220)
+endfunction
+
+//Camera_Skybox_Setup() - Sets up the camera skybox.
+Function Camera_Skybox_Setup():	
+	//variable setup
+	Global SkyboxObject As Integer : SkyboxObject = Reserve Free Object()
+	Global SkyboxImage As Integer  :	SkyboxImage  = Reserve Free Image()
+	Global SkyboxShader As Integer : SkyboxShader = Reserve Free Effect()
+	//object setup
+	make object sphere SkyBoxObject,-2000,5,5
+	Load Image "Media\Materials\Cubemaps\Cube0.dds",SkyboxImage,2
+   load effect "Media\Shaders\SkyBox.fx",SkyboxShader,0
+	texture object SkyBoxObject,0,SkyboxImage
+	Set Object Effect SkyboxObject,SkyboxShader
+Endfunction
+
+//Camera_Skybox_Load() - Loads a cubemap for the camera skybox.
+Function Camera_Skybox_Load(file$ As string):
+	//check if file exists
+	If File Exist(file$):
+		//if file exists, replace old texture
+		Delete image SkyboxImage
+		Load Image file$,SkyboxImage,2
+		//retexture sky
+		texture object SkyBoxObject,0,SkyboxImage
+	endif
+endfunction
+
+//Camera_Skybox_Update() - Updates the skybox to surround the camera.
+Function Camera_Skybox_Update():
+	//get position
+	Skybox_X# = Camera_GetPositionX(RootCamera)
+	Skybox_Y# = Camera_GetPositionY(RootCamera)
+	Skybox_Z# = Camera_GetPositionZ(RootCamera)
+	//set skybox to position
+	Position Object SkyboxObject,Skybox_X#,Skybox_Y#,Skybox_Z#
 endfunction
 
 //////////////////////////////////////////////////////////////

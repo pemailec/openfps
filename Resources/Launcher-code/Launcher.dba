@@ -31,19 +31,26 @@ Write Bank integer 1,0,0
 
 OpenFpsMain=execute executable("Engine\OpenFPS.exe",str$(clientport),"Engine")
 
+if clientport=20187 then goto skip_forward
+
 ip$=ip To string$(interface ip (1))
 commandline$ = "-add -app OpenFPS -lanip "+ip$+" -udpport "+str$(clientport)+" -q"
-Execute File "piczo.exe",commandline$,"Resources\Launcher-code\Port-forward",1
+Execute executable("..\Resources\Launcher-code\Port-forward\piczo.exe",commandline$,"..\Resources\Launcher-code\Port-forward")
 
+skip_forward:
 Write Bank integer 1,0,1
 
 While executable running(OpenFpsMain)=1:
 	Nice Wait 1000
 Endwhile
 
-delete bank 1
+Delete Bank 1
+
+if clientport=20187 then goto skiptoend
 commandline$ = "-delete -app OpenFPS -lanip "+ip$+" -udpport "+str$(clientport)+" -q"
 Execute File "piczo.exe",commandline$,"Resources\Launcher-code\Port-forward",0
+
+skiptoend:
 End
 
 //////////////////////////////////////////////////////////////

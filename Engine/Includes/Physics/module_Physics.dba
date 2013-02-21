@@ -29,7 +29,8 @@ Function Physics_Init():
 	Global NDBDebugobj As Integer
 	Global DefaultMaterial As Integer
 	DefaultMaterial = Ndb_Newtonmaterialgetdefaultgroupid()
-	ui_writelog(UI_Green,"Physics module init'd")
+	UI_WriteLog(UI_Green,"Physics module init'd")
+	Player_Init()
 Endfunction
 
 Function Physics_Update():

@@ -1,0 +1,38 @@
+for x=1 to MapSize-1
+   for z=1 to MapSize-1
+      rem create regular normals for Terrain array
+
+      rem  Verteces on the matrix
+      rem    x-1,z-1    x,z-1
+      rem    x-1,z      x,z
+
+      rem Get stored heights
+      h8#=land(x,z-1)
+      h4#=land(x-1,z)
+      h1#=land(x,z)
+
+      rem Calculate projected angle X using heights
+      y1#=h1#
+      y2#=h4#
+      rem X distance is a function of step#
+      dx#=step#/10
+      rem Y distance is the difference in height
+      dy#=y2#-y1#
+      ax#=atanfull(dx#,dy#)
+      ax#=wrapvalue(90-ax#)
+
+      rem Calculate projected angle Z using heights
+      y1#=h1#
+      y2#=h8#
+      rem Z distance is a function of step#
+      dz#=step#/10
+      rem Y distance is the difference in height
+      dy#=y2#-y1#
+      az#=atanfull(dz#,dy#)
+      az#=wrapvalue(90-az#)
+
+      rem save normal angles in an array
+      normals#(x,z,0)=ax#
+      normals#(x,z,1)=az#
+   next x
+next z
