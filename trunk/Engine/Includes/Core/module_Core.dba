@@ -21,38 +21,38 @@
 // or debug mode.
 //////////////////////////////////////////////////////////////
 
-Dim Chunk_Init() As Dword `string
-Dim Chunk_Update() as dword `string
-Dim Chunk_Terminate() As dword `String
+Dim Chunk_Init() As Dword
+Dim Chunk_Update() as dword
+Dim Chunk_Terminate() As dword
 
 Global Chunk_Init_PTR as dword : Chunk_Init_PTR = get arrayptr(Chunk_Init()) : unlink array Chunk_Init()
 Global Chunk_Update_PTR as dword : Chunk_Update_PTR = get arrayptr(Chunk_Update()) : unlink array Chunk_Update()
 global Chunk_Terminate_PTR as dword : Chunk_Terminate_PTR = get arrayptr(Chunk_Terminate()) : unlink array Chunk_Terminate()
 
+//Init chunk
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"SYS_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"TBM_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"UI_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"UI_Menu_Init")
-`Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"UI_Chat_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"IO_Input_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Physics_Init")
-`Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Terrain_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"World_Init")
-Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"CameraSystem_Init")
+Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Camera_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Network_Init")
 
+//Update chunk
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"TBM_Update")
-`Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"UI_DrawBackground")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"IO_Input_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"World_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Terrain_Update")
-Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"CameraSystem_Update")
+Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Camera_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Physics_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"UI_Menu_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"UI_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Network_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"SYS_Sync")
 
+//Terminate chunk
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Network_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"TBM_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"UI_Terminate")
@@ -73,7 +73,7 @@ Do
 	//runs the update set of functions
 	CORE_Chunk_Run(Chunk_Update_PTR)
 	
-	if TERMINATE_FLAG then exit
+	if Game.Terminate = 1 then exit
 	
 loop
 
@@ -88,6 +88,7 @@ CORE_Chunk_Run(Chunk_Terminate_PTR) : End
 // CHUNK Functions
 //////////////////////////////////////////////////////////////
 
+//CORE_Chunk_Add - Adds a function to the PTR chunk specified.
 Function CORE_Chunk_Add(chunkptr As dword,functionname as string):
 	local newchunkptr as dword
    local dim temp_chunk() as dword
@@ -98,6 +99,7 @@ Function CORE_Chunk_Add(chunkptr As dword,functionname as string):
    unlink array temp_chunk()
 Endfunction newchunkptr
 
+//CORE_Chunk_Run - Executes the specified chunk of functions.
 Function CORE_Chunk_Run(chunkptr As dword):
    Local Dim temp_chunk() As dword
    Link Array temp_chunk(),chunkptr

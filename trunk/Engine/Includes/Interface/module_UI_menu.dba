@@ -31,9 +31,8 @@
 #Constant M_MENU_CREDITS 7
 #Constant M_ENGINE_LOADING 8
 #Constant M_ENGINE_DEFAULT 9
-#Constant M_ENGINE_PLAYER 10
-#Constant M_MENU_SPLASH 11
-#Constant M_MENU_JOINGAME 12
+#Constant M_MENU_SPLASH 10
+#Constant M_MENU_JOINGAME 11
 
 //////////////////////////////////////////////////////////////
 //  UDTS
@@ -176,7 +175,6 @@ function UI_Menu_SetVariables():
 	MenuUI_DrawCalls(0,M_MENU_CREDITS)="UI_Render_M_MENU_CREDITS"
 	MenuUI_DrawCalls(0,M_ENGINE_LOADING)="UI_Render_M_ENGINE_LOADING"
 	MenuUI_DrawCalls(0,M_ENGINE_DEFAULT)="UI_Render_M_ENGINE_DEFAULT"
-	MenuUI_DrawCalls(0,M_ENGINE_PLAYER)="UI_Render_M_ENGINE_PLAYER"
 	MenuUI_DrawCalls(0,M_MENU_SPLASH)="UI_Render_M_MENU_SPLASH"
 	MenuUI_DrawCalls(0,M_MENU_JOINGAME)="UI_Render_M_MENU_JOINGAME"
 	
@@ -189,7 +187,6 @@ function UI_Menu_SetVariables():
 	MenuUI_DrawCalls(1,M_MENU_CREDITS)="UI_Render_U_MENU_CREDITS"
 	MenuUI_DrawCalls(1,M_ENGINE_LOADING)="UI_Render_U_ENGINE_LOADING"
 	MenuUI_DrawCalls(1,M_ENGINE_DEFAULT)="UI_Render_U_ENGINE_DEFAULT"
-	MenuUI_DrawCalls(1,M_ENGINE_PLAYER)="UI_Render_U_ENGINE_PLAYER"
 	MenuUI_DrawCalls(1,M_MENU_SPLASH)="UI_Render_U_MENU_SPLASH"
 	MenuUI_DrawCalls(1,M_MENU_JOINGAME)="UI_Render_U_MENU_JOINGAME"
 	
@@ -239,10 +236,17 @@ Function UI_Menu_CheckGadgets():
 				prompttitle$="Singleplayer Not Available"
 			endcase
 			Case "button_multiplayer"
-				UI_Menu_SetMode(M_MENU_GENERICPROMPT)
-				prompttextone$="Sorry, multiplayer isn't ready in this version of OpenFPS."
-				prompttexttwo$="Try out singleplayer, and keep on the lookout for upcoming updates!"
-				prompttitle$="Multiplayer Not Available"
+				if PortForwardDone=0:
+					UI_Menu_SetMode(M_MENU_GENERICPROMPT)
+					prompttextone$="Please wait for the port forwarding settings to be applied."
+					prompttexttwo$=""
+					prompttitle$="Multiplayer Not Available"
+				else:
+					UI_FadeManager.state=UI_FADEIN
+					UI_FadeManager.target=M_ENGINE_LOADING
+					WorldCacheTarget = "Media\Levels\training.xml"
+					`Network_Client_Connect()
+				endif
 			endcase
 			Case "button_options"
 				UI_Menu_SetMode(M_MENU_OPTIONS)
@@ -275,13 +279,13 @@ Function UI_Render_M_MENU_MAIN():
 	UI_AddTitleToGadget("button_quit",3,x-8,y-14,"Quit")
 	UI_AddInfoToGadget("button_quit",1,"Quit Biostorm.",1)
 	x=120:y=y-60
-	UI_AddCenterGadgetToScreen("button_options",x,y,"UI_button")`-gray")`
-	UI_AddMOuseOverImageToGadget("button_options","UI_buttonhover")
+	UI_AddCenterGadgetToScreen("button_options",x,y,"UI_buttongray")`-gray")`
+	`UI_AddMOuseOverImageToGadget("button_options","UI_buttonhover")
 	UI_AddTitleToGadget("button_options",3,x-8,y-14,"Options")
 	UI_AddInfoToGadget("button_options",1,"Change the game configuration.",1)
 	x=120:y=y-60
-	UI_AddCenterGadgetToScreen("button_training",x,y,"UI_buttonhighlight")
-	UI_AddMOuseOverImageToGadget("button_training","UI_buttonhover")
+	UI_AddCenterGadgetToScreen("button_training",x,y,"UI_buttongray")
+	`UI_AddMOuseOverImageToGadget("button_training","UI_buttonhover")
 	UI_AddTitleToGadget("button_training",3,x-8,y-14,"Training")
 	UI_AddInfoToGadget("button_training",1,"Load the training mission. Useful for beginners!",1)
 	x=120:y=y-60
@@ -290,8 +294,8 @@ Function UI_Render_M_MENU_MAIN():
 	UI_AddTitleToGadget("button_multiplayer",3,x-8,y-14,"Multi "+chr$(230)+chr$(230))
 	UI_AddInfoToGadget("button_multiplayer",1,"Join/start a multiplayer game.",1)
 	x=120:y=y-60
-	UI_AddCenterGadgetToScreen("button_singleplayer",x,y,"UI_button")`gray")
-	UI_AddMOuseOverImageToGadget("button_singleplayer","UI_buttonhover")
+	UI_AddCenterGadgetToScreen("button_singleplayer",x,y,"UI_buttongray")`gray")
+	`UI_AddMOuseOverImageToGadget("button_singleplayer","UI_buttonhover")
 	UI_AddTitleToGadget("button_singleplayer",3,x-8,y-14,"Single "+chr$(230))
 	UI_AddInfoToGadget("button_singleplayer",1,"Play the singleplayer campaign.",1)
 Endfunction
@@ -434,80 +438,74 @@ Function UI_Render_M_ENGINE_DEFAULT():
 Endfunction
 
 Function UI_Render_U_ENGINE_DEFAULT():
-	`UI_CenterText(3,Screen.Width/2,(Screen.Height/2)-40,"Engine Running")
-	ik paste image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height,cc_Shader
-	Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
-	d3d_box 0,0,Screen.Width,120,rgb(0,0,0),rgb(0,0,0),d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200)
-	Ik Paste Image MenuImage13,0,120,Screen.Width,124
-	
-	paste image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
-	
-	d3d_box 0,Screen.Height-120,Screen.Width,Screen.Height,d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200),rgb(0,0,0),rgb(0,0,0)
-	Ik Paste Image MenuImage13,0,Screen.Height-124,Screen.Width,Screen.Height-120
-	
-	//render chat
-	`UI_Chat_Update()
-	
-	UI_AlphaText(3,Screen.Width/2-(UI_stringmap(3,258).ascii*5),48,"~bSPECTATING "+chr$(230),250)
-	UI_CenterText(3,Screen.Width/2,Screen.Height-100,World.name)
-	UI_CenterText(1,Screen.Width/2,Screen.Height-65,World.description)
-	if CameraMode = CAM_SPECTATOR:
-	If NumSpectatorCameras > 0 Then UI_CenterText(1,Screen.Width/2,130,SpectatorCameras(CurSpectatorCamera).name+" - Press [return] to join.")
-	else:
-		If CameraMode = CAM_SPECTATOR_FREE:
-			UI_CenterText(1,Screen.Width/2,130,"Freecam - Press [return] to join.")
-			If Returnkey():
-				UI_Menu_SetMode(M_ENGINE_PLAYER)
-				CameraMode = CAM_PLAYER
-				`Player_SetPosition(CameraArray(RootCamera).position.x,CameraArray(RootCamera).position.y,CameraArray(RootCamera).position.z)
-			endif
-			CameraZoom=clamp(CameraZoom+__mouse.scrollButton.scrollUp - __mouse.scrollButton.scrollDown,0,1)
-			If keystate(KEY_ZOOM) or CameraZoom = 1:
-				Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
-				Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
-				CameraArray(cam).FOV = 30
-			else:
-				CameraArray(cam).FOV = 80
-			endif
-		endif
+	If Client.enabled = 1:
+		//paste game view
+		Ik Paste Image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height,cc_Shader
+		Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
+
+		Select Client.values.state:
+			Case Client_STATE_SPECTATING
+				CameraSystem_Zoom()
+				Client.values.rx = Wrapvalue(Client.values.rx + (Sys_Mousemovey*0.2))
+				Client.values.ry = Wrapvalue(Client.values.ry + (Sys_Mousemovex*0.2))
+				CameraArray(cam).rotation.x = Client.values.rx
+				CameraArray(cam).rotation.y = Client.values.ry
+				CameraArray(cam).rotation.z = 0
+				//paste crosshair
+				Paste Image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
+				//paste spectator bars
+				d3d_box 0,0,Screen.Width,120,rgb(0,0,0),rgb(0,0,0),d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200)
+				Ik Paste Image MenuImage13,0,120,Screen.Width,124
+				d3d_box 0,Screen.Height-120,Screen.Width,Screen.Height,d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200),rgb(0,0,0),rgb(0,0,0)
+				Ik Paste Image MenuImage13,0,Screen.Height-124,Screen.Width,Screen.Height-120
+				UI_AlphaText(3,Screen.Width/2-(UI_stringmap(3,258).ascii*5),48,"~bSPECTATING "+chr$(230),250)
+				UI_CenterText(1,Screen.Width/2,130,"Freecam - Press [return] to join.")
+				UI_CenterText(3,Screen.Width/2,Screen.Height-100,"Players: ("+str$(NumPlayers)+"/"+str$(MaxPlayers)+")")
+				If Returnkey() Then Network_Client_SendStateRequest(Client_STATE_ALIVE)
+				UI_Render_Playerlist()
+			Endcase
+			Case Client_STATE_ALIVE
+				CameraSystem_Zoom()
+				Client.values.rx = Wrapvalue(Client.values.rx + (Sys_Mousemovey*0.2))
+				Client.values.ry = Wrapvalue(Client.values.ry + (Sys_Mousemovex*0.2))
+				CameraArray(cam).rotation.x = Client.values.rx
+				CameraArray(cam).rotation.y = Client.values.ry
+				CameraArray(cam).rotation.z = 0
+				//paste crosshair
+				Paste Image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
+				//ui layer
+				If UI_GadgetExist("healthbar")=0:
+					UI_AddBarGadgetToScreen("healthbar",70,Screen.Height-110,"UI_redbar",100)
+					UI_AddBarGadgetToScreen("energybar",70,Screen.Height-70,"UI_bluebar",100)
+				Endif
+				Paste Image MenuImage14,0,Screen.Height-image height(menuimage14),1
+				`UI_SetGadgetValue("healthbar",Player.health/2)
+				`UI_SetGadgetValue("energybar",Player.energy/2)
+				`ui_text(1,70+(5*(Player.health/2)),Screen.Height-104,str$(int(Player.health)))
+				`UI_Text(1,70+(5*(Player.energy/2)),Screen.Height-64,str$(int(Player.energy)))
+				UI_Render_Playerlist()
+			Endcase
+			Case Client_STATE_DEAD
+			Endcase
+			Case Client_STATE_RESPAWN
+			Endcase
+		endselect
 	endif
 Endfunction
 
-Function UI_Render_M_ENGINE_PLAYER():
-	UI_AddBarGadgetToScreen("healthbar",70,Screen.Height-110,"UI_redbar",100)
-	UI_AddBarGadgetToScreen("energybar",70,Screen.Height-70,"UI_bluebar",100)
-Endfunction
-
-Function UI_Render_U_ENGINE_PLAYER():
-	Ik Paste Image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height,cc_Shader
-	`if spacekey() then ik paste image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height
-	Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
-	//second vignette will vary alpha based on health and other factors
-	paste image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
-	`UI_PutWindow(UI_mywindow.yrow*2,Screen.Height-(UI_mywindow.yrow*8),10,6)
-	`ui_putwindow(Screen.Width-(UI_mywindow.yrow*12),Screen.Height-(UI_mywindow.yrow*8),10,6)
-	CameraZoom=clamp(CameraZoom+__mouse.scrollButton.scrollUp - __mouse.scrollButton.scrollDown,0,1)
-	If Keystate(KEY_ZOOM)+CameraZoom>0 and Player.sprinting < 2:
-		Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
-		Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
-		CameraArray(cam).FOV = 30
-	else:
-		If Player.sprinting = 2:
-		CameraArray(cam).FOV = 90
+function UI_Render_Playerlist():
+	//render playerlist if active
+	If Keystate(KEY_VIEWPLAYERS):
+		ui_putwindow(Screen.Width/2-(ui_mywindow.yrow*8),(Screen.Height/2)-200,16,24)
+		UI_CenterIconText(3,Screen.Width/2,Screen.Height/2 - 180,chr$(230)+"Players:",0)
+		if Numplayers > 0:
+		For i = 0 To NumPlayers-1:
+			UI_CenterText(3,Screen.Width/2,(Screen.Height/2 - 150)+i*34,PlayerList(i).name)
+		next i
 		else:
-		CameraArray(cam).FOV = 80
+		UI_CenterText(3,Screen.Width/2,(Screen.Height/2 - 150),"*none*")
 		endif
-	Endif
-	//paste ui layer
-	Paste Image MenuImage14,0,Screen.Height-image height(menuimage14),1
-	
-	//render chat
-	`UI_Chat_Update()
-	
-	UI_SetGadgetValue("healthbar",Player.health/2)
-	UI_SetGadgetValue("energybar",Player.energy/2)
-	ui_text(1,70+(5*(Player.health/2)),Screen.Height-104,str$(int(Player.health)))
-	UI_Text(1,70+(5*(Player.energy/2)),Screen.Height-64,str$(int(Player.energy)))
+	endif
 Endfunction
 
 // M_MENU_SPLASH

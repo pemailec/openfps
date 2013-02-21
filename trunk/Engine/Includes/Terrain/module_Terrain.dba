@@ -7,10 +7,17 @@
 //  CONSTANTS
 //////////////////////////////////////////////////////////////
 
+//these variables are fixed for now.
+#Constant TerrainSizeX 15
+#Constant TerrainSizeZ 15
+#Constant TerrainUnitSizeX 16
+#Constant TerrainUnitSizeZ 16
+
 //////////////////////////////////////////////////////////////
 //  UDTS
 //////////////////////////////////////////////////////////////
 
+//t_TerrainGridTile - UDT for terrain tile object.
 Type t_TerrainGridTile
 	object As integer
 	heightmapchunk As Integer
@@ -21,6 +28,7 @@ endtype
 //  FUNCTIONS
 //////////////////////////////////////////////////////////////
 	
+//Terrain_create() - Creates a terrain object.
 Function Terrain_Init():
 	if TerrainExists=0:
 	global TerrainExists as boolean: terrainexists = 1
@@ -33,10 +41,6 @@ Function Terrain_Init():
 	Load Image "Media\Materials\Heightmaps\Generic\detail.tga",MasterDetail
 	`Load Mesh "Media\Models\grid.x",MasterGridObject
 	
-	Global TerrainSizeX : TerrainSizeX = 15 //actually 16
-	Global TerrainSizeZ : TerrainSizeZ = 15 //actually 16
-	Global TerrainUnitSizeX : TerrainUnitSizeX = 16 //world chunk scale
-	Global TerrainUnitSizeZ : TerrainUnitSizeZ = 16 //world chunk scale
 	Dim TerrainArray(TerrainSizeX,TerrainSizeZ) As t_TerrainGridTile
 	
 	For TZ = 0 To TerrainSizeX:
@@ -56,7 +60,9 @@ Function Terrain_Init():
 			`Ik Flip Image Vertically TerrainArray(TX,TZ).heightmapchunk
 			`Ik Flip Image Horizontally TerrainArray(TX,TZ).heightmapchunk
 			Texture Object TerrainArray(TX,TZ).object,MasterDetail
-			Scale Object Texture TerrainArray(TX,TZ).object,2,2
+			Scale Object Texture TerrainArray(TX,TZ).object,4,4
+			set object smoothing TerrainArray(TX,TZ).object,100
+			Set Object Smoothing TerrainArray(TX,TZ).object,100
 			
 			`Texture Object TerrainArray(TX,TZ).object,MasterTexture
 			`scale object texture TerrainArray(TX,TZ).object,1/16,1/16
@@ -105,21 +111,7 @@ Function Terrain_Init():
 			NDB_NewtonBodySetMatrix terrain
 			Ndb_Newtonreleasecollision Col1
 			delete object tempobject
-
-			Lock Vertexdata For Limb TerrainArray(TX,TZ).object,0,0
-			For current_vertex = 0 To Get Vertexdata Vertex Count()-1
-				x#=get vertexdata position x(current_vertex)+object position x(TerrainArray(TX,TZ).object)
-				z#=get vertexdata position z(current_vertex)+object position z(TerrainArray(TX,TZ).object)
-				collide=SC_rayCastGroup(0,x#,256,z#,x#,0.0,z#,0)
-				If collide>0:
-					normx#=SC_getCollisionNormalX()
-					normy#=SC_getCollisionNormalY()
-					normz#=SC_getCollisionNormalZ()
-					set vertexdata normals current_vertex,normx#,normy#,normz#
-				endif
-			next normal
-			Unlock Vertexdata
-			
+		
 		Next TZ
 	Next TX
 	endif

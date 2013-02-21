@@ -11,11 +11,6 @@
 //  UDTS
 //////////////////////////////////////////////////////////////
 
-Type Vector2D
-	x as integer
-	y as integer
-Endtype
-
 Type MouseButtons
 	down as boolean
 	clicked as boolean
@@ -37,14 +32,14 @@ Type PrivateVars
 Endtype
 
 Type MouseData
-	pos as Vector2D
+	pos as t_2dvector
 	leftButton as MouseButtons
 	rightButton as MouseButtons
 	scrollButton as MouseButtons
 	isMoving as boolean
 	private as PrivateVars
-	dragStartPos As Vector2D
-	dragEndPos as Vector2D
+	dragStartPos As t_2dvector
+	dragEndPos as t_2dvector
 Endtype
 
 //////////////////////////////////////////////////////////////
@@ -58,7 +53,27 @@ Function IO_Input_Init():
 Endfunction
 
 Function IO_Input():
-Endfunction
+	//returns a value for the engine. each boolean corresponds to a key being pressed.
+	local keys$ as string
+	if keystate(KEY_FORWARD):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	if keystate(KEY_BACKWARD):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	if keystate(KEY_LEFT):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	If Keystate(KEY_RIGHT):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	If Keystate(KEY_JUMP):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	If Keystate(KEY_CROUCH):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	If Keystate(KEY_SPRINT):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	If mouseclick()=KEY_PRIMARYFIRE:keys$=keys$+"1":else:keys$=keys$+"0":endif
+	If mouseclick()=KEY_SECONDARYFIRE:keys$=keys$+"1":else:keys$=keys$+"0":endif
+	If Keystate(KEY_WEAPON1):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	If Keystate(KEY_WEAPON2):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	If Keystate(KEY_WEAPON3):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	If Keystate(KEY_GRENADE):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	If Keystate(KEY_RELOAD):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	If Keystate(KEY_ZOOM):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	If Keystate(KEY_USE):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	
+	encode = Bin To Decimal(keys$)
+Endfunction encode
 
 Function IO_Input_Update():
 	currentinput$ = Entry$(1)
@@ -77,8 +92,8 @@ Function IO_Input_SetVariables():
 	Global KEY_SPRINT as integer : KEY_SPRINT = 42
 
 	//WEAPON CONSTANTS
-	Global KEY_PRIMARYFIRE as integer : KEY_PRIMARYFIRE = -1
-	Global KEY_SECONDARYFIRE as integer : KEY_SECONDARYFIRE = -2
+	Global KEY_PRIMARYFIRE as integer : KEY_PRIMARYFIRE = 1
+	Global KEY_SECONDARYFIRE as integer : KEY_SECONDARYFIRE = 2
 	Global KEY_WEAPON1 as integer : KEY_WEAPON1 = 2
 	Global KEY_WEAPON2 as integer : KEY_WEAPON2 = 3
 	Global KEY_WEAPON3 as integer : KEY_WEAPON3 = 4
@@ -88,11 +103,12 @@ Function IO_Input_SetVariables():
 	//ACTIVE CONSTANTS
 	global KEY_ZOOM as integer : KEY_ZOOM = 44
 	Global KEY_VIEWOBJECTIVES as integer : KEY_VIEWOBJECTIVES = 6
+	Global KEY_VIEWPLAYERS as integer : KEY_VIEWPLAYERS = 15
 	Global KEY_USE as integer : KEY_USE = 18
 	Global KEY_CHAT as integer : KEY_CHAT = 21
 	Global KEY_VOICECHAT as integer : KEY_VOICECHAT = 47
 	Global KEY_PAUSE as integer : KEY_PAUSE = 1
-	Global KEY_CONSOLE As Integer : KEY_CONSOLE = 15
+	Global KEY_CONSOLE As Integer : KEY_CONSOLE = 41
 	
 	ui_Writelog(UI_GREEN,"Input: Set controls for input.")
 	

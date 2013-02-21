@@ -6,7 +6,8 @@
 //////////////////////////////////////////////////////////////
 //  DOCUMENTATION
 //////////////////////////////////////////////////////////////
-//
+// Loads engine variables and sets display mode.
+// Also responsible for executing sync.
 //////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////
@@ -16,32 +17,16 @@
 #constant CONFIGFILE "Config\game.cfg"
 
 //////////////////////////////////////////////////////////////
-// Udts
-//////////////////////////////////////////////////////////////
-
-Type t_Screen
-	Width As Integer
-	Height As Integer
-	MiddleWidth As Integer
-	MiddleHeight as Integer
-	Depth As Integer
-	Vsync As Boolean
-	Fullscreen As Boolean
-	AA As Integer
-	ShowFPS as boolean
-endtype
-
-//////////////////////////////////////////////////////////////
 // Functions
 //////////////////////////////////////////////////////////////
 
+//Sys_Init() - Starts up the engine, loading config.
 Function SYS_Init():
 	//////////////////////////////////////
 	// Load lua config and set window mode
 	//////////////////////////////////////	
 	
-	if cl$()="" then exit prompt "OpenFPS.exe: Run without dependency. Use Launcher.exe!","Error":end
-	
+	//if config does not exist, generate a new one
 	If File Exist(CONFIGFILE)=0:
 		open to write 1,"config\game.cfg"
 		write string 1,"ScreenWidth=640"
@@ -49,32 +34,40 @@ Function SYS_Init():
 		write string 1,"ScreenDepth=32"
 		write string 1,"Vsync=0"
 		Write String 1,"Fullscreen=0"
+		Write String 1,"Port=20187"
 		close file 1
 	Endif
 	
+	//Creat Screen and Game objects
 	Global Screen As t_Screen
+	Global Game As t_Game
+	
+	//Load lua config
 	Lua Make : Lua Load File CONFIGFILE
+   Screen.Width = 		lua Int("ScreenWidth")			//Screen Width
+   Screen.Height = 		lua Int("ScreenHeight")			//Screen Height
+	Screen.Depth = 		lua Int("ScreenDepth")			//Screen Depth
+   Screen.Vsync = 		lua Int("Vsync")					//Vertical Sync
+	Screen.Fullscreen =  lua Int("Fullscreen")			//Fullscreen/window
+   Screen.AA = 			lua Int("AA")						//Anti-aliasing (bugged)
+	Game.NetworkPort = 	lua int("Port")					//Port for multiplayer
 	
-   Screen.Width = 		lua Int("ScreenWidth")
-   Screen.Height = 		lua Int("ScreenHeight")
-	Screen.Depth = 		lua Int("ScreenDepth")
-   Screen.Vsync = 		lua Int("Vsync")
-	Screen.Fullscreen =  lua Int("Fullscreen")
-   Screen.AA = 			lua Int("AA")
+	//set up port forwarding
+	//This uses a third-party app to add a port forwarding rule to the router.
+	ip$=ip To string$(interface ip (1))
+	commandline$ = "-add -app OpenFPS -lanip "+ip$+" -udpport "+str$(Game.NetworkPort)+" -q"
+	executable$ = "..\Resources\Launcher-code\Port-forward\piczo.exe"
+	directory$ = "..\Resources\Launcher-code\Port-forward"
+	Network_PFProcess = Execute executable(executable$,commandline$,directory$)
 	
-	global NetworkName as string
-   NetworkName = 			lua string$("NetworkName")
-	Global NetworkPort As Integer
-	NetworkPort = 			lua int("Port")
-	
+	//Apply display settings
 	Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,Screen.AA,0
    if Screen.Fullscreen=1 then set window off
 	If Screen.Fullscreen=0 Then Set Window On
 	
 	//center window
 	window = Get Dbpro Window ()
-	Position Window window,(desktop width()/2)-(GET WINDOW CLIENT width(window)/2),(desktop height()/2)-(GET WINDOW CLIENT HEIGHT(window)/2)
-
+	Position Window window,(desktop width()/2)-(Get Window Client width(window)/2),(desktop height()/2)-(Get Window Client Height(window)/2)
 	
 	//////////////////////////////////////
 	// Do standard Dbpro setup
@@ -87,13 +80,11 @@ Function SYS_Init():
 	// Do plugin setup
 	//////////////////////////////////////
 	
-	D3d_Init
-	D3d_Font 1,"16",24,1,0,1
-	
-	global TERMINATE_FLAG as boolean
+	d3d_init
 	
 Endfunction
 
+//SYS_Sync() - Syncs to the screen.
 Function SYS_Sync():
 	
 	//////////////////////////////////////
@@ -101,29 +92,12 @@ Function SYS_Sync():
 	// Modify to add sync-limiter.
 	//////////////////////////////////////
 	
-	if Screen.ShowFPS:
-	D3d_Starttext
-	d3d_text 1,Screen.Width-10,10,2,str$(screen fps())
-	D3d_Endtext
-	Endif
-	
 	Sync
 	
 Endfunction
 
-Function Sys_ToggleFPS():
-	Screen.ShowFPS = 1 - Screen.ShowFPS
-	If Screen.ShowFPS = 1:
-		Sync Rate 60
-	else:
-		Sync Rate 0
-	endif
-Endfunction
-
+//SYS_Terminate() - Terminates the system module (empty)
 Function SYS_Terminate():
-Endfunction
-
-Function SYS_Reset():
 Endfunction
 
 //////////////////////////////////////////////////////////////

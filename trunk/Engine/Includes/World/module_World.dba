@@ -55,10 +55,7 @@ Function World_Init():
 	Global WorldCacheTarget As String
 	Global WorldAutoRefresh As Boolean
 	WorldAutoRefresh = 1
-	
-	global FLAG_WAITINGFORNETWORK as boolean
-	FLAG_WAITINGFORNETWORK = 0
-	
+		
 	//world arrays
 	Dim WORLD_STATICOBJECTS() As t_WorldObject
 	Global WORLD_NUMSTATICOBJECTS As Integer
@@ -253,11 +250,9 @@ Function World_GetEnabled():
 Endfunction enabled
 
 Function World_Update():
-	If WorldCacheState = 1:
+	If WorldCacheState = 1: `and Client.connected=1:
 		World_LoadFile(WorldCacheTarget)
 		WorldCacheState = 0
-		FLAG_WAITINGFORNETWORK = 0
-		LoadingString = "Connected."
 		UI_FadeManager.state=UI_FADEIN
 		UI_FadeManager.target=M_ENGINE_DEFAULT
 	Endif
@@ -303,7 +298,6 @@ Function World_Update():
 		Endif
 		
 		//handle other things
-		CameraMode = CAM_SPECTATOR_FREE
 		
 		//end of world update code
 	endif
