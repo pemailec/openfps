@@ -42,10 +42,11 @@ Endtype
 //t_game - stores various game settings that don't fit anywhere.
 Type t_Game
 	NetworkName As String
-	NetworkPort As String
+	NetworkPort As dword
 	Network_PFProcess As Integer
 	Terminate As Boolean
-	num_cameras as integer
+	num_cameras As Integer
+	state as integer
 endtype
 
 //t_image - stores an image id and its width and height

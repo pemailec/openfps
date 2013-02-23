@@ -2,13 +2,14 @@
 //  Game Engine Standard Modules - UI CONSOLE MODULE
 //  Concept and code by thenerd, Summer 2012!
 //////////////////////////////////////////////////////////////
-
+//console key is `
 //////////////////////////////////////////////////////////////
 //  UDTS
 //////////////////////////////////////////////////////////////
 
 //console type
 Type t_Console
+	created as boolean
 	active as boolean
 	height As float
 	bgcolor As Integer
@@ -30,6 +31,7 @@ endtype
 //UI_Console_Init() - starts up the console system.
 Function UI_Console_Init():
 	Global Console As t_Console
+	Console.created = 1
 	Console.active=0
 	Console.height=160
 	Console.bgcolor=d3d_rgba(60,60,60,150)
@@ -41,44 +43,46 @@ Function UI_Console_Init():
 Endfunction
 
 //UI_Console_AddLine() - Adds a line to the console.
-Function UI_Console_AddLine(prefix as string, messagestring As string):
+Function UI_Console_AddLine(prefix As string, messagestring As string):
+	if Console.created = 1:
 	Array Delete Element Consolelines(),0
 	array insert at bottom ConsoleLines()
 	Consolelines(7).prefix=prefix
 	Consolelines(7).prefixcolormodifier="~b"
 	Consolelines(7).Messagetext=messagestring
 	Consolelines(7).timestamp=hitimer(1)
+	endif
 Endfunction
 
 //UI_Console_RunCMD() - Runs an engine function from the console.
 Function UI_Console_RunCMD(commandstring As string):
 	If Len(commandstring)>3:
-	commandstring=remove$(commandstring,chr$(13))
 	functionptr=Get Ptr To Function(commandstring)
 	if functionptr>0:
 		Call Function Ptr (functionptr)
 		UI_Console_AddLine("Engine",commandstring)
-	else:
+	else
 		UI_Console_AddLine("ERR","Command does not exist.")
 	Endif
 	endif
 endfunction
 
+//UI_Console_Update() - Updates the console. Messy but it works!
 Function UI_Console_Update():
-	If Keystate(KEY_CONSOLE) And input_toggler=0:
+	//console key is `
+	If Keystate(Game_Input.KEY_CONSOLE) And input_toggler=0: 
 		Console.active=1-Console.active
 		input_toggler=1
-		Paused=console.active
-		Clear Entry Buffer
+		Input_Text_Clear()
 		mouse_laststate = UI_Mouse.Hidden
 		If Console.active=1:
 			UI_ShowMouse()
-		else:
+		else
 			if mouse_laststate = UI_True then UI_HideMouse()
 			if mouse_laststate = UI_False then UI_ShowMouse()
 		endif
 	endif
-	If Keystate(KEY_CONSOLE)=0 Then input_toggler=0
+	If Keystate(Game_Input.KEY_CONSOLE)=0 Then input_toggler=0
 	
 	ui_putwindow(0-ui_mywindow.xwidth,0-(ui_mywindow.yrow*3),(Screen.Width/ui_mywindow.xwidth)+1,(Console.height/Ui_mywindow.yrow)+1)
 	If Console.active=1:
@@ -90,9 +94,9 @@ Function UI_Console_Update():
 		If Ticker(QtrSecondTicker) then cursor_toggle=1-cursor_toggle
 		If cursor_toggle=1 Then cursor$="_"
 		if cursor_toggle=0 then cursor$=" "
-		UI_AlphaText(1,4,-200+Console.height+9*16,"~rOPENFPS Console >>>~w "+currentinput$+cursor$,255)
-		if returnkey() then UI_Console_RunCMD(currentinput$):clear entry buffer
-	else:
+		UI_AlphaText(1,4,-200+Console.height+9*16,"~rOPENFPS Console >>>~w "+ Input_Text_Grab()+cursor$,255)
+		if returnkey() then UI_Console_RunCMD(currentinput$):Input_Text_Clear()
+	else
 		Console.height=clamp(Console.height-(20*TBM),0,200)
 	Endif
 	`d3d_box 0,0,Screen.Width,Console.Height,Console.bgcolor
@@ -102,13 +106,10 @@ Endfunction
 //  CONSOLE FUNCTIONS
 //////////////////////////////////////////////////////////////
 
+//Quit() - quits the game.
 Function quit():
-	TERMINATE_FLAG = 1
+	Game.Terminate = 1
 Endfunction
-
-//////////////////////////////////////////////////////////////
-//  End of code.
-//////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////
 //  End of code.

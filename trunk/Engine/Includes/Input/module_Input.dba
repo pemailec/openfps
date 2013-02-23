@@ -4,283 +4,133 @@
 //////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////
-//  CONSTANTS
-//////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////
 //  UDTS
 //////////////////////////////////////////////////////////////
 
-Type MouseButtons
-	down as boolean
-	clicked as boolean
-	doubleClicked as boolean
-	tripleClicked as boolean
-	clickCount as integer
-	scrollUp as boolean
-	scrollDown as boolean
-	isDragging as boolean
-	hasDragged as boolean
-Endtype
-
-Type PrivateVars
-	movingTimestamp as dword
-	doubleClickDelay as integer
-	lastClickTimestamp as dword
-	mouseZValue as integer
-	startDrag as boolean
-Endtype
-
-Type MouseData
-	pos as t_2dvector
-	leftButton as MouseButtons
-	rightButton as MouseButtons
-	scrollButton as MouseButtons
-	isMoving as boolean
-	private as PrivateVars
-	dragStartPos As t_2dvector
-	dragEndPos as t_2dvector
-Endtype
+//type t_Input - stores input variables
+Type t_Input
+	Mouse_down As Integer
+	Mouse_click As Integer
+	KEY_FORWARD as integer
+	KEY_BACKWARD as integer
+	KEY_LEFT as integer
+	KEY_RIGHT as integer
+	KEY_JUMP as integer
+	KEY_CROUCH as integer
+	KEY_SPRINT as integer
+	KEY_PRIMARYFIRE as integer
+	KEY_SECONDARYFIRE as integer
+	KEY_WEAPON1 as integer
+	KEY_WEAPON2 as integer
+	KEY_WEAPON3 as integer
+	KEY_GRENADE as integer
+	KEY_RELOAD as integer
+	KEY_ZOOM as integer
+	KEY_VIEWOBJECTIVES as integer
+	KEY_VIEWPLAYERS as integer
+	KEY_USE as integer
+	KEY_CHAT as integer
+	KEY_VOICECHAT as integer
+	KEY_PAUSE as integer
+	KEY_CONSOLE As Integer
+endtype
 
 //////////////////////////////////////////////////////////////
 //  FUNCTIONS
 //////////////////////////////////////////////////////////////
 
-Function IO_Input_Init():
-	IO_Input_SetVariables()
-	IO_Input_InitMouse()
-	Global currentinput$ as string
+//Input_Init() - starts up the input system.
+Function Input_Init():
+	//Make input UDT
+	global Game_Input as t_Input
+	
+	//MOVEMENT CONSTANTS
+	Game_Input.KEY_FORWARD = 17
+	Game_Input.KEY_BACKWARD = 31
+	Game_Input.KEY_LEFT = 30
+	Game_Input.KEY_RIGHT = 32
+	Game_Input.KEY_JUMP = 57
+	Game_Input.KEY_CROUCH = 29
+	Game_Input.KEY_SPRINT = 42
+
+	//WEAPON CONSTANTS
+	Game_Input.KEY_PRIMARYFIRE = 1
+	Game_Input.KEY_SECONDARYFIRE  = 2
+	Game_Input.KEY_WEAPON1  = 2
+	Game_Input.KEY_WEAPON2  = 3
+	Game_Input.KEY_WEAPON3  = 4
+	Game_Input.KEY_GRENADE  = 5
+	Game_Input.KEY_RELOAD  = 19
+
+	//ACTIVE CONSTANTS
+	Game_Input.KEY_ZOOM = 44
+	Game_Input.KEY_VIEWOBJECTIVES  = 6
+	Game_Input.KEY_VIEWPLAYERS  = 15
+	Game_Input.KEY_USE  = 18
+	Game_Input.KEY_CHAT  = 21
+	Game_Input.KEY_VOICECHAT = 47
+	Game_Input.KEY_PAUSE = 1
+	Game_Input.KEY_CONSOLE  = 41
+	UI_WriteLog(UI_Green,"Input: Initialized.")
 Endfunction
 
-Function IO_Input():
+//Input_Grab() - returns a string containing the current user input.
+Function Input_Grab():
 	//returns a value for the engine. each boolean corresponds to a key being pressed.
 	local keys$ as string
-	if keystate(KEY_FORWARD):keys$=keys$+"1":else:keys$=keys$+"0":endif
-	if keystate(KEY_BACKWARD):keys$=keys$+"1":else:keys$=keys$+"0":endif
-	if keystate(KEY_LEFT):keys$=keys$+"1":else:keys$=keys$+"0":endif
-	If Keystate(KEY_RIGHT):keys$=keys$+"1":else:keys$=keys$+"0":endif
-	If Keystate(KEY_JUMP):keys$=keys$+"1":else:keys$=keys$+"0":endif
-	If Keystate(KEY_CROUCH):keys$=keys$+"1":else:keys$=keys$+"0":endif
-	If Keystate(KEY_SPRINT):keys$=keys$+"1":else:keys$=keys$+"0":endif
-	If mouseclick()=KEY_PRIMARYFIRE:keys$=keys$+"1":else:keys$=keys$+"0":endif
-	If mouseclick()=KEY_SECONDARYFIRE:keys$=keys$+"1":else:keys$=keys$+"0":endif
-	If Keystate(KEY_WEAPON1):keys$=keys$+"1":else:keys$=keys$+"0":endif
-	If Keystate(KEY_WEAPON2):keys$=keys$+"1":else:keys$=keys$+"0":endif
-	If Keystate(KEY_WEAPON3):keys$=keys$+"1":else:keys$=keys$+"0":endif
-	If Keystate(KEY_GRENADE):keys$=keys$+"1":else:keys$=keys$+"0":endif
-	If Keystate(KEY_RELOAD):keys$=keys$+"1":else:keys$=keys$+"0":endif
-	If Keystate(KEY_ZOOM):keys$=keys$+"1":else:keys$=keys$+"0":endif
-	If Keystate(KEY_USE):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	if keystate(Game_Input.KEY_FORWARD):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	if keystate(Game_Input.KEY_BACKWARD):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	if keystate(Game_Input.KEY_LEFT):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	if keystate(Game_Input.KEY_RIGHT):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	if keystate(Game_Input.KEY_JUMP):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	if keystate(Game_Input.KEY_CROUCH):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	if keystate(Game_Input.KEY_SPRINT):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	If mouseclick()=Game_Input.KEY_PRIMARYFIRE:keys$=keys$+"1":else:keys$=keys$+"0":endif
+	If mouseclick()=Game_Input.KEY_SECONDARYFIRE:keys$=keys$+"1":else:keys$=keys$+"0":endif
+	if keystate(Game_Input.KEY_WEAPON1):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	if keystate(Game_Input.KEY_WEAPON2):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	if keystate(Game_Input.KEY_WEAPON3):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	if keystate(Game_Input.KEY_GRENADE):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	if keystate(Game_Input.KEY_RELOAD):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	if keystate(Game_Input.KEY_ZOOM):keys$=keys$+"1":else:keys$=keys$+"0":endif
+	if keystate(Game_Input.KEY_USE):keys$=keys$+"1":else:keys$=keys$+"0":endif
 	
 	encode = Bin To Decimal(keys$)
 Endfunction encode
 
-Function IO_Input_Update():
-	currentinput$ = Entry$(1)
-	IO_Input_UpdateMouse()
+//Input_Update() - updates the input system.
+Function Input_Update():
+	//handle mouse
+	Game_input.Mouse_click = 0
+	If Mouseclick()=1:
+		If Game_input.Mouse_down = 0
+			Game_input.Mouse_click = 1
+			Game_input.Mouse_down = 1
+		endif
+	else
+		Game_input.Mouse_down = 0
+	endif
 Endfunction
 
-Function IO_Input_SetVariables():
-	
-	//MOVEMENT CONSTANTS
-	Global KEY_FORWARD as integer : KEY_FORWARD = 17
-	Global KEY_BACKWARD as integer : KEY_BACKWARD = 31
-	Global KEY_LEFT as integer : KEY_LEFT = 30
-	Global KEY_RIGHT as integer : KEY_RIGHT = 32
-	Global KEY_JUMP as integer : KEY_JUMP = 57
-	Global KEY_CROUCH as integer : KEY_CROUCH = 29
-	Global KEY_SPRINT as integer : KEY_SPRINT = 42
+// Input_Text_Grab() - Grabs text input from the windows buffer.
+Function Input_Text_Grab():
+	//Grab input - needs code to remove ! (enter key)
+	Local tinput_grab As String
+	tinput_grab = Entry$(1)
+	//remove extra characters from carriage return and new line
+	tinput_grab=remove$(tinput_grab,chr$(13))
+	tinput_grab=remove$(tinput_grab,chr$(10))
+Endfunction tinput_grab
 
-	//WEAPON CONSTANTS
-	Global KEY_PRIMARYFIRE as integer : KEY_PRIMARYFIRE = 1
-	Global KEY_SECONDARYFIRE as integer : KEY_SECONDARYFIRE = 2
-	Global KEY_WEAPON1 as integer : KEY_WEAPON1 = 2
-	Global KEY_WEAPON2 as integer : KEY_WEAPON2 = 3
-	Global KEY_WEAPON3 as integer : KEY_WEAPON3 = 4
-	Global KEY_GRENADE as integer : KEY_GRENADE = 5
-	Global KEY_RELOAD as integer : KEY_RELOAD = 19
-
-	//ACTIVE CONSTANTS
-	global KEY_ZOOM as integer : KEY_ZOOM = 44
-	Global KEY_VIEWOBJECTIVES as integer : KEY_VIEWOBJECTIVES = 6
-	Global KEY_VIEWPLAYERS as integer : KEY_VIEWPLAYERS = 15
-	Global KEY_USE as integer : KEY_USE = 18
-	Global KEY_CHAT as integer : KEY_CHAT = 21
-	Global KEY_VOICECHAT as integer : KEY_VOICECHAT = 47
-	Global KEY_PAUSE as integer : KEY_PAUSE = 1
-	Global KEY_CONSOLE As Integer : KEY_CONSOLE = 41
-	
-	ui_Writelog(UI_GREEN,"Input: Set controls for input.")
-	
+//Input_Text_Clear() - Clears the windows text input.
+Function Input_Text_Clear():
+	clear entry buffer
 Endfunction
 
-//////////////////////////////////////////////////////////////
-//  Phaelax's mouse management code
-//////////////////////////////////////////////////////////////
-
-remstart
-Command list
-__mouse.leftButton.down
-__mouse.leftButton.clicked
-__mouse.leftButton.doubleClicked
-__mouse.leftButton.tripleClicked
-__mouse.leftButton.clickCount
-__mouse.rightButton.down
-__mouse.rightButton.clicked
-__mouse.rightButton.doubleClicked
-__mouse.rightButton.tripleClicked
-__mouse.rightButton.clickCount
-__mouse.scrollButton.down
-__mouse.scrollButton.clicked
-__mouse.scrollButton.doubleClicked
-__mouse.scrollButton.tripleClicked
-__mouse.scrollButton.clickCount
-__mouse.scrollButton.scrollUp
-__mouse.scrollButton.scrollDown
-__mouse.isMoving
-__mouse.pos.x
-__mouse.pos.y
-__mouse.leftButton.isDragging
-__mouse.leftButton.hasDragged
-__mouse.dragStartPos.x
-__mouse.dragStartPos.y
-__mouse.dragEndPos.x
-__mouse.dragEndPos.y
-remend
-
-//////////////////////////////////////////////////////////////
-
-Function IO_Input_InitMouse():    
-   Global __mouse as MouseData
-
-   load dll "user32.dll",1
-   __mouse.private.doubleClickDelay = call dll(1,"GetDoubleClickTime")
-   delete dll 1
-Endfunction
-
-Function IO_Input_UpdateMouse():    
-	MC = Mouseclick()
-    MZ = mousez()
-    TimeStamp = timer()
-    __mouse.leftButton.clicked   = 0
-    __mouse.rightButton.clicked  = 0
-    __mouse.scrollButton.clicked = 0
-    __mouse.leftButton.doubleClicked   = 0
-    __mouse.rightButton.doubleClicked  = 0
-    __mouse.scrollButton.doubleClicked = 0
-    __mouse.leftButton.tripleClicked   = 0
-    __mouse.rightButton.tripleClicked  = 0
-    __mouse.scrollButton.tripleClicked = 0
-    __mouse.scrollButton.scrollUp   = 0
-    __mouse.scrollButton.scrollDown = 0
-    __mouse.leftButton.hasDragged = 0
-	 
-    rem reset click counters if a button other than the current one was clicked
-    if MC > 0 && MC <> 1 then __mouse.leftButton.clickCount   = 0
-    if MC > 0 && MC <> 2 then __mouse.rightButton.clickCount  = 0
-    If MC > 0 && MC <> 4 Then __mouse.scrollButton.clickCount = 0
-	 
-    rem LEFT mouse button
-    rem If mouse button was already down but now nothing
-    rem is down, button was released. Initiate 'click'
-    rem action. Store time of last click.
-    if __mouse.leftButton.down and MC = 0
-        __mouse.leftButton.clicked = 1
-        __mouse.private.lastClickTimestamp = TimeStamp
-    Endif
-	 
-    rem RIGHT mouse button
-    if __mouse.rightButton.down and MC = 0
-        __mouse.rightButton.clicked = 1
-        __mouse.private.lastClickTimestamp = TimeStamp
-    Endif
-	 
-    rem SCROLL mouse button
-    if __mouse.scrollButton.down and MC = 0
-        __mouse.scrollButton.clicked = 1
-        __mouse.private.lastClickTimestamp = TimeStamp
-    Endif
-	 
-    rem If mouse button has not been clicked within specified 'double-click'
-    rem time value, reset counter.
-    if __mouse.private.lastClickTimestamp + __mouse.private.doubleClickDelay < TimeStamp
-        __mouse.leftButton.clickCount   = 0
-        __mouse.rightButton.clickCount  = 0
-        __mouse.scrollButton.clickCount = 0
-    endif
-    
-    rem If LEFT mouse button was clicked, increment counter.
-    if __mouse.leftButton.clicked = 1
-        inc __mouse.leftButton.clickCount
-        if __mouse.leftButton.clickCount = 2 then __mouse.leftButton.doubleClicked = 1
-        if __mouse.leftButton.clickCount = 3 then __mouse.leftButton.tripleClicked = 1
-    endif
-    
-    rem If RIGHT mouse button was clicked, increment counter.
-    if __mouse.rightButton.clicked = 1
-        inc __mouse.rightButton.clickCount
-        if __mouse.rightButton.clickCount = 2 then __mouse.rightButton.doubleClicked = 1
-        if __mouse.rightButton.clickCount = 3 then __mouse.rightButton.tripleClicked = 1
-    endif
-    
-    
-    rem If RIGHT mouse button was clicked, increment counter.
-    if __mouse.scrollButton.clicked = 1
-        inc __mouse.scrollButton.clickCount
-        if __mouse.scrollButton.clickCount = 2 then __mouse.scrollButton.doubleClicked = 1
-        if __mouse.scrollButton.clickCount = 3 then __mouse.scrollButton.tripleClicked = 1
-    endif
-    
-    
-    if __mouse.private.mouseZValue <> MZ
-        if __mouse.private.mouseZValue > MZ then __mouse.scrollButton.scrollDown = 1
-        if __mouse.private.mouseZValue < MZ then __mouse.scrollButton.scrollUp = 1
-        __mouse.private.mouseZValue = MZ
-    endif
-    
-    
-    rem get current state of each button
-    __mouse.leftButton.down   = (MC && %00000001) > 0
-    __mouse.rightButton.down  = (MC && %00000010) > 0
-    __mouse.scrollButton.down = (MC && %00000100) > 0
-    
-    
-    rem LEFT mouse dragging
-    if __mouse.leftButton.down = 1
-        if __mouse.private.startDrag = 0
-            __mouse.private.startDrag = 1
-            __mouse.dragStartPos.x = mousex()
-            __mouse.dragStartPos.y = mousey()
-        else
-            __mouse.dragEndPos.x = mousex()
-            __mouse.dragEndPos.y = mousey()
-            if __mouse.leftButton.isDragging = 0
-                if abs(__mouse.dragStartPos.x - __mouse.dragEndPos.x) > 5 || abs(__mouse.dragStartPos.y - __mouse.dragEndPos.y) > 5
-                    __mouse.leftButton.isDragging = 1
-                endif
-            endif
-        endif
-    else
-        __mouse.private.startDrag = 0
-        if __mouse.leftButton.isDragging = 1
-            __mouse.leftButton.isDragging = 0
-            __mouse.leftButton.hasDragged = 1
-        endif
-    endif
-    
-    
-    rem the reason for the delay is because the system
-    rem can update way faster than we can move a mouse
-    if __mouse.private.movingTimestamp+20 < TimeStamp
-        __mouse.isMoving = 0
-        x = mousex() : y = mousey()
-        if __mouse.pos.x <> x then __mouse.isMoving = 1
-        if __mouse.pos.y <> y then __mouse.isMoving = 1
-        __mouse.pos.x = x
-        __mouse.pos.y = y
-        __mouse.private.movingTimestamp = TimeStamp
-    endif
-    
+//Input_Terminate() - Terminates the input module.
+Function Input_Terminate():
+	//terminate the input module.
+	UI_WriteLog(UI_Green,"Input: Terminated.")
 endfunction
 
 //////////////////////////////////////////////////////////////

@@ -100,42 +100,6 @@ Function World_LoadFile(file$):
 							Endwhile
 							KD GETXMLPARENTNODE XMLID
 						Endcase
-						Case "spectatorcamera"
-							//position the root camera
-							//simple debug script
-							Array Insert At Bottom SpectatorCameras()
-							ChildNode = Kd Getxmlfirstchildnode(XMLID)
-							While ChildNode
-								Select Kd Getxmlnodevalue(XMLID)
-									Case "name"
-										SpectatorCameras(NumSpectatorCameras).name=Kd Getxmlnodeattribute(XMLID,"name")
-									endcase
-									Case "position"
-										x#=val(Kd Getxmlnodeattribute(XMLID,"x"))
-										y#=val(Kd Getxmlnodeattribute(XMLID,"y"))
-										z#=val(Kd Getxmlnodeattribute(XMLID,"z"))
-										SpectatorCameras(NumSpectatorCameras).position.x = x#
-										SpectatorCameras(NumSpectatorCameras).position.y = y#
-										SpectatorCameras(NumSpectatorCameras).position.z = z#
-									Endcase
-									Case "rotation"
-										x#=val(Kd Getxmlnodeattribute(XMLID,"x"))
-										y#=val(Kd Getxmlnodeattribute(XMLID,"y"))
-										z#=val(Kd Getxmlnodeattribute(XMLID,"z"))
-										SpectatorCameras(NumSpectatorCameras).rotation.x = x#
-										SpectatorCameras(NumSpectatorCameras).rotation.y = y#
-										SpectatorCameras(NumSpectatorCameras).rotation.z = z#
-									Endcase
-									Case "fov"
-										fov#=val(Kd Getxmlnodeattribute(XMLID,"value"))
-										SpectatorCameras(NumSpectatorCameras).fov = fov#
-									endcase
-								endselect
-								ChildNode = Kd Getxmlnextsiblingnode(XMLID)
-							Endwhile
-							KD GETXMLPARENTNODE XMLID
-							NumSpectatorCameras = NumSpectatorCameras + 1
-						Endcase
 						Case "object"
 							//load object data
 							Array Insert At Bottom WORLD_STATICOBJECTS()
@@ -239,7 +203,6 @@ Function World_Unload():
 			if object exist(WORLD_STATICOBJECTS(staticobj).mdlid) then delete object WORLD_STATICOBJECTS(staticobj).mdlid
 		Next staticobj
 	endif
-	ClearSpectatorArray()
 	Terrain_Destroy()
 	world.enabled = 0
 endfunction
