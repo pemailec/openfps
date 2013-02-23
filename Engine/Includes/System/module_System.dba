@@ -52,14 +52,6 @@ Function SYS_Init():
    Screen.AA = 			lua Int("AA")						//Anti-aliasing (bugged)
 	Game.NetworkPort = 	lua int("Port")					//Port for multiplayer
 	
-	//set up port forwarding
-	//This uses a third-party app to add a port forwarding rule to the router.
-	ip$=ip To string$(interface ip (1))
-	commandline$ = "-add -app OpenFPS -lanip "+ip$+" -udpport "+str$(Game.NetworkPort)+" -q"
-	executable$ = "..\Resources\Launcher-code\Port-forward\piczo.exe"
-	directory$ = "..\Resources\Launcher-code\Port-forward"
-	Network_PFProcess = Execute executable(executable$,commandline$,directory$)
-	
 	//Apply display settings
 	Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,Screen.AA,0
    if Screen.Fullscreen=1 then set window off

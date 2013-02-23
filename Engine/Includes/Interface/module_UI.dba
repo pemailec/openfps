@@ -511,6 +511,8 @@ Function UI_Init()
 	UI_FadeManager.state=UI_NORMAL
 	UI_FadeManager.current=0
 	
+	//init ui menu
+	UI_Menu_Init()
 	
 // Disable escapekey
 	Disable Escapekey
@@ -578,6 +580,8 @@ Function UI_Update()
 //*                                                                                     *
 //***************************************************************************************
 
+	//update menu first
+	UI_Menu_Update()
 
 //Add value to the mouse variables
 	SyS_MouseMoveX = MouseMoveX():SyS_MouseMoveY = MouseMoveY()
@@ -653,7 +657,6 @@ Function UI_Update()
 			//wait until key is released
 		endwhile
 	Endif
-	
 
 Endfunction
 

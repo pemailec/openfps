@@ -4,53 +4,63 @@
 //////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////
-//  CONSTANTS
-//////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////
-//  UDTS
-//////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////
 //  FUNCTIONS
 //////////////////////////////////////////////////////////////
 
+//Physics_Init() - sets up the basic newton world
 Function Physics_Init():
-	NDB_NewtonCreate
+	//create the world
+	Ndb_Newtoncreate
+	
+	//set the gravity to a decent value
 	NDB_SetVector 0.0, -48.0, 0.0
 	Ndb_Setstandardgravity
+	
+	//set the world size to be twice the size of the map
 	Ndb_Setvector 1, -256.0, -256.0, -256.0
 	Ndb_Setvector 2, 256.0, 256.0, 256.0
 	Ndb_Newtonsetworldsize
+	
+	//set up the newton timer system
 	Global Newtontime As Float
 	Newtontime = NDB_GetElapsedTimeInSec()
 	Newtontime = Ndb_Getelapsedtimeinsec()
+	
+	//add debug flag and variable for debug object
 	Global NDBDebug As Boolean : NDBDebug = 0
 	Global NDBDebugobj As Integer
+	
+	//set up the default material
 	Global DefaultMaterial As Integer
 	DefaultMaterial = Ndb_Newtonmaterialgetdefaultgroupid()
-	UI_WriteLog(UI_Green,"Physics module init'd")
-	Player_Init()
+	
+	//Write a log
+	UI_WriteLog(UI_Green,"Newton physics started.")
 Endfunction
 
+//Physics_Update() - updates newton physics
 Function Physics_Update():
-	If World.enabled = 1:
-		if NDBDebugobj <> 0
-			delete object NDBDebugobj
-		Endif	
-		
-		Newtontime = NDB_GetElapsedTimeInSec()
-		Ndb_Newtonupdate Newtontime
-		If NDBDebug=1:
-			NDBDebugobj = NDB_DebugMakeNewtonObject()
-			set object light NDBDebugobj, 0
-		else
-			NDBDebugobj = 0
-		endif
-	Endif
+	//if an old debug object exists, delete it
+	if NDBDebugobj <> 0
+		delete object NDBDebugobj
+	Endif	
+	
+	//get the time since the last update and call the update
+	Newtontime = NDB_GetElapsedTimeInSec()
+	Ndb_Newtonupdate Newtontime
+	
+	//if debug mode is active, create a debug object
+	If NDBDebug=1:
+		NDBDebugobj = NDB_DebugMakeNewtonObject()
+		set object light NDBDebugobj, 0
+	else
+		NDBDebugobj = 0
+	endif
 Endfunction
 
+//Physics_ToggleDebug() - Toggle physics debug mode.
 Function Physics_ToggleDebug():
+	//toggle the debug value between 1 and 0.
 	NDBDebug = 1 - NDBDebug
 Endfunction
 

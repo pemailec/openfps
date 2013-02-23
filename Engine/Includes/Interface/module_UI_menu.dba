@@ -227,7 +227,7 @@ Function UI_Menu_CheckGadgets():
 				endif
 			Endcase
 			Case "button_confirmquit"
-				TERMINATE_FLAG = 1
+				Game.Terminate = 1
 			Endcase
 			Case "button_singleplayer"
 				UI_Menu_SetMode(M_MENU_GENERICPROMPT)
@@ -244,7 +244,6 @@ Function UI_Menu_CheckGadgets():
 				else:
 					UI_FadeManager.state=UI_FADEIN
 					UI_FadeManager.target=M_ENGINE_LOADING
-					WorldCacheTarget = "Media\Levels\training.xml"
 					`Network_Client_Connect()
 				endif
 			endcase
@@ -259,7 +258,7 @@ Function UI_Menu_CheckGadgets():
 				`joingamearg$ = "training"
 				UI_FadeManager.state=UI_FADEIN
 				UI_FadeManager.target=M_ENGINE_LOADING
-				WorldCacheTarget = "Media\Levels\training.xml"
+
 			Endcase
 			Case "button_credits"
 				UI_FadeManager.state=UI_FADEIN
@@ -438,6 +437,7 @@ Function UI_Render_M_ENGINE_DEFAULT():
 Endfunction
 
 Function UI_Render_U_ENGINE_DEFAULT():
+	remstart
 	If Client.enabled = 1:
 		//paste game view
 		Ik Paste Image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height,cc_Shader
@@ -445,7 +445,7 @@ Function UI_Render_U_ENGINE_DEFAULT():
 
 		Select Client.values.state:
 			Case Client_STATE_SPECTATING
-				CameraSystem_Zoom()
+				`CameraSystem_Zoom()
 				Client.values.rx = Wrapvalue(Client.values.rx + (Sys_Mousemovey*0.2))
 				Client.values.ry = Wrapvalue(Client.values.ry + (Sys_Mousemovex*0.2))
 				CameraArray(cam).rotation.x = Client.values.rx
@@ -465,7 +465,7 @@ Function UI_Render_U_ENGINE_DEFAULT():
 				UI_Render_Playerlist()
 			Endcase
 			Case Client_STATE_ALIVE
-				CameraSystem_Zoom()
+				`CameraSystem_Zoom()
 				Client.values.rx = Wrapvalue(Client.values.rx + (Sys_Mousemovey*0.2))
 				Client.values.ry = Wrapvalue(Client.values.ry + (Sys_Mousemovex*0.2))
 				CameraArray(cam).rotation.x = Client.values.rx
@@ -491,10 +491,12 @@ Function UI_Render_U_ENGINE_DEFAULT():
 			Endcase
 		endselect
 	endif
+	remend
 Endfunction
 
 function UI_Render_Playerlist():
 	//render playerlist if active
+	remstart
 	If Keystate(KEY_VIEWPLAYERS):
 		ui_putwindow(Screen.Width/2-(ui_mywindow.yrow*8),(Screen.Height/2)-200,16,24)
 		UI_CenterIconText(3,Screen.Width/2,Screen.Height/2 - 180,chr$(230)+"Players:",0)
@@ -506,6 +508,7 @@ function UI_Render_Playerlist():
 		UI_CenterText(3,Screen.Width/2,(Screen.Height/2 - 150),"*none*")
 		endif
 	endif
+	remend
 Endfunction
 
 // M_MENU_SPLASH
@@ -562,7 +565,6 @@ Function UI_Render_U_MENU_JOINGAME():
 			Case "training"
 				UI_FadeManager.state=UI_FADEIN
 				UI_FadeManager.target=M_ENGINE_LOADING
-				WorldCacheTarget = "training"
 			endcase
 		endselect
 	endif

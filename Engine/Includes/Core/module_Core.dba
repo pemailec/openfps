@@ -11,7 +11,17 @@
 // This is the main source file for the OpenFPS Project.
 //
 //////////////////////////////////////////////////////////////
-
+// Modules:
+//
+// *TO-DO LIST*
+// Ordered in order of priority.
+// -module_Input
+// -module_Camera
+// -module_World
+// -module_Terrain
+// -module_Network
+// -?
+//
 //////////////////////////////////////////////////////////////
 // Setup program chunks
 // This serves as organization. Each chunk is a list of functions.
@@ -21,40 +31,35 @@
 // or debug mode.
 //////////////////////////////////////////////////////////////
 
+//set up arrays to store chunks
 Dim Chunk_Init() As Dword
-Dim Chunk_Update() as dword
-Dim Chunk_Terminate() As dword
+Dim Chunk_Update() As Dword
+Dim Chunk_Terminate() As Dword
 
-Global Chunk_Init_PTR as dword : Chunk_Init_PTR = get arrayptr(Chunk_Init()) : unlink array Chunk_Init()
-Global Chunk_Update_PTR as dword : Chunk_Update_PTR = get arrayptr(Chunk_Update()) : unlink array Chunk_Update()
-global Chunk_Terminate_PTR as dword : Chunk_Terminate_PTR = get arrayptr(Chunk_Terminate()) : unlink array Chunk_Terminate()
+//store arrays in memory
+Global Chunk_Init_PTR As dword
+Global Chunk_Update_PTR As dword
+Global Chunk_Terminate_PTR As dword
+Chunk_Init_PTR = Get Arrayptr(Chunk_Init()) : Unlink Array Chunk_Init()
+Chunk_Update_PTR = Get Arrayptr(Chunk_Update()) : Unlink Array Chunk_Update()
+Chunk_Terminate_PTR = Get Arrayptr(Chunk_Terminate()) : Unlink Array Chunk_Terminate()
 
 //Init chunk
+//core modules:
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"SYS_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"TBM_Init")
+Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Input_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"UI_Init")
-Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"UI_Menu_Init")
-Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"IO_Input_Init")
-Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Physics_Init")
-Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"World_Init")
-Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Camera_Init")
-Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Network_Init")
 
 //Update chunk
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"TBM_Update")
-Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"IO_Input_Update")
-Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"World_Update")
-Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Terrain_Update")
-Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Camera_Update")
-Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Physics_Update")
-Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"UI_Menu_Update")
+Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Input_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"UI_Update")
-Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Network_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"SYS_Sync")
 
 //Terminate chunk
-Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Network_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"TBM_Terminate")
+Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Input_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"UI_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"SYS_Terminate")
 
@@ -69,13 +74,10 @@ CORE_Chunk_Run(Chunk_Init_PTR)
 // Main loop
 //////////////////////////////////////////////////////////////
 
-Do
+While Game.Terminate = 0
 	//runs the update set of functions
 	CORE_Chunk_Run(Chunk_Update_PTR)
-	
-	if Game.Terminate = 1 then exit
-	
-loop
+Endwhile
 
 //////////////////////////////////////////////////////////////
 // Terminate

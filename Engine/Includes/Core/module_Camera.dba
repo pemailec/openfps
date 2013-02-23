@@ -22,7 +22,10 @@ Type t_Camera
 	position_curved As t_CameraVector
 	rotation_curved as t_CameraVector
 	smoothing As Boolean
-	zoom as integer
+	zoom As Integer
+	shake_curve as float
+	shake_amplitude As Float
+	shake_value as float
 Endtype
 
 //////////////////////////////////////////////////////////////
@@ -81,6 +84,17 @@ Function Camera_Update():
 			local_rotation.y = CameraArray(Camera_Current).rotation_curved.y
 			local_rotation.z = CameraArray(Camera_Current).rotation_curved.z
 		Endif
+		//calculate camera shake motion
+		If CameraArray(Camera_Current).shake_amplitude > 0:
+			CameraArray(Camera_Current).shake_amplitude = clamp(CameraArray(Camera_Current).shake_amplitude - (0.2 * TBM),0,20)
+			CameraArray(Camera_Current).shake_curve = Wrapvalue(CameraArray(Camera_Current).shake_curve + (25 * TBM)
+			CameraArray(Camera_Current).shake_value = sin(CameraArray(Camera_Current).shake_curve) * CameraArray(Camera_Current).shake_amplitude
+			local_rotation.x = local_rotation.x + CameraArray(Camera_Current).shake_value
+			local_rotation.y = local_rotation.y + ( CameraArray(Camera_Current).shake_value * 0.25 )
+		else
+			CameraArray(Camera_Current).shake_curve = 0
+			CameraArray(Camera_Current).shake_value = 0
+		endif
 		//calculated curved FOV (always on regardless of smoothing variable)
 		CameraArray(Camera_Current).camera_fov.current = tbm_curvevalue(CameraArray(Camera_Current).camera_fov.destination,CameraArray(Camera_Current).camera_fov.current,20)
 		Position Camera CameraArray(Camera_Current).id,local_position.x,local_position.y,local_position.z
@@ -151,6 +165,11 @@ Function Camera_SetRotMatrix(id as integer,x as float,y as float,z as float):
 	CameraArray(id).rotation.y = y
 	CameraArray(id).rotation.z = z
 Endfunction
+
+//Camera_shake() - makes the camera shake.
+Function Camera_Shake(id As integer,strength as float)
+	CameraArray(id).shake_amplitude = strength
+endfunction
 
 //Camera_GetPositionX() - gets the x position of a camera.
 Function Camera_GetPositionX(id As integer)
