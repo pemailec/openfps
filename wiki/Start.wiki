@@ -8,5 +8,3 @@ OpenFPS is an open source multiplayer FPS game.
 
 
 = Game design =
-
-
