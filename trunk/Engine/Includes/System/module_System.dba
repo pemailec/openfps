@@ -49,11 +49,11 @@ Function SYS_Init():
 	Screen.Depth = 		lua Int("ScreenDepth")			//Screen Depth
    Screen.Vsync = 		lua Int("Vsync")					//Vertical Sync
 	Screen.Fullscreen =  lua Int("Fullscreen")			//Fullscreen/window
-   Screen.AA = 			lua Int("AA")						//Anti-aliasing (bugged)
+   Screen.AA = 			lua Int("AA")						//Anti-aliasing
 	Game.NetworkPort = 	lua int("Port")					//Port for multiplayer
 	
 	//Apply display settings
-	Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,Screen.AA,0
+	Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,0,0
    if Screen.Fullscreen=1 then set window off
 	If Screen.Fullscreen=0 Then Set Window On
 	

@@ -49,17 +49,22 @@ Chunk_Terminate_PTR = Get Arrayptr(Chunk_Terminate()) : Unlink Array Chunk_Termi
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"SYS_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"TBM_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Input_Init")
+Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Audio_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"UI_Init")
+Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Game_Init")
 
 //Update chunk
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"TBM_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Input_Update")
+Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Game_Update")
+Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Audio_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"UI_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"SYS_Sync")
 
 //Terminate chunk
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"TBM_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Input_Terminate")
+Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Audio_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"UI_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"SYS_Terminate")
 

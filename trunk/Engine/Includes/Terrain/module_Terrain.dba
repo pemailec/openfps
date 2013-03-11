@@ -35,10 +35,14 @@ Function Terrain_Init():
 	global MasterHeightmap : MasterHeightmap = reserve free image()
 	Global MasterTexture : MasterTexture = Reserve Free Image()
 	Global MasterDetail : MasterDetail = Reserve Free Image()
-	Global MasterGridObject : MasterGridObject = Reserve Free mesh()
-	Load Image "Media\Materials\Heightmaps\Generic\heightmap.bmp",MasterHeightmap
-	Load Image "Media\Materials\Heightmaps\Generic\texture.jpg",MasterTexture
-	Load Image "Media\Materials\Heightmaps\Generic\detail.tga",MasterDetail
+	Global MasterGridObject : MasterGridObject = Reserve Free Mesh()
+	
+	Game_LoadFromLevel("HM\heightmap.bmp")
+	Game_LoadFromLevel("HM\texture.jpg")
+	Game_LoadFromLevel("HM\detail.tga")
+	Load Image "Media\Levels\data\HM\heightmap.bmp",MasterHeightmap
+	Load Image "Media\Levels\data\HM\texture.jpg",MasterTexture
+	Load Image "Media\Levels\data\HM\detail.tga",MasterDetail
 	`Load Mesh "Media\Models\grid.x",MasterGridObject
 	
 	Dim TerrainArray(TerrainSizeX,TerrainSizeZ) As t_TerrainGridTile
@@ -102,7 +106,7 @@ Function Terrain_Init():
 			Sc_Setupcomplexobject TerrainArray(TX,TZ).object,0,32
 			Sc_Updateobject TerrainArray(TX,TZ).object
 			Calculate Object Bounds TerrainArray(TX,TZ).object
-			
+			remstart
 			tempobject = find free object()
 			Clone Object tempobject,TerrainArray(TX,TZ).object
 			Col1 = NDB_NewtonCreateTreeCollision( tempobject )
@@ -111,18 +115,14 @@ Function Terrain_Init():
 			NDB_NewtonBodySetMatrix terrain
 			Ndb_Newtonreleasecollision Col1
 			delete object tempobject
-		
+			remend
 		Next TZ
 	Next TX
 	endif
 Endfunction
 
 Function Terrain_Update():
-	if TerrainExists=1:
-	If World.enabled = 1:
-	else:
-	Endif
-	endif
+	//does nothing for now
 Endfunction
 
 Function Terrain_Destroy():

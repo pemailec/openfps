@@ -1,0 +1,108 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - AUDIO MODULE
+//  Concept and code by thenerd, Winter 2013!
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+// Constants
+//////////////////////////////////////////////////////////////
+
+#Constant STATE_PLAYING 1
+#Constant STATE_LOOPING 2
+#Constant STATE_STOPPED 3
+
+//////////////////////////////////////////////////////////////
+// UDTS
+//////////////////////////////////////////////////////////////
+
+Type t_AudioReference
+	id As Integer
+	state As Integer
+	volume As Integer
+	pan As Integer
+	pitch As Integer
+	tag As String
+	tag_parameter as integer
+Endtype
+
+//////////////////////////////////////////////////////////////
+// Functions
+//////////////////////////////////////////////////////////////
+
+Function Audio_Init():
+	Dim AudioReferences() As t_AudioReference
+	Global Num_AudioReferences As Integer
+	UI_WriteLog(UI_Green,"Audio: inited!")
+	Global GameLoop1 As Integer
+	Global GameLoop2 As Integer
+	GameLoop1 = Audio_Load("Media\Sounds\Loops\Loop_Menu.ogg")
+	GameLoop2 = Audio_Load("Media\Sounds\Loops\Loop_Loading.ogg")
+	Audio_AddFinishTag(SplashSound,GameLoop1)
+Endfunction
+
+Function Audio_Update():
+	For a = 0 To Num_AudioReferences - 1:
+		Select AudioReferences(a).state
+			Case STATE_PLAYING
+				If Audio Playing(AudioReferences(a).id)=0:
+					AudioReferences(a).state = STATE_STOPPED
+					If AudioReferences(a).tag = "OnFinish":
+						Audio_Play(AudioReferences(a).tag_parameter)
+					endif
+				endif
+			Endcase
+			Case STATE_LOOPING
+			Endcase
+			Case STATE_STOPPED
+				
+			Endcase
+		endselect
+		Audio Pan AudioReferences(a).id,AudioReferences(a).pan
+		audio volume AudioReferences(a).id,AudioReferences(a).volume
+	next a
+Endfunction
+
+Function Audio_Load(file$ As string):
+	Array Insert At Bottom AudioReferences()
+	AudioReferences(Num_AudioReferences).id = Audio_FindFree()
+	load audio AudioReferences(Num_AudioReferences).id,file$
+	AudioReferences(Num_AudioReferences).state = STATE_STOPPED
+	AudioReferences(Num_AudioReferences).volume = 100
+	AudioReferences(Num_AudioReferences).pan = 0
+	AudioReferences(Num_AudioReferences).pitch = 1.0
+	returnid = Num_AudioReferences
+	Num_AudioReferences = Num_AudioReferences + 1
+	UI_WriteLog(UI_Green,"Audio: Loaded file "+file$)
+Endfunction returnid
+
+Function Audio_AddFinishTag(id,parameter):
+	AudioReferences(id).tag = "OnFinish"
+	AudioReferences(id).tag_parameter = parameter
+endfunction
+
+Function Audio_FindFree():
+	local return_ as integer
+	For i = 0 To Num_AudioReferences + 1:
+		if audio exist(i)=0 then return_=i:exit
+	next i
+endfunction return_
+
+Function Audio_Play(id As integer):
+	AudioReferences(id).state = STATE_PLAYING
+	play audio AudioReferences(id).id
+Endfunction
+
+Function Audio_Loop(id As integer):
+	AudioReferences(id).state = STATE_LOOPING
+	loop audio AudioReferences(id).id
+endfunction
+
+Function Audio_Terminate():
+	For a = 0 To Num_AudioReferences - 1:
+		Delete Audio AudioReferences(a).id
+	next a
+endfunction
+
+//////////////////////////////////////////////////////////////
+// End of code
+//////////////////////////////////////////////////////////////

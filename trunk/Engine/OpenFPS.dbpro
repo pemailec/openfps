@@ -15,6 +15,11 @@ include4=Includes\Interface\module_UI_console.dba
 include5=Includes\Input\module_Input.dba
 include6=Includes\Interface\module_UI_menu.dba
 include7=Includes\Core\module_Datatypes.dba
+include8=Includes\Audio\module_Audio.dba
+include9=Includes\Core\module_Game.dba
+include10=Includes\Terrain\module_Terrain.dba
+include11=Includes\Core\module_Camera.dba
+include12=Includes\World\module_World.dba
 executable=OpenFPS.exe
 build type=exe
 
