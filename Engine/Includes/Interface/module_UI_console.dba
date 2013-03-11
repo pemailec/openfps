@@ -95,7 +95,7 @@ Function UI_Console_Update():
 		If cursor_toggle=1 Then cursor$="_"
 		if cursor_toggle=0 then cursor$=" "
 		UI_AlphaText(1,4,-200+Console.height+9*16,"~rOPENFPS Console >>>~w "+ Input_Text_Grab()+cursor$,255)
-		if returnkey() then UI_Console_RunCMD(currentinput$):Input_Text_Clear()
+		if returnkey() then UI_Console_RunCMD(Input_Text_Grab()):Input_Text_Clear()
 	else
 		Console.height=clamp(Console.height-(20*TBM),0,200)
 	Endif

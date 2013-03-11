@@ -423,7 +423,7 @@ Function UI_Init()
 //***************************************************************************************
 
 // Start Debugmode
-	UI_Console_Init()
+	`UI_Console_Init()
 	UI_StartDebugmode(UI_LogON)    :`change parameter to UI_Logon to do logfile
 	UI_WriteLog(UI_Green,"=== Starting to initiate User Interface module.")
 // Setup basic data
@@ -623,7 +623,7 @@ Function UI_Update()
 	Endselect
 	If Temp_AlphaSlider>0 Then D3d_Box 0,0,Screen.Width,Screen.Height,D3d_Rgba(0,0,0,Temp_AlphaSlider)
 	
-	UI_Console_Update()
+	`UI_Console_Update()
 //-Handle all the mouse
 	UI_HandleMouse()
 	
@@ -659,8 +659,6 @@ Function UI_Update()
 	Endif
 
 Endfunction
-
-
 
 Function UI_Terminate()
 //***************************************************************************************

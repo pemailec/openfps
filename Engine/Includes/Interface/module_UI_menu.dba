@@ -92,12 +92,9 @@ Function UI_Menu_CreateResources():
 	Ik Resize Image MenuImage4,Screen.Width,Screen.Height,1
 	Ik Resize Image MenuImage6,Screen.Width,Screen.Height,1
 
-	Global SplashSound As Integer : SplashSound = Find Free Sound()
-	Load Sound "Media\Sounds\Interface\Jungle_01.wav",SplashSound
-	`Play Sound SplashSound
-	
-	Global MenuLoop As Integer :MenuLoop = Find Free Music()
-	Load Music "Media\Sounds\Loops\Beyond_the_Stars.mp3",MenuLoop
+	Global SplashSound As Integer
+	SplashSound = Audio_Load("Media\Sounds\Interface\Jungle_01.wav")
+	`Audio_Play(SplashSound)
 	
 	global cc_Shader as integer : cc_Shader = 2
 	Ik Load Effect "Media\Shaders\cc.fx",cc_Shader
@@ -203,7 +200,6 @@ Function UI_Menu_SetMode(mode_new As byte):
 endfunction
 
 function UI_Menu_Update():
-	if sound playing(splashsound)=0 and music playing(menuloop)=0 then play music menuloop
 	If MenuUI.initialized = 0 Then UI_Menu_Init()
 	`UI_CenterText(3,ScreenWidth/2,100,"Menu Initialized and Running! *Debug*")
 	If MenuUI.setflag=1 Then Call Function Ptr (Get Ptr To Function(MenuUI_DrawCalls(0,MenuUI.mode))):MenuUI.setflag=0
@@ -230,10 +226,11 @@ Function UI_Menu_CheckGadgets():
 				Game.Terminate = 1
 			Endcase
 			Case "button_singleplayer"
-				UI_Menu_SetMode(M_MENU_GENERICPROMPT)
-				prompttextone$="Sorry, singleplayer isn't ready in this version of OpenFPS."
-				prompttexttwo$="Try out multiplayer, and keep on the lookout for upcoming updates!"
-				prompttitle$="Singleplayer Not Available"
+				Game_Start("Media\Levels\Singleplayer.zip")
+				`UI_Menu_SetMode(M_MENU_GENERICPROMPT)
+				`prompttextone$="Sorry, singleplayer isn't ready in this version of OpenFPS."
+				`prompttexttwo$="Try out multiplayer, and keep on the lookout for upcoming updates!"
+				`prompttitle$="Singleplayer Not Available"
 			endcase
 			Case "button_multiplayer"
 				if PortForwardDone=0:
@@ -242,8 +239,8 @@ Function UI_Menu_CheckGadgets():
 					prompttexttwo$=""
 					prompttitle$="Multiplayer Not Available"
 				else:
-					UI_FadeManager.state=UI_FADEIN
-					UI_FadeManager.target=M_ENGINE_LOADING
+					`Game_Start("GenericLevel.lvl")
+					Ui_WriteLog(UI_RED,"No level.")
 					`Network_Client_Connect()
 				endif
 			endcase
@@ -254,15 +251,18 @@ Function UI_Menu_CheckGadgets():
 				UI_Menu_SetMode(M_MENU_TRAININGPROMPT)
 			endcase
 			Case "button_yestrain"
-				`UI_Menu_SetMode(M_MENU_JOINGAME)
-				`joingamearg$ = "training"
-				UI_FadeManager.state=UI_FADEIN
-				UI_FadeManager.target=M_ENGINE_LOADING
-
+				Game_Start("Media\Levels\Training.zip")
 			Endcase
+			Case "button_reload"
+				GameManager_End()
+				Game_Start("Media\Levels\Training.zip")
+			endcase
 			Case "button_credits"
 				UI_FadeManager.state=UI_FADEIN
 				UI_FadeManager.target=M_MENU_CREDITS
+			Endcase
+			Case "button_endgame"
+				GameManager_End()
 			endcase
 		Endselect
 	endif
@@ -278,13 +278,13 @@ Function UI_Render_M_MENU_MAIN():
 	UI_AddTitleToGadget("button_quit",3,x-8,y-14,"Quit")
 	UI_AddInfoToGadget("button_quit",1,"Quit Biostorm.",1)
 	x=120:y=y-60
-	UI_AddCenterGadgetToScreen("button_options",x,y,"UI_buttongray")`-gray")`
-	`UI_AddMOuseOverImageToGadget("button_options","UI_buttonhover")
+	UI_AddCenterGadgetToScreen("button_options",x,y,"UI_button")`-gray")`
+	UI_AddMOuseOverImageToGadget("button_options","UI_buttonhover")
 	UI_AddTitleToGadget("button_options",3,x-8,y-14,"Options")
 	UI_AddInfoToGadget("button_options",1,"Change the game configuration.",1)
 	x=120:y=y-60
-	UI_AddCenterGadgetToScreen("button_training",x,y,"UI_buttongray")
-	`UI_AddMOuseOverImageToGadget("button_training","UI_buttonhover")
+	UI_AddCenterGadgetToScreen("button_training",x,y,"UI_button")
+	UI_AddMOuseOverImageToGadget("button_training","UI_buttonhover")
 	UI_AddTitleToGadget("button_training",3,x-8,y-14,"Training")
 	UI_AddInfoToGadget("button_training",1,"Load the training mission. Useful for beginners!",1)
 	x=120:y=y-60
@@ -293,8 +293,8 @@ Function UI_Render_M_MENU_MAIN():
 	UI_AddTitleToGadget("button_multiplayer",3,x-8,y-14,"Multi "+chr$(230)+chr$(230))
 	UI_AddInfoToGadget("button_multiplayer",1,"Join/start a multiplayer game.",1)
 	x=120:y=y-60
-	UI_AddCenterGadgetToScreen("button_singleplayer",x,y,"UI_buttongray")`gray")
-	`UI_AddMOuseOverImageToGadget("button_singleplayer","UI_buttonhover")
+	UI_AddCenterGadgetToScreen("button_singleplayer",x,y,"UI_button")`gray")
+	UI_AddMOuseOverImageToGadget("button_singleplayer","UI_buttonhover")
 	UI_AddTitleToGadget("button_singleplayer",3,x-8,y-14,"Single "+chr$(230))
 	UI_AddInfoToGadget("button_singleplayer",1,"Play the singleplayer campaign.",1)
 Endfunction
@@ -429,20 +429,36 @@ Function UI_Render_U_ENGINE_LOADING():
 	`UI_PutWindow(-24,-24,(Screen.Width/UI_mywindow.yrow)+2,(Screen.Height/UI_mywindow.yrow)+2)
 	ik paste image MenuImageBlack,0,0,screen.width,screen.height
 	UI_CenterText(3,Screen.Width/2,(Screen.Height/2)-40,LoadingString)
-	if UI_FadeManager.state = UI_Normal then WorldCacheState = 1
 Endfunction
 
 // M_ENGINE_DEFAULT
 Function UI_Render_M_ENGINE_DEFAULT():
+	y=360
+	x=120:y=y-60
+	UI_AddCenterGadgetToScreen("button_endgame",x,y,"UI_button")
+	UI_AddMOuseOverImageToGadget("button_endgame","UI_buttonhover")
+	UI_AddTitleToGadget("button_endgame",3,x-8,y-14,"END GAME")
+	UI_AddInfoToGadget("button_endgame",1,"temp.",1)
+	y=y+120
+	UI_AddCenterGadgetToScreen("button_reload",x,y,"UI_button")
+	UI_AddMOuseOverImageToGadget("button_reload","UI_buttonhover")
+	UI_AddTitleToGadget("button_reload",3,x-8,y-14,"REFRESH LEVEL")
+	UI_AddInfoToGadget("button_reload",1,"reload level.",1)
 Endfunction
 
 Function UI_Render_U_ENGINE_DEFAULT():
+	//paste game view
+	Ik Paste Image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height,cc_Shader
+	Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
+	Paste Image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
+	d3d_box 0,0,Screen.Width,120,rgb(0,0,0),rgb(0,0,0),d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200)
+	Ik Paste Image MenuImage13,0,120,Screen.Width,124
+	d3d_box 0,Screen.Height-120,Screen.Width,Screen.Height,d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200),rgb(0,0,0),rgb(0,0,0)
+	Ik Paste Image MenuImage13,0,Screen.Height-124,Screen.Width,Screen.Height-120
+	UI_AlphaText(3,Screen.Width/2-(UI_stringmap(3,258).ascii*5),48,"~bSPECTATING "+chr$(230),250)
+	UI_AlphaText(3,Screen.Width/2-(UI_stringmap(3,258).ascii*5),Screen.Height-58,World().name,250)
+	
 	remstart
-	If Client.enabled = 1:
-		//paste game view
-		Ik Paste Image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height,cc_Shader
-		Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
-
 		Select Client.values.state:
 			Case Client_STATE_SPECTATING
 				`CameraSystem_Zoom()
@@ -492,6 +508,7 @@ Function UI_Render_U_ENGINE_DEFAULT():
 		endselect
 	endif
 	remend
+
 Endfunction
 
 function UI_Render_Playerlist():
