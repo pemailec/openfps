@@ -20,6 +20,8 @@ include9=Includes\Core\module_Game.dba
 include10=Includes\Terrain\module_Terrain.dba
 include11=Includes\Core\module_Camera.dba
 include12=Includes\World\module_World.dba
+include13=Includes\Networking\module_Network.dba
+include14=Includes\Effects\module_Particles.dba
 executable=OpenFPS.exe
 build type=exe
 
@@ -34,6 +36,10 @@ media root path=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\
 ;--> Included Media <--
 
 ;--> Cursors <--
+pointer1=Media\Images\Interface\aero_arrow.cur
+pointer2=Media\Images\Interface\aero_working_l.ani
+pointer3=Media\Images\Interface\aero_busy_l.ani
+pointer4=Media\Images\Interface\waitcursor_anim.ani
 
 ;--> Icons <--
 

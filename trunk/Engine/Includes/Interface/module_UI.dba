@@ -369,7 +369,8 @@ Type MyGuiType
 	DestDiffuseR				as   float 	  : `diffuse dest r
 	DestDiffuseG				as   float 	  : `diffuse dest g
 	DestDiffuseB				as   float 	  : `diffuse dest b
-	DestDiffuseA 				as   float
+	DestDiffuseA 				As   Float
+	AlphaMultiplier			as   Float
 EndType
 
 type t_DiffuseManager
@@ -493,6 +494,12 @@ Function UI_Init()
 	UI_LoadGuiGraphics("Media\Images\Interface\button-highlight2.png","UI_buttonhighlight")
 	UI_LoadGuiGraphics("Media\Images\Interface\button-menu.png","UI_buttonmenu")
 	UI_LoadGuiGraphics("Media\Images\Interface\button-menu-hover.png","UI_buttonmenuhover")
+	
+	UI_LoadGuiGraphics("Media\Images\Interface\bigbutton-normal.png","UI_bigbutton")
+	UI_LoadGuiGraphics("Media\Images\Interface\bigbutton-highlight.png","UI_bigbuttonhover")
+	
+	UI_LoadGuiGraphics("Media\Images\Interface\pausebutton-normal.png","UI_pausebutton")
+	UI_LoadGuiGraphics("Media\Images\Interface\pausebutton-highlight.png","UI_pausebutton_highlight")
 	
 	UI_LoadGuiGraphics("Media\Images\Interface\skull32_1.png","skull32_1")
 	UI_LoadGuiGraphics("Media\Images\Interface\skull32_2.png","skull32_2")
@@ -1617,7 +1624,7 @@ Function UI_HandleMouse()
 //*                                                                                     *
 //***************************************************************************************
 If UI_Mouse.Initialized = UI_True 
-	if Has Focus()=1 then position mouse UI_Display.Middlewidth,UI_Display.Middleheight
+	if Has Focus()=1 and Game.loading_cursor_toggle = 1 then position mouse UI_Display.Middlewidth,UI_Display.Middleheight
 	`If UI_Mouse.hidden=UI_False or UI_Mouse.FadingOut=UI_True
 	
 			If  UI_Mouse.smooth              = UI_False
@@ -2420,6 +2427,7 @@ If UI_GuiInitialized=UI_True
 				UI_Gadgets(UI_GadgetNumbers).DestDiffuseR   = 255
 				UI_Gadgets(UI_GadgetNumbers).DestDiffuseG   = 255
 				UI_Gadgets(UI_GadgetNumbers).DestDiffuseB   = 255
+				UI_Gadgets(UI_GadgetNumbers).AlphaMultiplier = 1
 				`AddDiffuseManager(UI_Gadgets(UI_GadgetNumbers).Gadgetname)
 			Endif
 		Next x
@@ -2458,6 +2466,7 @@ If UI_GuiInitialized=UI_True
 				UI_Gadgets(UI_GadgetNumbers).DestDiffuseR   = 255
 				UI_Gadgets(UI_GadgetNumbers).DestDiffuseG   = 255
 				UI_Gadgets(UI_GadgetNumbers).DestDiffuseB   = 255
+				UI_Gadgets(UI_GadgetNumbers).AlphaMultiplier = 1
 				`AddDiffuseManager(UI_Gadgets(UI_GadgetNumbers).Gadgetname)
 			Endif
 		Next x
@@ -2556,8 +2565,21 @@ If UI_GuiInitialized = UI_True
 Endif
 Endfunction
 
-
-
+Function UI_SetGadgetAlpha(gadgetID$,alpha as byte)
+//***************************************************************************************
+//*   Miso                                                                              *
+//*     Sets the render target of a gadget									                   *
+//*     (range 0 - 1)                                                                 *
+//*                                                                                     *
+//***************************************************************************************
+If UI_GuiInitialized = UI_True
+		For y=1 to UI_GadgetNumbers
+			If UI_Gadgets(y).Gadgetname = gadgetID$:
+				UI_Gadgets(y).AlphaMultiplier = alpha
+			endif
+		Next y
+Endif
+Endfunction
 
 Function UI_GetGadgetValue(gadgetID$)
 //***************************************************************************************
@@ -3146,6 +3168,7 @@ If UI_GuiInitialized=UI_True
 								Dxs Begin Sprite Render UI_Gadgets(x).ID
 								`DXS SET SPRITE DIFFUSE UI_Gadgets(x).ID,UI_Gadgets(x).DiffuseR,UI_Gadgets(x).DiffuseG,UI_Gadgets(x).DiffuseB
 								Dxs Draw Sprite UI_Gadgets(x).ID,UI_Gadgets(x).x,UI_Gadgets(x).y	
+								DXS SET SPRITE ALPHA UI_Gadgets(x).ID,255 * UI_Gadgets(x).AlphaMultiplier
 								Dxs End Sprite Render UI_Gadgets(x).ID
 								
 								Dxs Begin Sprite Render UI_Gadgets(x).MouseoverID
@@ -3173,6 +3196,7 @@ If UI_GuiInitialized=UI_True
 								`DXS SET SPRITE DIFFUSE UI_Gadgets(x).SelectedID,UI_Gadgets(x).DiffuseR,UI_Gadgets(x).DiffuseG,UI_Gadgets(x).DiffuseB
 								`DXS SET SPRITE DIFFUSE UI_Gadgets(x).SelectedID,UI_Gadgets(x).DestDiffuseR,UI_Gadgets(x).DestDiffuseG,UI_Gadgets(x).DestDiffuseB
 						  		Dxs Draw Sprite UI_Gadgets(x).SelectedID,UI_Gadgets(x).x,UI_Gadgets(x).y	
+								DXS SET SPRITE ALPHA UI_Gadgets(x).SelectedID,255 * UI_Gadgets(x).AlphaMultiplier
 						  		Dxs End Sprite Render UI_Gadgets(x).SelectedID
 								
 								if UI_Gadgets(x).DestDiffuseA>10:
@@ -3196,7 +3220,8 @@ If UI_GuiInitialized=UI_True
 								DiffuseManager(diffuseid).DiffuseA=0
 								`DXS SET SPRITE DIFFUSE UI_Gadgets(x).ID,UI_Gadgets(x).DiffuseR,UI_Gadgets(x).DiffuseG,UI_Gadgets(x).DiffuseB
 								`DXS SET SPRITE DIFFUSE UI_Gadgets(x).ID,UI_Gadgets(x).DestDiffuseR,UI_Gadgets(x).DestDiffuseG,UI_Gadgets(x).DestDiffuseB
-						  			Dxs Draw Sprite UI_Gadgets(x).ID,UI_Gadgets(x).x,UI_Gadgets(x).y	
+						  		DXS SET SPRITE ALPHA UI_Gadgets(x).ID,255 * UI_Gadgets(x).AlphaMultiplier
+								Dxs Draw Sprite UI_Gadgets(x).ID,UI_Gadgets(x).x,UI_Gadgets(x).y	
 						  		Dxs End Sprite Render UI_Gadgets(x).ID
 								
 								if UI_Gadgets(x).DestDiffuseA>10:
@@ -3475,6 +3500,16 @@ Local var_colorizer$  as string
 	`AddtoDisplay("~pLOGTEXT~w ",param_log$)
 	`UI_Chat_AddText("UI",param_log$)
 	UI_Console_AddLine("UI",param_log$)
+	if Game.Debug = 1:
+	Select param_importance
+		Case UI_RED : SET CONSOLE COLOUR 4, 0 : endcase
+		Case UI_YELLOW : SET CONSOLE COLOUR 14, 0 : endcase
+		Case UI_GREEN : SET CONSOLE COLOUR 2, 0 : endcase
+		Case UI_BLUE : SET CONSOLE COLOUR 1, 0 : endcase
+	Endselect
+	Print param_log$
+	Set Console Colour 7, 0
+	endif
 EndFunction
 
 
@@ -3624,3 +3659,17 @@ Function UI_CheckFile(filename$ as string )
 		Endif
 	Endif
 Endfunction
+
+Function UI_EnableWindowsCursor():
+	Game.loading_cursor_toggle = 1
+	position mouse ui_mousex(),ui_mousey()
+	Show Mouse
+	UI_HideMouse()
+Endfunction
+
+Function UI_DisableWindowsCursor():
+	Game.loading_cursor_toggle = 0
+	UI_SetMousePosition(mousex(),mousey())
+	Hide Mouse
+	UI_ShowMouse()
+endfunction

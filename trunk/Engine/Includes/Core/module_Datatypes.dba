@@ -46,7 +46,12 @@ Type t_Game
 	Network_PFProcess As Integer
 	Terminate As Boolean
 	num_cameras As Integer
-	state as integer
+	state As Integer
+	pause_toggle As Integer
+	paused As Integer
+	loading_cursor_toggle As Boolean
+	debug As Boolean
+	oldpausestate as integer
 endtype
 
 //t_image - stores an image id and its width and height
@@ -54,6 +59,13 @@ Type t_Image
 	id as integer
 	width As Integer
 	height As Integer
+Endtype
+
+Type t_campaignsave
+	name as string
+	description As String
+	timestamp As String
+	filename as string
 Endtype
 
 //////////////////////////////////////////////////////////////

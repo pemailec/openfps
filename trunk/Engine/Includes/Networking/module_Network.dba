@@ -3,6 +3,20 @@
 //  Concept and code by thenerd, Summer 2012!
 //////////////////////////////////////////////////////////////
 
+	remstart
+	If PortForwardDone = 0:
+		If Ticker(HalfSecondTicker) Then PortForwardProgress=PortForwardProgress+1
+		If PortForwardProgress>4 Then PortForwardProgress=1
+		local PortForwardProgressstr$ as string
+		For i = 1 To PortForwardProgress:
+		PortForwardProgressstr$=PortForwardProgressstr$+"."
+		next i
+		UI_CenterIconText(1,Screen.Width/2,Screen.Height - 16,"Waiting for port forwarding "+PortForwardProgressstr$,1)
+		if bank Boolean(1,0)=1
+			PortForwardDone = 1
+		Endif
+	endif
+	remend
 //////////////////////////////////////////////////////////////
 //  CONSTANTS
 //////////////////////////////////////////////////////////////
@@ -110,9 +124,9 @@ Function Network_Init():
 	
 	Network_Init_PlayerList()
 	
-	Global PortForwardDone As Boolean
-	global PortForwardProgress as integer
-	Map Shared Mem To Bank "PortForwardDone",1,512
+	`Global PortForwardDone As Boolean
+	`global PortForwardProgress as integer
+	`Map Shared Mem To Bank "PortForwardDone",1,512
 	
 	//start server for test.
 	`Network_Server_Start(25565)
@@ -136,19 +150,7 @@ Function Network_Update():
 	If Client.enabled = 1 Then Network_Client_Update()
 	
 	//check port forwarding
-	If PortForwardDone = 0:
-		If Ticker(HalfSecondTicker) Then PortForwardProgress=PortForwardProgress+1
-		If PortForwardProgress>4 Then PortForwardProgress=1
-		local PortForwardProgressstr$ as string
-		For i = 1 To PortForwardProgress:
-		PortForwardProgressstr$=PortForwardProgressstr$+"."
-		next i
-		UI_CenterIconText(1,Screen.Width/2,Screen.Height - 16,"Waiting for port forwarding "+PortForwardProgressstr$,1)
-		if bank Boolean(1,0)=1:
-			PortForwardDone = 1
-		Endif
-	endif
-
+	
 Endfunction
 
 Function Network_Reset():
@@ -163,21 +165,9 @@ Function Network_Terminate():
 	//of the program.
 	Winsock Clean Up
 	//write done flag to delete port mapping
-	Write Bank integer 1,0,2
+	//Write Bank integer 1,0,2
 	UI_WriteLog(UI_Green,"NETWORK: Terminated network module.")
 Endfunction
-
-Function Network_GetIP():
-	ip$="error"
-	port=443 : access=0x00800000
-	http connect "www.fpscreator.com",port
-	action$="" : return$=HTTP REQUEST DATA("POST", "gamehost/whatismyip.php",action$,access)
-	If return$<>""
-		ip$=return$
-	endif
-	Http Disconnect
-	if ip$="error" then UI_WriteLog(UI_RED,"IP RECV ERROR")
-Endfunction ip$
 
 //////////////////////////////////////////////////////////////
 //  CLIENT FUNCTIONS
@@ -186,10 +176,10 @@ Endfunction ip$
 Function Network_Client_Connect():
 	Local ip As String
 	Local port As Integer
-	ip = "96.233.35.5"
+	ip = "128.0.0.1"
 	port = 25565
 	if Client.enabled = 0:
-	Client.name = NetworkName
+	Client.name = game.NetworkName
 	Client.enabled = 1
 	Client.values.state = Client_STATE_SPECTATING
 	//use the system time As an authentication
@@ -251,7 +241,7 @@ Function Network_Client_Update():
 			Winsock Add String "input"
 			Winsock Add String Client.name
 			Winsock Add int Client.auth
-			Winsock Add Int IO_Input()
+			Winsock Add Int Input_Grab()
 			Winsock Add Float Client.values.rx
 			winsock add float Client.values.ry
 			winsock add int hitimer()
@@ -309,7 +299,7 @@ Function Network_Client_Update():
 					Case "posrot"
 						netname$=Winsock read String$()
 						auth=winsock Read Int()
-						If netname$=NetworkName And auth=Client.auth:
+						If netname$=game.NetworkName And auth=Client.auth:
 						//is current user
 						CameraArray(RootCamera).position.x = winsock read float()
 						CameraArray(RootCamera).position.y = winsock read float()
@@ -424,7 +414,7 @@ Function Network_Server_Update():
 							ServerClients(Server.Client_array_num).port = winsock read int()
 							ServerClients(Server.Client_array_num).udp_channel = Winsock Create Udp Channel()
 							ServerClients(Server.Client_array_num).state = Client_STATE_ALIVE
-							ServerClients(Server.Client_array_num).playerid = Player_add()
+							ServerClients(Server.Client_array_num).playerid = 0`Player_add()
 							Winsock Set Channel Target ServerClients(Server.Client_array_num).udp_channel,ServerClients(Server.Client_array_num).ip,ServerClients(Server.Client_array_num).port
 							Winsock Make Packet
 							Winsock add String "auth_response"
@@ -575,7 +565,7 @@ Function Network_Server_Update():
 				remend
 			Endcase
 			Case Client_STATE_ALIVE
-				Player_Update()
+				`Player_Update()
 			endcase
 		endselect
 	Next CurrentClient
@@ -594,6 +584,18 @@ Function Network_Server_SendGodMessage():
 		Next CurrentClient
 	endif
 endfunction
+
+Function Network_GetIP():
+	ip$="error"
+	port=443 : access=0x00800000
+	http connect "www.fpscreator.com",port
+	action$="" : return$=HTTP REQUEST DATA("POST", "gamehost/whatismyip.php",action$,access)
+	If return$ <> "":
+		ip$=return$
+	endif
+	Http Disconnect
+	if ip$="error" then UI_WriteLog(UI_RED,"IP RECV ERROR")
+Endfunction ip$
 
 //////////////////////////////////////////////////////////////
 //  End of code.

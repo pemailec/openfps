@@ -1,0 +1,57 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - MDL MODULE
+//  Concept and code by thenerd, Spring 2013!
+//////////////////////////////////////////////////////////////
+remstart
+The model system will consist of two parts. the first part is
+the database system, which will be a list of models that has
+been loaded. These master copies will be invisible. the second
+part will be the visible world models, which will be duplicated
+from the database list.
+remend
+//////////////////////////////////////////////////////////////
+// Constants
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+// UDTS
+//////////////////////////////////////////////////////////////
+
+Type t_MDL_DbEntry
+	name As String
+	filename as string
+endtype
+
+//////////////////////////////////////////////////////////////
+// Main Functions
+//////////////////////////////////////////////////////////////
+
+Function MDL_Init():
+	Dim MDL_Database() As t_MDL_DbEntry
+	Global MDL_Database_NumItems As Integer
+Endfunction
+
+Function MDL_Update():
+Endfunction
+
+Function MDL_Terminate():
+Endfunction
+
+//loads an item by file name
+Function MDL_Database_AddItem(filename as string):
+	Array Insert At Bottom MDL_Database()
+	MDL_Database(MDL_Database_NumItems).filename = filename
+	MDL_Database(MDL_Database_NumItems).name = 
+	MDL_Database_NumItems = MDL_Database_NumItems + 1
+Endfunction
+
+//removes an item by reference name
+Function MDL_Database_RemoveItem():
+endfunction
+
+Function MDL_Database_ListItems():
+endfunction
+
+//////////////////////////////////////////////////////////////
+// End of code
+//////////////////////////////////////////////////////////////

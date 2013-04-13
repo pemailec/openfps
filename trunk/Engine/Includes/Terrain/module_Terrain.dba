@@ -118,6 +118,23 @@ Function Terrain_Init():
 			remend
 		Next TZ
 	Next TX
+	
+	//fix normals
+	For TZ = 0 To TerrainSizeX:
+			For TX = 0 To TerrainSizeZ:
+				Lock Vertexdata For Limb TerrainArray(TX,TZ).object,0,2
+				verts=GET VERTEXDATA VERTEX COUNT()-1
+				For v=0 To verts
+					xx#=get vertexdata position x(v)
+					zz#=get vertexdata position z(v)
+					yy#=get vertexdata position y(v)
+					Set Vertexdata Position v,xx#,yy#,zz#
+				next v
+				unlock vertexdata
+				Set Object Normals TerrainArray(TX,TZ).object
+			Next TX
+	Next TZ
+	
 	endif
 Endfunction
 

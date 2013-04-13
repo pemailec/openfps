@@ -1,0 +1,237 @@
+`------------------------------------------
+
+            `Newton Cloths
+                           `by Chris Knott
+`------------------------------------------
+
+global xSize
+global ySize
+
+xSize = 8
+ySize = 8
+
+`Start up Newton
+NDB_NewtonCreate
+NDB_SetVector 0, -100, 0
+NDB_SetStandardGravity
+
+`Set up offset data
+dim Neighbours( 24, 2 )
+dim Lengths#( 24 )
+SetupOffsets()
+SetupLengths()
+
+NewtonSphereCol = NDB_NewtonCreateSphere( 0.1, 0.1, 0.1 )
+
+for xCell = 1 to xSize
+    for yCell = 0 to ySize
+        Cell = Number( xCell, yCell )
+
+         `Make the particle of the cloth
+         NewtonSphere = NDB_NewtonCreateBody( NewtonSphereCol )
+
+         NDB_NewtonBodySetMassMatrix NewtonSphere, 1, 1, 1, 1
+         NDB_BodySetGravity NewtonSphere, 0
+         NDB_BuildMatrix 0, 0, 0, xCell - 5, -1, yCell - 7
+         NDB_NewtonBodySetMatrix NewtonSphere
+         NDB_NewtonBodySetAutoFreeze NewtonSphere, 0
+
+         make object sphere Cell, 0.2
+         color object Cell, rgb( 255, 0, 128 )
+         NDB_BodySetDBProData NewtonSphere, Cell
+
+   next yCell
+next xCell
+
+DataDump = make vector3( 1 ) `Position Vector 1
+DataDump = make vector3( 2 ) `Position Vector 2
+DataDump = make vector3( 3 ) `Spring/Force Vector
+DataDump = make vector3( 4 ) `Velocity Vector 1
+DataDump = make vector3( 5 ) `Velocity Vector 2
+DataDump = make vector3( 6 ) `Acceleration/Body Force Vector
+
+   NewtonBoxCol = NDB_NewtonCreateBox( 5, 3, 5 )
+   NewtonBox = NDB_NewtonCreateBody( NewtonBoxCol )
+
+   NDB_BuildMatrix 20, 40, 10, -4, -8, -3
+   NDB_NewtonBodySetMatrix NewtonBox
+
+   DBProBox = FreeObject()
+   make object box DBProBox, 5, 3, 5
+   color object DBProBox, rgb( 0, 50, 50 )
+
+   position object DBProBox, -4, -8, -3
+   rotate object DBProBox, 20, 40, 10
+
+sync on
+do
+
+for xCell = 1 to xSize
+   for yCell = 0 to ySize
+
+   set vector3 4, 0, -10, 0
+
+      `Wipe the cell that says whether neighbours exist (assume they do)
+      for Wipe = 1 to 8
+         Neighbours( Wipe, 0 ) = 1
+      next Wipe
+
+      `Check whether the cell is near the edge and if it is, wipe neighbours that
+      `don't exist
+      if xCell = 1
+         Neighbours( 1, 0 ) = 0
+         Neighbours( 4, 0 ) = 0
+         Neighbours( 6, 0 ) = 0
+      endif
+
+      if xCell = xSize
+         Neighbours(  3, 0 ) = 0
+         Neighbours(  5, 0 ) = 0
+         Neighbours(  8, 0 ) = 0
+      endif
+
+      if yCell = 0
+         Neighbours( 1, 0 ) = 0
+         Neighbours( 2, 0 ) = 0
+         Neighbours( 3, 0 ) = 0
+      endif
+
+      if yCell = ySize
+         Neighbours( 6, 0 ) = 0
+         Neighbours( 7, 0 ) = 0
+         Neighbours( 8, 0 ) = 0
+      endif
+
+      for Neighbour = 1 to 8
+         if Neighbours( Neighbour, 0 ) = 1
+
+            GrabPositionVectors( Number( xCell, yCell ), Number( xCell + Neighbours( Neighbour, 1 ), yCell + Neighbours( Neighbour, 2 ) ) )
+
+            subtract vector3 3, 2, 1
+            Length# = length vector3( 3 )
+            Unstretched# = Lengths#( Neighbour )
+
+            Force# = ( Length# - Unstretched# ) / Unstretched#
+            multiply vector3 3, ( 1 / Length# )
+            multiply vector3 3, ( Force# * 100 )
+            add vector3 4, 4, 3 `Add force to velocity
+         endif
+      next Neighbour
+
+      NDB_NewtonBodyGetVelocity NDB_GetBody( Number( xCell, yCell ) )
+      set vector3 5, NDB_GetVector_X(), NDB_GetVector_Y(), NDB_GetVector_Z()
+
+      subtract vector3 6, 4, 5
+      multiply vector3 6, 15
+
+      `Update body force
+      NDB_SetVector 1, x vector3( 1 ), y vector3( 1 ), z vector3( 1 )
+      NDB_SetVector 2, x vector3( 6 ), y vector3( 6 ), z vector3( 6 )
+      NDB_BodySetForceGlobal NDB_GetBody( Number( xCell, yCell ) )
+
+      xEdge = 0 : yEdge = 0
+      if xCell = 1 or xCell = xSize then xEdge = 1
+      if yCell = 0 or yCell = ySize then yEdge = 1
+
+      if xEdge = 1 and yEdge = 1 and Held = 0
+         NDB_BuildMatrix 0, 0, 0, xCell - 5 + aBlah#, -1, yCell - 7 + bBlah#
+         NDB_NewtonBodySetMatrix NDB_GetBody( Number( xCell, yCell ) )
+      endif
+
+      if rightkey() = 1 then aBlah# = aBlah# + 0.0025
+      if leftkey() = 1 then aBlah# = aBlah# - 0.0025
+      if upkey() = 1 then bBlah# = bBlah# + 0.0025
+      if downkey() = 1 then bBlah# = bBlah# - 0.0025
+
+      if controlkey() = 1 then Held = 1
+
+   next yCell
+next xCell
+
+position camera 5, 15, -15
+point camera 0, -3, 0
+
+Time# = NDB_GetElapsedTimeInSec()
+NDB_NewtonUpdate Time#
+
+if spacekey() = 0 then Space = 0
+if spacekey() = 1  and Space = 0
+   MakeMovingBox()
+   Space = 1
+endif
+
+sync
+loop
+
+function Number( xCell, yCell )
+   ObjectNumber = xCell + ( yCell * xSize )
+endfunction ObjectNumber
+
+function SetupOffsets()
+`This sets up the offset positions for each neighbour
+`It's put in an array
+   Neighbours(  1, 1 ) = -1 : Neighbours(  1, 2 ) = -1
+   Neighbours(  2, 1 ) =  0 : Neighbours(  2, 2 ) = -1
+   Neighbours(  3, 1 ) =  1 : Neighbours(  3, 2 ) = -1
+   Neighbours(  4, 1 ) = -1 : Neighbours(  4, 2 ) =  0
+   Neighbours(  5, 1 ) =  1 : Neighbours(  5, 2 ) =  0
+   Neighbours(  6, 1 ) = -1 : Neighbours(  6, 2 ) =  1
+   Neighbours(  7, 1 ) =  0 : Neighbours(  7, 2 ) =  1
+   Neighbours(  8, 1 ) =  1 : Neighbours(  8, 2 ) =  1
+endfunction
+
+function SetupLengths()
+   Lengths#(  1 ) = 1.414213
+   Lengths#(  2 ) = 1
+   Lengths#(  3 ) = 1.414213
+   Lengths#(  4 ) = 1
+   Lengths#(  5 ) = 1
+   Lengths#(  6 ) = 1.414213
+   Lengths#(  7 ) = 1
+   Lengths#(  8 ) = 1.414213
+endfunction
+
+function GrabPositionVectors( aBody, bBody )
+`This function fills vectors 1 and 2 with the positions of the two bodies specified.
+   NDB_BodyGetPosition NDB_GetBody( aBody )
+   set vector3 1, NDB_GetVector_X(), NDB_GetVector_Y(), NDB_GetVector_Z()
+
+   NDB_BodyGetPosition NDB_GetBody( bBody )
+   set vector3 2, NDB_GetVector_X(), NDB_GetVector_Y(), NDB_GetVector_Z()
+endfunction
+
+function MakeMovingBox()
+   xSize# = RealRandom( 2, 3 )
+   ySize# = RealRandom( 2, 3 )
+   zSize# = RealRandom( 2, 3 )
+
+   NewtonBoxCol = NDB_NewtonCreateSphere( xSize# / 2, ySize# / 2, zSize# / 2 )
+   NewtonBox = NDB_NewtonCreateBody( NewtonBoxCol )
+
+   NDB_NewtonBodySetMassMatrix NewtonBox, 1, 1, 1, 1
+   NDB_BodySetGravity NewtonBox, 1
+   NDB_BuildMatrix rnd( 90 ), rnd( 90 ), rnd( 90 ), 0, 0, 0
+   NDB_NewtonBodySetMatrix NewtonBox
+   NDB_NewtonBodySetAutoFreeze NewtonBox, 0
+
+   DBProBox = FreeObject()
+   make object sphere DBProBox, 100
+   scale object DBProBox, xSize#, ySize#, zSize#
+   color object DBProBox, rgb( 255, 220, 200 )
+   NDB_BodySetDBProData NewtonBox, DBProBox
+endfunction
+
+function RealRandom( aLimit, bLimit )
+   Difference = bLimit - aLimit
+   RandomNum = rnd( Difference * 1000 )
+   Random# = RandomNum
+   Random# = Random# / 1000
+
+   Result# = aLimit + Random#
+endfunction Result#
+
+function FreeObject()
+   repeat
+      ObjectNum = ObjectNum + 1
+   until object exist( ObjectNum ) = 0
+endfunction ObjectNum

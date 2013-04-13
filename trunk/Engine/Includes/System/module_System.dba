@@ -50,12 +50,24 @@ Function SYS_Init():
    Screen.Vsync = 		lua Int("Vsync")					//Vertical Sync
 	Screen.Fullscreen =  lua Int("Fullscreen")			//Fullscreen/window
    Screen.AA = 			lua Int("AA")						//Anti-aliasing
-	Game.NetworkPort = 	lua int("Port")					//Port for multiplayer
+	Game.NetworkPort = 	lua Int("Port")					//Port For multiplayer
+	Game.Debug =			lua int("Debug")
 	
 	//Apply display settings
 	Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,0,0
-   if Screen.Fullscreen=1 then set window off
+   if Screen.Fullscreen=1 and Game.Debug = 0 then set window off
 	If Screen.Fullscreen=0 Then Set Window On
+	
+	If Game.Debug = 1:
+		Open Console
+		Print To Console
+		Set Console On Top 1
+		Print "//////////////////////////////////////////////////////////////"
+		Print "//  OpenFPS Game Engine"
+		Print "//////////////////////////////////////////////////////////////"
+		Print "Debug Console Init'd"
+		Print "INIT:"
+	Endif
 	
 	//center window
 	window = Get Dbpro Window ()
@@ -66,7 +78,7 @@ Function SYS_Init():
 	//////////////////////////////////////
 	
 	Sync on : sync rate 0 : autocam off
-	Disable Escapekey : Hide Mouse
+	Disable Escapekey : Hide Mouse : change mouse 4
 	
 	//////////////////////////////////////
 	// Do plugin setup
@@ -78,7 +90,6 @@ Endfunction
 
 //SYS_Sync() - Syncs to the screen.
 Function SYS_Sync():
-	
 	//////////////////////////////////////
 	// Sync function. called once per loop.
 	// Modify to add sync-limiter.
