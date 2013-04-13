@@ -28,6 +28,13 @@ Type t_Camera
 	shake_value as float
 Endtype
 
+Type t_SpectatorCamera
+	position As t_3dVector
+	rotation As t_3dVector
+	rrotation As Float
+	randomticker as integer
+endtype
+
 //////////////////////////////////////////////////////////////
 //  FUNCTIONS
 //////////////////////////////////////////////////////////////
@@ -42,6 +49,17 @@ Function Camera_Init():
 	
 	//Set up the camera array
 	Dim CameraArray() As t_Camera
+	
+	Global SpectatorView As t_SpectatorCamera
+	SpectatorView.position.x = 128
+	SpectatorView.position.y = 32
+	SpectatorView.position.z = 128
+	SpectatorView.rotation.x = 0
+	SpectatorView.rotation.y = 0
+	SpectatorView.rotation.z = 0
+	Global RX#
+	Global RY#
+	global RZ#
 	
 	//add the root camera to the scene
 	if Screen.AA > 0:
@@ -105,6 +123,7 @@ Function Camera_Update():
 		Rotate Camera CameraArray(Camera_Current).camera_id,local_rotation.x,local_rotation.y,local_rotation.z
 		set camera fov CameraArray(Camera_Current).camera_id,CameraArray(Camera_Current).camera_fov.current
 	Next Camera_Current
+	Camera_Skybox_Update()
 Endfunction
 
 //Camera_Game_Zoom() - Zoom in function for game. Client-side only!
@@ -242,6 +261,14 @@ Function Camera_Skybox_Setup():
    load effect "Media\Shaders\SkyBox.fx",SkyboxShader,0
 	texture object SkyBoxObject,0,SkyboxImage
 	Set Object Effect SkyboxObject,SkyboxShader
+	Global SkyboxSunObject As Integer : SkyboxSunObject = Reserve Free Object()
+	Global SkyboxSunFlare As Integer : SkyboxSunFlare = reserve free image()
+	Make Object Sphere SkyboxSunObject,2
+	Set Object Light 2,0
+	Load Image "Media\Materials\Engine\Sunflare1.png",skyboxsunflare
+	Global SkyboxSunEffect As Integer : SkyboxSuneffect = 22
+	Ik Load Effect "Media\Shaders\BlendAdditive.fx",22
+	global skyboxsunalpha as float
 Endfunction
 
 //Camera_Skybox_Load() - Loads a cubemap for the camera skybox.
@@ -264,7 +291,50 @@ Function Camera_Skybox_Update():
 	Skybox_Z# = Camera_GetPositionZ(RootCamera)
 	//set skybox to position
 	Position Object SkyboxObject,Skybox_X#,Skybox_Y#,Skybox_Z#
-endfunction
+	Position Object SkyboxSunObject,Skybox_X#,Skybox_Y#,Skybox_Z#
+	Rotate Object SkyboxSunObject,328,346,0
+	Move Object SkyboxSunObject,1000
+Endfunction
+
+Function Camera_PostUIRender():
+	
+	adx#=AngleDiff(object angle x(SkyboxSunObject),Camera_GetRotationX(RootCamera))
+	ady#=AngleDiff(object angle y(SkyboxSunObject),Camera_GetRotationY(RootCamera))
+	ad#=(abs(adx#)+abs(ady#))
+	If ad#>50:
+		ad#=50
+	Endif
+	add#=50 - ad#
+	skyboxsunalpha = tbm_Curvevalue(add#,skyboxsunalpha,10)
+	If Object In Screen(skyboxsunobject):
+	Ik Set Blend Mode 15
+	ik set effect float 22,"Alpha",add#/50.0
+	Ik Paste Image SkyboxSunFlare,object Screen x(SkyboxSunObject)-(Screen.Width/6),object screen y(SkyboxSunObject)-(Screen.Width/6),object Screen x(SkyboxSunObject)+(Screen.Width/6),object screen y(SkyboxSunObject)+(Screen.Width/6),22
+	ik set effect float 22,"Alpha",add#/120.0
+	Ik Paste Image SkyboxSunFlare,object Screen x(SkyboxSunObject)-(Screen.Width/2),object screen y(SkyboxSunObject)-(Screen.Width/2),object Screen x(SkyboxSunObject)+(Screen.Width/2),object screen y(SkyboxSunObject)+(Screen.Width/2),22
+	`ik set effect float 22,"Alpha",0.5
+	`Ik Paste Image SkyboxSunFlare,object Screen x(SkyboxSunObject)-256,object screen y(SkyboxSunObject)-256,object Screen x(SkyboxSunObject)+256,object screen y(SkyboxSunObject)+256,22
+	Ik Set Blend Mode 2
+	Endif
+	if TerrainExists=1:
+	For TZ = 0 To TerrainSizeX:
+			For TX = 0 To TerrainSizeZ:
+				If Object In Screen(TerrainArray(TX,TZ).object):
+					`dot object Screen x(TerrainArray(TX,TZ).object),object screen y(TerrainArray(TX,TZ).object),rgb(0,255,0)
+				endif
+			Next TX
+	Next TZ
+	endif
+Endfunction
+
+function AngleDiff(a,b)
+dif = abs(a-b)
+if dif>180
+adiff = 360-dif
+else
+adiff = dif
+endif
+endfunction adiff
 
 //////////////////////////////////////////////////////////////
 //  End of code

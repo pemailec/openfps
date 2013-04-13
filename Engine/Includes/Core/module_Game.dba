@@ -7,6 +7,9 @@
 // Constants
 //////////////////////////////////////////////////////////////
 
+#Constant Game_WAITTOJOIN 1
+#Constant Game_SPECTATING 2
+
 //////////////////////////////////////////////////////////////
 // UDTS
 //////////////////////////////////////////////////////////////
@@ -17,38 +20,75 @@
 
 Function GameManager_Start():
 	//init the game systems.
+	//functions called from here have access to the level data.
 	Terrain_Init() //INIT TERRAIN
 	World_Init() //INIT WORLD
+	Particles_Init() //INIT PARTICLES SYSTEM
 	UI_ShowMouse()
 	CameraArray(RootCamera).smoothing = 1
+	Game.state = Game_WAITTOJOIN
+	Game.pause_toggle = 0
+	Game.paused = 0
 Endfunction
 
 Function GameManager_Update():
 	//update the game systems.
 	
-	//do temporary spectator movement
-	X# = Camera_GetPositionX(RootCamera)
-	Y# = Camera_GetPositionY(RootCamera)
-	Z# = Camera_GetPositionZ(RootCamera)
-	RX# = Camera_GetRotationX(RootCamera)
-	RY# = Camera_GetRotationY(RootCamera)
-	RZ# = Camera_GetRotationZ(RootCamera)
-	RX# = wrapvalue(RX# + sys_mousemovey*0.2)
-	RY# = wrapvalue(RY# + sys_mousemovex*0.2)
-	RZ# = 0.0
+	//check for pause menu
+	If Escapekey() And Game.pause_toggle = 0:
+		Game.pause_toggle = 1
+		Game.paused = 1 - Game.Paused
+		If Game.Paused = 1:
+			Game.oldpausestate = MenuUI.mode
+			UI_Menu_Setmode(M_ENGINE_PAUSED)
+		else:
+			UI_Menu_Setmode(Game.oldpausestate)
+		endif
+	Endif
+	if escapekey()=0 then Game.pause_toggle = 0
 
-	NewX# = newxvalue(X#,RY#,(keystate(Game_Input.KEY_FORWARD)-keystate(Game_Input.KEY_BACKWARD))*TBM)
-	NewZ# = Newzvalue(Z#,RY#,(keystate(Game_Input.KEY_FORWARD)-keystate(Game_Input.KEY_BACKWARD))*TBM)
-	NewX# = newxvalue(NewX#,RY#-90,(keystate(Game_Input.KEY_LEFT)-keystate(Game_Input.KEY_RIGHT))*TBM)
-	NewZ# = Newzvalue(NewZ#,RY#-90,(keystate(Game_Input.KEY_LEFT)-keystate(Game_Input.KEY_RIGHT))*TBM)
-	newY# = Y# + sin(RX#-180) * (keystate(Game_Input.KEY_FORWARD)-keystate(Game_Input.KEY_BACKWARD))*TBM
-	
-	Camera_SetPosMatrix(RootCamera,NewX#,NewY#,NewZ#)
-	Camera_SetRotMatrix(RootCamera,RX#,RY#,RZ#)
+	if Game.paused = 0:
+	Select Game.state
+	case Game_SPECTATING
+		//do temporary spectator movement
+		X# = Camera_GetPositionX(RootCamera)
+		Y# = Camera_GetPositionY(RootCamera)
+		Z# = Camera_GetPositionZ(RootCamera)
+		RX# = Camera_GetRotationX(RootCamera)
+		RY# = Camera_GetRotationY(RootCamera)
+		RZ# = Camera_GetRotationZ(RootCamera)
+		RX# = wrapvalue(RX# + sys_mousemovey*0.2)
+		RY# = wrapvalue(RY# + sys_mousemovex*0.2)
+		RZ# = 0.0
+
+		NewX# = newxvalue(X#,RY#,(keystate(Game_Input.KEY_FORWARD)-keystate(Game_Input.KEY_BACKWARD))*TBM)
+		NewZ# = Newzvalue(Z#,RY#,(keystate(Game_Input.KEY_FORWARD)-keystate(Game_Input.KEY_BACKWARD))*TBM)
+		NewX# = newxvalue(NewX#,RY#-90,(keystate(Game_Input.KEY_LEFT)-keystate(Game_Input.KEY_RIGHT))*TBM)
+		NewZ# = Newzvalue(NewZ#,RY#-90,(keystate(Game_Input.KEY_LEFT)-keystate(Game_Input.KEY_RIGHT))*TBM)
+		newY# = Y# + sin(RX#-180) * (keystate(Game_Input.KEY_FORWARD)-keystate(Game_Input.KEY_BACKWARD))*TBM
+		Camera_SetRotMatrix(RootCamera,RX#,RY#,RZ#)
+		Camera_SetPosMatrix(RootCamera,NewX#,NewY#,NewZ#)
+	endcase
+	Case Game_WAITTOJOIN
+		SpectatorView.rrotation = SpectatorView.rrotation + 0.1 *TBM
+		NewX# = SpectatorView.position.x 
+		NewY# = SpectatorView.position.y
+		NewZ# = SpectatorView.position.z
+		Camera_SetPosMatrix(RootCamera,NewX#,NewY#,NewZ#)
+		RX# = SpectatorView.rotation.x + Sin(SpectatorView.rrotation)*2
+		RY# = SpectatorView.rotation.y + Cos(SpectatorView.rrotation)*2
+		RZ# = SpectatorView.rotation.z
+		Camera_SetRotMatrix(RootCamera,RX#,RY#,RZ#)
+	Endcase
+	endselect
+	Endif
 	
 	Terrain_Update() //UPDATE TERRAIN
 	World_Update() //UPDATE WORLD
-	Camera_Update() //UPDATE CAMERA SYSTEM
+	Camera_Update() //UPDATE CAMERA SYSTEM	
+	
+	if mouseclick() then AddParticle(128,8,128,5,10,10,ParticleDefaultImg,2,0,0,1,0)
+	Particles_Run() //UPDATE PARTICLES SYSTEM
 	
 Endfunction
 
@@ -57,6 +97,15 @@ Function GameManager_End():
 	UI_Menu_SetMode(M_MENU_MAIN) //RESTORE TO MENU
 	Terrain_Destroy() //TERMINATE TERRAIN
 	World_Destroy() //DESTROY WORLD
+	game_started = 0
+Endfunction
+
+Function GameManager_Spawn():
+	Game.state = Game_SPECTATING
+	UI_HideMouse()
+Endfunction
+
+Function GameManager_Kill():
 endfunction
 
 //////////////////////////////////////////////////////////////
@@ -89,6 +138,11 @@ Function Game_Start_R(file As string):
 	// MAIN LOADING CODE
 	//////////////////////////////////////
 	
+	//delete temp dir
+	Set Dir "Media\Levels"
+	delete directory "data"
+	Set Dir "..\.."
+	
 	//start ZIP management system
 	open file block file,1
 	
@@ -96,6 +150,8 @@ Function Game_Start_R(file As string):
 	GameManager_Start()
 	
 	close file block 1
+	
+	nice wait 5000
 	
 	//////////////////////////////////////
 	// END MAIN LOADING CODE
@@ -109,6 +165,7 @@ Function Game_Start_R(file As string):
 	Game_loading = 0
 	Game_started = 1
 	UI_WriteLog(UI_Yellow,"Done loading.")
+	UI_DisableWindowsCursor()
 	//////////////////////////////////////
 Endfunction
 

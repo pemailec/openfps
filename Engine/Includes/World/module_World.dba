@@ -168,6 +168,9 @@ Function World_Update():
 				y#=WORLD_OBJECTS(staticobj).scale.y
 				z#=WORLD_OBJECTS(staticobj).scale.z
 				Scale Object WORLD_OBJECTS(staticobj).mdlid,x#,y#,z#
+				If Object In Screen(WORLD_OBJECTS(staticobj).mdlid):
+					paste image DebugIcon,object screen x(WORLD_OBJECTS(staticobj).mdlid),object screen y(WORLD_OBJECTS(staticobj).mdlid)
+				endif
 			Next staticobj
 		Endif
 		
@@ -189,8 +192,14 @@ Function World_Destroy():
 	
 	World_enabled = 0
 	
-endfunction
+Endfunction
 
+function Object_ScaleToReal(obj as integer,size as integer):
+	//will scale an object to a real size in units
+	dbpunits = Object Size Y(obj,1)
+	desired = size
+	scale object obj,(desired/dbpunits)*100,(desired/dbpunits)*100,(desired/dbpunits)*100
+endfunction
 
 //////////////////////////////////////////////////////////////
 //  End of code
