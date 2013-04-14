@@ -1,7 +1,0 @@
-<world>
-	<info>
-		<var name="levelname" value="Example"/>
-		<var name="leveltype" value="default"/>
-		<var name="skybox" value="Daytime_1"/>
-	</info>
-</world>
