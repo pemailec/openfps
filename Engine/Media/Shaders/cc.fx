@@ -3,7 +3,7 @@ string Description = "Cinematic Filmgrain Shader with Color Correction";
 //Shader code by Mark Blosser
 //mjblosser@gmail.com
 //Global Variables
-float time : Time;
+float realtime;
 
 float2 ViewSize : ViewSize;
 
