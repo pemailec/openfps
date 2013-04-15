@@ -1,0 +1,68 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - WEAPON MODULE
+//  Code originally by thenerd
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  CONSTANTS
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  UDTS
+//////////////////////////////////////////////////////////////
+
+Type t_WeaponDefinition
+	name As String
+	displayname As String
+	model_file As String
+	texture_file As String
+	model_id As Integer
+	texture_id as integer
+Endtype
+
+Type t_GameWeapon
+	def_current As Integer
+	wep_realpos As t_3dVector
+	wep_virtualpos As t_3dVector
+	wep_angle as t_3dVector
+Endtype
+
+//////////////////////////////////////////////////////////////
+//  FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+Function Weapon_Init():
+	Weapon_Camera_Init()
+	Global GameWeapon As t_GameWeapon
+	Global WeaponDefs As t_WeaponDefinition
+	GameWeapon.wep_realpos.x=0
+	GameWeapon.wep_realpos.y=-1000
+	GameWeapon.wep_realpos.z=0
+Endfunction
+
+Function Weapon_Update():
+	Weapon_Camera_Update()
+Endfunction
+
+Function Weapon_Terminate():
+	Weapon_Camera_Terminate()
+Endfunction
+
+Function Weapon_Camera_Init():
+Endfunction
+
+Function Weapon_Camera_Update():
+Endfunction
+
+Function Weapon_Camera_Terminate():
+Endfunction
+
+Function Weapon_Def_Load():
+Endfunction
+
+Function Weapon_Def_SetActive():
+endfunction
+
+//////////////////////////////////////////////////////////////
+//  End of code
+//////////////////////////////////////////////////////////////

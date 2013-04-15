@@ -1241,7 +1241,14 @@ Function UI_CenterText(ID,x,y,sstring$)
 					DXS DRAW SPRITE FRAME CharacterWaveIcon,x+((xx-1)*UI_stringmap(ID,258).ascii)-UI_BitmapOffset,y
 					Dxs End Sprite Render CharacterWaveIcon
 				else:
-					DXS DRAW Sprite TILE UI_Stringmap(ID,258).bitmapID,UI_stringmap(ID,UI_chain(xx).character).bitmapID,x+((xx-1)*UI_stringmap(ID,258).ascii)-UI_BitmapOffset,y
+					If UI_Stringmap(ID,UI_chain(xx).character).bitmapID=104:
+							dxs begin sprite render CharLoadingIcon
+							Dxs Play Sprite CharLoadingIcon,1,16,40
+							DXS DRAW SPRITE FRAME CharLoadingIcon,x+((xx-1)*UI_stringmap(ID,258).ascii)-UI_BitmapOffset,y
+							Dxs End Sprite Render CharLoadingIcon
+					else:
+						DXS DRAW Sprite TILE UI_Stringmap(ID,258).bitmapID,UI_stringmap(ID,UI_chain(xx).character).bitmapID,x+((xx-1)*UI_stringmap(ID,258).ascii)-UI_BitmapOffset,y
+					endif
 				Endif
 			Next xx
 		DXS END SPRITE RENDER UI_stringmap(ID,258).bitmapID

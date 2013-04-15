@@ -22,6 +22,8 @@ include11=Includes\Core\module_Camera.dba
 include12=Includes\World\module_World.dba
 include13=Includes\Networking\module_Network.dba
 include14=Includes\Effects\module_Particles.dba
+include15=Includes\Weapon\module_Weapon.dba
+include16=Includes\Model\module_Model.dba
 executable=OpenFPS.exe
 build type=exe
 
