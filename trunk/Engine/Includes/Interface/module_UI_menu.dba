@@ -300,11 +300,13 @@ Function UI_Menu_CheckGadgets():
 				UI_Menu_SetMode(M_MENU_TRAININGPROMPT)
 			endcase
 			Case "button_yestrain"
-				Game_Start("Media\Levels\Training.zip")
+				`Game_start("Media\Levels\Training.zip")
+				
+				Game_Start("Media\Levels\templevel.zip")
 			Endcase
 			Case "button_reload"
-				GameManager_End()
-				Game_Start("Media\Levels\Training.zip")
+				`GameManager_End()
+				`Game_Start("Media\Levels\Training.zip")
 			endcase
 			Case "button_credits"
 				UI_FadeManager.state=UI_FADEIN
@@ -398,7 +400,7 @@ Function UI_Render_U_MENU_SINGLEPLAYER():
 	ui_RenderBackdrop()
 	ui_putwindow(UI_Display.Middlewidth-((UI_mywindow.xwidth*41)/2),UI_Display.Middleheight-((UI_mywindow.yrow*24)/2),40,24)
 	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-170
-	UI_CenterText(3,x,y,"Campaign - Select Save Slot")
+	UI_CenterText(3,x,y,"Campaign - Select Save Slot "+chr$(136))
 	img_x = UI_Display.Middlewidth-((UI_mywindow.xwidth*38)/2)
 	img_y = UI_Display.Middleheight-((UI_mywindow.yrow*14)/2)
 	Draw To Image CampaignLoad_holder

@@ -47,7 +47,8 @@ Function World_Init():
 	ui_writelog(UI_Green,"Loading world config from ZIP...")
 	
 	//extract level from zip
-	Game_LoadFromLevel("LVL\world.xml")
+	`local xml_filepath as string
+	`xml_filepath = Game_LoadFromLevel("testlevel.xml")
 	
 	//make a 1-element array
 	//allows us to delete the data later
@@ -58,6 +59,8 @@ Function World_Init():
 	World().name = "null"
 	World().description = "null"
 	
+	Global LM_Compiled : LM_Compiled = 0
+	
 	//add world arrays for different types of objects
 	//Planned:
 	// WORLD_OBJECTS
@@ -66,14 +69,18 @@ Function World_Init():
 	// WORLD_ACTORS
 	// ...
 	Dim WORLD_OBJECTS() As t_WorldObject : Global NUM_WORLD_OBJECTS As Integer
-	
+	ui_Writelog(UI_red,GET DIR$())
 	//load world data
-	XMLID=KD LoadXML("Media\Levels\data\LVL\world.xml")
+	If File Exist("Media\Levels\data\level.xml")=0:
+		ui_Writelog(UI_red,"level file does not exist!")
+	endif
+	XMLID=KD LoadXML("Media\Levels\data\level.xml")
 	If Kd Getxmlfirstchildnode(XMLID,"world")
 		CurrentNode = Kd Getxmlfirstchildnode(XMLID)
 		While CurrentNode
 			Select Kd Getxmlnodevalue(XMLID)
 				Case "info"
+					ui_writelog(UI_Blue,"World is valid.")
 					ChildNode = Kd Getxmlfirstchildnode(XMLID)
 					While ChildNode
 						If Kd Getxmlnodevalue(XMLID)="var":
@@ -99,6 +106,7 @@ Function World_Init():
 					WORLD_OBJECTS(NUM_WORLD_OBJECTS).scale.x = 100
 					WORLD_OBJECTS(NUM_WORLD_OBJECTS).scale.y = 100
 					WORLD_OBJECTS(NUM_WORLD_OBJECTS).scale.z = 100
+					`ui_writelog(UI_Blue,"Parsed object "+WORLD_OBJECTS(NUM_WORLD_OBJECTS).name)
 					ChildNode = Kd Getxmlfirstchildnode(XMLID)
 					While ChildNode
 						Select Kd Getxmlnodevalue(XMLID)
@@ -143,12 +151,13 @@ Function World_Update():
 	//updates the loaded world
 	If World_enabled = 1
 		//do world update
-		
+
 		//handle WORLD_OBJECTS
 		if NUM_WORLD_OBJECTS>0:
 			For staticobj = 0 To NUM_WORLD_OBJECTS - 1:
 				If Object Exist(WORLD_OBJECTS(staticobj).mdlid)=0:
 					Load Object WORLD_OBJECTS(staticobj).modelfile,WORLD_OBJECTS(staticobj).mdlid
+					`ui_writelog(ui_blue,"Loading object "+WORLD_OBJECTS(staticobj).modelfile)
 					If len(WORLD_OBJECTS(staticobj).texturefile)>0:
 						If Image Exist(WORLD_OBJECTS(staticobj).texid)=0:
 							Load Image WORLD_OBJECTS(staticobj).texturefile,WORLD_OBJECTS(staticobj).texid

@@ -86,6 +86,13 @@ Function SYS_Init():
 	
 	d3d_init
 	
+	//////////////////////////////////////
+	// wait for valid screen
+	//////////////////////////////////////
+	
+	While Screen Invalid()
+	Endwhile
+	
 Endfunction
 
 //SYS_Sync() - Syncs to the screen.
@@ -94,6 +101,21 @@ Function SYS_Sync():
 	// Sync function. called once per loop.
 	// Modify to add sync-limiter.
 	//////////////////////////////////////
+	
+	If Screen Invalid():
+		//the screen is invalid. this causes a crash.
+		Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,0,0
+		reload display pointer
+		UI_WriteLog(UI_RED,"Screen invalid.")
+		Global CrashImage : CrashImage = Find Free Image()
+		Load Image "Media\Images\Interface\crash.png",CrashImage
+		Repeat
+			Ik Paste Image CrashImage,0,0,Screen.Width,Screen.Height
+			sync
+		Until Mouseclick()
+		winsock clean up
+		end
+	endif
 	
 	Sync
 	

@@ -19,7 +19,11 @@ remend
 
 Type t_MDL_DbEntry
 	name As String
-	filename as string
+	filename As String
+	obj_number As Integer
+	obj_scale As t_3dVector
+	obj_matstr As String
+	obj_matid as integer
 endtype
 
 //////////////////////////////////////////////////////////////
@@ -35,21 +39,79 @@ Function MDL_Update():
 Endfunction
 
 Function MDL_Terminate():
+	MDL_Database_Clear()
+	undim MDL_Database()
 Endfunction
 
-//loads an item by file name
+//fills the model database.
+Function MDL_Database_Fill():
+	MDL_Database_Clear()
+	Set Dir "Media\Models\"
+	perform checklist for files
+	For t=1 To Checklist Quantity()
+		file$=checklist string$(t)
+		If Right$(file$,4)=".zip":
+			MDL_Database_AddItem(file$)
+		endif
+	next t
+	MDL_Database_ListItems()
+	Set Dir "..\.."
+Endfunction
+
+//loads an item by file name (zip package)
 Function MDL_Database_AddItem(filename as string):
 	Array Insert At Bottom MDL_Database()
-	MDL_Database(MDL_Database_NumItems).filename = filename
-	MDL_Database(MDL_Database_NumItems).name = 
-	MDL_Database_NumItems = MDL_Database_NumItems + 1
+	if file exist(filename):
+		open file block filename,2
+		Extract File From Block 2,"config.cfg","data"
+		lua load file "data\config.cfg"
+		MDL_Database(MDL_Database_NumItems).filename = Lua String$("File")
+		MDL_Database(MDL_Database_NumItems).name = lua string$("Name")
+		MDL_Database(MDL_Database_NumItems).obj_matstr = lua string$("Texture")
+		Extract File From Block 2,MDL_Database(MDL_Database_NumItems).obj_matstr,"data"
+		MDL_Database(MDL_Database_NumItems).obj_number = reserve free object()
+		MDL_Database(MDL_Database_NumItems).obj_matid = reserve free image()
+		Load Object From Block 2,MDL_Database(MDL_Database_NumItems).filename,MDL_Database(MDL_Database_NumItems).obj_number
+		Load Image "data\"+MDL_Database(MDL_Database_NumItems).obj_matstr,MDL_Database(MDL_Database_NumItems).obj_matid
+		MDL_Database(MDL_Database_NumItems).obj_scale.x = Lua Float("Scale")
+		MDL_Database(MDL_Database_NumItems).obj_scale.y = lua float("Scale")
+		MDL_Database(MDL_Database_NumItems).obj_scale.z = lua float("Scale")
+		texture object MDL_Database(MDL_Database_NumItems).obj_number,MDL_Database(MDL_Database_NumItems).obj_matid
+		`exclude object on MDL_Database(MDL_Database_NumItems).obj_number
+		delete file "data\config.cfg"
+		delete file "data\"+MDL_Database(MDL_Database_NumItems).obj_matstr
+		close file block 2
+		MDL_Database_NumItems = MDL_Database_NumItems + 1
+		ui_writelog(UI_Yellow,"(MDL) Loaded file from "+filename)
+	endif
 Endfunction
 
-//removes an item by reference name
-Function MDL_Database_RemoveItem():
+//removes an item by reference name (not implemented yet)
+Function MDL_Database_RemoveItem(name as string):
 endfunction
 
+//lists the current database contents to the log.
 Function MDL_Database_ListItems():
+	ui_writelog(UI_Yellow,"(MDL) Database Contents:")
+	If MDL_Database_NumItems>0:
+		For i = 0 To (MDL_Database_NumItems - 1):
+			ui_writelog(UI_Yellow,"(MDL)"+MDL_Database(i).name+", "+MDL_Database(i).filename+", object id = "+str$(MDL_Database(i).obj_number))
+		Next i
+	else
+		ui_writelog(UI_Yellow,"(MDL) Database is empty.")
+	endif
+	ui_writelog(UI_Yellow,"(MDL) End MDL Database Log")
+Endfunction
+
+Function MDL_Database_Clear():
+	If MDL_Database_NumItems>0:
+		For i = 0 To (MDL_Database_NumItems - 1):
+			delete object MDL_Database(i).obj_number
+		next i
+	endif
+	Clear Array MDL_Database()
+	MDL_Database_NumItems = 0
+	ui_writelog(UI_Yellow,"(MDL) Flushed database.")
 endfunction
 
 //////////////////////////////////////////////////////////////

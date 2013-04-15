@@ -21,9 +21,10 @@
 Function GameManager_Start():
 	//init the game systems.
 	//functions called from here have access to the level data.
-	Terrain_Init() //INIT TERRAIN
+	`Terrain_Init() //INIT TERRAIN
+	MDL_Database_Fill() //FILLS MODEL DATABASE
 	World_Init() //INIT WORLD
-	Particles_Init() //INIT PARTICLES SYSTEM
+	`Particles_Init() //INIT PARTICLES SYSTEM
 	UI_ShowMouse()
 	CameraArray(RootCamera).smoothing = 1
 	Game.state = Game_WAITTOJOIN
@@ -83,19 +84,18 @@ Function GameManager_Update():
 	endselect
 	Endif
 	
-	Terrain_Update() //UPDATE TERRAIN
+	`Terrain_Update() //UPDATE TERRAIN
 	World_Update() //UPDATE WORLD
 	Camera_Update() //UPDATE CAMERA SYSTEM	
-	
-	if mouseclick() then AddParticle(128,8,128,5,10,10,ParticleDefaultImg,2,0,0,1,0)
-	Particles_Run() //UPDATE PARTICLES SYSTEM
+	Weapon_Update() //UPDATE WEAPON SYSTEM
+	MDL_Update()    //UPDATE MODEL SYSTEM
 	
 Endfunction
 
 Function GameManager_End():
 	//end the game systems.
 	UI_Menu_SetMode(M_MENU_MAIN) //RESTORE TO MENU
-	Terrain_Destroy() //TERMINATE TERRAIN
+	`Terrain_Destroy() //TERMINATE TERRAIN
 	World_Destroy() //DESTROY WORLD
 	game_started = 0
 Endfunction
@@ -124,6 +124,8 @@ Function Game_Init():
 	//Add the other initialization functions here!
 	//This is called at the beginning of the program.
 	Camera_Init() //INIT CAMERA SYSTEM
+	MDL_Init()    //INIT MODEL SYSTEM
+	Weapon_Init() //INIT WEAPON SYSTEM
 	
 Endfunction
 
@@ -146,12 +148,16 @@ Function Game_Start_R(file As string):
 	//start ZIP management system
 	open file block file,1
 	
+	Perform Checklist For File Block Data 1
+	For i = 1 To Checklist Quantity()
+		`UI_WriteLog(ui_blue,checklist string$(i))
+		Game_LoadFromLevel(checklist string$(i))
+	Next i
+	
 	//all the real shit happens here
 	GameManager_Start()
 	
 	close file block 1
-	
-	nice wait 5000
 	
 	//////////////////////////////////////
 	// END MAIN LOADING CODE
@@ -208,6 +214,7 @@ Function Game_LoadFromLevel(file As string):
 	filename = "Media\Levels\data\"+file
 	//extract file
 	extract file from block 1,file,"Media\Levels\data\"
+	ui_writelog(UI_Blue,"Loaded file "+file+" from level package.")
 Endfunction filename
 
 //////////////////////////////////////////////////////////////
