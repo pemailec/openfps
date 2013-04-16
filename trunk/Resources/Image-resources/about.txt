@@ -1,1 +1,0 @@
-This folder contains a database of images standard to the openfps project. Use them for any posts!
