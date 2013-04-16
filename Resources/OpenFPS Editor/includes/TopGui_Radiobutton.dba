@@ -1,0 +1,74 @@
+
+function guiRadioButton(id as guiId, x, y, w, h, caption$, index, checkedIndex)
+    guiLayout(id, x, y, w, h)
+    
+    guiBeginControl(x, y, w, h, 1)
+    
+    checkedIndex = guiRadioButtonLogic(id, w, h, index, checkedIndex)
+    guiRadioButtonDraw(id, w, h, caption$, index, checkedIndex)
+    
+    guiEndControl()
+endfunction checkedIndex
+
+function guiRadioButtonLogic(id as guiId, w, h, index, checkedIndex)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    focused = guiFocus(id, 1)
+    
+    boxx = x+5
+    boxy = y+h/2-10
+    
+    ` If mouse over, try becoming hot
+    if guiInClip(guiMouseX(), guiMouseY())
+        if guiInEllipse(guiMouseX(), guiMouseY(), boxx, boxy, boxx+20, boxy+20)
+            guiSetHot(id)
+        else
+            if guiInRect(guiMouseX(), guiMouseY(), x+25, y, x+w, y+h)
+                guiSetHot(id)
+            endif
+        endif
+    endif
+    
+    if gui.msd = 1
+        if guiGetHot() = id
+            checkedIndex = index
+            guiSetFocus(id, 0, 0)
+        endif
+    endif
+    
+    if focused
+        if guiProcessKeyUp(id, VK_SPACE) then checkedIndex = index
+    endif
+    
+endfunction checkedIndex
+
+function guiRadioButtonDraw(id as guiId, w, h, caption$, index, checkedIndex)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    focused = guiGetFocus() = id
+    
+    boxx = x+5
+    boxy = y+h/2-10
+    
+    if (guiGetHot() = id) or (focused and spacekey())
+        a2FillCircle boxx+10, boxy+10, 10, THEME_ACTIVE_DARK
+    else
+        a2FillCircle boxx+10, boxy+10, 10, THEME_INACTIVE_LIGHT
+    endif
+    
+    if checkedIndex = index
+        a2FillCircle boxx+10, boxy+10, 5, THEME_RADIO_COLOR
+        a2Circle boxx+10, boxy+10, 5, THEME_RADIO_COLOR
+    endif
+    
+    a2Circle boxx+10, boxy+10, 10, THEME_OUTLINE_DARK
+    
+    `a2BoxText gui.fontId, x+30, y, x+w, y+h, caption$, 0, 1, 1, THEME_TEXT_LIGHT
+    guiFastBoxText(gui.fontId, x+30, y, x+w, y+h, caption$, 0, 1, 1, THEME_TEXT_LIGHT)
+    
+    if focused
+        guiDrawFocusRect(x, y, x+w-1, y+h-1, THEME_FOCUS_LIGHT)
+    endif
+endfunction

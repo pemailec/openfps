@@ -102,7 +102,7 @@ Function SYS_Sync():
 	// Modify to add sync-limiter.
 	//////////////////////////////////////
 	
-	If Screen Invalid():
+	If Screen.Fullscreen = 1 and Screen Invalid():
 		//the screen is invalid. this causes a crash.
 		Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,0,0
 		reload display pointer
