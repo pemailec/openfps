@@ -58,6 +58,8 @@ Function SYS_Init():
    if Screen.Fullscreen=1 and Game.Debug = 0 then set window off
 	If Screen.Fullscreen=0 Then Set Window On
 	
+	UI_Menu_ApplyConfigvars()
+	
 	If Game.Debug = 1:
 		Open Console
 		Print To Console
@@ -92,7 +94,6 @@ Function SYS_Init():
 	
 	While Screen Invalid()
 	Endwhile
-	
 Endfunction
 
 //SYS_Sync() - Syncs to the screen.

@@ -37,6 +37,7 @@
 #Constant M_ENGINE_ALIVE 13
 #Constant M_MENU_SINGLEPLAYER_CHOOSE 14
 #Constant M_MENU_SINGLEPLAYER_NEW 15
+#Constant M_ENGINE_LEVEL_TITLE 16
 
 //////////////////////////////////////////////////////////////
 //  UDTS
@@ -150,6 +151,11 @@ Function UI_Menu_CreateResources():
 	saves(num_saves).filename = "null"
 	num_saves = num_saves + 1
 	
+	Global TitleTypewriter : TitleTypewriter = Find Free Sound()
+	Load Sound "media\sounds\interface\typewriter.wav",TitleTypewriter
+	
+	Global MenuImage19 : menuImage19 = Reserve Free Image()
+	menuImage19 = Dxs Create Sprite("Media\Images\Interface\titleicon_72.png")
 
 	global MenuImage11
 	MenuImage11 = Dxs Create Sprite("Media\Images\Interface\pyramid.png")
@@ -222,6 +228,7 @@ function UI_Menu_SetVariables():
 	MenuUI_DrawCalls(0,M_ENGINE_ALIVE)="UI_Render_M_ENGINE_ALIVE"
 	MenuUI_DrawCalls(0,M_MENU_SINGLEPLAYER_CHOOSE)="UI_Render_M_SINGLEPLAYER_CHOOSE"
 	MenuUI_DrawCalls(0,M_MENU_SINGLEPLAYER_NEW)="UI_Render_M_SINGLEPLAYER_NEW"
+	MenuUI_DrawCalls(0,M_ENGINE_LEVEL_TITLE)="UI_Render_M_ENGINE_LEVEL_TITLE"
 	
 	MenuUI_DrawCalls(1,M_MENU_MAIN)="UI_Render_U_MENU_MAIN"
 	MenuUI_DrawCalls(1,M_MENU_SINGLEPLAYER)="UI_Render_U_MENU_SINGLEPLAYER"
@@ -238,17 +245,18 @@ function UI_Menu_SetVariables():
 	MenuUI_DrawCalls(1,M_ENGINE_ALIVE)="UI_Render_U_ENGINE_ALIVE"
 	MenuUI_DrawCalls(1,M_MENU_SINGLEPLAYER_CHOOSE)="UI_Render_U_SINGLEPLAYER_CHOOSE"
 	MenuUI_DrawCalls(1,M_MENU_SINGLEPLAYER_NEW)="UI_Render_U_SINGLEPLAYER_NEW"
+	MenuUI_DrawCalls(1,M_ENGINE_LEVEL_TITLE)="UI_Render_U_ENGINE_LEVEL_TITLE"
 	
 	UI_WriteLog(UI_Green,"// MENU MODULE //: Menu Variables Setup")
 Endfunction
 
 Function UI_Menu_SetMode(mode_new As byte):
-	 MenuUI.setflag=1
-	 MenuUI.mode=mode_new
-	 Local mode_new_int As Integer
-	 mode_new_int = mode_new
-	 UI_ClearAllGuis()
-	 UI_WriteLog(UI_Green,"Switching Menu Ui - Mode flag "+remove$(MenuUI_DrawCalls(0,mode_new_int),"UI_Render_M_"))
+	MenuUI.setflag=1
+	MenuUI.mode=mode_new
+	Local mode_new_int As Integer
+	mode_new_int = mode_new
+	UI_ClearAllGuis()
+	UI_WriteLog(UI_Green,"Switching Menu Ui - Mode flag "+remove$(MenuUI_DrawCalls(0,mode_new_int),"UI_Render_M_"))
 endfunction
 
 function UI_Menu_Update():
@@ -262,78 +270,98 @@ Endfunction
 Function UI_Menu_CheckGadgets():
 	If mouseclick()=1 and MenuUI.mouseclickflag=0
 		UI_WriteLog(UI_Yellow,"// MENU MODULE //: Clicked mouse on "+UI_MouseOveredGadget$)
-		Select UI_MouseOveredGadget$
-			Case "button_quit"
-				UI_Menu_SetMode(M_MENU_QUITPROMPT)
-			Endcase
-			Case "button_backtomain"
-				if MenuUI.mode=M_MENU_CREDITS:
-				UI_FadeManager.state=UI_FADEIN
-				UI_FadeManager.target=M_MENU_MAIN
-				else:
-				UI_Menu_SetMode(M_MENU_MAIN)
-				endif
-			Endcase
-			Case "button_confirmquit"
-				Game.Terminate = 1
-			Endcase
-			Case "button_singleplayer"
-				UI_Menu_SetMode(M_MENU_SINGLEPLAYER)
-			endcase
-			Case "button_multiplayer"
+		If UI_MouseOveredGadget$=" ": else: UI_PlayMouseClickSND() : endif
+			Select UI_MouseOveredGadget$
+				Case "button_quit"
+					UI_Menu_SetMode(M_MENU_QUITPROMPT)
+				Endcase
+				Case "button_backtomain"
+if MenuUI.mode=M_MENU_CREDITS:
+	UI_FadeManager.state=UI_FADEIN
+	UI_FadeManager.target=M_MENU_MAIN
+else: 
+	UI_Menu_SetMode(M_MENU_MAIN)
+endif
+Endcase
+case "button_cfgbacktomain"
+    UI_Menu_Resetconfigvars()
+    UI_Menu_SetMode(M_MENU_MAIN)
+endcase
+Case "button_confirmquit"
+	Game.Terminate = 1
+Endcase
+Case "button_singleplayer"
+	UI_Menu_SetMode(M_MENU_SINGLEPLAYER)
+endcase
+Case "button_multiplayer"
 				`if PortForwardDone=0:
-					UI_Menu_SetMode(M_MENU_GENERICPROMPT)
+	UI_Menu_SetMode(M_MENU_GENERICPROMPT)
 					`prompttextone$="Please wait for the port forwarding settings to be applied."
-					prompttextone$="Multiplayer will be available in a later version."
-					prompttexttwo$=""
-					prompttitle$="Multiplayer Not Available"
+	prompttextone$="Multiplayer will be available in a later version."
+	prompttexttwo$=""
+	prompttitle$="Multiplayer Not Available"
 				`else:
 					`Game_Start("GenericLevel.lvl")
 					`Ui_WriteLog(UI_RED,"No level.")
 					`Network_Client_Connect()
 				`endif
-			endcase
-			Case "button_options"
-				UI_Menu_SetMode(M_MENU_OPTIONS)
-			endcase
-			Case "button_training"
-				UI_Menu_SetMode(M_MENU_TRAININGPROMPT)
-			endcase
-			Case "button_yestrain"
+endcase
+Case "button_options"
+	UI_Menu_SetMode(M_MENU_OPTIONS)
+endcase
+case "button_apply_settings"
+    UI_Menu_ApplySettings()
+    UI_Menu_SetMode(M_MENU_GENERICPROMPT)
+    prompttextone$="The new settings will apply the next time the game is run."
+    prompttexttwo$="Please restart OpenFPS."
+    prompttitle$="Settings applied."
+endcase
+Case "button_training"
+	UI_Menu_SetMode(M_MENU_TRAININGPROMPT)
+endcase
+Case "button_yestrain"
 				`Game_start("Media\Levels\Training.zip")
 				
-				Game_Start("Media\Levels\templevel.zip")
-			Endcase
-			Case "button_reload"
+	Game_Start("Media\Levels\templevel.zip")
+Endcase
+Case "button_reload"
 				`GameManager_End()
 				`Game_Start("Media\Levels\Training.zip")
-			endcase
-			Case "button_credits"
-				UI_FadeManager.state=UI_FADEIN
-				UI_FadeManager.target=M_MENU_CREDITS
-			Endcase
-			Case "button_joingame"
-				GameManager_Spawn()
-			endcase
-			Case "button_endgame"
-				GameManager_End()
-			Endcase
-			Case "button_returntogame"
-				Game.paused = 0
-				UI_Menu_Setmode(M_ENGINE_DEFAULT)
-			Endcase
-			Case "button_loadsave"
+endcase
+Case "button_credits"
+	UI_FadeManager.state=UI_FADEIN
+	UI_FadeManager.target=M_MENU_CREDITS
+Endcase
+Case "button_joingame"
+	GameManager_Spawn()
+endcase
+Case "button_endgame"
+	GameManager_End()
+Endcase
+Case "button_returntogame"
+	Game.paused = 0
+	UI_Menu_Setmode(M_ENGINE_DEFAULT)
+Endcase
+Case "button_loadsave"
 				//load save
-			Endcase
-			Case "button_newsave"
+    UI_Menu_SetMode(M_MENU_GENERICPROMPT)
+    prompttextone$="Save file is invalid."
+    prompttexttwo$="(Oh no, something went wrong!)"
+    prompttitle$="File Invalid"
+Endcase
+Case "button_newsave"
 				//new save
-				UI_Menu_Setmode(M_MENU_SINGLEPLAYER_NEW)
-			Endcase
-			Case "button_acceptnewsave"
-			endcase
-		Endselect
-	endif
-	MenuUI.mouseclickflag=mouseclick()
+	UI_Menu_Setmode(M_MENU_SINGLEPLAYER_NEW)
+Endcase
+Case "button_acceptnewsave"
+    UI_Menu_SetMode(M_MENU_GENERICPROMPT)
+    prompttextone$="Save file is invalid."
+    prompttexttwo$="(Oh no, something went wrong!)"
+    prompttitle$="File Invalid"
+endcase
+Endselect
+endif
+MenuUI.mouseclickflag=mouseclick()
 Endfunction
 
 // M_MENU_MAIN
@@ -386,11 +414,11 @@ Function UI_Render_M_MENU_SINGLEPLAYER():
 	`	UI_AddtitleToGadget("button_apply",3,x-8,y-14,"Apply")	
 	`	UI_AddMouseoverImageToGadget("button_apply","UI_buttonhover")
 	`else
-		UI_AddCenterGadgettoScreen("button_loadsave",x,y,"UI_buttongray")
-		UI_AddtitleToGadget("button_loadsave",3,x-8,y-14,"Load")	
+	UI_AddCenterGadgettoScreen("button_loadsave",x,y,"UI_buttongray")
+	UI_AddtitleToGadget("button_loadsave",3,x-8,y-14,"Load")	
 	x=x+-200
-		UI_AddCenterGadgettoScreen("button_newsave",x,y,"UI_buttongray")
-		UI_AddtitleToGadget("button_newsave",3,x-8,y-14,"New")	
+	UI_AddCenterGadgettoScreen("button_newsave",x,y,"UI_buttongray")
+	UI_AddtitleToGadget("button_newsave",3,x-8,y-14,"New")	
 	`Endif
 	x=x-200
 	CampaignSave_Selected = -1
@@ -406,67 +434,67 @@ Function UI_Render_U_MENU_SINGLEPLAYER():
 	Draw To Image CampaignLoad_holder
 	Cls 0
 	d3d_box Image Width(CampaignLoad_holder)-25,5,Image Width(CampaignLoad_holder)-5,Image height(CampaignLoad_holder)-5,d3d_rgba(100,100,100,128)
-	if (ui_mousex()-img_x)>Image Width(CampaignLoad_holder)-25:
-	if (ui_mousex()-img_x)<Image Width(CampaignLoad_holder)-5:
-	if (ui_mousey()-img_y)>5:
-	if (ui_mousey()-img_y)<Image height(CampaignLoad_holder)-5:
+if (ui_mousex()-img_x)>Image Width(CampaignLoad_holder)-25:
+if (ui_mousex()-img_x)<Image Width(CampaignLoad_holder)-5:
+if (ui_mousey()-img_y)>5:
+if (ui_mousey()-img_y)<Image height(CampaignLoad_holder)-5:
 		`If Mouseclick():
 			`campaignsave_scrolloffset = campaignsave_scrolloffset + SyS_MouseMoveY
 			`ui_setmouseposition(img_x+Image Width(CampaignLoad_holder)-15,ui_mousey())
 		`endif
-		campaignsave_scrolloffset = clamp(campaignsave_scrolloffset,0,50)
-		d3d_box Image Width(CampaignLoad_holder)-23,7+campaignsave_scrolloffset,Image Width(CampaignLoad_holder)-7,7+campaignsave_scrolloffset+50,d3d_rgba(128,128,128,128)
-	Endif
-	Endif
-	Endif
-	endif
-	mouseinview = 0
-	If UI_MouseX()>img_x And ui_mousex()<(img_x+image width(CampaignLoad_holder)):
-		If UI_MouseY()>img_y And ui_mousey()<(img_y+image height(CampaignLoad_holder)):
-			mouseinview = 1
-		Endif
-	endif
-	For i = 0 To num_saves - 1:
-		x1 = 5
-		x2 = Image Width(CampaignLoad_holder)-30
-		y1 = (5 + campaignsave_scrolloffset) + (70*i)
-		If CampaignSave_Selected = i:
-			D3d_Box x1,y1,(x1+x2)/2,y1+64,d3d_rgba(255,0,0,180+(TBM_StandardSin*60)),d3d_rgba(255,0,0,0),d3d_rgba(255,0,0,180+(TBM_StandardSin*60)),d3d_rgba(255,0,0,0)
-		endif
-		if (ui_mousex()-img_x)>x1 and (ui_mousex()-img_x)<x2 and (ui_mousey()-img_y)>y1 and (ui_mousey()-img_y)<(y1+64):
-			D3d_Box x1,y1,x2,y1+64,d3d_rgba(128,128,128,128)
-			If Mouseclick()=1 And mouseinview=1:
-				If CampaignSave_Selected = -1:
-					X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-170
-					y=y+46
-					y=y+240:y=y+44:x=x+200
-					UI_DeleteGadget("button_loadsave")
-					UI_DeleteGadget("button_newsave")
-					UI_DeleteGadget("button_backtomain")
-					UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
-					UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
-					UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Cancel")	
-					x=x+-200
-					UI_AddCenterGadgettoScreen("button_loadsave",x,y,"UI_button")
-					UI_AddMouseoverImageToGadget("button_loadsave","UI_buttonhover")
-					UI_AddTitleToGadget("button_loadsave",3,x-8,y-14,"Load")	
-					x=x+-200
-					UI_AddCenterGadgettoScreen("button_newsave",x,y,"UI_button")
-					UI_AddMOuseOverImageToGadget("button_newsave","UI_buttonhover")
-					UI_AddtitleToGadget("button_newsave",3,x-8,y-14,"New")	
-				endif
-				CampaignSave_Selected = i
-			endif
-		else
-			D3d_Box x1,y1,x2,y1+64,d3d_rgba(100,100,100,128)
-		endif
-		ui_scaledtext(3,x1+5,y1+10,saves(i).name,80,250)
-		ui_scaledtext(1,x1+5,y1+36,saves(i).description + " - " + saves(i).timestamp,100,250)
-	Next i
-	draw to bitmap 0
-	Ik Paste Image MenuImage1,img_x,img_y,img_x + UI_mywindow.yrow*38,img_y + UI_mywindow.yrow*14
-	ik paste image CampaignLoad_holder,img_x,img_y,menu_additiveeffect
-	Ik Paste Image MenuImage1,img_x,img_y,img_x + UI_mywindow.yrow*38,img_y + UI_mywindow.yrow*14
+	campaignsave_scrolloffset = clamp(campaignsave_scrolloffset,0,50)
+	d3d_box Image Width(CampaignLoad_holder)-23,7+campaignsave_scrolloffset,Image Width(CampaignLoad_holder)-7,7+campaignsave_scrolloffset+50,d3d_rgba(128,128,128,128)
+Endif
+Endif
+Endif
+endif
+mouseinview = 0
+If UI_MouseX()>img_x And ui_mousex()<(img_x+image width(CampaignLoad_holder)):
+If UI_MouseY()>img_y And ui_mousey()<(img_y+image height(CampaignLoad_holder)):
+	mouseinview = 1
+Endif
+endif
+For i = 0 To num_saves - 1:
+	x1 = 5
+	x2 = Image Width(CampaignLoad_holder)-30
+	y1 = (5 + campaignsave_scrolloffset) + (70*i)
+If CampaignSave_Selected = i:
+	D3d_Box x1,y1,(x1+x2)/2,y1+64,d3d_rgba(255,0,0,180+(TBM_StandardSin*60)),d3d_rgba(255,0,0,0),d3d_rgba(255,0,0,180+(TBM_StandardSin*60)),d3d_rgba(255,0,0,0)
+endif
+if (ui_mousex()-img_x)>x1 and (ui_mousex()-img_x)<x2 and (ui_mousey()-img_y)>y1 and (ui_mousey()-img_y)<(y1+64):
+	D3d_Box x1,y1,x2,y1+64,d3d_rgba(128,128,128,128)
+If Mouseclick()=1 And mouseinview=1:
+If CampaignSave_Selected = -1:
+	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-170
+	y=y+46
+	y=y+240:y=y+44:x=x+200
+	UI_DeleteGadget("button_loadsave")
+	UI_DeleteGadget("button_newsave")
+	UI_DeleteGadget("button_backtomain")
+	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Cancel")	
+	x=x+-200
+	UI_AddCenterGadgettoScreen("button_loadsave",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_loadsave","UI_buttonhover")
+	UI_AddTitleToGadget("button_loadsave",3,x-8,y-14,"Load")	
+	x=x+-200
+	UI_AddCenterGadgettoScreen("button_newsave",x,y,"UI_button")
+	UI_AddMOuseOverImageToGadget("button_newsave","UI_buttonhover")
+	UI_AddtitleToGadget("button_newsave",3,x-8,y-14,"New")	
+endif
+CampaignSave_Selected = i
+endif
+else
+	D3d_Box x1,y1,x2,y1+64,d3d_rgba(100,100,100,128)
+endif
+ui_scaledtext(3,x1+5,y1+10,saves(i).name,80,250)
+ui_scaledtext(1,x1+5,y1+36,saves(i).description + " - " + saves(i).timestamp,100,250)
+Next i
+draw to bitmap 0
+Ik Paste Image MenuImage1,img_x,img_y,img_x + UI_mywindow.yrow*38,img_y + UI_mywindow.yrow*14
+ik paste image CampaignLoad_holder,img_x,img_y,menu_additiveeffect
+Ik Paste Image MenuImage1,img_x,img_y,img_x + UI_mywindow.yrow*38,img_y + UI_mywindow.yrow*14
 
 Endfunction
 
@@ -532,9 +560,9 @@ Function UI_Render_M_MENU_OPTIONS():
 	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-170
 	y=y+46
 	y=y+240:y=y+44:x=x+200
-	UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
-	UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
-	UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Cancel")	
+	UI_AddCenterGadgettoScreen("button_cfgbacktomain",x,y,"UI_button")
+	UI_AddMouseoverImageToGadget("button_cfgbacktomain","UI_buttonhover")
+	UI_AddtitleToGadget("button_cfgbacktomain",3,x-8,y-14,"Cancel")	
 	x=x+-200
 	if MENU_OptionsChanged
 		UI_AddCenterGadgettoScreen("button_apply",x,y,"UI_button")
@@ -553,9 +581,94 @@ Endfunction
 Function UI_Render_U_MENU_OPTIONS():
 	ui_RenderBackdrop()
 	ui_putwindow(UI_Display.Middlewidth-((UI_mywindow.xwidth*41)/2),UI_Display.Middleheight-((UI_mywindow.yrow*24)/2),41,24)
-	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-170
+ 	X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-170
 	UI_CenterText(3,x,y,"Game Options")
+ x=x-280
+ y=y+40
+ 
+ 
+// 1 = 640 x 480
+// 2 = 800 x 600
+// 3 = 1024 x 768
+// 4 = 1280 x 720
+`Game.option_resolution = UI_DrawCheckBox(x,y,"Resolution",Game.option_resolution = Game.option_resolution_old) : y = y+42
+d3d_line x+164,y,x+164,y+200,d3d_rgba(255,255,255,150),d3d_rgba(255,255,255,0)
+Game.option_fullscreen = UI_DrawCheckBox(x,y,"Fullscreen",Game.option_fullscreen) : y = y+36
+Game.option_vsync = UI_DrawCheckBox(x,y,"Vertical Sync",Game.option_vsync) : y = y+36
+Game.option_aa = UI_DrawCheckBox(x,y,"Anti-Aliasing",Game.option_aa) : y = y+36
+changed = 1
+    if Game.option_fullscreen = Game.option_fullscreen_old:
+        if Game.option_vsync = Game.option_vsync_old:
+            if Game.option_aa = Game.option_aa_old:
+                changed = 0
+            endif
+        endif
+    endif
+if changed = 1:
+    if UI_Gadgetexist("button_apply"):
+        ui_deletegadget("button_apply")
+        ui_deletegadget("button_cfgbacktomain")
+        X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-170
+        y=y+46
+        y=y+240:y=y+44:x=x+200
+        UI_AddCenterGadgettoScreen("button_cfgbacktomain",x,y,"UI_button")
+        UI_AddMouseoverImageToGadget("button_cfgbacktomain","UI_buttonhover")
+        UI_AddtitleToGadget("button_cfgbacktomain",3,x-8,y-14,"Cancel")    
+        x=x+-200
+        UI_AddCenterGadgettoScreen("button_apply_settings",x,y,"UI_button")
+        UI_AddtitleToGadget("button_apply_settings",3,x-8,y-14,"Apply")    
+        UI_AddMouseoverImageToGadget("button_apply_settings","UI_buttonhover")
+    endif
+endif
 Endfunction
+
+function UI_Menu_Resetconfigvars():
+    Game.option_fullscreen = Game.option_fullscreen_old
+    Game.option_vsync = Game.option_vsync_old
+    Game.option_aa = Game.option_aa_old
+ENDFUNCTION
+
+function UI_Menu_ApplySettings():
+    Game.option_fullscreen_old = Game.option_fullscreen
+    Game.option_vsync_old = Game.option_vsync
+    Game.option_aa_old = Game.option_aa
+    if file exist("Config\game.cfg") then delete file "Config\game.cfg"
+    open to write 4,"Config\game.cfg"
+    write string 4,"ScreenWidth="+str$(Screen.Width)
+    write string 4,"ScreenHeight="+str$(Screen.Height)
+    write string 4,"ScreenDepth="+str$(Screen.Depth)
+    write string 4,"Vsync="+str$(game.option_vsync)
+    write string 4,"AA="+str$(game.option_aa)
+    write string 4,"Fullscreen="+str$(game.option_fullscreen)
+    Write String 4,"Port=20187"
+    Write String 4,"Debug=0"
+    close file 4
+endfunction
+
+function UI_Menu_ApplyConfigvars():
+    Game.option_resolution_old = 1
+    select Screen.Width:
+        case 640
+            if Screen.Height = 480 then Game.option_resolution_old = 1
+        endcase
+        case 800
+            if Screen.Height = 600 then Game.option_resolution_old = 2
+        endcase
+        case 1024
+            if Screen.Height = 768 then Game.option_resolution_old = 3
+        endcase
+        case 1280
+            if Screen.Height = 720 then Game.option_resolution_old = 4
+        endcase
+    endselect
+    Game.option_fullscreen_old = Screen.Fullscreen
+    Game.option_vsync_old = Screen.Vsync
+    Game.option_aa_old = Screen.AA
+    Game.option_resolution = Game.option_resolution_old
+    Game.option_fullscreen = Game.option_fullscreen_old
+    Game.option_vsync  = Game.option_vsync_old
+    Game.option_aa = Game.option_aa_old
+endfunction
 
 // M_MENU_CREDITS
 Function UI_Render_M_MENU_CREDITS():
@@ -565,13 +678,13 @@ Endfunction
 Function UI_Render_U_MENU_CREDITS():
 	Ik Paste Image MenuImage9,0,0,Screen.Width,Screen.Height
 	paste image MenuImage2,Screen.Width-image width(MenuImage2),0,1
-	If (hitimer(1)-CreditsStartTime)>2:
-		UI_CenterText(1,Screen.Width/2,Screen.Height-20,"<M1> to return to menu.")
-		if mouseclick():
-		UI_FadeManager.state=UI_FADEIN
-		UI_FadeManager.target=M_MENU_MAIN
-		endif
-	endif
+If (hitimer(1)-CreditsStartTime)>2:
+	UI_CenterText(1,Screen.Width/2,Screen.Height-20,"<M1> to return to menu.")
+if mouseclick():
+	UI_FadeManager.state=UI_FADEIN
+	UI_FadeManager.target=M_MENU_MAIN
+endif
+endif
 Endfunction
 
 // M_ENGINE_LOADING
@@ -603,50 +716,50 @@ Endfunction
 
 Function UI_Render_U_ENGINE_PAUSED():
 	
-	If EnginePauseTimer > 50.0:
-		If EnginePausebtnCreatebool = 0 Then EnginePausebtnCreate = 1 : EnginePausebtnCreatebool = 1
-	Endif
+If EnginePauseTimer > 50.0:
+	If EnginePausebtnCreatebool = 0 Then EnginePausebtnCreate = 1 : EnginePausebtnCreatebool = 1
+Endif
 	
-	If EnginePausebtnCreate = 1:
-		EnginePausebtnCreate = 0
-		x=Screen.Width/2
-		y=200
-		UI_AddCenterGadgettoScreen("button_returntogame",x,y,"UI_pausebutton")
-		UI_AddMouseoverImageToGadget("button_returntogame","UI_pausebutton_highlight")
-		UI_AddtitleToGadget("button_returntogame",3,x-8,y-14,"Unpause")
-		UI_AddInfoToGadget("button_returntogame",1,"Return to the current game.",1)
-		y=y+60
-		UI_AddCenterGadgettoScreen("button_helpme",x,y,"UI_pausebutton")
-		UI_AddMouseoverImageToGadget("button_helpme","UI_pausebutton_highlight")
-		UI_AddtitleToGadget("button_helpme",3,x-8,y-14,"Help Me!")
-		UI_AddInfoToGadget("button_helpme",1,"Do you really need help?",1)
-		y=y+60
-		UI_AddCenterGadgettoScreen("button_ingameoptions",x,y,"UI_pausebutton")
-		UI_AddMouseoverImageToGadget("button_ingameoptions","UI_pausebutton_highlight")
-		UI_AddtitleToGadget("button_ingameoptions",3,x-8,y-14,"Options")
-		UI_AddInfoToGadget("button_ingameoptions",1,"Change game options.",1)
-		y=y+60
-		UI_AddCenterGadgettoScreen("button_endgame",x,y,"UI_pausebutton")
-		UI_AddMouseoverImageToGadget("button_endgame","UI_pausebutton_highlight")
-		UI_AddtitleToGadget("button_endgame",3,x-8,y-14,"Disconnect")
-		UI_AddInfoToGadget("button_endgame",1,"Disconnect from the current game.",1)
-		y=y+60
-		UI_AddCenterGadgettoScreen("button_confirmquit",x,y,"UI_pausebutton")
-		UI_AddMouseoverImageToGadget("button_confirmquit","UI_pausebutton_highlight")
-		UI_AddtitleToGadget("button_confirmquit",3,x-8,y-14,"Quit")
-		UI_AddInfoToGadget("button_confirmquit",1,"Quit to windows.",1)
-	endif
+If EnginePausebtnCreate = 1:
+	EnginePausebtnCreate = 0
+	x=Screen.Width/2
+	y=200
+	UI_AddCenterGadgettoScreen("button_returntogame",x,y,"UI_pausebutton")
+	UI_AddMouseoverImageToGadget("button_returntogame","UI_pausebutton_highlight")
+	UI_AddtitleToGadget("button_returntogame",3,x-8,y-14,"Unpause")
+	UI_AddInfoToGadget("button_returntogame",1,"Return to the current game.",1)
+	y=y+60
+	UI_AddCenterGadgettoScreen("button_helpme",x,y,"UI_pausebutton")
+	UI_AddMouseoverImageToGadget("button_helpme","UI_pausebutton_highlight")
+	UI_AddtitleToGadget("button_helpme",3,x-8,y-14,"Help Me!")
+	UI_AddInfoToGadget("button_helpme",1,"Do you really need help?",1)
+	y=y+60
+	UI_AddCenterGadgettoScreen("button_ingameoptions",x,y,"UI_pausebutton")
+	UI_AddMouseoverImageToGadget("button_ingameoptions","UI_pausebutton_highlight")
+	UI_AddtitleToGadget("button_ingameoptions",3,x-8,y-14,"Options")
+	UI_AddInfoToGadget("button_ingameoptions",1,"Change game options.",1)
+	y=y+60
+	UI_AddCenterGadgettoScreen("button_endgame",x,y,"UI_pausebutton")
+	UI_AddMouseoverImageToGadget("button_endgame","UI_pausebutton_highlight")
+	UI_AddtitleToGadget("button_endgame",3,x-8,y-14,"Disconnect")
+	UI_AddInfoToGadget("button_endgame",1,"Disconnect from the current game.",1)
+	y=y+60
+	UI_AddCenterGadgettoScreen("button_confirmquit",x,y,"UI_pausebutton")
+	UI_AddMouseoverImageToGadget("button_confirmquit","UI_pausebutton_highlight")
+	UI_AddtitleToGadget("button_confirmquit",3,x-8,y-14,"Quit")
+	UI_AddInfoToGadget("button_confirmquit",1,"Quit to windows.",1)
+endif
 	
-	EnginePauseTimer = EnginePauseTimer + (1*TBM)
-	transitionpercent# = clamp(EnginePauseTimer,0,50)/50.0
-	Ik Paste Image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height,cc_Shader
-	Camera_PostUIRender() //render 2d elements of the game
-	Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
-	D3d_Box 0,0,Screen.Width,Screen.Height,d3d_rgba(0,0,0,200*transitionpercent#)
-	D3d_Box (Screen.Width/2)-(200*transitionpercent#),0,(Screen.Width/2)+(200*transitionpercent#),Screen.Height,d3d_rgba(0,0,0,100*transitionpercent#)
-	ik Paste Image MenuImage16,(Screen.Width/2)-(200*transitionpercent#),0,(Screen.Width/2)-(4+(200*transitionpercent#)),Screen.Height
-	Ik Paste Image MenuImage16,(Screen.Width/2)+(200*transitionpercent#),0,(Screen.Width/2)+(4+(200*transitionpercent#)),Screen.Height
-	UI_CenterText(3,Screen.Width/2,-120+(240*transitionpercent#),"GAME PAUSED")
+EnginePauseTimer = EnginePauseTimer + (1*TBM)
+transitionpercent# = clamp(EnginePauseTimer,0,50)/50.0
+Ik Paste Image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height,cc_Shader
+Camera_PostUIRender() //render 2d elements of the game
+Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
+D3d_Box 0,0,Screen.Width,Screen.Height,d3d_rgba(0,0,0,200*transitionpercent#)
+D3d_Box (Screen.Width/2)-(200*transitionpercent#),0,(Screen.Width/2)+(200*transitionpercent#),Screen.Height,d3d_rgba(0,0,0,100*transitionpercent#)
+ik Paste Image MenuImage16,(Screen.Width/2)-(200*transitionpercent#),0,(Screen.Width/2)-(4+(200*transitionpercent#)),Screen.Height
+Ik Paste Image MenuImage16,(Screen.Width/2)+(200*transitionpercent#),0,(Screen.Width/2)+(4+(200*transitionpercent#)),Screen.Height
+UI_CenterText(3,Screen.Width/2,-120+(240*transitionpercent#),"GAME PAUSED")
 endfunction
 
 // M_ENGINE_DEFAULT
@@ -673,68 +786,68 @@ Function UI_Render_U_ENGINE_DEFAULT():
 	Ik Paste Image MenuImage13,0,120,Screen.Width,124
 	D3d_Box 0,Screen.Height-120,Screen.Width,Screen.Height,d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200),rgb(0,0,0),rgb(0,0,0)
 	Ik Paste Image MenuImage13,0,Screen.Height-124,Screen.Width,Screen.Height-120
-	If Game.state = Game_WAITTOJOIN:
-		UI_CenterText(3,Screen.Width/2,48,"Waiting to Join... ")
-		ui_showmouse()
-	else:
-		ui_hidemouse()
-		UI_AlphaText(3,Screen.Width/2-(UI_stringmap(3,258).ascii*5),48,"~bSPECTATING "+chr$(230),250)
-		If UI_GadgetExist("button_joingame"):
-			UI_DeleteGadget("button_joingame")
-			UI_DeleteGadget("button_endgame")
-		endif
-		Paste Image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
-	endif
+If Game.state = Game_WAITTOJOIN:
+	UI_CenterText(3,Screen.Width/2,48,"Waiting to Join... ")
+	ui_showmouse()
+else: 
+	ui_hidemouse()
+	UI_AlphaText(3,Screen.Width/2-(UI_stringmap(3,258).ascii*5),48,"~bSPECTATING "+chr$(230),250)
+If UI_GadgetExist("button_joingame"):
+	UI_DeleteGadget("button_joingame")
+	UI_DeleteGadget("button_endgame")
+endif
+Paste Image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
+endif
 	
 	remstart
-		Select Client.values.state:
-			Case Client_STATE_SPECTATING
+Select Client.values.state:
+	Case Client_STATE_SPECTATING
 				`CameraSystem_Zoom()
-				Client.values.rx = Wrapvalue(Client.values.rx + (Sys_Mousemovey*0.2))
-				Client.values.ry = Wrapvalue(Client.values.ry + (Sys_Mousemovex*0.2))
-				CameraArray(cam).rotation.x = Client.values.rx
-				CameraArray(cam).rotation.y = Client.values.ry
-				CameraArray(cam).rotation.z = 0
+		Client.values.rx = Wrapvalue(Client.values.rx + (Sys_Mousemovey*0.2))
+		Client.values.ry = Wrapvalue(Client.values.ry + (Sys_Mousemovex*0.2))
+		CameraArray(cam).rotation.x = Client.values.rx
+		CameraArray(cam).rotation.y = Client.values.ry
+		CameraArray(cam).rotation.z = 0
 				//paste crosshair
-				Paste Image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
+		Paste Image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
 				//paste spectator bars
-				d3d_box 0,0,Screen.Width,120,rgb(0,0,0),rgb(0,0,0),d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200)
-				Ik Paste Image MenuImage13,0,120,Screen.Width,124
-				d3d_box 0,Screen.Height-120,Screen.Width,Screen.Height,d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200),rgb(0,0,0),rgb(0,0,0)
-				Ik Paste Image MenuImage13,0,Screen.Height-124,Screen.Width,Screen.Height-120
-				UI_AlphaText(3,Screen.Width/2-(UI_stringmap(3,258).ascii*5),48,"~bSPECTATING "+chr$(230),250)
-				UI_CenterText(1,Screen.Width/2,130,"Freecam - Press [return] to join.")
-				UI_CenterText(3,Screen.Width/2,Screen.Height-100,"Players: ("+str$(NumPlayers)+"/"+str$(MaxPlayers)+")")
-				If Returnkey() Then Network_Client_SendStateRequest(Client_STATE_ALIVE)
-				UI_Render_Playerlist()
-			Endcase
-			Case Client_STATE_ALIVE
+		d3d_box 0,0,Screen.Width,120,rgb(0,0,0),rgb(0,0,0),d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200)
+		Ik Paste Image MenuImage13,0,120,Screen.Width,124
+		d3d_box 0,Screen.Height-120,Screen.Width,Screen.Height,d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200),rgb(0,0,0),rgb(0,0,0)
+		Ik Paste Image MenuImage13,0,Screen.Height-124,Screen.Width,Screen.Height-120
+		UI_AlphaText(3,Screen.Width/2-(UI_stringmap(3,258).ascii*5),48,"~bSPECTATING "+chr$(230),250)
+		UI_CenterText(1,Screen.Width/2,130,"Freecam - Press [return] to join.")
+		UI_CenterText(3,Screen.Width/2,Screen.Height-100,"Players: ("+str$(NumPlayers)+"/"+str$(MaxPlayers)+")")
+		If Returnkey() Then Network_Client_SendStateRequest(Client_STATE_ALIVE)
+		UI_Render_Playerlist()
+	Endcase
+	Case Client_STATE_ALIVE
 				`CameraSystem_Zoom()
-				Client.values.rx = Wrapvalue(Client.values.rx + (Sys_Mousemovey*0.2))
-				Client.values.ry = Wrapvalue(Client.values.ry + (Sys_Mousemovex*0.2))
-				CameraArray(cam).rotation.x = Client.values.rx
-				CameraArray(cam).rotation.y = Client.values.ry
-				CameraArray(cam).rotation.z = 0
+		Client.values.rx = Wrapvalue(Client.values.rx + (Sys_Mousemovey*0.2))
+		Client.values.ry = Wrapvalue(Client.values.ry + (Sys_Mousemovex*0.2))
+		CameraArray(cam).rotation.x = Client.values.rx
+		CameraArray(cam).rotation.y = Client.values.ry
+		CameraArray(cam).rotation.z = 0
 				//paste crosshair
-				Paste Image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
+		Paste Image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
 				//ui layer
-				If UI_GadgetExist("healthbar")=0:
-					UI_AddBarGadgetToScreen("healthbar",70,Screen.Height-110,"UI_redbar",100)
-					UI_AddBarGadgetToScreen("energybar",70,Screen.Height-70,"UI_bluebar",100)
-				Endif
-				Paste Image MenuImage14,0,Screen.Height-image height(menuimage14),1
+If UI_GadgetExist("healthbar")=0:
+	UI_AddBarGadgetToScreen("healthbar",70,Screen.Height-110,"UI_redbar",100)
+	UI_AddBarGadgetToScreen("energybar",70,Screen.Height-70,"UI_bluebar",100)
+Endif
+Paste Image MenuImage14,0,Screen.Height-image height(menuimage14),1
 				`UI_SetGadgetValue("healthbar",Player.health/2)
 				`UI_SetGadgetValue("energybar",Player.energy/2)
 				`ui_text(1,70+(5*(Player.health/2)),Screen.Height-104,str$(int(Player.health)))
 				`UI_Text(1,70+(5*(Player.energy/2)),Screen.Height-64,str$(int(Player.energy)))
-				UI_Render_Playerlist()
-			Endcase
-			Case Client_STATE_DEAD
-			Endcase
-			Case Client_STATE_RESPAWN
-			Endcase
-		endselect
-	endif
+UI_Render_Playerlist()
+Endcase
+Case Client_STATE_DEAD
+Endcase
+Case Client_STATE_RESPAWN
+Endcase
+endselect
+endif
 	remend
 Endfunction
 
@@ -752,19 +865,62 @@ endfunction
 function UI_Render_Playerlist():
 	//render playerlist if active
 	remstart
-	If Keystate(KEY_VIEWPLAYERS):
-		ui_putwindow(Screen.Width/2-(ui_mywindow.yrow*8),(Screen.Height/2)-200,16,24)
-		UI_CenterIconText(3,Screen.Width/2,Screen.Height/2 - 180,chr$(230)+"Players:",0)
-		if Numplayers > 0:
-		For i = 0 To NumPlayers-1:
-			UI_CenterText(3,Screen.Width/2,(Screen.Height/2 - 150)+i*34,PlayerList(i).name)
-		next i
-		else:
-		UI_CenterText(3,Screen.Width/2,(Screen.Height/2 - 150),"*none*")
-		endif
-	endif
+If Keystate(KEY_VIEWPLAYERS):
+	ui_putwindow(Screen.Width/2-(ui_mywindow.yrow*8),(Screen.Height/2)-200,16,24)
+	UI_CenterIconText(3,Screen.Width/2,Screen.Height/2 - 180,chr$(230)+"Players:",0)
+if Numplayers > 0:
+For i = 0 To NumPlayers-1:
+	UI_CenterText(3,Screen.Width/2,(Screen.Height/2 - 150)+i*34,PlayerList(i).name)
+next i
+else: 
+	UI_CenterText(3,Screen.Width/2,(Screen.Height/2 - 150),"*none*")
+endif
+endif
 	remend
 Endfunction
+
+Function UI_Render_M_ENGINE_LEVEL_TITLE():
+	Global TitleStartTime as integer : TitleStartTime = hitimer(8)
+	Global TitleCursortoggle : TitleCursortoggle = 0
+	global OldCurrentTime : OldCurrentTime = 0
+	play sound TitleTypewriter
+Endfunction
+
+Function UI_Render_U_ENGINE_LEVEL_TITLE():
+	if ticker(TitleCursorTicker) then TitleCursortoggle = 1 - TitleCursortoggle
+	Ik Paste Image MenuImageBlack,0,0,screen.width,screen.height
+	line0$="" : If TitleCursortoggle = 1 Then line0$ = "_"
+	CurrentTime = Hitimer(8) - TitleStartTime
+	if not OldCurrentTime = CurrentTime then 
+		OldCurrentTime = CurrentTime
+`		line1$="June 23rd, 2013    "
+`		line2$="United Special Task Force    "
+`		line3$="Location: USMC Training Camp"+line0$
+line1$="Summer 2013.    "
+line2$="Four years in the making.   "
+line3$="OpenFPS is here. "+line0$
+If CurrentTime>(len(line1$)+len(line2$)+len(line3$)) And Sound Playing(TitleTypewriter):
+	Stop Sound TitleTypewriter
+endif
+	
+line3$=left$(line3$,CurrentTime - Len(line1$) - len(line2$))
+	
+line2$=left$(line2$,CurrentTime - Len(line1$))
+	
+line1$=left$(line1$,CurrentTime)
+	
+	
+	`Paste Image MenuImage19,30,Screen.Height/2,1
+Dxs Begin Sprite Render menuImage19
+Dxs Set Sprite Alpha menuImage19,clamp(CurrentTime*8,0,200)
+Dxs Draw Sprite menuImage19,30,(Screen.Height/2)
+Dxs End Sprite Render menuImage19
+	
+UI_AlphaText(3,110,(Screen.Height/2),line1$,255)
+UI_AlphaText(3,110,(Screen.Height/2)+24,line2$,255)
+UI_AlphaText(3,110,(Screen.Height/2)+48,line3$,255)
+if spacekey() then ui_menu_setmode(M_ENGINE_LEVEL_TITLE)
+endfunction
 
 // M_MENU_SPLASH
 Function UI_Render_M_MENU_SPLASH():
@@ -790,23 +946,23 @@ Function UI_Render_U_MENU_SPLASH():
 	
 	`UI_CenterIconText(3,ScreenWidth/2,(ScreenHeight/2)+64,str$(seconds),1)
 	
-	If seconds>160 or mouseclick():
-		if SplashTicker=0:
-		UI_FadeManager.state=UI_FADEIN
-		Splashticker=1
-		If Screen.Width<800 And Screen.Height<600:
-			UI_FadeManager.target=M_MENU_MAIN
-			prompttextone$="The game isn't designed to run at a low resolution."
-			prompttexttwo$="Playing at this resolution may cause accessibility problems."
-			prompttitle$="Low Resolution Warning"
-		else:
-			UI_FadeManager.target=M_MENU_GENERICPROMPT
-			prompttextone$="'Hey you! Play the training map before starting a real game."
-			prompttexttwo$="It's a great intro to the team gameplay of Biostorm.'"
-			prompttitle$="The Developers say..."
-		Endif
-		endif
-	endif
+If seconds>160 or mouseclick():
+if SplashTicker=0:
+	UI_FadeManager.state=UI_FADEIN
+	Splashticker=1
+If Screen.Width<800 And Screen.Height<600:
+	UI_FadeManager.target=M_MENU_MAIN
+	prompttextone$="The game isn't designed to run at a low resolution."
+	prompttexttwo$="Playing at this resolution may cause accessibility problems."
+	prompttitle$="Low Resolution Warning"
+else: 
+	UI_FadeManager.target=M_MENU_GENERICPROMPT
+	prompttextone$="'Hey you! Play the training map before starting a real game."
+	prompttexttwo$="It's a great intro to the team gameplay of Biostorm.'"
+	prompttitle$="The Developers say..."
+Endif
+endif
+endif
 Endfunction
 
 // M_MENU_JOINGAME
@@ -818,14 +974,14 @@ Function UI_Render_U_MENU_JOINGAME():
 	ui_RenderBackdrop()
 	UI_PutWindow(UI_Display.Middlewidth-((UI_mywindow.xwidth*24)/2),UI_Display.Middleheight-((UI_mywindow.yrow*8)/2),24,8)
 	UI_CenterIconText(3,Screen.Width/2,Screen.Height/2,chr$(136)+" Joining Game...",1)
-	If hitimer(1)-JoinGameStartTime>1:
-		Select joingamearg$
-			Case "training"
-				UI_FadeManager.state=UI_FADEIN
-				UI_FadeManager.target=M_ENGINE_LOADING
-			endcase
-		endselect
-	endif
+If hitimer(1)-JoinGameStartTime>1:
+	Select joingamearg$
+		Case "training"
+			UI_FadeManager.state=UI_FADEIN
+			UI_FadeManager.target=M_ENGINE_LOADING
+		endcase
+	endselect
+endif
 Endfunction
 
 Function UI_Render_M_SINGLEPLAYER_CHOOSE():
@@ -892,3 +1048,18 @@ Function ui_RefreshBluredBG():
 	ik blur image MenuImage18,10,1
 endfunction
 
+function UI_DrawCheckBox(x as integer, y as integer, title as string, checked as integer):
+    if checked = 1: 
+        img = UI_GetGadgetImage("skull32_2")
+    else
+        img = UI_GetGadgetImage("skull32_1")
+    endif
+    d3d_box x+16,y+6,x+100,y+32-6,d3d_rgba(0,0,0,100),d3d_rgba(0,0,0,0),d3d_rgba(0,0,0,100),d3d_rgba(0,0,0,0)
+    DXS BEGIN SPRITE RENDER img
+    DXS DRAW SPRITE img,x,y
+    DXS END SPRITE RENDER img
+    ui_text(1,x+32,y+10,title)
+    if ui_mousex()>x and ui_mousey()>y and ui_mousex()<(x + 32) and ui_mousey()<(y+32):
+    if Game_input.Mouse_click = 1 then checked = 1 - checked
+    endif
+ENDFUNCTION checked

@@ -21,8 +21,8 @@
 Function GameManager_Start():
 	//init the game systems.
 	//functions called from here have access to the level data.
-	`Terrain_Init() //INIT TERRAIN
-	MDL_Database_Fill() //FILLS MODEL DATABASE
+	`MDL_Database_Fill() //FILLS MODEL DATABASE
+	Terrain_Init() //INIT TERRAIN
 	World_Init() //INIT WORLD
 	`Particles_Init() //INIT PARTICLES SYSTEM
 	UI_ShowMouse()
@@ -84,7 +84,7 @@ Function GameManager_Update():
 	endselect
 	Endif
 	
-	`Terrain_Update() //UPDATE TERRAIN
+	Terrain_Update() //UPDATE TERRAIN
 	World_Update() //UPDATE WORLD
 	Camera_Update() //UPDATE CAMERA SYSTEM	
 	Weapon_Update() //UPDATE WEAPON SYSTEM
@@ -95,7 +95,7 @@ Endfunction
 Function GameManager_End():
 	//end the game systems.
 	UI_Menu_SetMode(M_MENU_MAIN) //RESTORE TO MENU
-	`Terrain_Destroy() //TERMINATE TERRAIN
+	Terrain_Destroy() //TERMINATE TERRAIN
 	World_Destroy() //DESTROY WORLD
 	game_started = 0
 Endfunction
@@ -167,7 +167,7 @@ Function Game_Start_R(file As string):
 	//switch to engine mode. do variables
 	//////////////////////////////////////
 	UI_FadeManager.state=UI_FADEIN
-	UI_FadeManager.target=M_ENGINE_DEFAULT
+	UI_FadeManager.target=M_ENGINE_LEVEL_TITLE
 	Game_loading = 0
 	Game_started = 1
 	UI_WriteLog(UI_Yellow,"Done loading.")

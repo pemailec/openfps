@@ -2,7 +2,7 @@
 //  Game Engine Standard Modules - TERRAIN MODULE
 //  Concept and code by thenerd, Summer 2012!
 //////////////////////////////////////////////////////////////
-
+// new loading system: terrain_0_0.dbo through terrain_15_15.dbo
 //////////////////////////////////////////////////////////////
 //  CONSTANTS
 //////////////////////////////////////////////////////////////
@@ -32,41 +32,47 @@ endtype
 Function Terrain_Init():
 	if TerrainExists=0:
 	global TerrainExists as boolean: terrainexists = 1
-	global MasterHeightmap : MasterHeightmap = reserve free image()
-	Global MasterTexture : MasterTexture = Reserve Free Image()
-	Global MasterDetail : MasterDetail = Reserve Free Image()
-	Global MasterGridObject : MasterGridObject = Reserve Free Mesh()
+	`global MasterHeightmap : MasterHeightmap = reserve free image()
+	`Global MasterTexture : MasterTexture = Reserve Free Image()
+	`Global MasterDetail : MasterDetail = Reserve Free Image()
+	`Global MasterGridObject : MasterGridObject = Reserve Free Mesh()
 	
-	Game_LoadFromLevel("HM\heightmap.bmp")
-	Game_LoadFromLevel("HM\texture.jpg")
-	Game_LoadFromLevel("HM\detail.tga")
-	Load Image "Media\Levels\data\HM\heightmap.bmp",MasterHeightmap
-	Load Image "Media\Levels\data\HM\texture.jpg",MasterTexture
-	Load Image "Media\Levels\data\HM\detail.tga",MasterDetail
+	`Game_LoadFromLevel("HM\heightmap.bmp")
+	`Game_LoadFromLevel("HM\texture.jpg")
+	`Game_LoadFromLevel("HM\detail.tga")
+	`Load Image "Media\Levels\data\HM\heightmap.bmp",MasterHeightmap
+	`Load Image "Media\Levels\data\HM\texture.jpg",MasterTexture
+	`Load Image "Media\Levels\data\HM\detail.tga",MasterDetail
 	`Load Mesh "Media\Models\grid.x",MasterGridObject
+	
+	//for future reference: add shader application code here
 	
 	Dim TerrainArray(TerrainSizeX,TerrainSizeZ) As t_TerrainGridTile
 	
 	For TZ = 0 To TerrainSizeX:
 		For TX = 0 To TerrainSizeZ:
-			TerrainArray(TX,TZ).object = reserve free object()
-			TerrainArray(TX,TZ).heightmapchunk = reserve free image()
-			TerrainArray(TX,TZ).texturechunk = Reserve Free Image()
-			Make Object Plain TerrainArray(TX,TZ).object,TerrainUnitSizeX,TerrainUnitSizeZ,16,16
-			convert object fvf TerrainArray(TX,TZ).object,0x002||0x010||0x040||0x000||0x100
+			TerrainArray(TX,TZ).object = Reserve Free Object()
+			Load Object "Media\Levels\data\terrain_"+str$(TX)+"_"+str$(TZ)+".dbo",TerrainArray(TX,TZ).object
+			
+			//apply shader too! (but not in this version)
+			
+			`TerrainArray(TX,TZ).heightmapchunk = reserve free image()
+			`TerrainArray(TX,TZ).texturechunk = Reserve Free Image()
+			`Make Object Plain TerrainArray(TX,TZ).object,TerrainUnitSizeX,TerrainUnitSizeZ,16,16
+			`convert object fvf TerrainArray(TX,TZ).object,0x002||0x010||0x040||0x000||0x100
 			`make object TerrainArray(TX,TZ).object,MasterGridObject,MasterTexture
 			`Set Object Wireframe TerrainArray(TX,TZ).object,1
 			
 			//setup heightmap and textures
 			`testcolor=rgb(tx*16,0,tz*16)
-			ik create image TerrainArray(TX,TZ).heightmapchunk,(image width(MasterHeightmap)/(TerrainSizeX+1))+1,(image height(MasterHeightmap)/(TerrainSizeZ+1))+1`,testcolor
-			ik paste image on image MasterHeightmap,TerrainArray(TX,TZ).heightmapchunk,0-(TX*16),0-(TZ*16)
+			`ik create image TerrainArray(TX,TZ).heightmapchunk,(image width(MasterHeightmap)/(TerrainSizeX+1))+1,(image height(MasterHeightmap)/(TerrainSizeZ+1))+1`,testcolor
+			`ik paste image on image MasterHeightmap,TerrainArray(TX,TZ).heightmapchunk,0-(TX*16),0-(TZ*16)
 			`Ik Flip Image Vertically TerrainArray(TX,TZ).heightmapchunk
 			`Ik Flip Image Horizontally TerrainArray(TX,TZ).heightmapchunk
-			Texture Object TerrainArray(TX,TZ).object,MasterDetail
-			Scale Object Texture TerrainArray(TX,TZ).object,4,4
-			set object smoothing TerrainArray(TX,TZ).object,100
-			Set Object Smoothing TerrainArray(TX,TZ).object,100
+			`Texture Object TerrainArray(TX,TZ).object,MasterDetail
+			`Scale Object Texture TerrainArray(TX,TZ).object,4,4
+			`set object smoothing TerrainArray(TX,TZ).object,100
+			`Set Object Smoothing TerrainArray(TX,TZ).object,100
 			
 			`Texture Object TerrainArray(TX,TZ).object,MasterTexture
 			`scale object texture TerrainArray(TX,TZ).object,1/16,1/16
@@ -76,6 +82,7 @@ Function Terrain_Init():
 			// the plain function generates starting with 0,
 			// adding vertexdata for a full x row, then z=z+1
 			// until the end
+			remstart
 			Lock Vertexdata For Limb TerrainArray(TX,TZ).object,0,2
 			current_vertex = 0
 			For Vz = 0 To TerrainUnitSizeZ:
@@ -96,6 +103,7 @@ Function Terrain_Init():
 				Next Vx
 			Next Vz
 			Unlock Vertexdata
+			remend
 			
 			`ui_writelog(ui_yellow,"terrain debug - "+str$(current_vertex))
 			
@@ -143,14 +151,14 @@ Function Terrain_Update():
 Endfunction
 
 Function Terrain_Destroy():
-	Delete Image MasterHeightmap
-	Delete Image MasterTexture
-	Delete Image MasterDetail
+	`Delete Image MasterHeightmap
+	`Delete Image MasterTexture
+	`Delete Image MasterDetail
 
 	For TZ = 0 To TerrainSizeX:
 			For TX = 0 To TerrainSizeZ:
 				delete object TerrainArray(TX,TZ).object
-				delete image TerrainArray(TX,TZ).heightmapchunk
+				`delete image TerrainArray(TX,TZ).heightmapchunk
 			Next TX
 	Next TZ
 

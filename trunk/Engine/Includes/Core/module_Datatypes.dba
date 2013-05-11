@@ -52,6 +52,14 @@ Type t_Game
 	loading_cursor_toggle As Boolean
 	debug As Boolean
 	oldpausestate as integer
+option_resolution as integer
+option_fullscreen as integer
+option_vsync as integer
+option_aa as integer
+option_resolution_old as integer
+option_fullscreen_old as integer
+option_vsync_old as integer
+option_aa_old as integer
 endtype
 
 //t_image - stores an image id and its width and height
