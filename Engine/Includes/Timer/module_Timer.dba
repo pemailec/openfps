@@ -38,11 +38,13 @@ function TBM_Init():
 	Global QtrSecondTicker As Integer : QtrSecondTicker = 12
 	Global HalfRateTicker As Integer : HalfRateTicker = 13
 	Global FullRateTicker As Integer : FullRateTicker = 14
+	Global TitleCursorTicker : TitleCursorticker = 15
 	Make Ticker FullSecondTicker,1000
 	Make Ticker HalfSecondTicker,500
 	Make Ticker QtrSecondTicker,250
 	Make Ticker HalfRateTicker,1000/30
 	Make Ticker FullRateTicker,1000/60
+	Make Ticker TitleCursorTicker,250
 endfunction
 
 //////////////////////////////////////////////////////////////

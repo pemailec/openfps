@@ -1,72 +1,101 @@
+; **** Dark BASIC Professional Project File ****
+; **** Written by Synergy Editor ****
 version=DBP1.00
-;--> DarkBASIC Professional Project <--
-;--> Created with Indigo 1.3.3.1 <--
-;--> Basic project details <--
 project name=OpenFPS
-project comments=
 
-;--> Files <--
-final source=_Temp.dbsource
+; **** source file information ****
 main=Includes\Core\module_Core.dba
+LineMain=56
 include1=Includes\System\module_System.dba
+LineInclude1=35
 include2=Includes\Timer\module_Timer.dba
+LineInclude2=33
 include3=Includes\Interface\module_UI.dba
+LineInclude3=590
 include4=Includes\Interface\module_UI_console.dba
+LineInclude4=0
 include5=Includes\Input\module_Input.dba
+LineInclude5=104
 include6=Includes\Interface\module_UI_menu.dba
+LineInclude6=156
 include7=Includes\Core\module_Datatypes.dba
+LineInclude7=62
 include8=Includes\Audio\module_Audio.dba
+LineInclude8=0
 include9=Includes\Core\module_Game.dba
+LineInclude9=13
 include10=Includes\Terrain\module_Terrain.dba
+LineInclude10=0
 include11=Includes\Core\module_Camera.dba
+LineInclude11=139
 include12=Includes\World\module_World.dba
+LineInclude12=0
 include13=Includes\Networking\module_Network.dba
+LineInclude13=0
 include14=Includes\Effects\module_Particles.dba
+LineInclude14=0
 include15=Includes\Weapon\module_Weapon.dba
+LineInclude15=0
 include16=Includes\Model\module_Model.dba
+LineInclude16=0
+
+; **** Executable Information  ***
+; build types: exe, media, installer, alone
 executable=OpenFPS.exe
 build type=exe
-
-;--> Debug Mode YES/NO <--
-CLI=NO
-
-;--> Media Settings <--
+; ** Media file compression **
 compression=NO
+
+; ** Media file encryption **
 encryption=NO
-media root path=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\
+; ** Display the card options screen window? **
+card options window=NO
 
-;--> Included Media <--
+; **** debugger information ****
+; If the editor sets this to yes, it is running in debug mode
+CLI=NO
+CommandLineArguments=
 
-;--> Cursors <--
-pointer1=Media\Images\Interface\aero_arrow.cur
-pointer2=Media\Images\Interface\aero_working_l.ani
-pointer3=Media\Images\Interface\aero_busy_l.ani
-pointer4=Media\Images\Interface\waitcursor_anim.ani
-
-;--> Icons <--
-
-;--> Other Settings <--
+; **** display mode information ****
 app title=OpenFPS Engine
+
+; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
 graphics mode=window
 fullscreen resolution=640x480x32
+
+; arbitrary sizes are valid for windowed mode
 window resolution=640x480
 
-;--> Version Information <--
-verfilename=
-verfiledesc=
-vercompany=
-verfilenumber=v1.0
-verproduct=
-verproductnumber=v1.0
-vercopyright=
-vercomments=
-verinternal=v1.0
-vertrademark=
+; **** External Files Information ****
 
-;--> Config/setup.ini values <--
+; **** Media ****
+; Example entries: media1=graphics\*.jpg
+media root path=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\
+
+; **** Icons ****
+icon1=Media\Images\Interface\OpenFPS.ico
+
+; **** Cursors ****
+
+; **** Version Info ****
+VerComments=
+VerCompany=
+VerFileDesc=
+VerFileNumber=v1.0
+VerInternal=v1.0
+VerCopyright=
+VerTrademark=
+VerFilename=
+VerProduct=
+VerProductNumber=v1.0
+
+; **** To Do ****
+
+; **** Comments ****
+comments1=
+
+; **** Advanced (setup.ini) configuration ****
 RemoveSafetyCode=NO
 SafeArrays=YES
 LocalTempFolder=NO
 ExternaliseDLLS=NO
-
-;--> Project Organization <--
