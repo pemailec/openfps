@@ -49,25 +49,25 @@ Chunk_Terminate_PTR = Get Arrayptr(Chunk_Terminate()) : Unlink Array Chunk_Termi
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"SYS_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"TBM_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Input_Init")
-Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Audio_Init")
+`Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Audio_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"UI_Init")
-Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Network_Init")
+`Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Network_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Game_Init")
 
 //Update chunk
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"TBM_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Input_Update")
-Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Network_Update")
+`Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Network_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Game_Update")
-Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Audio_Update")
+`Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Audio_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"UI_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"SYS_Sync")
 
 //Terminate chunk
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"TBM_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Input_Terminate")
-Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Audio_Terminate")
-Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Network_Terminate")
+`Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Audio_Terminate")
+`Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Network_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"UI_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"SYS_Terminate")
 
@@ -83,8 +83,8 @@ CORE_Chunk_Run(Chunk_Init_PTR)
 //////////////////////////////////////////////////////////////
 
 While Game.Terminate = 0
-	//runs the update set of functions
-	CORE_Chunk_Run(Chunk_Update_PTR)
+    //runs the update set of functions
+    CORE_Chunk_Run(Chunk_Update_PTR)
 Endwhile
 
 //////////////////////////////////////////////////////////////
@@ -100,25 +100,25 @@ CORE_Chunk_Run(Chunk_Terminate_PTR) : End
 
 //CORE_Chunk_Add - Adds a function to the PTR chunk specified.
 Function CORE_Chunk_Add(chunkptr As dword,functionname as string):
-	local newchunkptr as dword
-   local dim temp_chunk() as dword
-   Link Array temp_chunk(),chunkptr
-	Array Insert At Bottom temp_chunk()
-	newchunkptr = get arrayptr(temp_chunk())
-	temp_chunk()=Get Ptr To Function(functionname)
-   unlink array temp_chunk()
+    local newchunkptr as dword
+    local dim temp_chunk() as dword
+    Link Array temp_chunk(),chunkptr
+    Array Insert At Bottom temp_chunk()
+    newchunkptr = get arrayptr(temp_chunk())
+    temp_chunk()=Get Ptr To Function(functionname)
+    unlink array temp_chunk()
 Endfunction newchunkptr
 
 //CORE_Chunk_Run - Executes the specified chunk of functions.
 Function CORE_Chunk_Run(chunkptr As dword):
-   Local Dim temp_chunk() As dword
-   Link Array temp_chunk(),chunkptr
-	For func = 0 To Array Count(temp_chunk()):
-		//execute function string for Chunk(func)
-		Call Function Ptr (temp_chunk(func))
-	Next func
-   unlink array temp_chunk()
-   Undim temp_chunk()
+    Local Dim temp_chunk() As dword
+    Link Array temp_chunk(),chunkptr
+    For func = 0 To Array Count(temp_chunk()):
+        //execute function string for Chunk(func)
+        Call Function Ptr (temp_chunk(func))
+    Next func
+    unlink array temp_chunk()
+    Undim temp_chunk()
 endfunction
 
 //////////////////////////////////////////////////////////////

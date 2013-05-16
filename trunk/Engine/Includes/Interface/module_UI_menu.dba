@@ -102,8 +102,8 @@ Function UI_Menu_CreateResources():
 	Ik Resize Image MenuImage4,Screen.Width,Screen.Height,1
 	Ik Resize Image MenuImage6,Screen.Width,Screen.Height,1
 
-	Global SplashSound As Integer
-	SplashSound = Audio_Load("Media\Sounds\Interface\Jungle_01.wav")
+	`Global SplashSound As Integer
+`	SplashSound = Audio_Load("Media\Sounds\Interface\Jungle_01.wav")
 	`Audio_Play(SplashSound)
 	
 	global cc_Shader as integer : cc_Shader = 2
@@ -359,8 +359,31 @@ Case "button_acceptnewsave"
     prompttexttwo$="(Oh no, something went wrong!)"
     prompttitle$="File Invalid"
 endcase
+case "fullscreen_checkbox"
+    ui_togglegadget("fullscreen_checkbox")
+endcase
+case "vsync_checkbox"
+    ui_togglegadget("vsync_checkbox")
+endcase
+case "aa_checkbox"
+    ui_togglegadget("aa_checkbox")
+endcase
+case "options_reset"
+    UI_Menu_SetDefaults()
+endcase
 Endselect
 endif
+//do those bars!
+if mouseclick():
+    select UI_MouseOveredGadget$
+        case "sensitivitybar"
+            UI_Countnewvalue("sensitivitybar")
+        endcase
+        case "mastervolumebar"
+            UI_Countnewvalue("mastervolumebar")
+        endcase
+    endselect
+ENDIF
 MenuUI.mouseclickflag=mouseclick()
 Endfunction
 
@@ -573,6 +596,67 @@ Function UI_Render_M_MENU_OPTIONS():
 		UI_AddtitleToGadget("button_apply",3,x-8,y-14,"Apply")	
 	Endif
 	x=x-200
+	
+x=x + 100
+y=y - 100
+
+ X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-170
+ x=x-280
+ x=x+164 + 16
+ y=y+40
+    y=y + 36
+    y=y + 36
+    x = x + 180 - 16
+    y=y - (36*2) + 16
+//add a View distance barholder panel
+ 
+    UI_AddGadgetToScreen("sensitivitybarholder",0+x,0+y,"UI_barholderimage")
+//add the BAR for DISTANCE
+    UI_AddbarGadgetToScreen("sensitivitybar",3+x,3+y,"UI_bluebar",50)
+    UI_Addmouseoverimagetogadget("sensitivitybar","UI_orangebar")      
+    UI_PositionGadget("sensitivitybar",x+3,y+3)
+    UI_addtitletogadget("sensitivitybar",1,x+128,y-16,"Mouse Sensitivity")
+    UI_addmouseovertitletogadget("sensitivitybar",1,x+128,y-16,"Mouse Sensitivity")
+    UI_SetGadgetValue("sensitivitybar",Game.option_sensitivity_old / 2)
+    
+    y=y + 60
+    UI_AddGadgetToScreen("mastervolumebarholder",0+x,0+y,"UI_barholderimage")
+//add the BAR for DISTANCE
+    UI_AddbarGadgetToScreen("mastervolumebar",3+x,3+y,"UI_redbar",50)
+    UI_Addmouseoverimagetogadget("mastervolumebar","UI_orangebar")
+    UI_PositionGadget("mastervolumebar",x+3,y+3)
+    UI_addtitletogadget("mastervolumebar",1,x+128,y-16,"Master Volume")
+    UI_addmouseovertitletogadget("mastervolumebar",1,x+128,y-16,"Master Volume")
+    UI_SetGadgetValue("mastervolumebar",Game.option_volume_old / 2)
+remstart
+//do other check boxes
+X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-170
+x=x-280
+y=y+40
+    UI_AddGadgetToScreen("fullscreen_checkbox",x,y,"skull32_1")
+    UI_addtitletogadget("fullscreen_checkbox",1,x+60,y+16,"Fullscreen")
+    UI_addmouseovertitletogadget("fullscreen_checkbox",1,x+60,y+16,"Fullscreen")
+    UI_Addmouseoverimagetogadget("fullscreen_checkbox","skull32_2")
+    UI_Addselectedimagetogadget("fullscreen_checkbox","skull32_3")
+    y=y+36
+    
+    UI_AddGadgetToScreen("vsync_checkbox",x,y,"skull32_1")
+    UI_addtitletogadget("vsync_checkbox",1,x+60,y+16,"Vertical Sync")
+    UI_addmouseovertitletogadget("vsync_checkbox",1,x+60,y+16,"Vertical Sync")
+    UI_Addmouseoverimagetogadget("vsync_checkbox","skull32_2")
+    UI_Addselectedimagetogadget("vsync_checkbox","skull32_3")
+    y=y+36
+    
+    UI_AddGadgetToScreen("aa_checkbox",x,y,"skull32_1")
+    UI_addtitletogadget("aa_checkbox",1,x+60,y+16,"Anti-Aliasing")
+    UI_addmouseovertitletogadget("aa_checkbox",1,x+60,y+16,"Anti-Aliasing")
+    UI_Addmouseoverimagetogadget("aa_checkbox","skull32_2")
+    UI_Addselectedimagetogadget("aa_checkbox","skull32_3")
+    
+    UI_DeselectGadget("fullscreen_checkbox") : if Game.option_fullscreen = 1 then UI_SelectGadget("fullscreen_checkbox")
+    UI_DeselectGadget("vsync_checkbox") : if Game.option_vsync = 1 then UI_SelectGadget("vsync_checkbox")
+    UI_DeselectGadget("aa_checkbox") : if Game.option_aa = 1 then UI_SelectGadget("aa_checkbox")
+    remend
 	//UI_AddCenterGadgettoScreen("button_credits",x,y,"UI_button")
 	//UI_AddMouseoverImageToGadget("button_credits","UI_buttonhover")
 	//UI_AddtitleToGadget("button_credits",3,x-8,y-14,"Credits")	
@@ -586,21 +670,44 @@ Function UI_Render_U_MENU_OPTIONS():
  x=x-280
  y=y+40
  
- 
 // 1 = 640 x 480
 // 2 = 800 x 600
 // 3 = 1024 x 768
 // 4 = 1280 x 720
 `Game.option_resolution = UI_DrawCheckBox(x,y,"Resolution",Game.option_resolution = Game.option_resolution_old) : y = y+42
 d3d_line x+164,y,x+164,y+200,d3d_rgba(255,255,255,150),d3d_rgba(255,255,255,0)
-Game.option_fullscreen = UI_DrawCheckBox(x,y,"Fullscreen",Game.option_fullscreen) : y = y+36
-Game.option_vsync = UI_DrawCheckBox(x,y,"Vertical Sync",Game.option_vsync) : y = y+36
-Game.option_aa = UI_DrawCheckBox(x,y,"Anti-Aliasing",Game.option_aa) : y = y+36
+d3d_line x+164+164,y,x+164+164,y+200,d3d_rgba(255,255,255,150),d3d_rgba(255,255,255,0)
+Game.option_fullscreen = UI_DrawCheckBox(x,y,"Fullscreen",Game.option_fullscreen):y=y+36 `UI_GetGadgetSelection("fullscreen_checkbox")
+Game.option_vsync = UI_DrawCheckBox(x,y,"Vertical sync",Game.option_vsync):y=y+36 `UI_GetGadgetSelection("vsync_checkbox")
+Game.option_aa = UI_DrawCheckBox(x,y,"Anti-Aliasing",Game.option_aa):y=y+36 `UI_GetGadgetSelection("aa_checkbox")
+if UI_DrawCheckBox(x,y+36,"Reset CFG",0) then UI_Menu_SetDefaults()
+y=y-(36*3)
+x=x+180
+if UI_DrawCheckBox(x,y,"800 x 600",Game.option_resolution = 1):
+    Game.option_resolution = 1
+endif
+y=y+36
+if UI_DrawCheckBox(x,y,"1024 x 768",Game.option_resolution = 2):
+    Game.option_resolution = 2
+endif
+y=y+36
+if UI_DrawCheckBox(x,y,"1280 x 720",Game.option_resolution = 3):
+    Game.option_resolution = 3
+endif
+y=y+36
+Game.option_sensitivity = UI_GetGadgetValue("sensitivitybar") * 2
+Game.option_volume = UI_GetGadgetValue("mastervolumebar") * 2
 changed = 1
     if Game.option_fullscreen = Game.option_fullscreen_old:
         if Game.option_vsync = Game.option_vsync_old:
             if Game.option_aa = Game.option_aa_old:
-                changed = 0
+                if Game.option_resolution = Game.option_resolution_old:
+                    if Game.option_sensitivity = Game.option_sensitivity_old:
+                        if Game.option_volume = Game.option_volume_old:
+                            changed = 0
+                        endif
+                    endif
+                endif
             endif
         endif
     endif
@@ -626,39 +733,72 @@ function UI_Menu_Resetconfigvars():
     Game.option_fullscreen = Game.option_fullscreen_old
     Game.option_vsync = Game.option_vsync_old
     Game.option_aa = Game.option_aa_old
+    Game.option_resolution = Game.option_resolution_old
+    Game.option_sensitivity = Game.option_sensitivity_old
+    Game.option_volume = Game.option_volume_old
+ENDFUNCTION
+
+function UI_Menu_SetDefaults():
+    Game.option_fullscreen = 1
+    Game.option_vsync = 0
+    Game.option_aa = 0
+    Game.option_resolution = 1
+    Game.option_sensitivity = 50
+    Game.option_volume = 98
+    UI_SetGadgetValue("sensitivitybar",Game.option_sensitivity / 2)
+    UI_SetGadgetValue("mastervolumebar",Game.option_volume / 2)
 ENDFUNCTION
 
 function UI_Menu_ApplySettings():
     Game.option_fullscreen_old = Game.option_fullscreen
     Game.option_vsync_old = Game.option_vsync
     Game.option_aa_old = Game.option_aa
+    Game.option_resolution_old = Game.option_resolution
+    Game.option_sensitivity_old = Game.option_sensitivity
+    Game.option_volume_old = Game.option_volume
     if file exist("Config\game.cfg") then delete file "Config\game.cfg"
     open to write 4,"Config\game.cfg"
-    write string 4,"ScreenWidth="+str$(Screen.Width)
-    write string 4,"ScreenHeight="+str$(Screen.Height)
+    Screen_width$ = "800"
+    Screen_height$ = "600"
+    select Game.option_resolution
+        case 1
+            Screen_width$ = "800"
+            Screen_height$ = "600"
+        endcase
+        case 2
+            Screen_width$ = "1024"
+            Screen_height$ = "768"
+        endcase
+        case 3
+            Screen_width$ = "1280"
+            Screen_height$ = "720"
+        endcase
+    endselect
+    
+    write string 4,"ScreenWidth="+Screen_width$
+    write string 4,"ScreenHeight="+Screen_height$
     write string 4,"ScreenDepth="+str$(Screen.Depth)
     write string 4,"Vsync="+str$(game.option_vsync)
     write string 4,"AA="+str$(game.option_aa)
     write string 4,"Fullscreen="+str$(game.option_fullscreen)
     Write String 4,"Port=20187"
     Write String 4,"Debug=0"
+    Write String 4,"Sensitivity="+str$(Game.option_sensitivity)
+    Write String 4,"Volume="+str$(Game.option_volume)
     close file 4
 endfunction
 
 function UI_Menu_ApplyConfigvars():
     Game.option_resolution_old = 1
     select Screen.Width:
-        case 640
-            if Screen.Height = 480 then Game.option_resolution_old = 1
-        endcase
         case 800
-            if Screen.Height = 600 then Game.option_resolution_old = 2
+            if Screen.Height = 600 then Game.option_resolution_old = 1
         endcase
         case 1024
-            if Screen.Height = 768 then Game.option_resolution_old = 3
+            if Screen.Height = 768 then Game.option_resolution_old = 2
         endcase
         case 1280
-            if Screen.Height = 720 then Game.option_resolution_old = 4
+            if Screen.Height = 720 then Game.option_resolution_old = 3
         endcase
     endselect
     Game.option_fullscreen_old = Screen.Fullscreen
@@ -668,6 +808,8 @@ function UI_Menu_ApplyConfigvars():
     Game.option_fullscreen = Game.option_fullscreen_old
     Game.option_vsync  = Game.option_vsync_old
     Game.option_aa = Game.option_aa_old
+    Game.option_sensitivity  = Game.option_sensitivity_old
+    Game.option_volume = Game.option_volume_old
 endfunction
 
 // M_MENU_CREDITS
@@ -899,6 +1041,7 @@ Function UI_Render_U_ENGINE_LEVEL_TITLE():
 line1$="Summer 2013.    "
 line2$="Four years in the making.   "
 line3$="OpenFPS is here. "+line0$
+line4$="<spacekey to continue> "
 If CurrentTime>(len(line1$)+len(line2$)+len(line3$)) And Sound Playing(TitleTypewriter):
 	Stop Sound TitleTypewriter
 endif
@@ -919,6 +1062,7 @@ Dxs End Sprite Render menuImage19
 UI_AlphaText(3,110,(Screen.Height/2),line1$,255)
 UI_AlphaText(3,110,(Screen.Height/2)+24,line2$,255)
 UI_AlphaText(3,110,(Screen.Height/2)+48,line3$,255)
+UI_ScaledText(3,Screen.Width/2 - ((len(line4$)/2)*16*0.7),(Screen.Height)-(60+(TBM_StandardSin*8.0)),line4$,70,clamp((CurrentTime - Len(line1$) - len(line2$) - 20)*2,0,128))
 if spacekey() then ui_menu_setmode(M_ENGINE_LEVEL_TITLE)
 endfunction
 
@@ -1049,15 +1193,17 @@ Function ui_RefreshBluredBG():
 endfunction
 
 function UI_DrawCheckBox(x as integer, y as integer, title as string, checked as integer):
-    if checked = 1: 
-        img = UI_GetGadgetImage("skull32_2")
-    else
-        img = UI_GetGadgetImage("skull32_1")
-    endif
+    img2 = UI_GetGadgetImage("skull32_2")
+    img1 = UI_GetGadgetImage("skull32_1")
     d3d_box x+16,y+6,x+100,y+32-6,d3d_rgba(0,0,0,100),d3d_rgba(0,0,0,0),d3d_rgba(0,0,0,100),d3d_rgba(0,0,0,0)
-    DXS BEGIN SPRITE RENDER img
-    DXS DRAW SPRITE img,x,y
-    DXS END SPRITE RENDER img
+    DXS BEGIN SPRITE RENDER img1
+    DXS SET SPRITE ALPHA img1,255
+    DXS DRAW SPRITE img1,x,y
+    DXS END SPRITE RENDER img1
+    DXS BEGIN SPRITE RENDER img2
+    DXS SET SPRITE ALPHA img2,255
+    if checked=1 then DXS DRAW SPRITE img2,x,y
+    DXS END SPRITE RENDER img2
     ui_text(1,x+32,y+10,title)
     if ui_mousex()>x and ui_mousey()>y and ui_mousex()<(x + 32) and ui_mousey()<(y+32):
     if Game_input.Mouse_click = 1 then checked = 1 - checked

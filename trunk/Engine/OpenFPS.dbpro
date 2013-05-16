@@ -5,39 +5,27 @@ project name=OpenFPS
 
 ; **** source file information ****
 main=Includes\Core\module_Core.dba
-LineMain=56
+LineMain=62
 include1=Includes\System\module_System.dba
-LineInclude1=35
+LineInclude1=106
 include2=Includes\Timer\module_Timer.dba
-LineInclude2=33
+LineInclude2=122
 include3=Includes\Interface\module_UI.dba
-LineInclude3=590
-include4=Includes\Interface\module_UI_console.dba
+LineInclude3=3524
+include4=Includes\Input\module_Input.dba
 LineInclude4=0
-include5=Includes\Input\module_Input.dba
+include5=Includes\Interface\module_UI_menu.dba
 LineInclude5=104
-include6=Includes\Interface\module_UI_menu.dba
-LineInclude6=156
-include7=Includes\Core\module_Datatypes.dba
-LineInclude7=62
-include8=Includes\Audio\module_Audio.dba
-LineInclude8=0
-include9=Includes\Core\module_Game.dba
-LineInclude9=13
-include10=Includes\Terrain\module_Terrain.dba
+include6=Includes\Core\module_Datatypes.dba
+LineInclude6=13
+include7=Includes\Core\module_Game.dba
+LineInclude7=125
+include8=Includes\Core\module_Camera.dba
+LineInclude8=317
+include9=Includes\World\module_World.dba
+LineInclude9=0
+include10=Includes\Model\module_Model.dba
 LineInclude10=0
-include11=Includes\Core\module_Camera.dba
-LineInclude11=139
-include12=Includes\World\module_World.dba
-LineInclude12=0
-include13=Includes\Networking\module_Network.dba
-LineInclude13=0
-include14=Includes\Effects\module_Particles.dba
-LineInclude14=0
-include15=Includes\Weapon\module_Weapon.dba
-LineInclude15=0
-include16=Includes\Model\module_Model.dba
-LineInclude16=0
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone

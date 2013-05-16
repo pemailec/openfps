@@ -27,24 +27,24 @@
 //  Output variables: *none*
 //////////////////////////////////////////////////////////////
 function TBM_Init():
-   Global TBM As Float
-   Global TBM_timer      As Float : TBM_timer      = Hitimer()
-	Global TBM_timer_last As Float : TBM_timer_last = TBM_timer
-   Global TBM_timer_scale As Float : TBM_timer_scale = 1.0
-   Global TBM_StandardSin As Float : TBM_StandardSin = 0
-   Global TBM_StandardSinR As Float : TBM_StandardSinR = 0
-	Global FullSecondTicker As Integer : FullSecondTicker = 10
-	Global HalfSecondTicker As Integer : HalfSecondTicker = 11
-	Global QtrSecondTicker As Integer : QtrSecondTicker = 12
-	Global HalfRateTicker As Integer : HalfRateTicker = 13
-	Global FullRateTicker As Integer : FullRateTicker = 14
-	Global TitleCursorTicker : TitleCursorticker = 15
-	Make Ticker FullSecondTicker,1000
-	Make Ticker HalfSecondTicker,500
-	Make Ticker QtrSecondTicker,250
-	Make Ticker HalfRateTicker,1000/30
-	Make Ticker FullRateTicker,1000/60
-	Make Ticker TitleCursorTicker,250
+    Global TBM As Float
+    Global TBM_timer      As Float : TBM_timer      = Hitimer()
+    Global TBM_timer_last As Float : TBM_timer_last = TBM_timer
+    Global TBM_timer_scale As Float : TBM_timer_scale = 1.0
+    Global TBM_StandardSin As Float : TBM_StandardSin = 0
+    Global TBM_StandardSinR As Float : TBM_StandardSinR = 0
+    Global FullSecondTicker As Integer : FullSecondTicker = 10
+    Global HalfSecondTicker As Integer : HalfSecondTicker = 11
+    Global QtrSecondTicker As Integer : QtrSecondTicker = 12
+    Global HalfRateTicker As Integer : HalfRateTicker = 13
+    Global FullRateTicker As Integer : FullRateTicker = 14
+    Global TitleCursorTicker : TitleCursorticker = 15
+    Make Ticker FullSecondTicker,1000
+    Make Ticker HalfSecondTicker,500
+    Make Ticker QtrSecondTicker,250
+    Make Ticker HalfRateTicker,1000/30
+    Make Ticker FullRateTicker,1000/60
+    Make Ticker TitleCursorTicker,250
 endfunction
 
 //////////////////////////////////////////////////////////////
@@ -55,14 +55,14 @@ endfunction
 //  Output variables: *none*
 //////////////////////////////////////////////////////////////
 function TBM_Update():
-        TBM_timer     = hitimer()
-        Diff#          = TBM_timer - TBM_timer_last
-        TBM_timer_last= TBM_timer
-        TBM        = Diff# / 10.0
-		  TBM = TBM * TBM_timer_scale
-		  TBM_StandardSinR = TBM_StandardSinR + (3 * TBM)
-		  TBM_StandardSin = Sin(TBM_StandardSinR)
-		  if TBM>10 then TBM=10
+    TBM_timer     = hitimer()
+    Diff#          = TBM_timer - TBM_timer_last
+    TBM_timer_last= TBM_timer
+    TBM        = Diff# / 10.0
+    TBM = TBM * TBM_timer_scale
+    TBM_StandardSinR = TBM_StandardSinR + (3 * TBM)
+    TBM_StandardSin = Sin(TBM_StandardSinR)
+    if TBM>10 then TBM=10
 endfunction
 
 //////////////////////////////////////////////////////////////
@@ -73,7 +73,7 @@ endfunction
 //  Output variables: *none*
 //////////////////////////////////////////////////////////////
 function TBM_SetTimerScale(scale as float):
-	TBM_timer_scale = scale
+    TBM_timer_scale = scale
 endfunction
 
 //////////////////////////////////////////////////////////////
@@ -83,10 +83,10 @@ endfunction
 //  Input variables: destination value, current value, speed.
 //  Output variables: interpolated value
 //////////////////////////////////////////////////////////////
-function TBM_CurveValue(dest as float, current as float, speed as float)
-   local diff as float : local value as float
-   diff = dest - current
-   value = current + (diff * ((speed^TBM-(speed-1)^TBM)/(speed^TBM)))
+function TBM_CurveValue(dest as float, current as float, speed as float):
+    local diff as float : local value as float
+    diff = dest - current
+    value = current + (diff * ((speed^TBM-(speed-1)^TBM)/(speed^TBM)))
 endfunction value
 
 //////////////////////////////////////////////////////////////
@@ -96,15 +96,15 @@ endfunction value
 //  Input variables: destination angle, current angle, speed.
 //  Output variables: interpolated angle
 //////////////////////////////////////////////////////////////
-function TBM_CurveAngle(dest as float, current as float, speed as float)
-   local diff as float : local value as float : local tempCurrent as float
-	tempCurrent = wrapvalue(current - dest)
-   if tempCurrent <= 180.0
-		diff = -tempCurrent
-   else
-		diff = 360-tempCurrent
-   endif
-   value = wrapvalue(current + (diff * ((speed^TBM-(speed-1)^TBM)/(speed^TBM))))
+function TBM_CurveAngle(dest as float, current as float, speed as float):
+    local diff as float : local value as float : local tempCurrent as float
+    tempCurrent = wrapvalue(current - dest)
+    if tempCurrent <= 180.0
+        diff = -tempCurrent
+    else
+        diff = 360-tempCurrent
+    endif
+    value = wrapvalue(current + (diff * ((speed^TBM-(speed-1)^TBM)/(speed^TBM))))
 endfunction value
 
 //////////////////////////////////////////////////////////////
@@ -116,7 +116,9 @@ endfunction value
 //////////////////////////////////////////////////////////////
 function TBM_Terminate():
     //Terminate code
-	 //This module doesn't need anything terminated!
+    //This module doesn't need anything terminated!
 Endfunction
 
+//////////////////////////////////////////////////////////////
 //End of file
+//////////////////////////////////////////////////////////////

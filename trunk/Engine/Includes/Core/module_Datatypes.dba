@@ -9,71 +9,75 @@
 
 //t_2dvector - simple 2d vector type.
 Type t_2dVector
-	x As Float
-	y as float
+    x As Float
+    y as float
 Endtype
 
 //t_3dvector - (x,y,z) 3d vector type.
 Type t_3dVector
-	x As Float
-	y As Float
-	z As Float
+    x As Float
+    y As Float
+    z As Float
 Endtype
 
 //t_curvedvector - values for curved data.
 Type t_CurvedVector
-	destination As Float
-	current As Float
-	speed as float
+    destination As Float
+    current As Float
+    speed as float
 endtype
 
 //t_screen - stores various screen settings.
 Type t_Screen
-	Width As Integer
-	Height As Integer
-	MiddleWidth As Integer
-	MiddleHeight as Integer
-	Depth As Integer
-	Vsync As Boolean
-	Fullscreen As Boolean
-	AA As Integer
+    Width As Integer
+    Height As Integer
+    MiddleWidth As Integer
+    MiddleHeight as Integer
+    Depth As Integer
+    Vsync As Boolean
+    Fullscreen As Boolean
+    AA As Integer
 Endtype
 
 //t_game - stores various game settings that don't fit anywhere.
 Type t_Game
-	NetworkName As String
-	NetworkPort As dword
-	Network_PFProcess As Integer
-	Terminate As Boolean
-	num_cameras As Integer
-	state As Integer
-	pause_toggle As Integer
-	paused As Integer
-	loading_cursor_toggle As Boolean
-	debug As Boolean
-	oldpausestate as integer
-option_resolution as integer
-option_fullscreen as integer
-option_vsync as integer
-option_aa as integer
-option_resolution_old as integer
-option_fullscreen_old as integer
-option_vsync_old as integer
-option_aa_old as integer
+    NetworkName As String
+    NetworkPort As dword
+    Network_PFProcess As Integer
+    Terminate As Boolean
+    num_cameras As Integer
+    state As Integer
+    pause_toggle As Integer
+    paused As Integer
+    loading_cursor_toggle As Boolean
+    debug As Boolean
+    oldpausestate as integer
+    option_resolution as integer
+    option_fullscreen as integer
+    option_vsync as integer
+    option_aa as integer
+    option_resolution_old as integer
+    option_fullscreen_old as integer
+    option_vsync_old as integer
+    option_aa_old as integer
+    option_sensitivity as integer
+    option_volume as integer
+    option_sensitivity_old as integer
+    option_volume_old as integer
 endtype
 
 //t_image - stores an image id and its width and height
 Type t_Image
-	id as integer
-	width As Integer
-	height As Integer
+    id as integer
+    width As Integer
+    height As Integer
 Endtype
 
 Type t_campaignsave
-	name as string
-	description As String
-	timestamp As String
-	filename as string
+    name as string
+    description As String
+    timestamp As String
+    filename as string
 Endtype
 
 //////////////////////////////////////////////////////////////
