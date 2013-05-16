@@ -22,104 +22,108 @@
 
 //Sys_Init() - Starts up the engine, loading config.
 Function SYS_Init():
-	//////////////////////////////////////
-	// Load lua config and set window mode
-	//////////////////////////////////////	
-	
-	//if config does not exist, generate a new one
-	If File Exist(CONFIGFILE)=0:
-		open to write 1,"config\game.cfg"
-		write string 1,"ScreenWidth=640"
-		write string 1,"ScreenHeight=480"
-		write string 1,"ScreenDepth=32"
-		write string 1,"Vsync=0"
-		Write String 1,"Fullscreen=0"
-		Write String 1,"Port=20187"
-		close file 1
-	Endif
-	
-	//Creat Screen and Game objects
-	Global Screen As t_Screen
-	Global Game As t_Game
-	
-	//Load lua config
-	Lua Make : Lua Load File CONFIGFILE
-   Screen.Width = 		lua Int("ScreenWidth")			//Screen Width
-   Screen.Height = 		lua Int("ScreenHeight")			//Screen Height
-	Screen.Depth = 		lua Int("ScreenDepth")			//Screen Depth
-   Screen.Vsync = 		lua Int("Vsync")					//Vertical Sync
-	Screen.Fullscreen =  lua Int("Fullscreen")			//Fullscreen/window
-   Screen.AA = 			lua Int("AA")						//Anti-aliasing
-	Game.NetworkPort = 	lua Int("Port")					//Port For multiplayer
-	Game.Debug =			lua int("Debug")
-	
-	//Apply display settings
-	Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,0,0
-   if Screen.Fullscreen=1 and Game.Debug = 0 then set window off
-	If Screen.Fullscreen=0 Then Set Window On
-	
-	UI_Menu_ApplyConfigvars()
-	
-	If Game.Debug = 1:
-		Open Console
-		Print To Console
-		Set Console On Top 1
-		Print "//////////////////////////////////////////////////////////////"
-		Print "//  OpenFPS Game Engine"
-		Print "//////////////////////////////////////////////////////////////"
-		Print "Debug Console Init'd"
-		Print "INIT:"
-	Endif
-	
-	//center window
-	window = Get Dbpro Window ()
-	Position Window window,(desktop width()/2)-(Get Window Client width(window)/2),(desktop height()/2)-(Get Window Client Height(window)/2)
-	
-	//////////////////////////////////////
-	// Do standard Dbpro setup
-	//////////////////////////////////////
-	
-	Sync on : sync rate 0 : autocam off
-	Disable Escapekey : Hide Mouse : change mouse 4
-	
-	//////////////////////////////////////
-	// Do plugin setup
-	//////////////////////////////////////
-	
-	d3d_init
-	
-	//////////////////////////////////////
-	// wait for valid screen
-	//////////////////////////////////////
-	
-	While Screen Invalid()
-	Endwhile
+    //////////////////////////////////////
+    // Load lua config and set window mode
+    //////////////////////////////////////	
+
+    //if config does not exist, generate a new one
+    If File Exist(CONFIGFILE)=0:
+        open to write 1,"config\game.cfg"
+        write string 1,"ScreenWidth=640"
+        write string 1,"ScreenHeight=480"
+        write string 1,"ScreenDepth=32"
+        write string 1,"Vsync=0"
+        Write String 1,"Fullscreen=0"
+        Write String 1,"Port=20187"
+        Write String 1,"Sensitivity=50"
+        Write String 1,"Volume=98"
+        close file 1
+    Endif
+    
+    //Creat Screen and Game objects
+    Global Screen As t_Screen
+    Global Game As t_Game
+    
+    //Load lua config
+    Lua Make : Lua Load File CONFIGFILE
+    Screen.Width = 		lua Int("ScreenWidth")			//Screen Width
+    Screen.Height = 		lua Int("ScreenHeight")			//Screen Height
+    Screen.Depth = 		lua Int("ScreenDepth")			//Screen Depth
+    Screen.Vsync = 		lua Int("Vsync")					//Vertical Sync
+    Screen.Fullscreen =  lua Int("Fullscreen")			//Fullscreen/window
+    Screen.AA = 			lua Int("AA")						//Anti-aliasing
+    Game.NetworkPort = 	lua Int("Port")					//Port For multiplayer
+    Game.Debug =			lua int("Debug")
+    Game.option_sensitivity_old =            lua int("Sensitivity")
+    Game.option_volume_old =            lua int("Volume")
+    
+    //Apply display settings
+    Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,0,0
+    if Screen.Fullscreen=1 and Game.Debug = 0 then set window off
+    If Screen.Fullscreen=0 Then Set Window On
+    
+    UI_Menu_ApplyConfigvars()
+    
+    If Game.Debug = 1:
+        Open Console
+        Print To Console
+        Set Console On Top 1
+        Print "//////////////////////////////////////////////////////////////"
+        Print "//  OpenFPS Game Engine"
+        Print "//////////////////////////////////////////////////////////////"
+        Print "Debug Console Init'd"
+        Print "INIT:"
+    Endif
+    
+    //center window
+    window = Get Dbpro Window ()
+    Position Window window,(desktop width()/2)-(Get Window Client width(window)/2),(desktop height()/2)-(Get Window Client Height(window)/2)
+    
+    //////////////////////////////////////
+    // Do standard Dbpro setup
+    //////////////////////////////////////
+    
+    Sync on : sync rate 0 : autocam off
+    Disable Escapekey : Hide Mouse : change mouse 4
+    
+    //////////////////////////////////////
+    // Do plugin setup
+    //////////////////////////////////////
+    
+    d3d_init
+    
+    //////////////////////////////////////
+    // wait for valid screen
+    //////////////////////////////////////
+    
+    While Screen Invalid()
+    Endwhile
 Endfunction
 
 //SYS_Sync() - Syncs to the screen.
 Function SYS_Sync():
-	//////////////////////////////////////
-	// Sync function. called once per loop.
-	// Modify to add sync-limiter.
-	//////////////////////////////////////
-	
-	If Screen.Fullscreen = 1 and Screen Invalid():
-		//the screen is invalid. this causes a crash.
-		Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,0,0
-		reload display pointer
-		UI_WriteLog(UI_RED,"Screen invalid.")
-		Global CrashImage : CrashImage = Find Free Image()
-		Load Image "Media\Images\Interface\crash.png",CrashImage
-		Repeat
-			Ik Paste Image CrashImage,0,0,Screen.Width,Screen.Height
-			sync
-		Until Mouseclick()
-		winsock clean up
-		end
-	endif
-	
-	Sync
-	
+    //////////////////////////////////////
+    // Sync function. called once per loop.
+    // Modify to add sync-limiter.
+    //////////////////////////////////////
+    
+    If Screen.Fullscreen = 1 and Screen Invalid():
+        //the screen is invalid. this causes a crash.
+        Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,0,0
+        reload display pointer
+        UI_WriteLog(UI_RED,"Screen invalid.")
+        Global CrashImage : CrashImage = Find Free Image()
+        Load Image "Media\Images\Interface\crash.png",CrashImage
+        Repeat
+            Ik Paste Image CrashImage,0,0,Screen.Width,Screen.Height
+            sync
+        Until Mouseclick()
+        winsock clean up
+        end
+    endif
+    
+    Sync
+
 Endfunction
 
 //SYS_Terminate() - Terminates the system module (empty)

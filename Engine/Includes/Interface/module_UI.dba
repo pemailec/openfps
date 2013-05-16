@@ -495,9 +495,6 @@ UI_StartDebugmode(UI_LogON)    :`change parameter to UI_Logon to do logfile
 	UI_LoadGuiGraphics("Media\Images\Interface\button-menu.png","UI_buttonmenu")
 	UI_LoadGuiGraphics("Media\Images\Interface\button-menu-hover.png","UI_buttonmenuhover")
 	
-	UI_LoadGuiGraphics("Media\Images\Interface\bigbutton-normal.png","UI_bigbutton")
-	UI_LoadGuiGraphics("Media\Images\Interface\bigbutton-highlight.png","UI_bigbuttonhover")
-	
 	UI_LoadGuiGraphics("Media\Images\Interface\pausebutton-normal.png","UI_pausebutton")
 	UI_LoadGuiGraphics("Media\Images\Interface\pausebutton-highlight.png","UI_pausebutton_highlight")
 	
@@ -3190,7 +3187,7 @@ if UI_Gadgets(x).mouseoveriD>0 and UI_Mouse.hidden=0
 			Dxs Begin Sprite Render UI_Gadgets(x).ID
 								`DXS SET SPRITE DIFFUSE UI_Gadgets(x).ID,UI_Gadgets(x).DiffuseR,UI_Gadgets(x).DiffuseG,UI_Gadgets(x).DiffuseB
 			Dxs Draw Sprite UI_Gadgets(x).ID,UI_Gadgets(x).x,UI_Gadgets(x).y	
-			DXS SET SPRITE ALPHA UI_Gadgets(x).ID,255 * UI_Gadgets(x).AlphaMultiplier
+			DXS SET SPRITE ALPHA UI_Gadgets(x).ID,255 `* UI_Gadgets(x).AlphaMultiplier
 			Dxs End Sprite Render UI_Gadgets(x).ID
 								
 			Dxs Begin Sprite Render UI_Gadgets(x).MouseoverID
@@ -3198,6 +3195,7 @@ if UI_Gadgets(x).mouseoveriD>0 and UI_Mouse.hidden=0
 								`DXS SET SPRITE DIFFUSE UI_Gadgets(x).MouseoverID,UI_Gadgets(x).DiffuseR,UI_Gadgets(x).DiffuseG,UI_Gadgets(x).DiffuseB
 			DXS SET SPRITE ALPHA UI_Gadgets(x).MouseoverID,UI_Gadgets(x).DestDiffuseA
 			Dxs Draw Sprite UI_Gadgets(x).MouseoverID,UI_Gadgets(x).x,UI_Gadgets(x).y	
+   DXS SET SPRITE ALPHA UI_Gadgets(x).MouseoverID,255
 			Dxs End Sprite render UI_Gadgets(x).MouseoverID
 								
 		Endif
@@ -3218,7 +3216,7 @@ if UI_Gadgets(x).mouseoveriD>0 and UI_Mouse.hidden=0
 								`DXS SET SPRITE DIFFUSE UI_Gadgets(x).SelectedID,UI_Gadgets(x).DiffuseR,UI_Gadgets(x).DiffuseG,UI_Gadgets(x).DiffuseB
 								`DXS SET SPRITE DIFFUSE UI_Gadgets(x).SelectedID,UI_Gadgets(x).DestDiffuseR,UI_Gadgets(x).DestDiffuseG,UI_Gadgets(x).DestDiffuseB
 				Dxs Draw Sprite UI_Gadgets(x).SelectedID,UI_Gadgets(x).x,UI_Gadgets(x).y	
-				DXS SET SPRITE ALPHA UI_Gadgets(x).SelectedID,255 * UI_Gadgets(x).AlphaMultiplier
+				DXS SET SPRITE ALPHA UI_Gadgets(x).SelectedID,255 `* UI_Gadgets(x).AlphaMultiplier
 				Dxs End Sprite Render UI_Gadgets(x).SelectedID
 								
 if UI_Gadgets(x).DestDiffuseA>10:
@@ -3227,6 +3225,7 @@ if UI_Gadgets(x).DestDiffuseA>10:
 								`DXS SET SPRITE DIFFUSE UI_Gadgets(x).MouseoverID,UI_Gadgets(x).DiffuseR,UI_Gadgets(x).DiffuseG,UI_Gadgets(x).DiffuseB
 	DXS SET SPRITE ALPHA UI_Gadgets(x).MouseoverID,UI_Gadgets(x).DestDiffuseA
 	Dxs Draw Sprite UI_Gadgets(x).MouseoverID,UI_Gadgets(x).x,UI_Gadgets(x).y	
+ DXS SET SPRITE ALPHA UI_Gadgets(x).MouseoverID,255
 	Dxs End Sprite Render UI_Gadgets(x).MouseoverID
 endif
 Endif
@@ -3244,6 +3243,7 @@ Else
 								`DXS SET SPRITE DIFFUSE UI_Gadgets(x).ID,UI_Gadgets(x).DestDiffuseR,UI_Gadgets(x).DestDiffuseG,UI_Gadgets(x).DestDiffuseB
 		DXS SET SPRITE ALPHA UI_Gadgets(x).ID,255 * UI_Gadgets(x).AlphaMultiplier
 		Dxs Draw Sprite UI_Gadgets(x).ID,UI_Gadgets(x).x,UI_Gadgets(x).y	
+  DXS SET SPRITE ALPHA UI_Gadgets(x).ID,255
 		Dxs End Sprite Render UI_Gadgets(x).ID
 								
 if UI_Gadgets(x).DestDiffuseA>10:
@@ -3252,6 +3252,7 @@ if UI_Gadgets(x).DestDiffuseA>10:
 								`DXS SET SPRITE DIFFUSE UI_Gadgets(x).MouseoverID,UI_Gadgets(x).DiffuseR,UI_Gadgets(x).DiffuseG,UI_Gadgets(x).DiffuseB
 	DXS SET SPRITE ALPHA UI_Gadgets(x).MouseoverID,UI_Gadgets(x).DestDiffuseA
 	Dxs Draw Sprite UI_Gadgets(x).MouseoverID,UI_Gadgets(x).x,UI_Gadgets(x).y	
+ DXS SET SPRITE ALPHA UI_Gadgets(x).MouseoverID,255
 	Dxs End Sprite Render UI_Gadgets(x).MouseoverID
 endif
 Endif
@@ -3521,7 +3522,7 @@ Function UI_WriteLog(param_importance,param_log$)
 	Endif
 	`AddtoDisplay("~pLOGTEXT~w ",param_log$)
 	`UI_Chat_AddText("UI",param_log$)
-	UI_Console_AddLine("UI",param_log$)
+	`UI_Console_AddLine("UI",param_log$)
 if Game.Debug = 1:
 	Select param_importance
 		Case UI_RED : SET CONSOLE COLOUR 4, 0 : endcase

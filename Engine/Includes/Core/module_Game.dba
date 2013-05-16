@@ -22,8 +22,6 @@ Function GameManager_Start():
 	//init the game systems.
 	//functions called from here have access to the level data.
 	`MDL_Database_Fill() //FILLS MODEL DATABASE
-	Terrain_Init() //INIT TERRAIN
-	World_Init() //INIT WORLD
 	`Particles_Init() //INIT PARTICLES SYSTEM
 	UI_ShowMouse()
 	CameraArray(RootCamera).smoothing = 1
@@ -84,10 +82,10 @@ Function GameManager_Update():
 	endselect
 	Endif
 	
-	Terrain_Update() //UPDATE TERRAIN
+`	Terrain_Update() //UPDATE TERRAIN
 	World_Update() //UPDATE WORLD
 	Camera_Update() //UPDATE CAMERA SYSTEM	
-	Weapon_Update() //UPDATE WEAPON SYSTEM
+`	Weapon_Update() //UPDATE WEAPON SYSTEM
 	MDL_Update()    //UPDATE MODEL SYSTEM
 	
 Endfunction
@@ -95,7 +93,7 @@ Endfunction
 Function GameManager_End():
 	//end the game systems.
 	UI_Menu_SetMode(M_MENU_MAIN) //RESTORE TO MENU
-	Terrain_Destroy() //TERMINATE TERRAIN
+`	Terrain_Destroy() //TERMINATE TERRAIN
 	World_Destroy() //DESTROY WORLD
 	game_started = 0
 Endfunction
@@ -124,8 +122,8 @@ Function Game_Init():
 	//Add the other initialization functions here!
 	//This is called at the beginning of the program.
 	Camera_Init() //INIT CAMERA SYSTEM
-	MDL_Init()    //INIT MODEL SYSTEM
-	Weapon_Init() //INIT WEAPON SYSTEM
+`	MDL_Init()    //INIT MODEL SYSTEM
+`	Weapon_Init() //INIT WEAPON SYSTEM
 	
 Endfunction
 
