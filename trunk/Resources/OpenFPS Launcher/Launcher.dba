@@ -13,10 +13,20 @@
 // -Authentication / version checking?
 //////////////////////////////////////////////////////////////
 
+if file exist("Engine\OpenFPS.exe")=1:
+    //the program is in the right directory
+else:
+    //the program is in the wrong directory!
+    message "Error!","The program is being run in the wrong directory!"
+    end
+ENDIF
+
 Global clientport As Integer
 
 Lua Make : Lua Load File "Engine\config\game.cfg"
 clientport = Lua Int("Port")
+
+
 
 //first of all, add firewall exceptions for the engine and port forwarder
 // use netsh.exe (windows utility)
@@ -35,7 +45,7 @@ if clientport=20187 then goto skip_forward
 
 ip$=ip To string$(interface ip (1))
 commandline$ = "-add -app OpenFPS -lanip "+ip$+" -udpport "+str$(clientport)+" -q"
-Execute executable("..\Resources\Launcher-code\Port-forward\piczo.exe",commandline$,"..\Resources\Launcher-code\Port-forward")
+exe = Execute executable("Resources\Launcher-code\Port-forward\piczo.exe",commandline$,"Resources\Launcher-code\Port-forward")
 
 skip_forward:
 Write Bank integer 1,0,1
