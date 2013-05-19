@@ -7,9 +7,6 @@
 // Constants
 //////////////////////////////////////////////////////////////
 
-#Constant Game_WAITTOJOIN 1
-#Constant Game_SPECTATING 2
-
 //////////////////////////////////////////////////////////////
 // UDTS
 //////////////////////////////////////////////////////////////
@@ -19,200 +16,136 @@
 //////////////////////////////////////////////////////////////
 
 Function GameManager_Start():
-	//init the game systems.
-	//functions called from here have access to the level data.
-	`MDL_Database_Fill() //FILLS MODEL DATABASE
-	`Particles_Init() //INIT PARTICLES SYSTEM
-	UI_ShowMouse()
-	CameraArray(RootCamera).smoothing = 1
-	Game.state = Game_WAITTOJOIN
-	Game.pause_toggle = 0
-	Game.paused = 0
+//init the game systems.
+//functions called from here have access to the level data.
+`World_Init()
+EntLoad("Media\levels\test.xnt")
+
+CameraArray(RootCamera).smoothing = 1
 Endfunction
 
 Function GameManager_Update():
-	//update the game systems.
-	
-	//check for pause menu
-	If Escapekey() And Game.pause_toggle = 0:
-		Game.pause_toggle = 1
-		Game.paused = 1 - Game.Paused
-		If Game.Paused = 1:
-			Game.oldpausestate = MenuUI.mode
-			UI_Menu_Setmode(M_ENGINE_PAUSED)
-		else:
-			UI_Menu_Setmode(Game.oldpausestate)
-		endif
-	Endif
-	if escapekey()=0 then Game.pause_toggle = 0
+//update the game systems.
 
-	if Game.paused = 0:
-	Select Game.state
-	case Game_SPECTATING
-		//do temporary spectator movement
-		X# = Camera_GetPositionX(RootCamera)
-		Y# = Camera_GetPositionY(RootCamera)
-		Z# = Camera_GetPositionZ(RootCamera)
-		RX# = Camera_GetRotationX(RootCamera)
-		RY# = Camera_GetRotationY(RootCamera)
-		RZ# = Camera_GetRotationZ(RootCamera)
-		RX# = wrapvalue(RX# + sys_mousemovey*0.2)
-		RY# = wrapvalue(RY# + sys_mousemovex*0.2)
-		RZ# = 0.0
+`World_Update() //UPDATE WORLD
 
-		NewX# = newxvalue(X#,RY#,(keystate(Game_Input.KEY_FORWARD)-keystate(Game_Input.KEY_BACKWARD))*TBM)
-		NewZ# = Newzvalue(Z#,RY#,(keystate(Game_Input.KEY_FORWARD)-keystate(Game_Input.KEY_BACKWARD))*TBM)
-		NewX# = newxvalue(NewX#,RY#-90,(keystate(Game_Input.KEY_LEFT)-keystate(Game_Input.KEY_RIGHT))*TBM)
-		NewZ# = Newzvalue(NewZ#,RY#-90,(keystate(Game_Input.KEY_LEFT)-keystate(Game_Input.KEY_RIGHT))*TBM)
-		newY# = Y# + sin(RX#-180) * (keystate(Game_Input.KEY_FORWARD)-keystate(Game_Input.KEY_BACKWARD))*TBM
-		Camera_SetRotMatrix(RootCamera,RX#,RY#,RZ#)
-		Camera_SetPosMatrix(RootCamera,NewX#,NewY#,NewZ#)
-	endcase
-	Case Game_WAITTOJOIN
-		SpectatorView.rrotation = SpectatorView.rrotation + 0.1 *TBM
-		NewX# = SpectatorView.position.x 
-		NewY# = SpectatorView.position.y
-		NewZ# = SpectatorView.position.z
-		Camera_SetPosMatrix(RootCamera,NewX#,NewY#,NewZ#)
-		RX# = SpectatorView.rotation.x + Sin(SpectatorView.rrotation)*2
-		RY# = SpectatorView.rotation.y + Cos(SpectatorView.rrotation)*2
-		RZ# = SpectatorView.rotation.z
-		Camera_SetRotMatrix(RootCamera,RX#,RY#,RZ#)
-	Endcase
-	endselect
-	Endif
-	
-`	Terrain_Update() //UPDATE TERRAIN
-	World_Update() //UPDATE WORLD
-	Camera_Update() //UPDATE CAMERA SYSTEM	
-`	Weapon_Update() //UPDATE WEAPON SYSTEM
-	MDL_Update()    //UPDATE MODEL SYSTEM
-	
 Endfunction
 
 Function GameManager_End():
-	//end the game systems.
-	UI_Menu_SetMode(M_MENU_MAIN) //RESTORE TO MENU
-`	Terrain_Destroy() //TERMINATE TERRAIN
-	World_Destroy() //DESTROY WORLD
-	game_started = 0
+//end the game systems.
+UI_Menu_SetMode(M_MENU_MAIN) //RESTORE TO MENU
+`World_Destroy() //DESTROY WORLD
+game_started = 0
 Endfunction
-
-Function GameManager_Spawn():
-	Game.state = Game_SPECTATING
-	UI_HideMouse()
-Endfunction
-
-Function GameManager_Kill():
-endfunction
 
 //////////////////////////////////////////////////////////////
 // Internal Functions
 //////////////////////////////////////////////////////////////
 
 Function Game_Init():
-	//////////////////////////////////////
-	// Internal management variables
-	//////////////////////////////////////
-	Global Game_level As String
-	Global Game_loading As Boolean
-	global Game_started as boolean
-	//////////////////////////////////////
-	
-	//Add the other initialization functions here!
-	//This is called at the beginning of the program.
-	Camera_Init() //INIT CAMERA SYSTEM
+//////////////////////////////////////
+// Internal management variables
+//////////////////////////////////////
+Global Game_level As String
+Global Game_loading As Boolean
+global Game_started as boolean
+//////////////////////////////////////
+
+//Add the other initialization functions here!
+//This is called at the beginning of the program.
+Camera_Init() //INIT CAMERA SYSTEM
 `	MDL_Init()    //INIT MODEL SYSTEM
 `	Weapon_Init() //INIT WEAPON SYSTEM
-	
+
 Endfunction
 
 Function Game_Start_R(file As string):
-	//////////////////////////////////////
-	// Real game start function
-	// Called when the game is loading.
-	//////////////////////////////////////
-	UI_WriteLog(UI_Yellow,"Loading '"+file+"'")
-	
-	//////////////////////////////////////
-	// MAIN LOADING CODE
-	//////////////////////////////////////
-	
-	//delete temp dir
-	Set Dir "Media\Levels"
-	delete directory "data"
-	Set Dir "..\.."
-	
-	//start ZIP management system
-	open file block file,1
-	
-	Perform Checklist For File Block Data 1
-	For i = 1 To Checklist Quantity()
-		`UI_WriteLog(ui_blue,checklist string$(i))
-		Game_LoadFromLevel(checklist string$(i))
-	Next i
-	
-	//all the real shit happens here
-	GameManager_Start()
-	
-	close file block 1
-	
-	//////////////////////////////////////
-	// END MAIN LOADING CODE
-	//////////////////////////////////////
-	
-	//////////////////////////////////////
-	//switch to engine mode. do variables
-	//////////////////////////////////////
-	UI_FadeManager.state=UI_FADEIN
-	UI_FadeManager.target=M_ENGINE_LEVEL_TITLE
-	Game_loading = 0
-	Game_started = 1
-	UI_WriteLog(UI_Yellow,"Done loading.")
-	UI_DisableWindowsCursor()
-	//////////////////////////////////////
+//////////////////////////////////////
+// Real game start function
+// Called when the game is loading.
+//////////////////////////////////////
+UI_WriteLog(UI_Yellow,"Loading '"+file+"'")
+
+//////////////////////////////////////
+// MAIN LOADING CODE
+//////////////////////////////////////
+
+//delete temp dir
+remstart
+Set Dir "Media\Levels"
+delete directory "data"
+Set Dir "..\.."
+
+//start ZIP management system
+open file block file,1
+
+Perform Checklist For File Block Data 1
+For i = 1 To Checklist Quantity()
+`UI_WriteLog(ui_blue,checklist string$(i))
+Game_LoadFromLevel(checklist string$(i))
+Next i
+remend
+//all the real shit happens here
+GameManager_Start()
+
+//close file block 1
+
+//////////////////////////////////////
+// END MAIN LOADING CODE
+//////////////////////////////////////
+
+//////////////////////////////////////
+//switch to engine mode. do variables
+//////////////////////////////////////
+UI_FadeManager.state=UI_FADEIN
+UI_FadeManager.target=Ent_GetInt(EntGetReference("root"),"defaultuistate")
+Game_loading = 0
+Game_started = 1
+UI_WriteLog(UI_Yellow,"Done loading.")
+UI_DisableWindowsCursor()
+//////////////////////////////////////
 Endfunction
 
 Function Game_start(file As string):
-	//////////////////////////////////////
-	// Internal management function
-	// Sets up variables to load a game
-	//////////////////////////////////////
-	If Game_loading = 0:
-		Game_loading = 1
-		Game_level=file
-		UI_FadeManager.state=UI_FADEIN
-		UI_FadeManager.target=M_ENGINE_LOADING
-	else
-		UI_WriteLog(UI_Yellow,"Level already loading!")
-	endif
-	//////////////////////////////////////
+//////////////////////////////////////
+// Internal management function
+// Sets up variables to load a game
+//////////////////////////////////////
+If Game_loading = 0:
+Game_loading = 1
+Game_level=file
+UI_FadeManager.state=UI_FADEIN
+UI_FadeManager.target=M_ENGINE_LOADING
+else
+UI_WriteLog(UI_Yellow,"Level already loading!")
+endif
+//////////////////////////////////////
 Endfunction
 
 Function Game_End():
 endfunction
 
 Function Game_Update():
-	If Game_loading = 1 And UI_FadeManager.state = UI_NORMAL:
-		Game_Start_R(Game_level)
-	Endif
-	if Game_started = 1:
-	//world / game update functions
-	GameManager_Update()
-	Endif
+If Game_loading = 1 And UI_FadeManager.state = UI_NORMAL:
+Game_Start_R(Game_level)
+Endif
+if Game_started = 1:
+//world / game update functions
+GameManager_Update()
+Endif
 Endfunction
 
 Function Game_Terminate():
-	// world / game terminate functions
-	GameManager_End()
+// world / game terminate functions
+GameManager_End()
 endfunction
 
 Function Game_LoadFromLevel(file As string):
-	Local filename As String
-	filename = "Media\Levels\data\"+file
-	//extract file
-	extract file from block 1,file,"Media\Levels\data\"
-	ui_writelog(UI_Blue,"Loaded file "+file+" from level package.")
+Local filename As String
+filename = "Media\Levels\data\"+file
+//extract file
+extract file from block 1,file,"Media\Levels\data\"
+ui_writelog(UI_Blue,"Loaded file "+file+" from level package.")
 Endfunction filename
 
 //////////////////////////////////////////////////////////////
@@ -232,29 +165,29 @@ Backdrop On
 Make Object Sphere 1,25
 D3d_Init
 Do
-	r#=wrapvalue(r#+10.0)
-	Rotate Object 1,r#,r#,r#
-	
-	//crosshair test
-	col1=d3d_rgba(255,255,255,200)
-	col2=d3d_rgba(255,255,255,10)
-	col3=d3d_rgba(0,0,0,200)
-	col4=d3d_rgba(0,0,0,10)
-	size#=sin(r#)*20
-	x = Screen Width()/2
-	y = Screen Height()/2
-	
-	D3d_Line x-(30+size#)+1,y+1,x-(10+size#)-1,y+1,col3,col4
-	D3d_Line x+(30+size#)+1,y+1,x+(10+size#)-1,y+1,col3,col4
-	D3d_Line x+1,y-(30+size#)+1,x+1,y-(10+size#)+1,col3,col4
-	D3d_Line x+1,y+(30+size#)+1,x+1,y+(10+size#)+1,col3,col4
-	
-	D3d_Line x-(30+size#),y,x-(10+size#),y,col1,col2
-	D3d_Line x+(30+size#),y,x+(10+size#),y,col1,col2
-	D3d_Line x,y-(30+size#),x,y-(10+size#),col1,col2
-	D3d_Line x,y+(30+size#),x,y+(10+size#),col1,col2
-	
-	Sync
+r#=wrapvalue(r#+10.0)
+Rotate Object 1,r#,r#,r#
+
+//crosshair test
+col1=d3d_rgba(255,255,255,200)
+col2=d3d_rgba(255,255,255,10)
+col3=d3d_rgba(0,0,0,200)
+col4=d3d_rgba(0,0,0,10)
+size#=sin(r#)*20
+x = Screen Width()/2
+y = Screen Height()/2
+
+D3d_Line x-(30+size#)+1,y+1,x-(10+size#)-1,y+1,col3,col4
+D3d_Line x+(30+size#)+1,y+1,x+(10+size#)-1,y+1,col3,col4
+D3d_Line x+1,y-(30+size#)+1,x+1,y-(10+size#)+1,col3,col4
+D3d_Line x+1,y+(30+size#)+1,x+1,y+(10+size#)+1,col3,col4
+
+D3d_Line x-(30+size#),y,x-(10+size#),y,col1,col2
+D3d_Line x+(30+size#),y,x+(10+size#),y,col1,col2
+D3d_Line x,y-(30+size#),x,y-(10+size#),col1,col2
+D3d_Line x,y+(30+size#),x,y+(10+size#),col1,col2
+
+Sync
 Loop
 
 remend

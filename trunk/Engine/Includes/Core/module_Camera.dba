@@ -327,6 +327,27 @@ adiff = dif
 endif
 endfunction adiff
 
+remstart
+//do temporary spectator movement
+X# = Camera_GetPositionX(RootCamera)
+Y# = Camera_GetPositionY(RootCamera)
+Z# = Camera_GetPositionZ(RootCamera)
+RX# = Camera_GetRotationX(RootCamera)
+RY# = Camera_GetRotationY(RootCamera)
+RZ# = Camera_GetRotationZ(RootCamera)
+RX# = wrapvalue(RX# + sys_mousemovey*0.2)
+RY# = wrapvalue(RY# + sys_mousemovex*0.2)
+RZ# = 0.0
+
+NewX# = newxvalue(X#,RY#,(keystate(Game_Input.KEY_FORWARD)-keystate(Game_Input.KEY_BACKWARD))*TBM)
+NewZ# = Newzvalue(Z#,RY#,(keystate(Game_Input.KEY_FORWARD)-keystate(Game_Input.KEY_BACKWARD))*TBM)
+NewX# = newxvalue(NewX#,RY#-90,(keystate(Game_Input.KEY_LEFT)-keystate(Game_Input.KEY_RIGHT))*TBM)
+NewZ# = Newzvalue(NewZ#,RY#-90,(keystate(Game_Input.KEY_LEFT)-keystate(Game_Input.KEY_RIGHT))*TBM)
+newY# = Y# + sin(RX#-180) * (keystate(Game_Input.KEY_FORWARD)-keystate(Game_Input.KEY_BACKWARD))*TBM
+Camera_SetRotMatrix(RootCamera,RX#,RY#,RZ#)
+Camera_SetPosMatrix(RootCamera,NewX#,NewY#,NewZ#)
+remend
+
 //////////////////////////////////////////////////////////////
 //  End of code
 //////////////////////////////////////////////////////////////
