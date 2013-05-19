@@ -14,10 +14,72 @@ type EntReference
     values as arrayptr
 endtype
 
-function EntInit():
+function Ent_Init():
     //Init entity system
     global NumEntities
     dim Entities() as EntReference
+ENDFUNCTION
+
+function EntSave(file$):
+    if file exist(file$) then delete file file$
+    file_temp = find free file()
+    open to write file_temp,file$
+    write string file_temp,"entsave"
+    for i = 0 to NumEntities-1:
+    WRITE LONG file_temp,1 //flag for an entity existing
+    WRITE STRING file_temp,Entities(i).name
+    if Entities(i).attributes.arraysize>0:
+         // list entity attributes
+         local dim tempattributes() as string
+         local dim tempvalues() as string
+         link array tempattributes(),Entities(i).attributes.ptr
+         link array tempvalues(),Entities(i).values.ptr
+         for ii = 0 to Entities(i).attributes.arraysize-1:
+              if array index valid(tempattributes(ii)):
+              WRITE LONG file_temp,2
+              WRITE STRING file_temp,tempattributes(ii)
+              WRITE STRING file_temp,tempvalues(ii)
+              endif
+         next ii
+         unlink array tempattributes()
+         unlink array tempvalues()
+         undim tempattributes()
+         undim tempvalues()  
+    endif
+    next i
+    WRITE LONG file_temp,-1 //flag for end of file
+    close file file_temp
+ENDFUNCTION
+
+function EntLoad(file$):
+    if file exist(file$):
+        file_temp = find free file()
+        open to read file_temp,file$
+        header$ = "null"
+        read string file_temp,header$
+        if header$="entsave"
+            DeleteAllEntities()
+            read long file_temp,flag
+            while flag > 0:
+                select flag
+                    case 1
+                        //next value will be an entity name
+                        read string file_temp,latestname$
+                        EntAdd(latestname$)
+                    endcase
+                    case 2
+                        //next values will be entity attrib/value
+                        read string file_temp,latestattrib$
+                        read string file_temp,latestvalue$
+                        EntAddAttribute(EntGetReference(latestname$),latestattrib$,latestvalue$)
+                    endcase
+                endselect
+                //loop through all dat shit
+                read long file_temp,flag
+            endwhile
+        endif
+        close file file_temp
+    endif
 ENDFUNCTION
 
 function DeleteAllEntities():
@@ -36,7 +98,7 @@ function DeleteAllEntities():
     next i
 	 undim Entities()
     NumEntities=0
-	 EntInit()
+   Ent_Init()
 ENDFUNCTION
 
 function GetNumEntities():
@@ -147,6 +209,29 @@ function EntSetAttribute(id, attribute_name as string, attribute_value as string
     undim tempvalues()
 ENDFUNCTION
 
+function EntDeleteAttribute(id, attribute_name as string):
+    // set entity attribute
+    local dim tempattributes() as string
+    local dim tempvalues() as string
+    link array tempattributes(),Entities(id).attributes.ptr
+    link array tempvalues(),Entities(id).values.ptr
+    
+    `array insert at bottom tempattributes()
+    for i = 0 to Entities(id).attributes.arraysize-1:
+        if tempattributes(i)=attribute_name:
+            array delete element tempattributes(),i
+            array delete element tempvalues(),i
+            Entities(id).attributes.arraysize = Entities(id).attributes.arraysize - 1
+            exit
+        endif
+    next i
+    
+    unlink array tempattributes()
+    unlink array tempvalues()
+    undim tempattributes()
+    undim tempvalues()
+ENDFUNCTION
+
 function Ent_GetExists(name as string):
     local returnint as integer
     //get entity id
@@ -190,10 +275,10 @@ function EntGetAttribute(id, attribute_name as string):
     undim tempvalues()
 ENDFUNCTION return_string
 
-function EntUpdate():
+function Ent_Update():
     //update entity system
 	 EntHandleEntities()
-	 
+	 `EntListDebug()
 	y=60 : x= 10
 	 `UI_Text(1,x,y,"OpenFPS Entities - "+str$(NumEntities)+" Current") : y=y+12
 	
@@ -219,6 +304,29 @@ function EntUpdate():
 		 undim tempvalues()  
     endif
 	 `UI_Text(1,x,y,str$(i)+") "+Entityname$+", values "+entitytext$) : y=y+12
+    next i
+ENDFUNCTION
+
+function EntListDebug():
+    set cursor 0,0
+    for i = 0 to NumEntities-1:
+    print "$" ; Entities(i).name
+    if Entities(i).attributes.arraysize>0:
+         // list entity attributes
+         local dim tempattributes() as string
+         local dim tempvalues() as string
+         link array tempattributes(),Entities(i).attributes.ptr
+         link array tempvalues(),Entities(i).values.ptr
+         for ii = 0 to Entities(i).attributes.arraysize-1:
+              if array index valid(tempattributes(ii)):
+              print "  -";tempattributes(ii);"=";tempvalues(ii)
+              endif
+         next ii
+         unlink array tempattributes()
+         unlink array tempvalues()
+         undim tempattributes()
+         undim tempvalues()  
+    endif
     next i
 ENDFUNCTION
 
@@ -428,10 +536,6 @@ function SV_EntUpdate():
     //update entity system
 	 SV_EntHandleEntities()
 	 
-	 //debug parts
-	 y=60 : x= 400
-	 UI_Text(1,x,y,"OpenFPS SV_Entities - "+str$(SV_NumEntities)+" Current") : y=y+12
-	
     for i = 0 to SV_NumEntities-1:
     Entityname$=SV_Entities(i).name
     Entityptr$=str$(SV_Entities(i).attributes.ptr)
@@ -453,7 +557,6 @@ function SV_EntUpdate():
 		 undim SV_tempattributes()
 		 undim SV_tempvalues()  
     endif
-	UI_Text(1,x,y,str$(i)+") "+Entityname$+", values "+entitytext$) : y=y+12
     next i
 Endfunction
 

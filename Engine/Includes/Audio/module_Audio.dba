@@ -58,7 +58,7 @@ Function Audio_Update():
 			Endcase
 		endselect
 		Audio Pan AudioReferences(a).id,AudioReferences(a).pan
-		audio volume AudioReferences(a).id,AudioReferences(a).volume
+		audio volume AudioReferences(a).id,AudioReferences(a).volume * (Game.option_volume / 100.0)
 	next a
 Endfunction
 
@@ -90,6 +90,19 @@ endfunction return_
 Function Audio_Play(id As integer):
 	AudioReferences(id).state = STATE_PLAYING
 	play audio AudioReferences(id).id
+Endfunction
+
+Function Audio_Stop(id As integer):
+    AudioReferences(id).state = STATE_STOPPED
+    stop audio AudioReferences(id).id
+Endfunction
+
+Function Audio_Playing(id As integer):
+    playing = audio playing(AudioReferences(id).id)
+Endfunction playing
+
+Function Audio_SetVolume(id As integer,volume as float):
+    AudioReferences(id).volume = volume
 Endfunction
 
 Function Audio_Loop(id As integer):
