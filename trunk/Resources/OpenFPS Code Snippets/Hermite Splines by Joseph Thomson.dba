@@ -1,0 +1,188 @@
+`2D Hermite Splines in DBPro
+`By Joseph Thomson
+`12/05/04
+
+randomize timer()
+
+set display mode 800,600,32
+
+type pointType
+   x as integer
+   y as integer
+   cx as integer
+   cy as integer
+   cmx as integer
+   cmy as integer
+endtype
+
+`Maximum number of points
+maxPoints as integer = 100
+
+dim points(maxPoints) as pointType
+
+`Number of starting points (has to be at least 2)
+numPoints as integer = 2
+`Number of points between main points (displaying the curve)
+numSections as integer = 50
+
+pointSelected as integer
+controlPointSelected as integer
+controlPointMirrorSelected as integer
+mouseHold as integer
+spaceHold as integer
+controlScale as float = 4.0
+
+`Randomize the starting points coordinates and the control point coordinates
+for x = 1 to 2
+   points(x).x = rnd(600)+100
+   points(x).y = rnd(400)+100
+   points(x).cx = rnd(100)-50
+   points(x).cy = rnd(100)-50
+   points(x).cmx = -points(x).cx
+   points(x).cmy = -points(x).cy
+next x
+
+`Create the vectors 1 to 5
+tmp = make vector2(1)
+tmp = make vector2(2)
+tmp = make vector2(3)
+tmp = make vector2(4)
+tmp = make vector2(5)
+
+sync on
+sync rate 0
+
+do
+   `User can control control scale
+   if upkey() = 1
+      inc controlScale,0.01
+   endif
+   if downkey() = 1
+      dec controlScale,0.01
+   endif
+
+   `Control addition of points
+   if mouseclick() = 2
+      if numPoints < maxPoints and mouseHold = 0
+         inc numPoints
+         points(numPoints).x = mousex()
+         points(numPoints).y = mousey()
+         points(numPoints).cx = rnd(100)-50
+         points(numPoints).cy = rnd(100)-50
+         points(numPoints).cmx = -points(numPoints).cx
+         points(numPoints).cmy = -points(numPoints).cy
+      endif
+      mouseHold = 1
+   endif
+   
+   `Control deletion of points
+   if spacekey() = 1
+      if numPoints > 2 and spaceHold = 0
+         dec numPoints
+      endif
+      spaceHold = 1
+   else
+      spaceHold = 0
+   endif
+
+   mouseHoldSwitch = 0
+
+   `Loop through all points
+   for x = 1 to numPoints
+      `Control moving of points
+      if mouseclick() = 1
+         if mousex() >= points(x).x-3 and mousex() <= points(x).x+3 and mousey() >= points(x).y-3 and mousey() <= points(x).y+3 and mouseHold = 0
+            pointSelected = x
+         else
+            if mousex() >= points(x).x+points(x).cx-3 and mousex() <= points(x).x+points(x).cx+3 and mousey() >= points(x).y+points(x).cy-3 and mousey() <= points(x).y+points(x).cy+3 and mouseHold = 0
+               controlPointSelected = x
+            else
+               if mousex() >= points(x).x+points(x).cmx-3 and mousex() <= points(x).x+points(x).cmx+3 and mousey() >= points(x).y+points(x).cmy-3 and mousey() <= points(x).y+points(x).cmy+3 and mouseHold = 0
+                  controlPointMirrorSelected = x
+               endif
+            endif
+         endif
+         mouseHoldSwitch = 1
+      endif
+      
+      `Draw lines between the points
+      ink rgb(100,100,255),0
+      line points(x).x+points(x).cx,points(x).y+points(x).cy,points(x).x+points(x).cmx,points(x).y+points(x).cmy
+      `Draw point
+      ink rgb(255,255,0),0
+      box points(x).x-2,points(x).y-2,points(x).x+2,points(x).y+2
+      `Draw control point
+      ink rgb(0,0,255),0
+      box points(x).x+points(x).cx-2,points(x).y+points(x).cy-2,points(x).x+points(x).cx+2,points(x).y+points(x).cy+2
+      `Draw control point mirror
+      ink rgb(0,0,255),0
+      box points(x).x+points(x).cmx-2,points(x).y+points(x).cmy-2,points(x).x+points(x).cmx+2,points(x).y+points(x).cmy+2
+      
+   next x
+   
+   `Mouse hold for one click only
+   if mouseHoldSwitch = 1
+      mouseHold = 1
+   endif
+   
+   `Move selected point if there is one
+   if pointSelected <> 0
+      points(pointSelected).x = mousex()
+      points(pointSelected).y = mousey()
+   endif
+
+   `Move selected control point if there is one
+   if controlPointSelected <> 0
+      points(controlPointSelected).cx = mousex()-points(controlPointSelected).x
+      points(controlPointSelected).cy = mousey()-points(controlPointSelected).y
+      points(controlPointSelected).cmx = -points(controlPointSelected).cx
+      points(controlPointSelected).cmy = -points(controlPointSelected).cy
+   endif
+
+   `Move selected control point mirror if there is one
+   if controlPointMirrorSelected <> 0
+      points(controlPointMirrorSelected).cmx = mousex()-points(controlPointMirrorSelected).x
+      points(controlPointMirrorSelected).cmy = mousey()-points(controlPointMirrorSelected).y
+      points(controlPointMirrorSelected).cx = -points(controlPointMirrorSelected).cmx
+      points(controlPointMirrorSelected).cy = -points(controlPointMirrorSelected).cmy
+   endif
+   
+   ink rgb(255,255,255),0
+   `Loop through all active points
+   for x = 2 to numPoints
+      `Fill vectors with point coordinates
+      set vector2 1,points(x-1).x,points(x-1).y
+      set vector2 2,points(x-1).cx*controlScale,points(x-1).cy*controlScale
+      set vector2 3,points(x).x,points(x).y
+      set vector2 4,points(x).cx*controlScale,points(x).cy*controlScale
+      
+      `Loop through the sections between points
+      for y = 1 to numSections-1
+         `Work out point on hermite spline (filledVector,pointA,pointB,pointC,pointD,value (0.0 = beginning of curve, 1.0 = end of curve, 0.5 = half way down curve))
+         `pointA = start of the curve, pointB = tangent of the curve at pointA (also has a distance), pointC = end of the curve, pointD = tangent of the curve at pointC (also has a distance)
+         hermite vector2 5,1,2,3,4,1.0/numSections*y
+         `Draw point
+         dot x vector2(5),y vector2(5)
+      next y
+   next x
+
+   `Reset one click variable and point selected if no mouse is clicked
+   if mouseclick() = 0
+      mouseHold = 0
+      pointSelected = 0
+      controlPointSelected = 0
+      controlPointMirrorSelected = 0
+   endif
+   
+   `Info
+   ink rgb(255,255,255),0
+   text 10,10,"2D Hermite Splines"
+   text 10,25,"By Joseph Thomson 12/05/04"
+   text 10,45,"LMB to move points"
+   text 10,60,"RMB to add a point"
+   text 10,75,"Space bar to delete the last point"
+   text 10,90,"Up and down to change the control scale: "+str$(controlScale)
+   
+   sync
+   cls
+loop

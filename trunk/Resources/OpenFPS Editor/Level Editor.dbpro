@@ -1,54 +1,74 @@
+; **** Dark BASIC Professional Project File ****
+; **** Written by Synergy Editor ****
 version=DBP1.00
-;--> DarkBASIC Professional Project <--
-;--> Created with Indigo 1.3.3.1 <--
-;--> Basic project details <--
 project name=Level Editor
-project comments=
 
-;--> Files <--
-final source=_Temp.dbsource
-main=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Resources\OpenFPS Editor\Level Editor.dba
+; **** source file information ****
+main=Level Editor.dba
+LineMain=38
 include1=includes\Module_ui_topgui.dba
-include2=includes\module_Timer.dba
+LineInclude1=0
+include2=includes\OpenFPS\module_Terrain.dba
+LineInclude2=9
+include3=includes\OpenFPS\module_Timer.dba
+LineInclude3=27
+
+; **** Executable Information  ***
+; build types: exe, media, installer, alone
 executable=Level Editor.exe
 build type=exe
-
-;--> Debug Mode YES/NO <--
-CLI=NO
-
-;--> Media Settings <--
+; ** Media file compression **
 compression=NO
+
+; ** Media file encryption **
 encryption=NO
-media root path=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Resources\OpenFPS Editor\
+; ** Display the card options screen window? **
+card options window=NO
 
-;--> Included Media <--
+; **** debugger information ****
+; If the editor sets this to yes, it is running in debug mode
+CLI=NO
+CommandLineArguments=
 
-;--> Cursors <--
-
-;--> Icons <--
-
-;--> Other Settings <--
+; **** display mode information ****
 app title=OpenFPS Level Editor
+
+; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
 graphics mode=window
 fullscreen resolution=1280x720x32
+
+; arbitrary sizes are valid for windowed mode
 window resolution=1280x720
 
-;--> Version Information <--
-verfilename=
-verfiledesc=
-vercompany=
-verfilenumber=0.1a
-verproduct=
-verproductnumber=
-vercopyright=
-vercomments=
-verinternal=
-vertrademark=
+; **** External Files Information ****
 
-;--> Config/setup.ini values <--
+; **** Media ****
+; Example entries: media1=graphics\*.jpg
+media root path=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Resources\OpenFPS Editor\
+
+; **** Icons ****
+
+; **** Cursors ****
+
+; **** Version Info ****
+VerComments=
+VerCompany=
+VerFileDesc=
+VerFileNumber=
+VerInternal=
+VerCopyright=
+VerTrademark=
+VerFilename=
+VerProduct=
+VerProductNumber=v1.0
+
+; **** To Do ****
+
+; **** Comments ****
+comments1=
+
+; **** Advanced (setup.ini) configuration ****
 RemoveSafetyCode=NO
 SafeArrays=YES
 LocalTempFolder=NO
 ExternaliseDLLS=NO
-
-;--> Project Organization <--

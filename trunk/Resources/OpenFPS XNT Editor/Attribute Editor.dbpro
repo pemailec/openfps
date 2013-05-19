@@ -1,0 +1,72 @@
+; **** Dark BASIC Professional Project File ****
+; **** Written by Synergy Editor ****
+version=DBP1.00
+project name=Level Editor
+
+; **** source file information ****
+main=Attribute Editor.dba
+LineMain=129
+include1=includes\Module_ui_topgui.dba
+LineInclude1=0
+include2=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\Entities\Module_Entity.dba
+LineInclude2=175
+
+; **** Executable Information  ***
+; build types: exe, media, installer, alone
+executable=Attribute Editor.exe
+build type=exe
+; ** Media file compression **
+compression=NO
+
+; ** Media file encryption **
+encryption=NO
+; ** Display the card options screen window? **
+card options window=NO
+
+; **** debugger information ****
+; If the editor sets this to yes, it is running in debug mode
+CLI=NO
+CommandLineArguments=
+
+; **** display mode information ****
+app title=OpenFPS Attribute Editor
+
+; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
+graphics mode=fulldesktop
+fullscreen resolution=1280x720x32
+
+; arbitrary sizes are valid for windowed mode
+window resolution=800x600
+
+; **** External Files Information ****
+
+; **** Media ****
+; Example entries: media1=graphics\*.jpg
+media root path=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Resources\OpenFPS XNT Editor\
+
+; **** Icons ****
+
+; **** Cursors ****
+
+; **** Version Info ****
+VerComments=
+VerCompany=
+VerFileDesc=
+VerFileNumber=v1.0
+VerInternal=v1.0
+VerCopyright=
+VerTrademark=
+VerFilename=
+VerProduct=
+VerProductNumber=v1.0
+
+; **** To Do ****
+
+; **** Comments ****
+comments1=
+
+; **** Advanced (setup.ini) configuration ****
+RemoveSafetyCode=NO
+SafeArrays=YES
+LocalTempFolder=NO
+ExternaliseDLLS=NO

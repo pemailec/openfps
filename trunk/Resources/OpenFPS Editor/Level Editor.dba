@@ -52,9 +52,6 @@ UI_Topgui_Load()
 UI_Log_Init()
 ui_log_Write("Editor Initialized.")
 
-//make debug matrix
-Make Matrix 1,256,256,16,16
-
 //////////////////////////////////////////////////////////////
 // Main Loop
 //////////////////////////////////////////////////////////////
@@ -128,7 +125,7 @@ Do
 	if currentwindowclicked=1 then currentwindow = 3
 	guiMenuBegin(GEN_ID, 0, 0,ScreenWidth-808, 24)
 	If guiDropDownMenuItemBegin(GEN_ID, "File", 24, 0, 0, 150, (25 * 4)+5)
-		if guiMenuItem("New", 0, 24, 20, 0) then //new
+		if guiMenuItem("New", 0, 24, 20, 0) then Terrain_new() //new
 		If guiMenuItem("Load...", 0, 24, 20, 0) Then //load
 		If guiMenuItem("Save...", 0, 24, 20, 0) Then //save
 		guiSplitterMenuItem(5)
