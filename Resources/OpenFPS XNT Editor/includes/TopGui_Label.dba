@@ -1,0 +1,38 @@
+
+function guiLabel(id as guiId, x, y, w, h, caption$, halign, valign, color)
+    guiLayout(id, x, y, w, h)
+
+    guiBeginControl(x, y, w, h, 1)
+    
+    guiLabelDraw(id, w, h, caption$, halign, valign, color)
+    
+    guiEndControl()
+endfunction
+
+function guiLabelDraw(id as guiId, w, h, caption$, halign, valign, color)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+
+    `a2BoxText gui.fontId, x, y, x+w, y+h, caption$, halign, valign, 1, color
+    guiFastBoxText(gui.fontId, x, y, x+w, y+h, caption$, halign, valign, 1, color)
+endfunction
+
+function guiShadowLabel(id as guiId, x, y, w, h, caption$, halign, valign, color, xoffset, yoffset, shadowcolor)
+    guiLayout(id, x, y, w, h)
+    
+    guiBeginControl(x, y, w, h, 1)
+    
+    guiShadowLabelDraw(id, w, h, caption$, halign, valign, color, xoffset, yoffset, shadowcolor)
+    
+    guiEndControl()
+endfunction
+
+function guiShadowLabelDraw(id as guiId, w, h, caption$, halign, valign, color, xoffset, yoffset, shadowcolor)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+
+    `a2BoxText gui.fontId, x, y, x+w, y+h, caption$, halign, valign, 1, color
+    guiFastBoxText(gui.fontID, x+xoffset, y+yoffset, x+w+xoffset, y+h+yoffset, caption$, halign, valign, 1,shadowcolor)    
+    guiFastBoxText(gui.fontId, x, y, x+w, y+h, caption$, halign, valign, 1, color)
+    
+endfunction

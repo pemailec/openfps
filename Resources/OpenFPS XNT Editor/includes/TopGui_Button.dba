@@ -1,0 +1,174 @@
+
+function guiButton(id as guiId, x, y, w, h, caption$)
+    guiLayout(id, x, y, w, h)
+
+    guiBeginControl(x, y, w, h, 1)
+    
+    clicked = guiButtonLogic(id, w, h)
+    guiButtonDraw(id, w, h, caption$)
+    
+    guiEndControl()
+endfunction clicked
+
+function guiPicButton(id as guiId, x, y, w, h, imageId)
+    guiLayout(id, x, y, w, h)
+
+    guiBeginControl(x, y, w, h, 1)
+    
+    clicked = guiButtonLogic(id, w, h)
+    guiPicButtonDraw(id, w, h, imageId)
+    
+    guiEndControl()
+endfunction clicked
+
+function guiTextButton(id as guiId, x, y, w, h, caption$)
+    guiLayout(id, x, y, w, h)
+
+    guiBeginControl(x, y, w, h, 1)
+    
+    clicked = guiButtonLogic(id, w, h)
+    guiTextButtonDraw(id, w, h, caption$)
+    
+    guiEndControl()
+endfunction clicked
+
+function guiButtonLogic(id as guiId, w, h)
+    focused = guiFocus(id, 1)
+    
+    clicked = 0
+    ` Convert 0, 0 to screen coordinates
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+
+    ` If mouse over, try becoming hot
+    if guiInClip(guiMouseX(), guiMouseY())
+        guiSetHot(id)
+    endif
+    
+    ` If we're the active control
+    if guiGetActive() = id
+        guiStayActive()
+        
+        ` If left button was released
+        if gui.msu = 1
+            ` If we're hot we were clicked
+            if guiGetHot() = id then clicked = 1
+
+            ` No longer active
+            guiSetActive(0)
+        endif
+        
+        ` If other button was pressed
+        if gui.msd
+            ` No longer active
+            guiSetActive(0)
+        endif
+    else
+        ` If we're the hot control
+        if guiGetHot() = id
+            ` If left button was pressed
+            if gui.msd = 1
+                ` Make us active
+                guiSetActive(id)
+                guiSetFocus(id, 0, 0)
+            endif
+        endif
+    endif
+    
+    if focused
+        if guiProcessKeyUp(id, VK_SPACE) then clicked = 1
+    endif
+endfunction clicked
+
+function guiButtonDraw(id as guiId, w, h, caption$)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    focused = guiGetFocus() = id
+    pressed = focused and spacekey()
+    
+    if guiGetHot() = id or pressed
+        if guiGetActive() = id or pressed
+            ` Active (pressed)
+            a2FillBox x, y, x+w, y+h, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT
+        else
+            ` Hot
+            a2FillBox x, y, x+w, y+h, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK
+        endif
+    else
+        ` Normal
+        a2FillBox x, y, x+w, y+h, THEME_INACTIVE_LIGHT, THEME_INACTIVE_LIGHT, THEME_INACTIVE_DARK, THEME_INACTIVE_DARK
+    endif
+    
+    a2SetLineAA 0
+    a2Box x, y, x+w-1, y+h-1, THEME_OUTLINE_DARK
+    a2SetLineAA 1
+    
+    `a2BoxText gui.fontId, x+4, y+4, x+w-2, y+h-2, caption$, 1, 1, 1, THEME_TEXT_SHADOW
+    `a2BoxText gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, THEME_TEXT_DARK
+    guiFastBoxText(gui.fontId, x+4, y+4, x+w-2, y+h-2, caption$, 1, 1, 1, THEME_TEXT_SHADOW)
+    guiFastBoxText(gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, THEME_TEXT_DARK)
+    
+    if focused
+        guiDrawFocusRect(x+3, y+3, x+w-4, y+h-4, THEME_FOCUS_DARK)
+    endif
+    
+endfunction
+
+function guiPicButtonDraw(id as guiId, w, h, imageId)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    focused = guiGetFocus() = id
+    pressed = focused and spacekey()
+    
+    if guiGetHot() = id or pressed
+        if guiGetActive() = id or pressed
+            ` Active (pressed)
+            a2FillBox x, y, x+w, y+h, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT
+        else
+            ` Hot
+            a2FillBox x, y, x+w, y+h, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK
+        endif
+    else
+        ` Normal
+        a2FillBox x, y, x+w, y+h, THEME_INACTIVE_LIGHT, THEME_INACTIVE_LIGHT, THEME_INACTIVE_DARK, THEME_INACTIVE_DARK
+    endif
+    
+    a2SetLineAA 0
+    a2Box x, y, x+w-1, y+h-1, THEME_OUTLINE_DARK
+    a2SetLineAA 1
+    
+    if image exist(imageId)
+        a2DrawImage imageId, (x+w/2)-(image width(imageId)/2), (y+h/2)-(image height(imageId)/2), 0, 0, 0, 1, 0, 0xFFFFFFFF
+    endif
+        
+    if focused
+        guiDrawFocusRect(x+3, y+3, x+w-4, y+h-4, THEME_FOCUS_DARK)
+    endif
+    
+endfunction
+
+function guiTextButtonDraw(id as guiId, w, h, caption$)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    focused = guiGetFocus() = id
+    pressed = focused and spacekey()
+    
+    if guiGetHot() = id or pressed
+        if guiGetActive() = id or pressed
+            ` Active (pressed)
+            guiFastBoxText(gui.fontId, x+4, y+4, x+w-2, y+h-2, caption$, 1, 1, 1, THEME_TEXT_SHADOW)
+            guiFastBoxText(gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, THEME_TEXT_LIGHT)
+        else
+            ` Hot
+            guiFastBoxText(gui.fontId, x+4, y+4, x+w-2, y+h-2, caption$, 1, 1, 1, THEME_TEXT_SHADOW)
+            guiFastBoxText(gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, THEME_TEXT_LIGHT)
+        endif
+    else
+        ` Normal
+        guiFastBoxText(gui.fontId, x+4, y+4, x+w-2, y+h-2, caption$, 1, 1, 1, THEME_TEXT_SHADOW)
+        guiFastBoxText(gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, THEME_TEXT_DARK)
+    endif
+endfunction
