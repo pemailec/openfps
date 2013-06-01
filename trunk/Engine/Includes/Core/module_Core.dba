@@ -53,13 +53,13 @@ Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Ent_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Audio_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"UI_Init")
 `Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Network_Init")
-Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Game_Init")
+`Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Game_Init")
 
 //Update chunk
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"TBM_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Input_Update")
 `Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Network_Update")
-Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Game_Update")
+`Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Game_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Audio_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"UI_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Ent_Update")
@@ -79,6 +79,8 @@ Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"SYS_Terminate")
 
 //runs the init set of functions
 CORE_Chunk_Run(Chunk_Init_PTR)
+
+Engine_Check_EditorFlag()
 
 //////////////////////////////////////////////////////////////
 // Main loop

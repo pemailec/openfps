@@ -57,6 +57,15 @@ Function SYS_Init():
     Game.option_sensitivity_old =            lua int("Sensitivity")
     Game.option_volume_old =            lua int("Volume")
     
+    if left$(cl$(),7)="-editor":
+        Screen.Width = 800
+        Screen.Height = 600
+        Screen.Fullscreen = 0
+        Game.editor_flag = 1
+        Game.editor_file = right$(cl$(),len(cl$())-8)
+        set window title "OpenFPS Engine - DEVELOPER MODE / RUNNING FROM EDITOR"
+    endif
+    
     //Apply display settings
     Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,0,0
     if Screen.Fullscreen=1 and Game.Debug = 0 then set window off
@@ -129,6 +138,16 @@ Endfunction
 //SYS_Terminate() - Terminates the system module (empty)
 Function SYS_Terminate():
 Endfunction
+
+function Engine_Check_EditorFlag():
+    ui_writelog(UI_GREEN,"Command line:'"+cl$()+"'")
+    ui_writelog(UI_GREEN,"File = "+Game.editor_file)
+    if Game.editor_flag:
+        ui_writelog(UI_BLUE,"EDITOR-BASED MODE ACTIVE")
+        ui_writelog(UI_BLUE,"LOADING OVERRIDE LEVEL")
+        Game_Start(Game.editor_file)
+    endif
+ENDFUNCTION
 
 //////////////////////////////////////////////////////////////
 // End of code

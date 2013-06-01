@@ -107,16 +107,11 @@ Ik Resize Image MenuImage20,Screen.Width,Screen.Height,1
 
 Global SplashSound As Integer
 SplashSound = Audio_Load("Media\Sounds\Interface\Jungle_01.wav")
-Audio_Play(SplashSound)
 Global MenuSound As Integer
 MenuSound = Audio_Load("Media\Sounds\Game\game_join\Quiet Morning.mp3")
-Audio_AddFinishTag(SplashSound,MenuSound)
-Audio_SetVolume(SplashSound,10)
-Audio_SetVolume(MenuSound,10)
 global RainSound as integer
 RainSound = Audio_Load("Media\Sounds\Loops\Ambience\rain-6.mp3")
-Audio_AddFinishTag(MenuSound,RainSound)
-Audio_SetVolume(RainSound,10)
+
 
 global cc_Shader as integer : cc_Shader = 2
 Ik Load Effect "Media\Shaders\cc.fx",cc_Shader
@@ -342,7 +337,7 @@ endcase
 Case "button_yestrain"
 `Game_start("Media\Levels\Training.zip")
 
-Game_Start("Media\Levels\templevel.zip")
+Game_Start("Media\levels\test.xnt")
 Endcase
 Case "button_reload"
 `GameManager_End()
@@ -1080,7 +1075,11 @@ UI_AlphaText(3,110,(Screen.Height/2),line1$,255)
 UI_AlphaText(3,110,(Screen.Height/2)+24,line2$,255)
 UI_AlphaText(3,110,(Screen.Height/2)+48,line3$,255)
 UI_ScaledText(3,Screen.Width/2 - ((len(line4$)/2)*16*0.7),(Screen.Height)-(60+(TBM_StandardSin*8.0)),line4$,70,clamp((CurrentTime - Len(line1$) - len(line2$) - 20)*2,0,128))
-if spacekey() then ui_menu_setmode(M_ENGINE_LEVEL_TITLE)
+if spacekey():
+    Audio_stop(TitleTypewriter)
+    UI_FadeManager.state=UI_FADEIN
+    UI_FadeManager.target=M_ENGINE_DEFAULT
+ENDIF
 endfunction
 
 // M_MENU_SPLASH
@@ -1088,6 +1087,12 @@ Function UI_Render_M_MENU_SPLASH():
 Global SplashTicker : Splashticker = 0
 Global Splashalpha as float: Splashalpha = 0
 Global SplashStartTime : SplashStartTime = Hitimer()
+Audio_Play(SplashSound)
+Audio_AddFinishTag(SplashSound,MenuSound)
+Audio_SetVolume(SplashSound,10)
+Audio_SetVolume(MenuSound,10)
+Audio_AddFinishTag(MenuSound,RainSound)
+Audio_SetVolume(RainSound,10)
 Endfunction
 
 Function UI_Render_U_MENU_SPLASH():
@@ -1161,17 +1166,8 @@ global JoinGameStartTime as integer : JoinGameStartTime = hitimer(1)
 Endfunction
 
 Function UI_Render_U_MENU_JOINGAME():
-ui_RenderBackdrop()
-UI_PutWindow(UI_Display.Middlewidth-((UI_mywindow.xwidth*24)/2),UI_Display.Middleheight-((UI_mywindow.yrow*8)/2),24,8)
+ik paste image MenuImageBlack,0,0,screen.width,screen.height
 UI_CenterIconText(3,Screen.Width/2,Screen.Height/2,chr$(136)+" Joining Game...",1)
-If hitimer(1)-JoinGameStartTime>1:
-Select joingamearg$
-Case "training"
-UI_FadeManager.state=UI_FADEIN
-UI_FadeManager.target=M_ENGINE_LOADING
-endcase
-endselect
-endif
 Endfunction
 
 Function UI_Render_M_SINGLEPLAYER_CHOOSE():
@@ -1255,3 +1251,42 @@ if ui_mousex()>x and ui_mousey()>y and ui_mousex()<(x + 32) and ui_mousey()<(y+3
 if Game_input.Mouse_click = 1 then checked = 1 - checked
 endif
 ENDFUNCTION checked
+
+remstart Crosshair
+
+`%Project Title%
+`%Source File Name%
+`======================
+Sync On
+Sync Rate 60
+Backdrop On
+
+Make Object Sphere 1,25
+D3d_Init
+Do
+r#=wrapvalue(r#+10.0)
+Rotate Object 1,r#,r#,r#
+
+//crosshair test
+col1=d3d_rgba(255,255,255,200)
+col2=d3d_rgba(255,255,255,10)
+col3=d3d_rgba(0,0,0,200)
+col4=d3d_rgba(0,0,0,10)
+size#=sin(r#)*20
+x = Screen Width()/2
+y = Screen Height()/2
+
+D3d_Line x-(30+size#)+1,y+1,x-(10+size#)-1,y+1,col3,col4
+D3d_Line x+(30+size#)+1,y+1,x+(10+size#)-1,y+1,col3,col4
+D3d_Line x+1,y-(30+size#)+1,x+1,y-(10+size#)+1,col3,col4
+D3d_Line x+1,y+(30+size#)+1,x+1,y+(10+size#)+1,col3,col4
+
+D3d_Line x-(30+size#),y,x-(10+size#),y,col1,col2
+D3d_Line x+(30+size#),y,x+(10+size#),y,col1,col2
+D3d_Line x,y-(30+size#),x,y-(10+size#),col1,col2
+D3d_Line x,y+(30+size#),x,y+(10+size#),col1,col2
+
+Sync
+Loop
+
+remend
