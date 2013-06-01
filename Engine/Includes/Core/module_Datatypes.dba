@@ -64,6 +64,8 @@ Type t_Game
     option_volume as integer
     option_sensitivity_old as integer
     option_volume_old as integer
+    editor_flag as integer
+    editor_file as string
 endtype
 
 //t_image - stores an image id and its width and height

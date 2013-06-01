@@ -278,7 +278,7 @@ ENDFUNCTION return_string
 function Ent_Update():
     //update entity system
 	 EntHandleEntities()
-	 `EntListDebug()
+	 if KEYSTATE(41) then EntListDebug()
 	y=60 : x= 10
 	 `UI_Text(1,x,y,"OpenFPS Entities - "+str$(NumEntities)+" Current") : y=y+12
 	
@@ -308,9 +308,10 @@ function Ent_Update():
 ENDFUNCTION
 
 function EntListDebug():
-    set cursor 0,0
+    y = 0
+    UI_ScaledText(3,0,y,"OpenFPS Entities:",50,250):y=y+16
     for i = 0 to NumEntities-1:
-    print "$" ; Entities(i).name
+    UI_ScaledText(3,0,y,"$" + Entities(i).name,50,250):y=y+16
     if Entities(i).attributes.arraysize>0:
          // list entity attributes
          local dim tempattributes() as string
@@ -319,7 +320,7 @@ function EntListDebug():
          link array tempvalues(),Entities(i).values.ptr
          for ii = 0 to Entities(i).attributes.arraysize-1:
               if array index valid(tempattributes(ii)):
-              print "  -";tempattributes(ii);"=";tempvalues(ii)
+                UI_ScaledText(3,0,y,"  -"+tempattributes(ii)+"="+tempvalues(ii),50,250):y=y+16
               endif
          next ii
          unlink array tempattributes()

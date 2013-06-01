@@ -15,11 +15,11 @@
 // Main Functions
 //////////////////////////////////////////////////////////////
 
-Function GameManager_Start():
+Function GameManager_Start(file$):
 //init the game systems.
 //functions called from here have access to the level data.
 `World_Init()
-EntLoad("Media\levels\test.xnt")
+EntLoad(file$)
 
 CameraArray(RootCamera).smoothing = 1
 Endfunction
@@ -33,7 +33,10 @@ Endfunction
 
 Function GameManager_End():
 //end the game systems.
-UI_Menu_SetMode(M_MENU_MAIN) //RESTORE TO MENU
+`UI_Menu_SetMode(M_MENU_MAIN) //RESTORE TO MENU
+UI_FadeManager.state=UI_FADEIN
+UI_FadeManager.target=M_MENU_MAIN
+DeleteAllEntities()
 `World_Destroy() //DESTROY WORLD
 game_started = 0
 Endfunction
@@ -86,7 +89,7 @@ Game_LoadFromLevel(checklist string$(i))
 Next i
 remend
 //all the real shit happens here
-GameManager_Start()
+GameManager_Start(file)
 
 //close file block 1
 
@@ -153,41 +156,3 @@ Endfunction filename
 //////////////////////////////////////////////////////////////
 
 
-remstart Crosshair
-
-`%Project Title%
-`%Source File Name%
-`======================
-Sync On
-Sync Rate 60
-Backdrop On
-
-Make Object Sphere 1,25
-D3d_Init
-Do
-r#=wrapvalue(r#+10.0)
-Rotate Object 1,r#,r#,r#
-
-//crosshair test
-col1=d3d_rgba(255,255,255,200)
-col2=d3d_rgba(255,255,255,10)
-col3=d3d_rgba(0,0,0,200)
-col4=d3d_rgba(0,0,0,10)
-size#=sin(r#)*20
-x = Screen Width()/2
-y = Screen Height()/2
-
-D3d_Line x-(30+size#)+1,y+1,x-(10+size#)-1,y+1,col3,col4
-D3d_Line x+(30+size#)+1,y+1,x+(10+size#)-1,y+1,col3,col4
-D3d_Line x+1,y-(30+size#)+1,x+1,y-(10+size#)+1,col3,col4
-D3d_Line x+1,y+(30+size#)+1,x+1,y+(10+size#)+1,col3,col4
-
-D3d_Line x-(30+size#),y,x-(10+size#),y,col1,col2
-D3d_Line x+(30+size#),y,x+(10+size#),y,col1,col2
-D3d_Line x,y-(30+size#),x,y-(10+size#),col1,col2
-D3d_Line x,y+(30+size#),x,y+(10+size#),col1,col2
-
-Sync
-Loop
-
-remend

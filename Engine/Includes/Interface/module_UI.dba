@@ -687,10 +687,6 @@ Function UI_Terminate()
 	
 		//--Destroy Window image if loaded
 		If UI_Mywindow.ID>0 then DXS DELETE SPRITE UI_Mywindow.ID
-	
-		//--Destroy mouse sounds if loaded
-		If UI_MouseclickSND>0 then delete sound UI_MouseClickSND
-		If UI_MouseOverSND>0 then delete sound UI_MouseOverSND
 		
 		//--Unload Gadget images if loaded any
 		If GadgetimageNumbers>0
@@ -2064,8 +2060,7 @@ Function UI_LoadAndSetMouseOverSND(snd$)
 	UI_SetDebugPosition("UI_SetMouseOverSND()","module_ui.dba")
 	UI_WriteLog(UI_Green,"loading mouseover sound : " + snd$ + ".")
 	UI_CheckFile(snd$)
-	UI_MouseOverSND = reserve free sound()
-	Load Sound snd$,UI_MouseOverSND
+	UI_MouseOverSND = Audio_Load(snd$)
 	UI_WriteLog(UI_Green,"sound succesfully loaded")
 	UI_RestoreDebugPosition()
 Endfunction
@@ -2086,8 +2081,7 @@ Function UI_LoadAndSetMouseClickSND(snd$)
 	UI_SetDebugPosition("UI_SetMouseClickSND()","module_ui.dba")
 	UI_WriteLog(UI_Green,"loading mouse click sound : " + snd$ + ".")
 	UI_CheckFile(snd$)
-	UI_MouseClickSND = reserve free sound()
-	load sound snd$,UI_MouseClickSND
+	UI_MouseClickSND = Audio_Load(snd$)
 	UI_WriteLog(UI_Green,"sound succesfully loaded.")
 UI_RestoreDebugPosition()      :
 Endfunction
@@ -2107,7 +2101,7 @@ Function UI_PlayMouseClickSND()
 	`UI_SetDebugPosition("UI_PlayMouseClickSND()","module_ui.dba")
 	//__Safe check not to cause crash while checking sound exist(0)
 	If UI_MouseclickSND>0 
-		if Sound exist(UI_MouseclickSND)=1 and UI_MouseClicked=UI_False then play Sound UI_MouseclickSND
+		if UI_MouseClicked=UI_False then Audio_Play(UI_MouseclickSND)
 	Endif
 	UI_MouseClicked = UI_True
 	`UI_RestoreDebugPosition()
