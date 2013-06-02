@@ -515,6 +515,7 @@ UI_StartDebugmode(UI_LogON)    :`change parameter to UI_Logon to do logfile
 	UI_FadeManager.state=UI_NORMAL
 	UI_FadeManager.current=0
 	
+	
 	//init ui menu
 	UI_Menu_Init()
 	

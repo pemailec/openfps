@@ -335,9 +335,7 @@ Case "button_training"
 UI_Menu_SetMode(M_MENU_TRAININGPROMPT)
 endcase
 Case "button_yestrain"
-`Game_start("Media\Levels\Training.zip")
-
-Game_Start("Media\levels\test.xnt")
+`Game_Start("Media\levels\test.xnt")
 Endcase
 Case "button_reload"
 `GameManager_End()
@@ -348,7 +346,7 @@ UI_FadeManager.state=UI_FADEIN
 UI_FadeManager.target=M_MENU_CREDITS
 Endcase
 Case "button_endgame"
-GameManager_End()
+`GameManager_End()
 Endcase
 Case "button_returntogame"
 Game.paused = 0
