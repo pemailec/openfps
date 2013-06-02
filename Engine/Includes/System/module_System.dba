@@ -29,12 +29,14 @@ Function SYS_Init():
     //if config does not exist, generate a new one
     If File Exist(CONFIGFILE)=0:
         open to write 1,"config\game.cfg"
-        write string 1,"ScreenWidth=640"
-        write string 1,"ScreenHeight=480"
+        write string 1,"ScreenWidth=800"
+        write string 1,"ScreenHeight=600"
         write string 1,"ScreenDepth=32"
         write string 1,"Vsync=0"
         Write String 1,"Fullscreen=0"
         Write String 1,"Port=20187"
+        Write String 1,"ServerPort=25565"
+        Write String 1,"ServerIP="+chr$(34)+"96.233.35.5"+chr$(34)
         Write String 1,"Sensitivity=50"
         Write String 1,"Volume=98"
         close file 1
@@ -57,6 +59,7 @@ Function SYS_Init():
     Game.option_sensitivity_old =            lua int("Sensitivity")
     Game.option_volume_old =            lua int("Volume")
     Game.ServerPort = lua int("ServerPort")
+    Game.ServerIP = lua string$("ServerIP")
     if left$(cl$(),7)="-editor":
         Screen.Width = 800
         Screen.Height = 600
