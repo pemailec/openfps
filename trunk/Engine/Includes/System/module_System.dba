@@ -56,7 +56,7 @@ Function SYS_Init():
     Game.Debug =			lua int("Debug")
     Game.option_sensitivity_old =            lua int("Sensitivity")
     Game.option_volume_old =            lua int("Volume")
-    
+    Game.ServerPort = lua int("ServerPort")
     if left$(cl$(),7)="-editor":
         Screen.Width = 800
         Screen.Height = 600

@@ -18,15 +18,60 @@
 Function Network_Init(): 
     UI_WriteLog(UI_Blue,"Network Module Started.")
     Game.ip = Network_GetIP()
+    Winsock Make
     UI_WriteLog(UI_Blue,"Got Client IP:"+Game.ip)
+    UI_WriteLog(UI_Blue,"Connecting to master server...")
+    global ClientMasterServer
+    ClientMasterServer = Winsock Connect(Game.ip,Game.serverport)
+    global MasterserverOnline
+    MasterserverOnline = 1
+    if WINSOCK CHANNEL ERROR(ClientMasterServer):
+        ui_writelog(UI_RED,winsock channel error msg$(ClientMasterServer))
+        MasterserverOnline = 0
+        winsock delete channel ClientMasterServer
+    endif
+    global NetworkUsersOnline : NetworkUsersOnline = 0
+    remstart
+    Winsock Make Packet
+    Winsock Add String "numusers"
+    winsock add int NetworkUsersOnline
+    Winsock Send Tcp Packet Client.channel_tcp
+    
+    remend
 Endfunction
 
 Function Network_Update():
-	
+    WINSOCK REFRESH CHANNELS
+    //check master server channel
+    if MasterserverOnline = 1:
+    if Winsock Channel Data Waiting(ClientMasterServer):
+        //check incoming data from server (TCP)
+        Winsock recv message ClientMasterServer
+        Winsock Split Data ClientMasterServer
+        While Winsock Packet Count(ClientMasterServer)>0:
+        Winsock Fetch Packet ClientMasterServer
+        Local packet_header As String
+        packet_header = Winsock Read String$()
+        Select packet_header
+            Case "msv_info"
+                //update number of users variable
+                NetworkUsersOnline = winsock read int()
+            endcase
+        Endselect
+        endwhile
+    Endif
+    endif
 Endfunction
 
 Function Network_Terminate():
-
+    if MasterserverOnline:
+    UI_WriteLog(UI_Blue,"Disconnecting from master server.")
+    Winsock Make Packet
+    Winsock Add String "disconnect"
+    Winsock Send Tcp Packet ClientMasterServer
+    WINSOCK DISCONNECT ClientMasterServer
+    endif
+    winsock clean up
 Endfunction
 
 //////////////////////////////////////////////////////////////
@@ -72,13 +117,22 @@ endfunction dispTime$
 //  MASTER SERVER FUNCTIONS
 //////////////////////////////////////////////////////////////
 
+Type t_MasterServerClient
+    name as string
+    ip as string
+    channel_tcp As Dword
+    target_ip As String
+    target_port As Integer
+    local_port as integer
+Endtype
+
 //master server code
 //run by using the -server flag
 function Network_LoopMasterServer():
     sync off : hide window
     Open Console "OpenFPS Engine - DEVELOPER MODE / RUNNING MASTER SERVER"
     Print To Console
-    Set Console On Top 1
+    Set Console On Top 0
     CLEAR CONSOLE
     SET CURSOR 0,0
     Print "//////////////////////////////////////////////////////////////"
@@ -103,6 +157,13 @@ function Network_LoopMasterServer():
     startTime = timer()
     global MasterServerMaxClients : MasterServerMaxClients = 24
     global MasterServerNumClients : MasterServerNumClients = 0
+    Winsock Make
+    global MasterServerListenChannel as integer 
+    MasterServerListenChannel = Winsock Listen(Game.ServerPort)
+    dim MasterServerClients() as t_MasterServerClient
+    dim servertextlines() as string
+    global numservertextlines as integer
+    global SlowUpdateCurrentClient as integer
     do
         CLEAR CONSOLE
         SET CURSOR 0,0
@@ -112,9 +173,75 @@ function Network_LoopMasterServer():
         Print "// Server running. IP: ",Game.ip
         print "// Time online: "+elapsedTime(startTime)
         print "// Current clients connected: (",MasterServerNumClients,"/",MasterServerMaxClients,")"
+        WINSOCK REFRESH CHANNELS
+        If Winsock Error() then print "WINSOCK ERROR - "+winsock error msg$()
+        If (winsock channel Data waiting(MasterServerListenChannel)):
+            //adding a new client
+            Array Insert At Bottom MasterServerClients()
+            MasterServerClients(MasterServerNumClients).name="newclient"
+            MasterServerClients(MasterServerNumClients).channel_tcp=winsock accept(MasterServerListenChannel)
+            MasterServerNumClients=MasterServerNumClients+1
+            SvPrint("A new client connected to the master server!")
+        Endif
+        
+        If MasterServerNumClients>0:
+            For CurrentClient = 0 To MasterServerNumClients-1:
+                If Winsock Channel Data Waiting(MasterServerClients(CurrentClient).channel_tcp):
+                    Winsock recv message MasterServerClients(CurrentClient).channel_tcp
+                    if WINSOCK CHANNEL DATA LEN(MasterServerClients(CurrentClient).channel_tcp)>0:
+                    Winsock Split Data MasterServerClients(CurrentClient).channel_tcp
+                    While Winsock Packet Count(MasterServerClients(CurrentClient).channel_tcp)>0:
+                        Winsock Fetch Packet MasterServerClients(CurrentClient).channel_tcp
+                        Local packet_header As String
+                        packet_header = Winsock Read String$()
+                        Select packet_header
+                            Case "init"
+                                `Winsock Make Packet
+                                `Winsock Add String "udpinit"
+                                `Winsock Send Tcp Packet ServerClients(CurrentClient).tcp
+                            Endcase
+                            Case "msg"
+                            Endcase
+                            case "disconnect"
+                                disconnectflag = 1
+                            endcase
+                        Endselect
+                    endwhile
+                    endif
+                    if disconnectflag = 1:
+                        SvPrint("Client disconnected.")
+                        winsock disconnect MasterServerClients(CurrentClient).channel_tcp
+                        array delete element MasterServerClients(CurrentClient)
+                        MasterServerNumClients = MasterServerNumClients - 1
+                        disconnectflag = 0
+                    endif
+                endif
+            Next CurrentClient
+        endif
+        
+        //update clients
+        if MasterServerNumClients>0:
+        For CurrentClient = 0 To MasterServerNumClients-1:
+            Winsock Make Packet
+            Winsock Add String "msv_info"
+            winsock add int MasterServerNumClients
+            Winsock Send Tcp Packet MasterServerClients(CurrentClient).channel_tcp
+        Next CurrentClient
+        endif
+        
+        for i = 0 to numservertextlines-1:
+            print servertextlines(i)
+        next i
+        
         nice wait 1000
     loop
     end
+ENDFUNCTION
+
+function SvPrint(stringf$):
+    Array Insert At Bottom servertextlines()
+    servertextlines(numservertextlines)=stringf$
+    numservertextlines = numservertextlines + 1
 ENDFUNCTION
 
 //////////////////////////////////////////////////////////////
