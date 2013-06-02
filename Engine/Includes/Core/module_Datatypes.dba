@@ -67,6 +67,7 @@ Type t_Game
     editor_flag as integer
     editor_file as string
     ip as string
+    ServerPort as integer
 endtype
 
 //t_image - stores an image id and its width and height

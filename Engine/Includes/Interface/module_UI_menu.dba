@@ -1224,6 +1224,12 @@ paste image MenuImage4,0,0,1
 `texture object MenuScreenObject,MenuImage4
 UI_PutWindow(-24,-24,16,MenuSidebarHeight)
 Paste Image MenuImage5,31,35,1
+if MasterserverOnline:
+if NetworkUsersOnline =1 then ui_scaledtext(3,-10+Screen.Width-(len("1 user online.")*(UI_stringmap(3,258).ascii)*(70/100.0)),Screen.Height-24,"1 user online.",70,150)
+if NetworkUsersOnline > 1 then ui_scaledtext(3,-10+Screen.Width-(len(str$(NetworkUsersOnline)+" users online.")*(UI_stringmap(3,258).ascii)*(70/100.0)),Screen.Height-24,str$(NetworkUsersOnline)+" users online.",70,150)
+else
+ui_scaledtext(3,-10+Screen.Width-(len("Master server offline.")*(UI_stringmap(3,258).ascii)*(70/100.0)),Screen.Height-24,"Master server offline.",70,150)
+endif
 Endfunction
 
 Function ui_RefreshBluredBG():
