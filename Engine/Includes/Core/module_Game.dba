@@ -1,8 +1,11 @@
 //////////////////////////////////////////////////////////////
 //  Game Engine Standard Modules - GAME CORE MODULE
-//  Concept and code by thenerd, Winter 2013!
+//  Concept and code by thenerd, Summer 2013!
 //////////////////////////////////////////////////////////////
-
+//
+// Game Module Log:
+// June 1st 2013 - starting a new version, adding networking.
+//
 //////////////////////////////////////////////////////////////
 // Constants
 //////////////////////////////////////////////////////////////
@@ -15,141 +18,17 @@
 // Main Functions
 //////////////////////////////////////////////////////////////
 
-Function GameManager_Start(file$):
-//init the game systems.
-//functions called from here have access to the level data.
-`World_Init()
-EntLoad(file$)
+function Game_Init():
+    
+ENDFUNCTION
 
-CameraArray(RootCamera).smoothing = 1
-Endfunction
+function Game_Update():
+    
+ENDFUNCTION
 
-Function GameManager_Update():
-//update the game systems.
-
-`World_Update() //UPDATE WORLD
-
-Endfunction
-
-Function GameManager_End():
-//end the game systems.
-`UI_Menu_SetMode(M_MENU_MAIN) //RESTORE TO MENU
-UI_FadeManager.state=UI_FADEIN
-UI_FadeManager.target=M_MENU_MAIN
-DeleteAllEntities()
-`World_Destroy() //DESTROY WORLD
-game_started = 0
-Endfunction
-
-//////////////////////////////////////////////////////////////
-// Internal Functions
-//////////////////////////////////////////////////////////////
-
-Function Game_Init():
-//////////////////////////////////////
-// Internal management variables
-//////////////////////////////////////
-Global Game_level As String
-Global Game_loading As Boolean
-global Game_started as boolean
-//////////////////////////////////////
-
-//Add the other initialization functions here!
-//This is called at the beginning of the program.
-Camera_Init() //INIT CAMERA SYSTEM
-`	MDL_Init()    //INIT MODEL SYSTEM
-`	Weapon_Init() //INIT WEAPON SYSTEM
-
-Endfunction
-
-Function Game_Start_R(file As string):
-//////////////////////////////////////
-// Real game start function
-// Called when the game is loading.
-//////////////////////////////////////
-UI_WriteLog(UI_Yellow,"Loading '"+file+"'")
-
-//////////////////////////////////////
-// MAIN LOADING CODE
-//////////////////////////////////////
-
-//delete temp dir
-remstart
-Set Dir "Media\Levels"
-delete directory "data"
-Set Dir "..\.."
-
-//start ZIP management system
-open file block file,1
-
-Perform Checklist For File Block Data 1
-For i = 1 To Checklist Quantity()
-`UI_WriteLog(ui_blue,checklist string$(i))
-Game_LoadFromLevel(checklist string$(i))
-Next i
-remend
-//all the real shit happens here
-GameManager_Start(file)
-
-//close file block 1
-
-//////////////////////////////////////
-// END MAIN LOADING CODE
-//////////////////////////////////////
-
-//////////////////////////////////////
-//switch to engine mode. do variables
-//////////////////////////////////////
-UI_FadeManager.state=UI_FADEIN
-UI_FadeManager.target=Ent_GetInt(EntGetReference("root"),"defaultuistate")
-Game_loading = 0
-Game_started = 1
-UI_WriteLog(UI_Yellow,"Done loading.")
-UI_DisableWindowsCursor()
-//////////////////////////////////////
-Endfunction
-
-Function Game_start(file As string):
-//////////////////////////////////////
-// Internal management function
-// Sets up variables to load a game
-//////////////////////////////////////
-If Game_loading = 0:
-Game_loading = 1
-Game_level=file
-UI_FadeManager.state=UI_FADEIN
-UI_FadeManager.target=M_ENGINE_LOADING
-else
-UI_WriteLog(UI_Yellow,"Level already loading!")
-endif
-//////////////////////////////////////
-Endfunction
-
-Function Game_End():
-endfunction
-
-Function Game_Update():
-If Game_loading = 1 And UI_FadeManager.state = UI_NORMAL:
-Game_Start_R(Game_level)
-Endif
-if Game_started = 1:
-//world / game update functions
-GameManager_Update()
-Endif
-Endfunction
-
-Function Game_Terminate():
-// world / game terminate functions
-GameManager_End()
-endfunction
-
-Function Game_LoadFromLevel(file As string):
-Local filename As String
-filename = "Media\Levels\data\"+file
-//extract file
-extract file from block 1,file,"Media\Levels\data\"
-ui_writelog(UI_Blue,"Loaded file "+file+" from level package.")
-Endfunction filename
+function Game_Terminate():
+    
+ENDFUNCTION
 
 //////////////////////////////////////////////////////////////
 // End of code.

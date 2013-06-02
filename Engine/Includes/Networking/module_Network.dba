@@ -1,589 +1,37 @@
 //////////////////////////////////////////////////////////////
-//  Game Engine Standard Modules - PLAYER MODULE
+//  Game Engine Standard Modules - NETWORK MODULE
 //  Concept and code by thenerd, Summer 2012!
 //////////////////////////////////////////////////////////////
 
-	remstart
-	If PortForwardDone = 0:
-		If Ticker(HalfSecondTicker) Then PortForwardProgress=PortForwardProgress+1
-		If PortForwardProgress>4 Then PortForwardProgress=1
-		local PortForwardProgressstr$ as string
-		For i = 1 To PortForwardProgress:
-		PortForwardProgressstr$=PortForwardProgressstr$+"."
-		next i
-		UI_CenterIconText(1,Screen.Width/2,Screen.Height - 16,"Waiting for port forwarding "+PortForwardProgressstr$,1)
-		if bank Boolean(1,0)=1
-			PortForwardDone = 1
-		Endif
-	endif
-	remend
 //////////////////////////////////////////////////////////////
 //  CONSTANTS
 //////////////////////////////////////////////////////////////
 
-#Constant Client_STATE_SPECTATING 1
-#Constant Client_STATE_ALIVE 2
-#Constant Client_STATE_DEAD 3
-#Constant Client_STATE_RESPAWN 4
-
 //////////////////////////////////////////////////////////////
 //  UDTS
 //////////////////////////////////////////////////////////////
-
-Type t_ClientValues
-	state as integer
-	x As Float
-	y As Float
-	z As Float
-	rx As Float
-	ry As Float
-	shake as float
-Endtype
-
-Type t_Client
-	name As String
-	enabled As Boolean
-	connected as boolean
-	auth As Integer
-	udp_local_authorized As Boolean
-	udp_packet_ticker as integer
-	udp_local_channel As Integer
-	udp_local_port As Integer
-	udp_target_ip As String
-	udp_target_port As Integer
-	values as t_ClientValues
-Endtype
-
-Type t_PlayerList
-	name As String
-endtype
-
-Type t_Server
-	name As String
-	enabled as boolean
-	udp_local_channel As Integer
-	udp_local_port As Integer
-	udp_local_ip As String
-	udp_local_filter as string
-	Client_array_num As Integer
-	updatetick as integer
-Endtype
-
-Type t_InputKeys
-	In_KEY_FORWARD as boolean
-	In_KEY_BACKWARD as boolean
-	In_KEY_LEFT as boolean
-	In_KEY_RIGHT as boolean
-	In_KEY_JUMP as boolean
-	In_KEY_CROUCH as boolean
-	In_KEY_SPRINT as boolean
-	In_KEY_PRIMARYFIRE as boolean
-	In_KEY_SECONDARYFIRE as boolean
-	In_KEY_WEAPON1 as boolean
-	In_KEY_WEAPON2 as boolean
-	In_KEY_WEAPON3 as boolean
-	In_KEY_GRENADE as boolean
-	In_KEY_RELOAD as boolean
-	In_KEY_ZOOM as boolean
-	In_KEY_USE as boolean
-Endtype
-
-Type t_ServerClient
-	name As String
-	auth As Integer
-	ip As String
-	port As Integer
-	udp_channel As Integer
-	inputkeys As Integer
-	inputkeysdecoded As t_InputKeys
-	inputkeyslatest As Integer
-	state As Integer
-	position As t_WorldVector
-	rotation As t_WorldVector
-	playerid as integer
-Endtype
-
-Type t_ClientPeer
-	name As String
-	auth As Integer
-	obj as integer
-	position As t_WorldVector
-endtype
 
 //////////////////////////////////////////////////////////////
 //  MAIN FUNCTIONS
 //////////////////////////////////////////////////////////////
 
 Function Network_Init(): 
-	//only call this once at the beginning
-	//of the program.
-	Winsock Make
-	
-	Global Client As t_Client
-	Global Server As t_Server
-	
-	Network_Init_PlayerList()
-	
-	`Global PortForwardDone As Boolean
-	`global PortForwardProgress as integer
-	`Map Shared Mem To Bank "PortForwardDone",1,512
-	
-	//start server for test.
-	`Network_Server_Start(25565)
-	
-	//start client for test.
-	`Network_Client_Connect()
-	
-	UI_WriteLog(UI_Green,"NETWORK: Started up network module.")
-Endfunction
-
-Function Network_Init_PlayerList()
-	Dim PlayerList() As t_PlayerList
-	Global NumPlayers As Integer
-	Global MaxPlayers As Integer
-	MaxPlayers = 12
+    UI_WriteLog(UI_Blue,"Network Module Started.")
+    Game.ip = Network_GetIP()
+    UI_WriteLog(UI_Blue,"Got Client IP:"+Game.ip)
 Endfunction
 
 Function Network_Update():
-   Winsock Refresh Channels
-	if Server.enabled = 1 then Network_Server_Update()
-	If Client.enabled = 1 Then Network_Client_Update()
 	
-	//check port forwarding
-	
-Endfunction
-
-Function Network_Reset():
-	UI_WriteLog(UI_Green,"NETWORK: Resetting:")
-	Network_Terminate()
-	Network_Init()
-	UI_WriteLog(UI_Green,"NETWORK: Done resetting.")
 Endfunction
 
 Function Network_Terminate():
-	//only call this once at the end
-	//of the program.
-	Winsock Clean Up
-	//write done flag to delete port mapping
-	//Write Bank integer 1,0,2
-	UI_WriteLog(UI_Green,"NETWORK: Terminated network module.")
+
 Endfunction
 
 //////////////////////////////////////////////////////////////
 //  CLIENT FUNCTIONS
 //////////////////////////////////////////////////////////////
-
-Function Network_Client_Connect():
-	Local ip As String
-	Local port As Integer
-	ip = "128.0.0.1"
-	port = 25565
-	if Client.enabled = 0:
-	Client.name = game.NetworkName
-	Client.enabled = 1
-	Client.values.state = Client_STATE_SPECTATING
-	//use the system time As an authentication
-	//this is pretty hard to replicate
-	Client.auth = Hitimer(1) 
-	Client.udp_local_channel = Winsock Create Udp Channel()
-	Client.udp_local_port = NetworkPort `20000 + Rnd(200) //find a Free port, Random For now
-	UI_WriteLog(UI_Green,"NETWORK: local set port is="+str$(Client.udp_local_port))
-	remstart
-	Note from Chris, 2/18/13
-	The issue with using udp as opposed to tcp is that now
-	some routers will not allow a connection because of
-	the need to set up port forwarding.
-	There are a few ways we can get around this:
-	-Port triggering / mapping
-	-Software-based uPnP port forwarding
-	-Possibility of using Darknet plugin in Launcher to forward ports.
-	Darknet has commands that allow for port mapping.
-	This is a necessity in order to have universal clients!
-	remend
-	Client.udp_target_ip = ip
-	Client.udp_target_port = port
-	Client.udp_local_authorized = 0
-	Client.udp_packet_ticker = find free ticker() : make ticker Client.udp_packet_ticker,33
-	Winsock Set Channel Target Client.udp_local_channel,Client.udp_target_ip, Client.udp_target_port
-	Winsock Bind Channel Client.udp_local_channel,"0.0.0.0",Client.udp_local_port
-	Winsock Make Packet
-	Winsock Add String "auth"
-	ip$=ip to string$(interface ip (1))
-	UI_WriteLog(UI_Green,"NETWORK: ip="+ip$)
-	Winsock Add String ip$ //get local ip
-	Winsock Add String Client.name //name
-	winsock add int Client.auth //auth
-	winsock add int Client.udp_local_port //port
-	Winsock Send Udp Packet Client.udp_local_channel
-	
-	dim ClientPeers() as t_ClientPeer
-	Global NumPeers As Integer
-	
-	
-	UI_WriteLog(UI_Green,"NETWORK: Started client.")
-	else:
-		UI_WriteLog(UI_RED,"NETWORK: Client already enabled!")
-	endif
-Endfunction
-
-Function Network_Client_Disconnect():
-Endfunction
-
-Function Network_Client_Update():
-	
-	
-	//attempt authorization
-	If Client.udp_local_authorized = 0:
-	else:
-		//do client update
-		If Ticker(Client.udp_packet_ticker):
-			Winsock Make Packet
-			Winsock Add String "input"
-			Winsock Add String Client.name
-			Winsock Add int Client.auth
-			Winsock Add Int Input_Grab()
-			Winsock Add Float Client.values.rx
-			winsock add float Client.values.ry
-			winsock add int hitimer()
-			Winsock Send Udp Packet Client.udp_local_channel
-			
-			remstart
-			Winsock Make Packet
-			Winsock Add String "rxry"
-			Winsock Add String Client.name
-			Winsock Add int Client.authentication
-			winsock add float Client.values.rx
-			winsock add float Client.values.ry
-			Winsock Send Udp Packet Client.udp_local_channel
-			remend
-		endif
-	endif
-	
-	//udp channel
-	If Winsock Channel Data Waiting(Client.udp_local_channel):
-		Winsock Recv Udp Message Client.udp_local_channel
-		if winsock channel data len(Client.udp_local_channel)>0:
-		Winsock Split Data Client.udp_local_channel
-		While Winsock Packet Count(Client.udp_local_channel)>0:
-			Winsock Fetch Packet Client.udp_local_channel
-				Local packet_header As String
-				packet_header = Winsock Read String$()
-				`UI_WriteLog(UI_Green,"Client got packet."+packet_header)
-				Select packet_header
-					Case "auth_response"
-						local authorization as integer
-						authorization = Winsock Read Int()
-						UI_WriteLog(UI_Green,"Client got authorized."+str$(authorization))
-						Client.udp_local_authorized = 1
-						Client.connected = 1
-					Endcase
-					Case "godmessage"
-						ui_Menu_Setmode(M_MENU_GENERICPROMPT)
-						prompttitle$=Winsock Read String$()
-						prompttextone$=Winsock Read String$()
-						prompttexttwo$=Winsock Read String$()
-					Endcase
-					Case "playerlist"
-						//clear player list and
-						//restore with new players
-						Undim PlayerList()
-						NumPlayers = winsock read int()
-						Dim PlayerList(NumPlayers) As t_PlayerList
-						For i = 0 To NumPlayers-1:
-							PlayerList(i).name = Winsock Read String$()
-						next i
-					Endcase
-					Case "clstate"
-						Client.values.state = winsock read int()
-					endcase
-					Case "posrot"
-						netname$=Winsock read String$()
-						auth=winsock Read Int()
-						If netname$=game.NetworkName And auth=Client.auth:
-						//is current user
-						CameraArray(RootCamera).position.x = winsock read float()
-						CameraArray(RootCamera).position.y = winsock read float()
-						CameraArray(RootCamera).position.z = Winsock Read Float()
-						else:
-						//is someone else
-							new = 1
-							If NumPeers > 0:
-							For i = 0 To NumPeers-1:
-								If ClientPeers(i).name = netname$ And ClientPeers(i).auth = auth:
-									new = 0
-									ClientPeers(i).position.x = winsock read float()
-									ClientPeers(i).position.y = winsock read float()
-									ClientPeers(i).position.z = Winsock Read Float()
-									position object ClientPeers(i).obj,ClientPeers(i).position.x,ClientPeers(i).position.y,ClientPeers(i).position.z
-								endif
-							next i
-							Endif
-							if new = 1:
-								Array Insert At Bottom ClientPeers()
-								ClientPeers(NumPeers).name = netname$
-								ClientPeers(NumPeers).auth = auth
-								ClientPeers(NumPeers).obj = Find Free Object()
-								Make Object Box ClientPeers(NumPeers).obj,2,6.5,2
-								NumPeers = NumPeers + 1
-							endif
-						Endif
-						remstart
-						CameraArray(RootCamera).rotation.x = winsock read float()
-						CameraArray(RootCamera).rotation.y = winsock read float()
-						CameraArray(RootCamera).rotation.z = winsock read float()
-						remend
-					endcase
-				endselect
-		Endwhile
-		endif
-	Endif
-	
-	//parse recieved udp data
-Endfunction
-
-Function Network_Client_SendStateRequest(state As integer):
-	Winsock Make Packet
-	Winsock add String "clstatereq"
-	Winsock Add String Client.name
-	Winsock Add int Client.auth
-	winsock add int state
-	Winsock Send udp Packet Client.udp_local_channel
-Endfunction
-
-//////////////////////////////////////////////////////////////
-//  SERVER FUNCTIONS
-//////////////////////////////////////////////////////////////
-
-Function Network_Server_Start():
-	port = 25565
-	if Server.enabled = 0:
-	Server.enabled = 1
-	Server.name = "OpenFPS Game Server"
-	Server.udp_local_channel=Winsock create udp channel()
-	Server.udp_local_filter = "0.0.0.0"
-	Server.udp_local_ip = Network_GetIP()
-	Server.udp_local_port = port
-	Server.updatetick = Find Free Ticker()
-	make ticker Server.updatetick,33
-	Winsock Bind Channel Server.udp_local_channel,Server.udp_local_filter,Server.udp_local_port
-	Dim ServerClients() As t_ServerClient
-	Global ServerCamera As Integer
-	ServerCamera = Camera_make(1,1) //never actually displayed
-	UI_WriteLog(UI_Green,"NETWORK: Started server.")
-	else:
-		UI_WriteLog(UI_RED,"NETWORK: Server already enabled!")
-	endif
-Endfunction
-
-Function Network_Server_End():
-Endfunction
-
-Function Network_Server_Update():
-	
-	//check UDP connection
-	If Winsock Channel Data Waiting(Server.udp_local_channel):
-		Winsock Recv Udp Message Server.udp_local_channel
-		Winsock Split Data Server.udp_local_channel
-			While Winsock Packet Count(Server.udp_local_channel)>0:
-				Winsock Fetch Packet Server.udp_local_channel
-				Local packet_header As String
-				packet_header = Winsock Read String$()
-				Select packet_header
-					Case "auth"
-						ip$=winsock remote host$(Server.udp_local_channel)
-						port=winsock remote port(Server.udp_local_channel)
-						If ip$ = Server.udp_local_ip:
-							ip$ = Winsock Read String$()
-						else:
-							nulls$ = Winsock Read String$()
-						endif
-						new_client=1
-						if Server.client_array_num>0:
-							For CurrentClient = 0 To Server.Client_array_num-1:
-								If ServerClients(CurrentClient).ip=ip$ and ServerClients(CurrentClient).port = port:
-									//do nothing because the client is already registered in the server.
-									new_client = 0
-								endif	
-							Next CurrentClient
-						endif
-						If new_client = 1:
-							Array Insert At Bottom ServerClients()
-							ServerClients(Server.Client_array_num).name = winsock read string$()
-							ServerClients(Server.Client_array_num).auth =  winsock read int()
-							ServerClients(Server.Client_array_num).ip = ip$
-							ServerClients(Server.Client_array_num).port = winsock read int()
-							ServerClients(Server.Client_array_num).udp_channel = Winsock Create Udp Channel()
-							ServerClients(Server.Client_array_num).state = Client_STATE_ALIVE
-							ServerClients(Server.Client_array_num).playerid = 0`Player_add()
-							Winsock Set Channel Target ServerClients(Server.Client_array_num).udp_channel,ServerClients(Server.Client_array_num).ip,ServerClients(Server.Client_array_num).port
-							Winsock Make Packet
-							Winsock add String "auth_response"
-							Winsock add int ServerClients(Server.Client_array_num).auth
-							Winsock Send Udp Packet ServerClients(Server.Client_array_num).udp_channel
-							ui_writelog(UI_Green,"NETWORK: SERVER ADDED CLIENT")
-							ui_writelog(UI_Green,"Name: "+ServerClients(Server.Client_array_num).name)
-							ui_writelog(UI_Green,"Auth: "+str$(ServerClients(Server.Client_array_num).auth))
-							ui_writelog(UI_Green,"IP: "+ServerClients(Server.Client_array_num).ip)
-							ui_writelog(UI_Green,"Port: "+str$(ServerClients(Server.Client_array_num).port))
-							Server.Client_array_num = Server.Client_array_num + 1
-						endif
-					Endcase
-					Case "input"
-						name$=winsock Read string$()
-						auth=winsock read int()
-						For CurrentClientSrc = 0 To Server.Client_array_num-1:
-							If ServerClients(CurrentClientSrc).name=name$:
-								If ServerClients(CurrentClientSrc).auth = auth
-									newinput= winsock read int()
-									ServerClients(CurrentClientSrc).rotation.x = winsock read float()
-									ServerClients(CurrentClientSrc).rotation.y = winsock read float()
-									newage = winsock read int()
-									If newage > ServerClients(CurrentClientSrc).inputkeyslatest:
-										ServerClients(CurrentClientSrc).inputkeys = newinput
-										ServerClients(CurrentClientSrc).inputkeyslatest = newage
-										decode$=Right$(Bin$(newinput),16)
-										ServerClients(CurrentClientSrc).inputkeysdecoded.In_KEY_FORWARD=val(MID$(decode$,1))
-										ServerClients(CurrentClientSrc).inputkeysdecoded.In_KEY_BACKWARD=val(MID$(decode$,2))
-										ServerClients(CurrentClientSrc).inputkeysdecoded.In_KEY_LEFT=val(MID$(decode$,3))
-										ServerClients(CurrentClientSrc).inputkeysdecoded.In_KEY_RIGHT=val(MID$(decode$,4))
-										ServerClients(CurrentClientSrc).inputkeysdecoded.In_KEY_JUMP=val(MID$(decode$,5))
-										ServerClients(CurrentClientSrc).inputkeysdecoded.In_KEY_CROUCH=val(MID$(decode$,6))
-										ServerClients(CurrentClientSrc).inputkeysdecoded.In_KEY_SPRINT=val(MID$(decode$,7))
-										ServerClients(CurrentClientSrc).inputkeysdecoded.In_KEY_PRIMARYFIRE=val(MID$(decode$,8))
-										ServerClients(CurrentClientSrc).inputkeysdecoded.In_KEY_SECONDARYFIRE=val(MID$(decode$,9))
-										ServerClients(CurrentClientSrc).inputkeysdecoded.In_KEY_WEAPON1=val(MID$(decode$,10))
-										ServerClients(CurrentClientSrc).inputkeysdecoded.In_KEY_WEAPON2=val(MID$(decode$,11))
-										ServerClients(CurrentClientSrc).inputkeysdecoded.In_KEY_WEAPON3=val(MID$(decode$,12))
-										ServerClients(CurrentClientSrc).inputkeysdecoded.In_KEY_GRENADE=val(MID$(decode$,13))
-										ServerClients(CurrentClientSrc).inputkeysdecoded.In_KEY_RELOAD=val(MID$(decode$,14))
-										ServerClients(CurrentClientSrc).inputkeysdecoded.In_KEY_ZOOM=val(MID$(decode$,15))
-										ServerClients(CurrentClientSrc).inputkeysdecoded.In_KEY_USE=val(MID$(decode$,16))
-									Endif
-								endif
-							endif	
-						Next CurrentClientSrc
-					endcase
-					Case "clstatereq"
-						name$=winsock Read string$()
-						auth=winsock read int()
-						For CurrentClientSrc = 0 To Server.Client_array_num-1:
-							If ServerClients(CurrentClientSrc).name=name$:
-								If ServerClients(CurrentClientSrc).auth = auth
-									Winsock Make Packet
-									Winsock Add String "clstate"
-									state = winsock read int()
-									Winsock Add Int state
-									Winsock Send Udp Packet ServerClients(CurrentClient).udp_channel
-									ServerClients(CurrentClientSrc).state = state
-								endif
-							endif	
-						Next CurrentClientSrc
-					Endcase
-					Case "rxry"
-						name$=winsock Read string$()
-						auth=winsock read int()
-						For CurrentClientSrc = 0 To Server.Client_array_num-1:
-							If ServerClients(CurrentClientSrc).name=name$:
-								If ServerClients(CurrentClientSrc).auth = auth
-									ServerClients(CurrentClientSrc).rotation.x = winsock read float()
-									ServerClients(CurrentClientSrc).rotation.y = winsock read float()
-									ServerClients(CurrentClientSrc).rotation.z = 0
-								endif
-							endif	
-						Next CurrentClientSrc
-					endcase
-				endselect
-			Endwhile
-	Endif
-	
-	//do data checks
-	If Ticker(FullSecondTicker) and Server.Client_array_num > 0:
-		//send player list to all clients
-		For CurrentClient = 0 To Server.Client_array_num-1:
-			Winsock Make Packet
-			Winsock Add String "playerlist"
-			Winsock Add Int Server.Client_array_num
-			For i = 0 To Server.Client_array_num-1:
-			Winsock Add String ServerClients(i).name
-			Next i
-			winsock send udp packet ServerClients(CurrentClient).udp_channel
-		Next CurrentClient
-	endif
-	
-	For CurrentClientSrc = 0 To Server.Client_array_num-1:
-		ui_text(1,100,100+(CurrentClientSrc*16),bin$(ServerClients(CurrentClientSrc).inputkeys))
-	Next CurrentClientSrc
-	
-	updatedue=ticker(Server.updatetick)
-	//do calculations
-	For CurrentClient = 0 To Server.Client_array_num-1:
-		Select ServerClients(CurrentClient).state
-			Case Client_STATE_SPECTATING
-				remstart
-				x#=ServerClients(CurrentClient).position.x
-				y#=ServerClients(CurrentClient).position.y
-				z#=ServerClients(CurrentClient).position.z
-				rx#=ServerClients(CurrentClient).rotation.x
-				ry#=ServerClients(CurrentClient).rotation.y
-				rz#=ServerClients(CurrentClient).rotation.z
-				position camera CameraArray(ServerCamera).id,x#,y#,z#
-				rotate camera CameraArray(ServerCamera).id,rx#,ry#,rz#
-				cr#=0:cf#=0
-				If ServerClients(CurrentClient).inputkeysdecoded.In_KEY_RIGHT=1 Then cr#=-0.2*TBM
-				If ServerClients(CurrentClient).inputkeysdecoded.In_KEY_LEFT=1 Then cr#=0.2*TBM
-				If ServerClients(CurrentClient).inputkeysdecoded.In_KEY_FORWARD=1 Then cf#=0.2*TBM
-				if ServerClients(CurrentClient).inputkeysdecoded.In_KEY_BACKWARD=1 then cf#=-0.2*TBM
-				ncx#=ServerClients(CurrentClient).rotation.x
-				ncy#=ServerClients(CurrentClient).rotation.y
-				move camera CameraArray(ServerCamera).id,ncf#
-				rotate camera CameraArray(ServerCamera).id,0,wrapvalue(ncy#-90),0
-				move camera CameraArray(ServerCamera).id,ncr#
-				rotate camera CameraArray(ServerCamera).id,0,wrapvalue(ncy#+90),0
-				Rotate Camera CameraArray(ServerCamera).id,ncx#,ncy#,0
-				ServerClients(CurrentClient).position.x=Camera Position X(CameraArray(ServerCamera).id)
-				ServerClients(CurrentClient).position.y=Camera Position Y(CameraArray(ServerCamera).id)
-				ServerClients(CurrentClient).position.z=Camera Position Z(CameraArray(ServerCamera).id)
-				ServerClients(CurrentClient).rotation.x=Camera angle X(CameraArray(ServerCamera).id)
-				ServerClients(CurrentClient).rotation.y=Camera angle Y(CameraArray(ServerCamera).id)
-				ServerClients(CurrentClient).rotation.z=Camera angle Z(CameraArray(ServerCamera).id)
-				collide=SC_rayCast(0,x#,256,z#,x#,0,z#,0)
-				If collide>0:
-					yy#=SC_getStaticCollisionY()+3.5
-				endif
-				If y#<yy# Then y#=yy#
-				if updatedue:
-					Winsock Make Packet
-					Winsock add String "posrot"
-					Winsock Add Float ServerClients(CurrentClient).position.x
-					Winsock Add Float ServerClients(CurrentClient).position.y
-					Winsock Add Float ServerClients(CurrentClient).position.z
-					Winsock Add Float ServerClients(CurrentClient).rotation.x
-					Winsock Add Float ServerClients(CurrentClient).rotation.y
-					Winsock Add Float ServerClients(CurrentClient).rotation.z
-					Winsock Send Udp Packet ServerClients(CurrentClient).udp_channel
-				endif
-				remend
-			Endcase
-			Case Client_STATE_ALIVE
-				`Player_Update()
-			endcase
-		endselect
-	Next CurrentClient
-	
-Endfunction
-
-Function Network_Server_SendGodMessage():
-	if Server.Client_array_num>0:
-		For CurrentClient = 0 To Server.Client_array_num-1:
-		Winsock Make Packet
-		Winsock add String "godmessage"
-		Winsock add string "Hello from chris"
-		Winsock add string "Hello, this is a prompt created by the server."
-		Winsock add string "Hello, this is a prompt created by the server."
-		Winsock Send Udp Packet ServerClients(CurrentClient).udp_channel
-		Next CurrentClient
-	endif
-endfunction
 
 Function Network_GetIP():
 	ip$="error"
@@ -596,6 +44,78 @@ Function Network_GetIP():
 	Http Disconnect
 	if ip$="error" then UI_WriteLog(UI_RED,"IP RECV ERROR")
 Endfunction ip$
+
+function elapsedTime(timeStart)
+    currentTime=TIMER()
+    currentTime = currentTime - timeStart
+    currentTime = currentTime / 1000
+    remainingSeconds = currentTime mod 360
+    if remainingSeconds > 59 rem at least a minutes' worth of seconds
+        minutes = remainingSeconds /  60
+        seconds = remainingSeconds mod 60
+    else
+        seconds = remainingSeconds
+    endif
+    if currentTime > 359 rem at least an hours' worth of seconds
+        hours = currentTime / 360
+    endif 
+    hours$ = str$(hours)
+    minutes$ = str$(minutes)
+    seconds$ = str$(secondS)
+    if len(hours$) < 2 then hours$ = "0" + hours$
+    if len(minutes$) < 2 then minutes$ = "0" + minutes$
+    if len(seconds$) < 2 then seconds$ = "0" + seconds$
+    dispTime$ = hours$ + ":" + minutes$ + ":" + seconds$
+endfunction dispTime$
+
+//////////////////////////////////////////////////////////////
+//  MASTER SERVER FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+//master server code
+//run by using the -server flag
+function Network_LoopMasterServer():
+    sync off : hide window
+    Open Console "OpenFPS Engine - DEVELOPER MODE / RUNNING MASTER SERVER"
+    Print To Console
+    Set Console On Top 1
+    CLEAR CONSOLE
+    SET CURSOR 0,0
+    Print "//////////////////////////////////////////////////////////////"
+    Print "//  OpenFPS Game Engine - MASTER SERVER"
+    Print "//////////////////////////////////////////////////////////////"
+    Print "// Only run this program if you intend to host the master server!"
+    print "// The master server provides services for the entire game."
+    print "// *This is the wrong program if you want to host a game server!*"
+    print "// *To host a game server, start a multiplayer game through the*"
+    print "// *main menu. Press any key if you really want to host..."
+    Print "//////////////////////////////////////////////////////////////"
+    nullstr$ = GET CONSOLE CHAR$ ( )
+    CLEAR CONSOLE
+    SET CURSOR 0,0
+    Print "//////////////////////////////////////////////////////////////"
+    Print "//  OpenFPS Game Engine - MASTER SERVER"
+    Print "//////////////////////////////////////////////////////////////"
+    Print "// Starting up..."
+    Print "//////////////////////////////////////////////////////////////"
+    //password entered successfully
+    Game.ip = Network_GetIP()
+    startTime = timer()
+    global MasterServerMaxClients : MasterServerMaxClients = 24
+    global MasterServerNumClients : MasterServerNumClients = 0
+    do
+        CLEAR CONSOLE
+        SET CURSOR 0,0
+        Print "//////////////////////////////////////////////////////////////"
+        Print "//  OpenFPS Game Engine - MASTER SERVER"
+        Print "//////////////////////////////////////////////////////////////"
+        Print "// Server running. IP: ",Game.ip
+        print "// Time online: "+elapsedTime(startTime)
+        print "// Current clients connected: (",MasterServerNumClients,"/",MasterServerMaxClients,")"
+        nice wait 1000
+    loop
+    end
+ENDFUNCTION
 
 //////////////////////////////////////////////////////////////
 //  End of code.
