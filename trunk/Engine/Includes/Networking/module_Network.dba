@@ -22,7 +22,7 @@ Function Network_Init():
     UI_WriteLog(UI_Blue,"Got Client IP:"+Game.ip)
     UI_WriteLog(UI_Blue,"Connecting to master server...")
     global ClientMasterServer
-    ClientMasterServer = Winsock Connect(Game.ip,Game.serverport)
+    ClientMasterServer = Winsock Connect(Game.ServerIP,Game.serverport)
     global MasterserverOnline
     MasterserverOnline = 1
     if WINSOCK CHANNEL ERROR(ClientMasterServer):
