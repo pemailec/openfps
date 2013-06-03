@@ -31,6 +31,9 @@ Function Network_Init():
         winsock delete channel ClientMasterServer
     endif
     global NetworkUsersOnline : NetworkUsersOnline = 0
+    dim MasterServerChat(10) as string
+    global MasterServerChatNumLines as integer
+    
     remstart
     Winsock Make Packet
     Winsock Add String "numusers"
@@ -57,6 +60,11 @@ Function Network_Update():
                 //update number of users variable
                 NetworkUsersOnline = winsock read int()
             endcase
+            case "msv_chat"
+                //add new chat line
+                message$ = winsock read string$()
+                ui_writelog(UI_Blue,"Chat: "+message$)
+            endcase
         Endselect
         endwhile
     Endif
@@ -77,6 +85,13 @@ Endfunction
 //////////////////////////////////////////////////////////////
 //  CLIENT FUNCTIONS
 //////////////////////////////////////////////////////////////
+
+function Network_LobbyMessage(message$):
+    Winsock Make Packet
+    Winsock Add String "cl_chat"
+    winsock add string message$
+    Winsock Send Tcp Packet ClientMasterServer
+ENDFUNCTION
 
 Function Network_GetIP():
 	ip$="error"
@@ -164,6 +179,7 @@ function Network_LoopMasterServer():
     dim servertextlines() as string
     global numservertextlines as integer
     global SlowUpdateCurrentClient as integer
+    make ticker 1,6000
     do
         CLEAR CONSOLE
         SET CURSOR 0,0
@@ -200,7 +216,16 @@ function Network_LoopMasterServer():
                                 `Winsock Add String "udpinit"
                                 `Winsock Send Tcp Packet ServerClients(CurrentClient).tcp
                             Endcase
-                            Case "msg"
+                            Case "cl_chat"
+                                message$ = Winsock Read String$()
+                                svprint("Chat message:"+message$)
+                                //relay message to all the clients
+                                For CurrentClientMSG = 0 To MasterServerNumClients-1:
+                                    Winsock Make Packet
+                                    Winsock Add String "msv_chat"
+                                    winsock add string message$
+                                    Winsock Send Tcp Packet MasterServerClients(CurrentClientMSG).channel_tcp
+                                Next CurrentClientMSG
                             Endcase
                             case "disconnect"
                                 disconnectflag = 1
@@ -219,7 +244,8 @@ function Network_LoopMasterServer():
             Next CurrentClient
         endif
         
-        //update clients
+        //update clients every ~6 seconds
+        if ticker(1):
         if MasterServerNumClients>0:
         For CurrentClient = 0 To MasterServerNumClients-1:
             Winsock Make Packet
@@ -228,12 +254,13 @@ function Network_LoopMasterServer():
             Winsock Send Tcp Packet MasterServerClients(CurrentClient).channel_tcp
         Next CurrentClient
         endif
+        endif
         
         for i = 0 to numservertextlines-1:
             print servertextlines(i)
         next i
         
-        nice wait 1000
+        nice wait 100
     loop
     end
 ENDFUNCTION

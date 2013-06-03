@@ -7,15 +7,15 @@ project name=OpenFPS
 main=Includes\Core\module_Core.dba
 LineMain=0
 include1=Includes\System\module_System.dba
-LineInclude1=48
+LineInclude1=99
 include2=Includes\Timer\module_Timer.dba
-LineInclude2=122
+LineInclude2=63
 include3=Includes\Interface\module_UI.dba
-LineInclude3=1187
+LineInclude3=3162
 include4=Includes\Input\module_Input.dba
 LineInclude4=0
 include5=Includes\Interface\module_UI_menu.dba
-LineInclude5=794
+LineInclude5=1245
 include6=Includes\Core\module_Datatypes.dba
 LineInclude6=70
 include7=Includes\Core\module_Game.dba
@@ -31,7 +31,7 @@ LineInclude11=315
 include12=Includes\Audio\module_Audio.dba
 LineInclude12=101
 include13=Includes\Networking\module_Network.dba
-LineInclude13=18
+LineInclude13=225
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
@@ -70,6 +70,9 @@ media root path=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\
 icon1=Media\Images\Interface\OpenFPS.ico
 
 ; **** Cursors ****
+cursorarrow=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Media\Images\Interface\aero_arrow.cur
+cursorwait=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Media\Images\Interface\aero_busy_l.ani
+pointer2=Media\Images\Interface\testcursor.cur
 
 ; **** Version Info ****
 VerComments=
