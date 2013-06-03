@@ -502,7 +502,9 @@ UI_StartDebugmode(UI_LogON)    :`change parameter to UI_Logon to do logfile
 	UI_LoadGuiGraphics("Media\Images\Interface\skull32_2.png","skull32_2")
 	UI_LoadGuiGraphics("Media\Images\Interface\skull32_3.png","skull32_3")
 		
-		
+ ui_loadguigraphics("Media\Images\Interface\chatbutton.png","chatbutton")
+ ui_loadguigraphics("Media\Images\Interface\chatbutton_hover.png","chatbutton_hover")
+ 
 	UI_LoadGuiGraphics("Media\Images\Interface\small_button-normal.png","UI_button_small")
 	UI_LoadGuiGraphics("Media\Images\Interface\small_button-hover.png","UI_button_small_hover")
 	
@@ -1625,7 +1627,7 @@ Function UI_HandleMouse()
 //*                                                                                     *
 //***************************************************************************************
 	If UI_Mouse.Initialized = UI_True 
-		if Has Focus()=1 and Game.loading_cursor_toggle = 0 then position mouse UI_Display.Middlewidth,UI_Display.Middleheight
+		`if Has Focus()=1 and Game.loading_cursor_toggle = 0 then position mouse UI_Display.Middlewidth,UI_Display.Middleheight
 	`If UI_Mouse.hidden=UI_False or UI_Mouse.FadingOut=UI_True
 	
 		If  UI_Mouse.smooth              = UI_False
@@ -1674,7 +1676,7 @@ Function UI_HandleMouse()
 		If UI_Mouse.Y>UI_Display.Height-1  Then UI_Mouse.Y = UI_Display.Height-1
 		If UI_Mouse.Y<0                    Then UI_Mouse.Y = 0
 			
-	
+	remstart
 		If UI_Mouse.Hidden=UI_False
 			Dxs Begin Sprite Render UI_Mouse.ID
 			UI_Mouse.curvex=TBM_CurveValue(UI_Mouse.X,UI_Mouse.curvex,2)
@@ -1709,7 +1711,9 @@ Function UI_HandleMouse()
 				DXS SET SPRITE ALPHA UI_Mouse.ID,UI_Mouse.FadeValue
 			Endif
 		Endif
-
+remend
+ui_mouse.x = mousex()
+ui_mouse.y = mousey()
 	Endif
 Endfunction
 
@@ -1847,7 +1851,7 @@ Function UI_MouseX()
 //*                                                                                     *
 //***************************************************************************************
 	Local return_mousex as Integer
-	If UI_Mouse.Initialized = UI_True then return_mousex = UI_Mouse.X
+	If UI_Mouse.Initialized = UI_True then return_mousex = mousex()
 Endfunction return_mousex
 
 
@@ -1861,7 +1865,7 @@ Function UI_MouseY()
 //*                                                                                     *
 //***************************************************************************************
 	Local return_mousey as Integer
-	If UI_Mouse.Initialized = UI_True then return_mousey = UI_Mouse.Y
+	If UI_Mouse.Initialized = UI_True then return_mousey = mousey()
 Endfunction return_mousey
 
 Function UI_AskMouseHidden()
@@ -3153,15 +3157,15 @@ Function UI_HandleGadgets()
 			for x=1 to UI_GadgetNumbers
 if UI_Gadgets(x).Target > 0:
 	draw to image UI_Gadgets(x).Target
-	UI_Mouse_TempX = UI_Mouse.X
-	UI_Mouse_TempY = UI_Mouse.Y
+	UI_Mouse_TempX =  mousex()
+	UI_Mouse_TempY =  mousey()
 	UI_Mouse_X=Targetclickx
 	UI_Mouse_Y=Targetclicky
 else: 
-	UI_Mouse_TempX = UI_Mouse.X
-	UI_Mouse_TempY = UI_Mouse.Y
-	UI_Mouse_X=UI_Mouse.X
-	UI_Mouse_Y=UI_Mouse.Y
+	UI_Mouse_TempX = mousex()
+	UI_Mouse_TempY =  mousey()
+	UI_Mouse_X= mousex()
+	UI_Mouse_Y= mousey()
 Endif
 UI_Gadgets(x).DestDiffuseA = Clamp(TBM_CurveValue(UI_Gadgets(x).DiffuseA,UI_Gadgets(x).DestDiffuseA,10),0,255)
 Local temp_selected As Boolean
@@ -3681,13 +3685,12 @@ Endfunction
 Function UI_EnableWindowsCursor():
 	Game.loading_cursor_toggle = 1
 	position mouse ui_mousex(),ui_mousey()
-	Show Mouse
 	UI_HideMouse()
 Endfunction
 
 Function UI_DisableWindowsCursor():
 	Game.loading_cursor_toggle = 0
 	UI_SetMousePosition(mousex(),mousey())
-	Hide Mouse
+
 	UI_ShowMouse()
 endfunction

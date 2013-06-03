@@ -101,12 +101,14 @@ Function SYS_Init():
     //////////////////////////////////////
     
     Sync on : sync rate 0 : autocam off
-    Disable Escapekey : Hide Mouse : change mouse 4
+    Disable Escapekey : change mouse 2
     
     //////////////////////////////////////
     // Do plugin setup
     //////////////////////////////////////
     
+    // this, weirdly enough, causes a crash
+    // on miso's computer... huh.
     d3d_init
     
     //////////////////////////////////////
