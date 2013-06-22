@@ -172,6 +172,26 @@ menuImage19 = Dxs Create Sprite("Media\Images\Interface\titleicon_72.png")
 global MenuImage11
 MenuImage11 = Dxs Create Sprite("Media\Images\Interface\pyramid.png")
 
+//create soldier images
+global soldier_rotation as float
+global legSprite
+legSprite = dxs create sprite("Media\Images\Interface\soldier\legs.png")
+dxs set sprite center legSprite,132,317
+global upperMainSprite
+upperMainSprite = dxs create sprite("Media\Images\Interface\soldier\upper.png")
+dxs set sprite center upperMainSprite,141,161
+global grenadeSprite
+grenadeSprite = dxs create sprite("Media\Images\Interface\soldier\grenade.png")
+dxs set sprite center grenadeSprite,12,8
+`DXS SET SPRITE ROTATION CENTER upperMainSprite,screen width()/2, Screen height()-170
+global gunSprite
+gunSprite = dxs create sprite("Media\Images\Interface\soldier\gun.png")
+dxs set sprite center gunSprite,114,63
+global headSprite
+headSprite = dxs create sprite("Media\Images\Interface\soldier\head.png")
+dxs set sprite center headSprite,124,175
+
+
 UI_WriteLog(UI_Yellow,"// MENU MODULE //: UI_Menu_CreateResources:Create Button Placeholders")
 Draw To Image MenuImage5
 x=0:y=0:paste image MenuImage7,x,y,1:UI_CenterText(3,x+(178/2)-8,y+11,"Single "+chr$(230))
@@ -227,6 +247,7 @@ Global campaignsave_scrolloffset As Integer
 global menu_chatenabled as integer
 global menu_chatoffsetx as float
 menu_chatoffsetx = Screen.Width
+global menu_chatoffsety as float
 dim MenuUI_DrawCalls(1,64) as string
 MenuUI_DrawCalls(0,M_MENU_MAIN)="UI_Render_M_MENU_MAIN"
 MenuUI_DrawCalls(0,M_MENU_SINGLEPLAYER)="UI_Render_M_MENU_SINGLEPLAYER"
@@ -337,7 +358,13 @@ Case "button_training"
 UI_Menu_SetMode(M_MENU_TRAININGPROMPT)
 endcase
 Case "button_yestrain"
-`Game_Start("Media\levels\test.xnt")
+Network_Server_Init()
+Network_Server_SetFlag("setname","TestServer")
+Network_Server_SetFlag("setdescription","Test description")
+Network_Server_SetFlag("setlevel","Media\Levels\test.xnt")
+Network_Server_SetFlag("setport","20188")
+Network_Server_Start()
+Network_Connect("127.0.0.1",20188)
 Endcase
 Case "button_reload"
 `GameManager_End()
@@ -396,6 +423,9 @@ UI_Countnewvalue("sensitivitybar")
 endcase
 case "mastervolumebar"
 UI_Countnewvalue("mastervolumebar")
+endcase
+case "gammabar"
+UI_Countnewvalue("gammabar")
 endcase
 endselect
 ENDIF
@@ -644,6 +674,16 @@ UI_PositionGadget("mastervolumebar",x+3,y+3)
 UI_addtitletogadget("mastervolumebar",1,x+128,y-16,"Master Volume")
 UI_addmouseovertitletogadget("mastervolumebar",1,x+128,y-16,"Master Volume")
 UI_SetGadgetValue("mastervolumebar",Game.option_volume_old / 2)
+
+y=y + 60
+UI_AddGadgetToScreen("gammabarholder",0+x,0+y,"UI_barholderimage")
+//add the BAR for DISTANCE
+UI_AddbarGadgetToScreen("gammabar",3+x,3+y,"UI_redbar",50)
+UI_Addmouseoverimagetogadget("gammabar","UI_orangebar")
+UI_PositionGadget("gammabar",x+3,y+3)
+UI_addtitletogadget("gammabar",1,x+128,y-16,"Brightness")
+UI_addmouseovertitletogadget("gammabar",1,x+128,y-16,"Brightness")
+UI_SetGadgetValue("gammabar",int(Game.gamma))
 remstart
 //do other check boxes
 X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-170
@@ -686,6 +726,8 @@ UI_CenterText(3,x,y,"Game Options")
 x=x-280
 y=y+40
 
+changed = 1
+Game.gamma_needs_refresh = 1
 // 1 = 640 x 480
 // 2 = 800 x 600
 // 3 = 1024 x 768
@@ -695,9 +737,11 @@ d3d_line x+164,y,x+164,y+200,d3d_rgba(255,255,255,150),d3d_rgba(255,255,255,0)
 d3d_line x+164+164,y,x+164+164,y+200,d3d_rgba(255,255,255,150),d3d_rgba(255,255,255,0)
 Game.option_fullscreen = UI_DrawCheckBox(x,y,"Fullscreen",Game.option_fullscreen):y=y+36 `UI_GetGadgetSelection("fullscreen_checkbox")
 Game.option_vsync = UI_DrawCheckBox(x,y,"Vertical sync",Game.option_vsync):y=y+36 `UI_GetGadgetSelection("vsync_checkbox")
-Game.option_aa = UI_DrawCheckBox(x,y,"Anti-Aliasing",Game.option_aa):y=y+36 `UI_GetGadgetSelection("aa_checkbox")
-if UI_DrawCheckBox(x,y+36,"Reset CFG",0) then UI_Menu_SetDefaults()
-y=y-(36*3)
+Game.option_aa = UI_DrawCheckBox(x,y,"Anti-Aliasing",Game.option_aa):y=y+36+36 `UI_GetGadgetSelection("aa_checkbox")
+if UI_DrawCheckBox(x,y,"Reset CFG",0) then UI_Menu_SetDefaults()
+y=y+36
+if UI_DrawCheckBox(x,y,"Reset Brightness",0) then Game.gamma = 25 : UI_SetGadgetValue("gammabar",int(Game.gamma))
+y=y-(36*5)
 x=x+180
 if UI_DrawCheckBox(x,y,"800 x 600",Game.option_resolution = 1):
 Game.option_resolution = 1
@@ -713,14 +757,16 @@ endif
 y=y+36
 Game.option_sensitivity = UI_GetGadgetValue("sensitivitybar") * 2
 Game.option_volume = UI_GetGadgetValue("mastervolumebar") * 2
-changed = 1
+Game.gamma = int(UI_GetGadgetValue("gammabar"))
 if Game.option_fullscreen = Game.option_fullscreen_old:
 if Game.option_vsync = Game.option_vsync_old:
 if Game.option_aa = Game.option_aa_old:
 if Game.option_resolution = Game.option_resolution_old:
 if Game.option_sensitivity = Game.option_sensitivity_old:
 if Game.option_volume = Game.option_volume_old:
+if Game.gamma = game.gamma_old:
 changed = 0
+endif
 endif
 endif
 endif
@@ -752,6 +798,7 @@ Game.option_aa = Game.option_aa_old
 Game.option_resolution = Game.option_resolution_old
 Game.option_sensitivity = Game.option_sensitivity_old
 Game.option_volume = Game.option_volume_old
+Game.gamma = Game.gamma_Old
 ENDFUNCTION
 
 function UI_Menu_SetDefaults():
@@ -763,6 +810,7 @@ Game.option_sensitivity = 50
 Game.option_volume = 98
 UI_SetGadgetValue("sensitivitybar",Game.option_sensitivity / 2)
 UI_SetGadgetValue("mastervolumebar",Game.option_volume / 2)
+Game.gamma = 25
 ENDFUNCTION
 
 function UI_Menu_ApplySettings():
@@ -772,6 +820,7 @@ Game.option_aa_old = Game.option_aa
 Game.option_resolution_old = Game.option_resolution
 Game.option_sensitivity_old = Game.option_sensitivity
 Game.option_volume_old = Game.option_volume
+Game.gamma_old = Game.gamma
 if file exist("Config\game.cfg") then delete file "Config\game.cfg"
 open to write 4,"Config\game.cfg"
 Screen_width$ = "800"
@@ -803,6 +852,7 @@ Write String 4,"ServerIP="+chr$(34)+"96.233.35.5"+chr$(34)
 Write String 4,"Debug=0"
 Write String 4,"Sensitivity="+str$(Game.option_sensitivity)
 Write String 4,"Volume="+str$(Game.option_volume)
+Write String 4,"Gamma="+str$(Game.gamma)
 close file 4
 endfunction
 
@@ -828,6 +878,7 @@ Game.option_vsync  = Game.option_vsync_old
 Game.option_aa = Game.option_aa_old
 Game.option_sensitivity  = Game.option_sensitivity_old
 Game.option_volume = Game.option_volume_old
+Game.gamma = Game.gamma_old
 endfunction
 
 // M_MENU_CREDITS
@@ -1173,7 +1224,16 @@ Endfunction
 
 Function UI_Render_U_MENU_JOINGAME():
 ik paste image MenuImageBlack,0,0,screen.width,screen.height
-UI_CenterIconText(3,Screen.Width/2,Screen.Height/2,chr$(136)+" Joining Game...",1)
+UI_CenterIconText(3,Screen.Width/2,Screen.Height/2,chr$(136)+" Joining Game... ",1) `+str$(clamp(10-Client.autofailtime,0,10))
+    if Client.init = 1 and Client.auth = 1:
+    y = 0
+    UI_ScaledText(3,0,y,"Client.server_name="+Client.server_name,50,250):y=y+16
+    UI_ScaledText(3,0,y,"Client.server_description="+Client.server_description,50,250):y=y+16
+    UI_ScaledText(3,0,y,"Client.level_name="+Client.level_name,50,250):y=y+16
+    else
+    y = 0
+    UI_ScaledText(3,0,y,"Waiting for connect...",50,250):y=y+16
+    endif
 Endfunction
 
 Function UI_Render_M_SINGLEPLAYER_CHOOSE():
@@ -1232,40 +1292,104 @@ paste image MenuImage4,0,0,1
 `texture object MenuScreenObject,MenuImage4
 UI_PutWindow(-24,-24,16,MenuSidebarHeight)
 Paste Image MenuImage5,31,35,1
-if MasterserverOnline:
+
+//draw soldier
+
+    mx = ui_mouseX()
+    my = ui_mouseY()
+    px = screen.width-140
+    py = Screen.height-170
+    disx =px-mx
+    disy =py-my
+    soldier_rotation=tbm_curvevalue(clamp(atanfull(disx,disy),40,100),soldier_rotation,10)
+    x=(186-141)
+    y=(139-161)
+    dist#=threedistance(px, Screen.height-170,0,px+x, (Screen.height-170)+y,0)
+    x#=sin(soldier_rotation+40)*50
+    y#=cos(soldier_rotation+40)*50
+    x2#=sin(soldier_rotation+165)*110
+    y2#=cos(soldier_rotation+165)*110
+    x3#=sin(soldier_rotation+105)*120
+    y3#=cos(soldier_rotation+105)*120
+    `DXS SET SPRITE ANGLE legSprite,(soldier_rotation)/90
+    dxs update sprite legSprite
+    dxs begin sprite render legSprite
+    dxs draw sprite legSprite,px, Screen.height
+    dxs end sprite render legSprite
+    DXS SET SPRITE ROTATION CENTER upperMainSprite,px, Screen.height-170
+    DXS SET SPRITE ANGLE upperMainSprite,360-(soldier_rotation-90)
+    dxs update sprite upperMainSprite
+    dxs begin sprite render upperMainSprite
+    dxs draw sprite upperMainSprite,px, Screen.height-170
+    dxs end sprite render upperMainSprite
+    DXS SET SPRITE ANGLE grenadeSprite,0
+    dxs update sprite grenadeSprite
+    dxs begin sprite render grenadeSprite
+    dxs draw sprite grenadeSprite,px+x#,Screen.height-170+y#
+    dxs end sprite render grenadeSprite
+    DXS SET SPRITE ROTATION CENTER gunSprite,px+x2#,Screen.height-170+y2#
+    DXS SET SPRITE ANGLE gunSprite,(360-(soldier_rotation*1.4)+90)
+    dxs update sprite gunSprite
+    dxs begin sprite render gunSprite
+    dxs draw sprite gunSprite,px+x2#,Screen.height-170+y2#
+    dxs end sprite render gunSprite
+    DXS SET SPRITE ROTATION CENTER headSprite,px+x3#,Screen.height-170+y3#
+    DXS SET SPRITE ANGLE headSprite,360-((soldier_rotation*1.4)-100)
+    dxs update sprite headSprite
+    dxs begin sprite render headSprite
+    dxs draw sprite headSprite,px+x3#,Screen.height-170+y3#
+    dxs end sprite render headSprite
     
-    if menu_chatenabled:
+remstart
+    
+    if menu_chatenabled and MenuUI.mode = M_MENU_MAIN:
         menu_chatoffsetx = tbm_curvevalue(420,menu_chatoffsetx,50)
-        d3d_box menu_chatoffsetx-50,Screen.Height-260,menu_chatoffsetx,Screen.Height-40,d3d_rgba(0,0,0,50)
-        d3d_box menu_chatoffsetx-50,Screen.Height-260,menu_chatoffsetx,Screen.Height-40,d3d_rgba(33,51,26,0),d3d_rgba(33,51,26,140+(TBM_StandardSin*60)),d3d_rgba(33,51,26,0),d3d_rgba(33,51,26,140+(TBM_StandardSin*60))
-        if ui_mousex()>menu_chatoffsetx-50 and ui_mousey()>Screen.Height-260:
-            if ui_mousex()<menu_chatoffsetx and ui_mousey()<Screen.Height-40:
+        ui_putwindow(menu_chatoffsetx-50,Screen.Height-260,Screen.Width/ui_mywindow.yrow,220/ui_mywindow.yrow)
+        `d3d_box menu_chatoffsetx-50,Screen.Height-260,menu_chatoffsetx,Screen.Height-40,d3d_rgba(0,0,0,50)
+        `d3d_box menu_chatoffsetx-50,Screen.Height-260,menu_chatoffsetx,Screen.Height-40,d3d_rgba(33,51,26,0),d3d_rgba(33,51,26,140+(TBM_StandardSin*60)),d3d_rgba(33,51,26,0),d3d_rgba(33,51,26,140+(TBM_StandardSin*60))
+        if ui_mousex()>420-50 and ui_mousey()>Screen.Height-260:
+            if ui_mousex()<420 and ui_mousey()<Screen.Height-40:
                 if mouseclick() then menu_chatenabled = 0
             endif
         endif
     else
         menu_chatoffsetx = tbm_curvevalue(Screen.Width,menu_chatoffsetx,50)
-        d3d_box menu_chatoffsetx-50,Screen.Height-260,menu_chatoffsetx,Screen.Height-40,d3d_rgba(0,0,0,50)
-        d3d_box menu_chatoffsetx-50,Screen.Height-260,menu_chatoffsetx,Screen.Height-40,d3d_rgba(33,51,26,0),d3d_rgba(33,51,26,140),d3d_rgba(33,51,26,0),d3d_rgba(33,51,26,140)
+        ui_putwindow(menu_chatoffsetx-50,Screen.Height-260,Screen.Width/ui_mywindow.yrow,220/ui_mywindow.yrow)
         if ui_mousex()>Screen.Width-50 and ui_mousey()>Screen.Height-260:
             if ui_mousex()<Screen.Width and ui_mousey()<Screen.Height-40:
                 if mouseclick() then menu_chatenabled = 1
             endif
         endif
     endif
-    d3d_box menu_chatoffsetx,Screen.Height-260,Screen.Width,Screen.Height-40,d3d_rgba(0,0,0,100)
-    ui_centericontext(3,menu_chatoffsetx-35,Screen.Height-155,chr$(230),0)
+    if mousex()>Screen.Width-50:
+    ui_centericontext(3,menu_chatoffsetx-24,Screen.Height-155,chr$(230),1)
+    else:
+    ui_centericontext(3,menu_chatoffsetx-24,Screen.Height-155,chr$(230),0)
+    endif
     
-    
-if menu_chatenabled:
-    `entrytext$=entry$(1)
-    ``ui_scaledtext(3,x+10,y+10+(11*16),"~rChat:~w  "+right$(entrytext$,22),50,200)
-    `if returnkey() and len(entrytext$)>3:
-    `    clear entry buffer
-    `    Network_LobbyMessage(entrytext$)
-    `endif
+    y=Screen.Height-230
+    x=(menu_chatoffsetx-50)+(ui_mywindow.yrow*4)
+    `4,2,12
+    Ik Paste Image MenuImage1,x,Screen.Height-260+(ui_mywindow.yrow*2)-4,x+Screen.Width,Screen.Height-260+(ui_mywindow.yrow*12)+8
+    x=x+5
+    y=y+4
+if MasterserverOnline:
+//display chat text
+    entrytext$=entry$(1)
+    for i = 0 to 7:
+        ui_scaledtext(3,x,y+menu_chatoffsety,MasterServerChat(i),70,250)
+        y=y+ui_mywindow.yrow+2
+    next i
+    ui_scaledtext(3,x,y,"~b >>>"+entrytext$,70,200):y=y+ui_mywindow.yrow+2
+    menu_chatoffsety = tbm_curvevalue(0,menu_chatoffsety,5)
+    if returnkey() and len(entrytext$)>3:
+        Network_SendMessage(entrytext$) : clear entry buffer
+    endif
+else
+//display "master server is offline"
+    ui_scaledtext(3,x,y,"~b Master server offline.",70,100)
 endif
-endif
+remend
 if MasterserverOnline:
 if NetworkUsersOnline =1 then ui_scaledtext(3,-10+Screen.Width-(len("1 user online.")*(UI_stringmap(3,258).ascii)*(70/100.0)),Screen.Height-24,"1 user online.",70,100)
 if NetworkUsersOnline > 1 then ui_scaledtext(3,-10+Screen.Width-(len(str$(NetworkUsersOnline)+" users online.")*(UI_stringmap(3,258).ascii)*(70/100.0)),Screen.Height-24,str$(NetworkUsersOnline)+" users online.",70,100)
@@ -1297,6 +1421,10 @@ if ui_mousex()>x and ui_mousey()>y and ui_mousex()<(x + 32) and ui_mousey()<(y+3
 if Game_input.Mouse_click = 1 then checked = 1 - checked
 endif
 ENDFUNCTION checked
+
+function threedistance(x1#,y1#,z1#,x2#,y2#,z2#)
+   d#=sqrt(((x2#-x1#)*(x2#-x1#))+((y2#-y1#)*(y2#-y1#))+((z2#-z1#)*(z2#-z1#)))
+endfunction d#
 
 remstart Crosshair
 

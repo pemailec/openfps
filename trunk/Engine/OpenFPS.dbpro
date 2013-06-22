@@ -5,9 +5,9 @@ project name=OpenFPS
 
 ; **** source file information ****
 main=Includes\Core\module_Core.dba
-LineMain=0
+LineMain=10
 include1=Includes\System\module_System.dba
-LineInclude1=99
+LineInclude1=131
 include2=Includes\Timer\module_Timer.dba
 LineInclude2=63
 include3=Includes\Interface\module_UI.dba
@@ -15,23 +15,21 @@ LineInclude3=3162
 include4=Includes\Input\module_Input.dba
 LineInclude4=0
 include5=Includes\Interface\module_UI_menu.dba
-LineInclude5=1245
+LineInclude5=812
 include6=Includes\Core\module_Datatypes.dba
-LineInclude6=70
+LineInclude6=69
 include7=Includes\Core\module_Game.dba
-LineInclude7=28
+LineInclude7=13
 include8=Includes\Core\module_Camera.dba
 LineInclude8=349
-include9=Includes\World\module_World.dba
-LineInclude9=62
-include10=Includes\Model\module_Model.dba
-LineInclude10=0
-include11=Includes\Entities\Module_Entity.dba
-LineInclude11=315
-include12=Includes\Audio\module_Audio.dba
-LineInclude12=101
-include13=Includes\Networking\module_Network.dba
-LineInclude13=225
+include9=Includes\Model\module_Model.dba
+LineInclude9=0
+include10=Includes\Entities\Module_Entity.dba
+LineInclude10=305
+include11=Includes\Audio\module_Audio.dba
+LineInclude11=101
+include12=Includes\Networking\module_Network.dba
+LineInclude12=32
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone

@@ -64,11 +64,56 @@ Type t_Game
     option_volume as integer
     option_sensitivity_old as integer
     option_volume_old as integer
+    gamma as integer
+    gamma_old as integer
+    gamma_old_real as integer
+    gamma_needs_refresh as integer
     editor_flag as integer
     editor_file as string
     ip as string
     ServerPort as integer
     ServerIP as string
+endtype
+
+
+
+type t_Server
+    server_name as string
+    server_description as string
+    server_password_enabled as integer
+    server_password_string as string
+    level_name as string
+    starttime as integer
+    started as integer
+    init as integer
+    auth as integer
+    autofailtime as integer
+    port as integer
+    listenchannel as integer
+    numclients as integer
+    offline as integer
+endtype
+
+Type t_ServerClient
+    name as string
+    ip as string
+    channel_tcp As Dword
+    target_ip As String
+    target_port As Integer
+    local_port as integer
+Endtype
+
+type t_Client
+    client_name as string
+    server_channel as integer
+    init as integer
+    auth as integer
+    autofailtime as integer
+    server_ip as string
+    server_port as integer
+    server_name as string
+    server_description as string
+    level_name as string
 endtype
 
 //t_image - stores an image id and its width and height
