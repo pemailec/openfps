@@ -39,6 +39,7 @@ Function SYS_Init():
         Write String 1,"ServerIP="+chr$(34)+"96.233.35.5"+chr$(34)
         Write String 1,"Sensitivity=50"
         Write String 1,"Volume=98"
+        Write String 1,"Gamma=25"
         close file 1
     Endif
     
@@ -58,6 +59,9 @@ Function SYS_Init():
     Game.Debug =			lua int("Debug")
     Game.option_sensitivity_old =            lua int("Sensitivity")
     Game.option_volume_old =            lua int("Volume")
+    Game.gamma_old = lua int("Gamma")
+    Game.gamma = Game.gamma_old
+    Game.gamma_needs_refresh = 1
     Game.ServerPort = lua int("ServerPort")
     Game.ServerIP = lua string$("ServerIP")
     if left$(cl$(),7)="-editor":
@@ -125,7 +129,11 @@ Function SYS_Sync():
     // Sync function. called once per loop.
     // Modify to add sync-limiter.
     //////////////////////////////////////
-    
+    if Game.gamma_needs_refresh:
+        gamma_temp = clamp(103+(Game.gamma),0,255)
+        BO SET GAMMA gamma_temp,gamma_temp,gamma_temp
+        Game.gamma_needs_refresh = 0
+    ENDIF
     If Screen.Fullscreen = 1 and Screen Invalid():
         //the screen is invalid. this causes a crash.
         Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,0,0
