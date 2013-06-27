@@ -5,7 +5,7 @@ project name=Launcher
 
 ; **** source file information ****
 main=Launcher.dba
-LineMain=55
+LineMain=50
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
@@ -48,8 +48,8 @@ media root path=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Resources\Op
 VerComments=
 VerCompany=
 VerFileDesc=
-VerFileNumber=
-VerInternal=
+VerFileNumber=v1.0
+VerInternal=v1.0
 VerCopyright=
 VerTrademark=
 VerFilename=

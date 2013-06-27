@@ -21,10 +21,10 @@ else:
     end
 ENDIF
 
-Global clientport As Integer
+`Global clientport As Integer
 
-Lua Make : Lua Load File "Engine\config\game.cfg"
-clientport = Lua Int("Port")
+`Lua Make : Lua Load File "Engine\config\game.cfg"
+`clientport = Lua Int("Port")
 
 
 
@@ -32,16 +32,16 @@ clientport = Lua Int("Port")
 // use netsh.exe (windows utility)
 // netsh advfirewall set currentprofile state on
 
-Global OpenFpsMain As Dword
-Global PortForwardOpen As Dword
-global PortForwardClose as dword
+`Global OpenFpsMain As Dword
+`Global PortForwardOpen As Dword
+`global PortForwardClose as dword
 
-Map Shared Mem To Bank "PortForwardDone",1,4
-Write Bank integer 1,0,0
+`Map Shared Mem To Bank "PortForwardDone",1,4
+`Write Bank integer 1,0,0
 
-OpenFpsMain=execute executable("Engine\OpenFPS.exe",str$(clientport),"Engine")
-
-if clientport=20187 then goto skip_forward
+OpenFpsMain=execute executable("Engine\OpenFPS.exe","","Engine")`str$(clientport)
+remstart
+`if clientport=20187 then goto skip_forward
 
 ip$=ip To string$(interface ip (1))
 commandline$ = "-add -app OpenFPS -lanip "+ip$+" -udpport "+str$(clientport)+" -q"
@@ -53,7 +53,6 @@ Write Bank integer 1,0,1
 While executable running(OpenFpsMain)=1:
 	Nice Wait 1000
 Endwhile
-
 Delete Bank 1
 
 if clientport=20187 then goto skiptoend
@@ -62,6 +61,7 @@ Execute File "piczo.exe",commandline$,"Resources\Launcher-code\Port-forward",0
 
 skiptoend:
 End
+remend
 
 //////////////////////////////////////////////////////////////
 // End of code

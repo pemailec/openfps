@@ -1297,7 +1297,7 @@ Paste Image MenuImage5,31,35,1
 
     mx = ui_mouseX()
     my = ui_mouseY()
-    px = screen.width-140
+    px = screen.width-200
     py = Screen.height-170
     disx =px-mx
     disy =py-my

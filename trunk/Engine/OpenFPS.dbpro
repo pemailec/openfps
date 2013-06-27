@@ -5,7 +5,7 @@ project name=OpenFPS
 
 ; **** source file information ****
 main=Includes\Core\module_Core.dba
-LineMain=10
+LineMain=0
 include1=Includes\System\module_System.dba
 LineInclude1=131
 include2=Includes\Timer\module_Timer.dba
@@ -15,7 +15,7 @@ LineInclude3=3162
 include4=Includes\Input\module_Input.dba
 LineInclude4=0
 include5=Includes\Interface\module_UI_menu.dba
-LineInclude5=812
+LineInclude5=1311
 include6=Includes\Core\module_Datatypes.dba
 LineInclude6=69
 include7=Includes\Core\module_Game.dba
