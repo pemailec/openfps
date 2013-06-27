@@ -2,170 +2,349 @@
 //  Game Engine Standard Modules - TERRAIN MODULE
 //  Concept and code by thenerd, Summer 2012!
 //////////////////////////////////////////////////////////////
-// new loading system: terrain_0_0.dbo through terrain_15_15.dbo
+// Lod system:
+// LOD_1 - 16x16 - Distance of 16*2
+// LOD_2 - 8x8 - Distance of 16*4
+// LOD_3 - 4x4 - Distance of 16*6
+// LOD_4 - 2x2 - Distance of 16*8
+// LOD_5 - 1x1 (flat) - Manual Only
 //////////////////////////////////////////////////////////////
 //  CONSTANTS
 //////////////////////////////////////////////////////////////
-
-//these variables are fixed for now.
-#Constant TerrainSizeX 15
-#Constant TerrainSizeZ 15
-#Constant TerrainUnitSizeX 16
-#Constant TerrainUnitSizeZ 16
 
 //////////////////////////////////////////////////////////////
 //  UDTS
 //////////////////////////////////////////////////////////////
 
-//t_TerrainGridTile - UDT for terrain tile object.
-Type t_TerrainGridTile
-	object As integer
-	heightmapchunk As Integer
-	texturechunk As Integer
+type T_TerrainChunk
+    LOD_1 as integer
+    LOD_2 as integer
+    LOD_3 as integer
+    LOD_OVERRIDE as integer
+    Texture_1 as integer
+    Texture_2 as integer
+    Texture_3 as integer
+    Texture_4 as integer
+    Texture_5 as integer
+    Texture_6 as integer
+    Mask_1 as integer
+    Mask_2 as integer
 endtype
 
 //////////////////////////////////////////////////////////////
 //  FUNCTIONS
 //////////////////////////////////////////////////////////////
-	
-//Terrain_create() - Creates a terrain object.
-Function Terrain_Init():
-	if TerrainExists=0:
-	global TerrainExists as boolean: terrainexists = 1
-	`global MasterHeightmap : MasterHeightmap = reserve free image()
-	`Global MasterTexture : MasterTexture = Reserve Free Image()
-	`Global MasterDetail : MasterDetail = Reserve Free Image()
-	`Global MasterGridObject : MasterGridObject = Reserve Free Mesh()
-	
-	`Game_LoadFromLevel("HM\heightmap.bmp")
-	`Game_LoadFromLevel("HM\texture.jpg")
-	`Game_LoadFromLevel("HM\detail.tga")
-	`Load Image "Media\Levels\data\HM\heightmap.bmp",MasterHeightmap
-	`Load Image "Media\Levels\data\HM\texture.jpg",MasterTexture
-	`Load Image "Media\Levels\data\HM\detail.tga",MasterDetail
-	`Load Mesh "Media\Models\grid.x",MasterGridObject
-	
-	//for future reference: add shader application code here
-	
-	Dim TerrainArray(TerrainSizeX,TerrainSizeZ) As t_TerrainGridTile
-	
-	For TZ = 0 To TerrainSizeX:
-		For TX = 0 To TerrainSizeZ:
-			TerrainArray(TX,TZ).object = Reserve Free Object()
-			Load Object "Media\Levels\data\terrain_"+str$(TX)+"_"+str$(TZ)+".dbo",TerrainArray(TX,TZ).object
-			
-			//apply shader too! (but not in this version)
-			
-			`TerrainArray(TX,TZ).heightmapchunk = reserve free image()
-			`TerrainArray(TX,TZ).texturechunk = Reserve Free Image()
-			`Make Object Plain TerrainArray(TX,TZ).object,TerrainUnitSizeX,TerrainUnitSizeZ,16,16
-			`convert object fvf TerrainArray(TX,TZ).object,0x002||0x010||0x040||0x000||0x100
-			`make object TerrainArray(TX,TZ).object,MasterGridObject,MasterTexture
-			`Set Object Wireframe TerrainArray(TX,TZ).object,1
-			
-			//setup heightmap and textures
-			`testcolor=rgb(tx*16,0,tz*16)
-			`ik create image TerrainArray(TX,TZ).heightmapchunk,(image width(MasterHeightmap)/(TerrainSizeX+1))+1,(image height(MasterHeightmap)/(TerrainSizeZ+1))+1`,testcolor
-			`ik paste image on image MasterHeightmap,TerrainArray(TX,TZ).heightmapchunk,0-(TX*16),0-(TZ*16)
-			`Ik Flip Image Vertically TerrainArray(TX,TZ).heightmapchunk
-			`Ik Flip Image Horizontally TerrainArray(TX,TZ).heightmapchunk
-			`Texture Object TerrainArray(TX,TZ).object,MasterDetail
-			`Scale Object Texture TerrainArray(TX,TZ).object,4,4
-			`set object smoothing TerrainArray(TX,TZ).object,100
-			`Set Object Smoothing TerrainArray(TX,TZ).object,100
-			
-			`Texture Object TerrainArray(TX,TZ).object,MasterTexture
-			`scale object texture TerrainArray(TX,TZ).object,1/16,1/16
-			`scroll object texture TerrainArray(TX,TZ).object,TX,TZ
-			
-			//scale vertices to a (0,0),(16,16) size
-			// the plain function generates starting with 0,
-			// adding vertexdata for a full x row, then z=z+1
-			// until the end
-			remstart
-			Lock Vertexdata For Limb TerrainArray(TX,TZ).object,0,2
-			current_vertex = 0
-			For Vz = 0 To TerrainUnitSizeZ:
-				For Vx = 0 To TerrainUnitSizeX:
-					vertx#=get vertexdata position x(current_vertex)
-					vertz#=get vertexdata position z(current_vertex)
-					//pixel height calculations
-					calculatedpixel=ik point(TerrainArray(TX,TZ).heightmapchunk,Vx,Vz)
-					calculatedheight#=(rgbr(calculatedpixel)+rgbg(calculatedpixel)+rgbb(calculatedpixel))/3
-					Set Vertexdata Position current_vertex,vertx#,(calculatedheight#/255.0)*40.0,vertz#
-					//pixel color calculations
-					calculatedcolor=ik point(MasterTexture,(TX*16)+Vx,(TZ*16)+Vz)
-					Set Vertexdata Diffuse current_vertex,calculatedcolor
-					//calc normals
-					y#=get vertexdata position y(current_vertex)
-					`set vertexdata normals current_vertex,rnd(100)/100.0 +50,rnd(100)/100.0 +50,rnd(100)/100.0 +50
-					current_vertex = current_vertex + 1
-				Next Vx
-			Next Vz
-			Unlock Vertexdata
-			remend
-			
-			`ui_writelog(ui_yellow,"terrain debug - "+str$(current_vertex))
-			
-			//do positioning
-			Position Object TerrainArray(TX,TZ).object,TX*TerrainUnitSizeX,0,(15-TZ)*TerrainUnitSizeZ
-			
-			//setup sparkies collision
-			Sc_Setupcomplexobject TerrainArray(TX,TZ).object,0,32
-			Sc_Updateobject TerrainArray(TX,TZ).object
-			Calculate Object Bounds TerrainArray(TX,TZ).object
-			remstart
-			tempobject = find free object()
-			Clone Object tempobject,TerrainArray(TX,TZ).object
-			Col1 = NDB_NewtonCreateTreeCollision( tempobject )
-			terrain = NDB_NewtonCreateBody( Col1 )
-			NDB_BuildMatrix 0.0, 0.0, 0.0, TX*TerrainUnitSizeX,0,(15-TZ)*TerrainUnitSizeZ
-			NDB_NewtonBodySetMatrix terrain
-			Ndb_Newtonreleasecollision Col1
-			delete object tempobject
-			remend
-		Next TZ
-	Next TX
-	
-	//fix normals
-	For TZ = 0 To TerrainSizeX:
-			For TX = 0 To TerrainSizeZ:
-				Lock Vertexdata For Limb TerrainArray(TX,TZ).object,0,2
-				verts=GET VERTEXDATA VERTEX COUNT()-1
-				For v=0 To verts
-					xx#=get vertexdata position x(v)
-					zz#=get vertexdata position z(v)
-					yy#=get vertexdata position y(v)
-					Set Vertexdata Position v,xx#,yy#,zz#
-				next v
-				unlock vertexdata
-				Set Object Normals TerrainArray(TX,TZ).object
-			Next TX
-	Next TZ
-	
-	endif
-Endfunction
 
-Function Terrain_Update():
-	//does nothing for now
-Endfunction
+function Terrain_Init():
+    global Terrain_Internal_LOD_1 as integer : Terrain_Internal_LOD_1 = reserve free object()
+    global Terrain_Internal_LOD_2 as integer : Terrain_Internal_LOD_2 = reserve free object()
+    global Terrain_Internal_LOD_3 as integer : Terrain_Internal_LOD_3 = reserve free object()
+    Make Object Plain Terrain_Internal_LOD_1,16,16,16,16
+    Make Object Plain Terrain_Internal_LOD_2,16,16,8,8
+    Make Object Plain Terrain_Internal_LOD_3,16,16,4,4
+    position object Terrain_Internal_LOD_1,0,0,0
+    position object Terrain_Internal_LOD_2,16*1,0,0
+    position object Terrain_Internal_LOD_3,16*2,0,0
+    //FVF_XYZ=0x002 , FVF_NORMAL=0x010, FVF_DIFFUSE=0x040, FVF_TEX0=0x000, FVF_TEX1=0x100, FVF_TEX2=0x200, FVF_TEX3=0x300, FVF_TEX4=0x400, FVF_TEX5=0x500, FVF_TEX6=0x600, FVF_TEX7=0x700, FVF_TEX8=0x800
+    convert object fvf Terrain_Internal_LOD_1,0x002 || 0x010 || 0x040 || 0x800
+    convert object fvf Terrain_Internal_LOD_2,0x002 || 0x010 || 0x040 || 0x800
+    convert object fvf Terrain_Internal_LOD_3,0x002 || 0x010 || 0x040 || 0x800
+    
+    remstart
+    set object wireframe Terrain_Internal_LOD_1,1
+    set object wireframe Terrain_Internal_LOD_2,1
+    set object wireframe Terrain_Internal_LOD_3,1
+    set object wireframe Terrain_Internal_LOD_4,1
+    set object wireframe Terrain_Internal_LOD_5,1
+    color object Terrain_Internal_LOD_1,rgb(0,0,0)
+    color object Terrain_Internal_LOD_2,rgb(0,0,0)
+    color object Terrain_Internal_LOD_3,rgb(0,0,0)
+    color object Terrain_Internal_LOD_4,rgb(0,0,0)
+    color object Terrain_Internal_LOD_5,rgb(0,0,0)
+    remend
+    
+    global Terrain_TEX1 as integer : Terrain_TEX1 = reserve free image()
+    global Terrain_TEX2 as integer : Terrain_TEX2 = reserve free image()
+    global Terrain_TEX3 as integer : Terrain_TEX3 = reserve free image()
+    global Terrain_TEX4 as integer : Terrain_TEX4 = reserve free image()
+    global Terrain_TEX5 as integer : Terrain_TEX5 = reserve free image()
+    global Terrain_TEX6 as integer : Terrain_TEX6 = reserve free image()
+    load image "Media\textures\grass.jpg",Terrain_TEX1
+    load image "Media\textures\dirt.jpg",Terrain_TEX2
+    load image "Media\textures\sand.jpg",Terrain_TEX3
+    load image "Media\textures\rockface.jpg",Terrain_TEX4
+    load image "Media\textures\grass2.jpg",Terrain_TEX5
+    load image "Media\textures\path.jpg",Terrain_TEX6
+    global Terrain_SHADER as integer : Terrain_SHADER = reserve free effect()
+    load effect "Media\gg_blend_and_per_pixel.fx",Terrain_SHADER,0
+    
+    exclude object on Terrain_Internal_LOD_1
+    exclude object on Terrain_Internal_LOD_2
+    exclude object on Terrain_Internal_LOD_3
+    dim Terrain(16,16) as T_TerrainChunk
+    //wow this is a lot of data ... 256kb to be exact!
+    dim Heightfield(256,256) as float
+    global TerrainExists as boolean
+    global Terrain_LOD_Ticker as integer : Terrain_LOD_Ticker = reserve free ticker()
+    make ticker Terrain_Lod_Ticker,500
+ENDFUNCTION
 
-Function Terrain_Destroy():
-	`Delete Image MasterHeightmap
-	`Delete Image MasterTexture
-	`Delete Image MasterDetail
+//creates a default terrain
+function Terrain_New():
+    if TerrainExists = 1 then Terrain_Delete()
+    for TerrainX = 0 to 15:
+        For TerrainZ = 0 to 15:
+            Terrain(TerrainX,TerrainZ).LOD_1 = reserve free object()
+            Terrain(TerrainX,TerrainZ).LOD_2 = reserve free object()
+            Terrain(TerrainX,TerrainZ).LOD_3 = reserve free object()
+            clone object Terrain(TerrainX,TerrainZ).LOD_1,Terrain_Internal_LOD_1
+            clone object Terrain(TerrainX,TerrainZ).LOD_2,Terrain_Internal_LOD_2 //adjust these to change the LODS
+            clone object Terrain(TerrainX,TerrainZ).LOD_3,Terrain_Internal_LOD_3
+            position object Terrain(TerrainX,TerrainZ).LOD_1,TerrainX*16,0,TerrainZ*16
+            position object Terrain(TerrainX,TerrainZ).LOD_2,TerrainX*16,0,TerrainZ*16
+            position object Terrain(TerrainX,TerrainZ).LOD_3,TerrainX*16,0,TerrainZ*16
+            exclude object on Terrain(TerrainX,TerrainZ).LOD_1
+            exclude object on Terrain(TerrainX,TerrainZ).LOD_2
+            exclude object on Terrain(TerrainX,TerrainZ).LOD_3
+            current_object = Terrain(TerrainX,TerrainZ).LOD_1
+            Terrain(TerrainX,TerrainZ).Mask_1 = reserve free image()
+            Terrain(TerrainX,TerrainZ).Mask_2 = reserve free image()
+            Terrain(TerrainX,TerrainZ).Texture_1 = Terrain_TEX1
+            Terrain(TerrainX,TerrainZ).Texture_2 = Terrain_TEX2
+            Terrain(TerrainX,TerrainZ).Texture_3 = Terrain_TEX3
+            Terrain(TerrainX,TerrainZ).Texture_4 = Terrain_TEX4
+            Terrain(TerrainX,TerrainZ).Texture_5 = Terrain_TEX5
+            Terrain(TerrainX,TerrainZ).Texture_6 = Terrain_TEX6
+            ik create image Terrain(TerrainX,TerrainZ).Mask_1,16,16,rgb(255,0,0)
+            ik create image Terrain(TerrainX,TerrainZ).Mask_2,16,16,rgb(0,0,0)
+            GenShader:
+            set object effect current_object,Terrain_SHADER
+            texture object current_object,0,Terrain(TerrainX,TerrainZ).Mask_1
+            texture object current_object,1,Terrain(TerrainX,TerrainZ).Mask_2
+            texture object current_object,2,Terrain(TerrainX,TerrainZ).Texture_1
+            texture object current_object,3,Terrain(TerrainX,TerrainZ).Texture_2
+            texture object current_object,4,Terrain(TerrainX,TerrainZ).Texture_3
+            texture object current_object,5,Terrain(TerrainX,TerrainZ).Texture_4
+            texture object current_object,6,Terrain(TerrainX,TerrainZ).Texture_5
+            texture object current_object,7,Terrain(TerrainX,TerrainZ).Texture_6
+            if current_object = Terrain(TerrainX,TerrainZ).LOD_1 then current_object = Terrain(TerrainX,TerrainZ).LOD_2 : goto GenShader
+            if current_object = Terrain(TerrainX,TerrainZ).LOD_2 then current_object = Terrain(TerrainX,TerrainZ).LOD_3 : goto GenShader
+            Terrain(TerrainX,TerrainZ).LOD_OVERRIDE = 0
+        Next TerrainZ
+    next TerrainX
+    TerrainExists = 1
+ENDFUNCTION
 
-	For TZ = 0 To TerrainSizeX:
-			For TX = 0 To TerrainSizeZ:
-				delete object TerrainArray(TX,TZ).object
-				`delete image TerrainArray(TX,TZ).heightmapchunk
-			Next TX
-	Next TZ
-
-	Undim TerrainArray()
-	TerrainExists = 0
+//load a 256x256 heightmap
+function Terrain_Load_Heightmap(file$):
+    if file exist(file$):
+    heightmap = reserve free image()
+    load image file$,heightmap
+    for x = 0 to 255:
+        for z = 0 to 255:
+            color = ik point(heightmap,x,z)
+            Heightfield(x,z) = rgbr(color)
+        next z
+    next x
+    delete image heightmap
+    endif
 endfunction
+
+//calculate smoothing
+function Terrain_Smooth():
+    for x = 0 to 255:
+        for z = 0 to 255:
+            Heightfield(x,z) = (Heightfield(x,z)*0.50)+(Heightfield(clamp(x+1,0,255),z)*0.125)+(Heightfield(clamp(x-1,0,255),z)*0.125)+(Heightfield(x,clamp(z+1,0,255))*0.125)+(Heightfield(x,clamp(z-1,0,255))*0.125)
+        next z
+    next x
+    Terrain_Refresh()
+ENDFUNCTION
+
+function Terrain_Refresh_Near(x,z):
+    for TerrainX = 0 to 15:
+        For TerrainZ = 0 to 15:
+            x2 = (TerrainX * 16)
+            z2 = (TerrainZ * 16)
+            dist# = Terrain_GetDistance(x,0,z,x2,0,z2)
+            if dist#<32 then Terrain_Refresh_Chunk(TerrainX,TerrainZ)
+        Next TerrainZ
+    next TerrainX
+endfunction
+
+function Terrain_Refresh():
+    for TerrainX = 0 to 15:
+        For TerrainZ = 0 to 15:
+            Terrain_Refresh_Chunk(TerrainX,TerrainZ)
+        Next TerrainZ
+    next TerrainX
+ENDFUNCTION
+
+function Terrain_Deform(x as float,y as float,z as float,delta as float):
+    x = x + 8
+    z = z + 8
+    size = 8
+    for x_delta = 0-size to size:
+        for z_delta = 0-size to size:
+            ratio_x# = ((x_delta + size) / (size * 2.0)) * 180.0
+            ratio_z# = ((z_delta + size) / (size * 2.0)) * 180.0
+            ratio# = sin(ratio_x#) * sin(ratio_z#)
+            height_add# = ((delta/10)*TBM) * ratio#
+            if (x+x_delta) < 256 and (x+x_delta) > -1:
+            if (z+z_delta) < 256 and (z+z_delta) > -1:
+            height# = Heightfield(int(clamp(x+x_delta,0,255)),int(clamp(z+z_delta,0,255))) + height_add#
+            Heightfield(int(clamp(x+x_delta,0,255)),int(clamp(z+z_delta,0,255))) = height#
+            endif : endif
+        next z_delta
+    next x_delta
+    remstart
+    Terrain_Refresh_Chunk(int(x/16),int((z-1)/16))
+    Terrain_Refresh_Chunk(int(x/16),int(z/16))
+    Terrain_Refresh_Chunk(int(x/16),int((z+1)/16))
+    Terrain_Refresh_Chunk(int((x-1)/16),int((z-1)/16))
+    Terrain_Refresh_Chunk(int((x-1)/16),int(z/16))
+    Terrain_Refresh_Chunk(int((x-1)/16),int((z+1)/16))
+    Terrain_Refresh_Chunk(int((x+1)/16),int((z-1)/16))
+    Terrain_Refresh_Chunk(int((x+1)/16),int(z/16))
+    Terrain_Refresh_Chunk(int((x+1)/16),int((z+1)/16))
+    remend
+    Terrain_Refresh_Near((x),(z))
+ENDFUNCTION
+
+function Terrain_Refresh_Chunk(x,z):
+    if x > -1 and x < 16:
+    if z > -1 and z < 16:
+    current_object = Terrain(x,z).LOD_1
+    current_object_maxheight# = -256
+    current_object_minheight# = 256
+    GenVertices:
+    for i = 0 to get limb count(current_object):
+        LOCK VERTEXDATA FOR LIMB current_object,i,1
+        verts=GET VERTEXDATA VERTEX COUNT()-1
+        for v=0 to verts
+            pos_real_x#=get vertexdata position x(v)+object position x(current_object)
+            pos_real_y#=get vertexdata position y(v)+object position y(current_object)
+            pos_real_z#=get vertexdata position z(v)+object position z(current_object)
+            xx#=get vertexdata position x(v)
+            zz#=get vertexdata position z(v)
+            set vertexdata position v,xx#,Heightfield(clamp(int(pos_real_x#+8),0,255),clamp(int(pos_real_z#+8),0,255)),zz#
+            height#=Heightfield(clamp(int(pos_real_x#+8),0,255),clamp(int(pos_real_z#+8),0,255))
+            if current_object = Terrain(x,z).LOD_1:
+                if height#>current_object_maxheight# then current_object_maxheight# = height#
+                if height#<current_object_minheight# then current_object_minheight# = height#
+            endif
+        next v
+        unlock vertexdata
+    Next i
+    if current_object = Terrain(x,z).LOD_1 then current_object = Terrain(x,z).LOD_2 : goto GenVertices
+    if current_object = Terrain(x,z).LOD_2 then current_object = Terrain(x,z).LOD_3 : goto GenVertices
+    Terrain(x,z).LOD_OVERRIDE = 0 : if (current_object_maxheight# - current_object_minheight#) < 0.1 then Terrain(x,z).LOD_OVERRIDE = 1
+    Set Object Normals current_object
+    calculate object bounds current_object
+    endif
+    endif
+endfunction
+
+function Terrain_Load(file$):
+    if TerrainExists = 1 then Terrain_Delete()
+    Terrain_New()
+    read_file = reserve free file()
+    open to read read_file,file$
+    header$ = "" : read string read_file, header$
+    if header$="OpenFPS_Terrain"
+        for TerrainX = 0 to 255:
+            For TerrainZ = 0 to 255:
+                read float read_file,Heightfield(TerrainX,TerrainZ)
+            Next TerrainZ
+        next TerrainX
+    endif
+    Terrain_Refresh()
+    close file read_file
+ENDFUNCTION
+
+function Terrain_Save(file$):
+    if file exist(file$) then delete file file$
+    save_file = reserve free file()
+    open to write save_file,file$
+    write string save_file,"OpenFPS_Terrain"
+        for TerrainX = 0 to 255:
+            For TerrainZ = 0 to 255:
+                write float save_file,Heightfield(TerrainX,TerrainZ)
+            Next TerrainZ
+        next TerrainX
+    write string save_file,"OpenFPS_Terrain_End"
+    close file save_file
+ENDFUNCTION
+
+function Terrain_Delete():
+    for TerrainX = 0 to 15:
+        For TerrainZ = 0 to 15:
+            if object exist(Terrain(TerrainX,TerrainZ).LOD_1) then delete object Terrain(TerrainX,TerrainZ).LOD_1
+            if object exist(Terrain(TerrainX,TerrainZ).LOD_2) then delete object Terrain(TerrainX,TerrainZ).LOD_2
+            if object exist(Terrain(TerrainX,TerrainZ).LOD_3) then delete object Terrain(TerrainX,TerrainZ).LOD_3
+            if image exist(Terrain(TerrainX,TerrainZ).Mask_1) then delete image Terrain(TerrainX,TerrainZ).Mask_1
+            if image exist(Terrain(TerrainX,TerrainZ).Mask_2) then delete image Terrain(TerrainX,TerrainZ).Mask_2
+        Next TerrainZ
+    next TerrainX
+    TerrainExists = 0
+endfunction
+
+function Terrain_Update():
+    CamX = camera position x()
+    CamY = camera position y()
+    CamZ = camera position z()
+    TickLoop = ticker(Terrain_Lod_Ticker)
+    if TerrainExists = 1:
+    for TerrainX = 0 to 15:
+        For TerrainZ = 0 to 15:
+        //refresh LOD if Terrain_Lod_Ticker is active
+        if TickLoop  = 1:
+        distance# = Terrain_GetDistance(CamX,CamY,CamZ,TerrainX*16,0,TerrainZ*16)
+        `exclude object off Terrain(TerrainX,TerrainZ).LOD_1
+        if Terrain(TerrainX,TerrainZ).LOD_OVERRIDE = 0:
+        exclude object on Terrain(TerrainX,TerrainZ).LOD_1
+        exclude object on Terrain(TerrainX,TerrainZ).LOD_2
+        exclude object off Terrain(TerrainX,TerrainZ).LOD_3
+        if distance# < 16*8:
+            exclude object on Terrain(TerrainX,TerrainZ).LOD_1
+            exclude object on Terrain(TerrainX,TerrainZ).LOD_2
+            exclude object off Terrain(TerrainX,TerrainZ).LOD_3
+        endif
+        if distance# < 16*6:
+            exclude object on Terrain(TerrainX,TerrainZ).LOD_1
+            exclude object off Terrain(TerrainX,TerrainZ).LOD_2
+            exclude object on Terrain(TerrainX,TerrainZ).LOD_3
+        endif
+        if distance# < 16*4:
+            exclude object off Terrain(TerrainX,TerrainZ).LOD_1
+            exclude object on Terrain(TerrainX,TerrainZ).LOD_2
+            exclude object on Terrain(TerrainX,TerrainZ).LOD_3
+        endif
+        else
+            exclude object on Terrain(TerrainX,TerrainZ).LOD_1
+            exclude object on Terrain(TerrainX,TerrainZ).LOD_2
+            exclude object off Terrain(TerrainX,TerrainZ).LOD_3
+        endif
+        endif
+        Next TerrainZ
+    next TerrainX
+    endif
+ENDFUNCTION
+
+function Terrain_Terminate():
+    if TerrainExists = 1 then Terrain_Delete()
+    delete object Terrain_Internal_LOD_1
+    delete object Terrain_Internal_LOD_2
+    delete object Terrain_Internal_LOD_3
+ENDFUNCTION
+
+Function Terrain_GetDistance( obj1X# , obj1Y# , obj1Z#, obj2X# , obj2Y# , obj2Z# )
+xx# = obj1X# - obj2X#
+yy# = obj1Y# - obj2Y#
+zz# = obj1Z# - obj2Z#
+thisDistance2# = Sqrt((xx#*xx#)+(yy#*yy#)+(zz#*zz#))
+Endfunction thisDistance2#
 
 //////////////////////////////////////////////////////////////
 //  End of code
 //////////////////////////////////////////////////////////////
+
