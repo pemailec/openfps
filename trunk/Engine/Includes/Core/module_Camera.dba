@@ -29,10 +29,11 @@ shake_value as float
 Endtype
 
 Type t_SpectatorCamera
-position As t_3dVector
-rotation As t_3dVector
-rrotation As Float
-randomticker as integer
+    name as string
+    position As t_3dVector
+    rotation As t_3dVector
+    rrotation As Float
+    randomticker as integer
 endtype
 
 //////////////////////////////////////////////////////////////
@@ -269,6 +270,9 @@ Load Image "Media\Materials\Engine\Sunflare1.png",skyboxsunflare
 Global SkyboxSunEffect As Integer : SkyboxSuneffect = 22
 Ik Load Effect "Media\Shaders\BlendAdditive.fx",22
 global skyboxsunalpha as float
+DSky_Init()
+  exclude object on SkyboxObj
+  exclude object on skyMesh
 Endfunction
 
 //Camera_Skybox_Load() - Loads a cubemap for the camera skybox.
@@ -294,7 +298,22 @@ Position Object SkyboxObject,Skybox_X#,Skybox_Y#,Skybox_Z#
 Position Object SkyboxSunObject,Skybox_X#,Skybox_Y#,Skybox_Z#
 Rotate Object SkyboxSunObject,328,346,0
 Move Object SkyboxSunObject,1000
+DSky_update()
+if Game_Running:
+    if Ent_GetInt(EntGetReference("root"),"sky_dynamic_enabled")=1
+      exclude object on SkyboxObj
+      exclude object off skyMesh
+        setGWTime( Ent_GetInt(EntGetReference("root"),"sky_dynamic_timeofday") , 0 , 0 )
+    else:
+      exclude object off SkyboxObj
+      exclude object on skyMesh
+    endif
+ENDIF
 Endfunction
+
+function Camera_Terminate():
+    DSky_Terminate()
+ENDFUNCTION
 
 Function Camera_PostUIRender():
 
@@ -326,6 +345,55 @@ else
 adiff = dif
 endif
 endfunction adiff
+
+function Camera_Spectator_Generate():
+    //generates and sets up a spectator camera list
+    dim SpectatorCameras() as t_SpectatorCamera
+    global NumSpectatorCameras as integer
+    global CurrentSpectatorCamera as integer
+    global mc_toggle as integer
+    //scan entities for spectator cameras
+    for i = 0 to NumEntities-1:
+        if EntGetAttribute(i,"spectator_camera")="1":
+            array insert at bottom SpectatorCameras()
+            SpectatorCameras(NumSpectatorCameras).name = EntGetAttribute(i,"name")
+            SpectatorCameras(NumSpectatorCameras).position.x = Ent_GetFloat(i,"x")
+            SpectatorCameras(NumSpectatorCameras).position.y = Ent_GetFloat(i,"y")
+            SpectatorCameras(NumSpectatorCameras).position.z = Ent_GetFloat(i,"z")
+            SpectatorCameras(NumSpectatorCameras).rotation.x = Ent_GetFloat(i,"rx")
+            SpectatorCameras(NumSpectatorCameras).rotation.y = Ent_GetFloat(i,"ry")
+            SpectatorCameras(NumSpectatorCameras).rotation.z = Ent_GetFloat(i,"rz")
+            NumSpectatorCameras = NumSpectatorCameras + 1
+        endif
+    next i
+ENDFUNCTION
+
+function Camera_Spectator_Update():
+    mc = mouseclick()
+    if mc = 1 and mc_toggle = 0:
+        mc_toggle = 1
+        CurrentSpectatorCamera = CurrentSpectatorCamera + 1
+    endif
+    if mc = 2 and mc_toggle = 0:
+        mc_toggle = 1
+        CurrentSpectatorCamera = CurrentSpectatorCamera - 1
+    endif
+    if mc = 0 then mc_toggle = 0
+    if CurrentSpectatorCamera < 0 then CurrentSpectatorCamera = NumSpectatorCameras -1
+    if CurrentSpectatorCamera > NumSpectatorCameras - 1 then CurrentSpectatorCamera = 0
+    x# = SpectatorCameras(CurrentSpectatorCamera).position.x
+    y# = SpectatorCameras(CurrentSpectatorCamera).position.y
+    z# = SpectatorCameras(CurrentSpectatorCamera).position.z
+    rx# = SpectatorCameras(CurrentSpectatorCamera).rotation.x
+    ry# = SpectatorCameras(CurrentSpectatorCamera).rotation.y
+    rz# = SpectatorCameras(CurrentSpectatorCamera).rotation.z
+    Camera_SetRotMatrix(RootCamera,RX#,RY#,RZ#)
+    Camera_SetPosMatrix(RootCamera,X#,Y#,Z#)
+ENDFUNCTION
+
+function Camera_Spectator_Clear():
+    undim SpectatorCameras()
+ENDFUNCTION
 
 remstart
 //do temporary spectator movement

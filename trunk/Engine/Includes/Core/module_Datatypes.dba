@@ -73,6 +73,8 @@ Type t_Game
     ip as string
     ServerPort as integer
     ServerIP as string
+    game_load_target as string
+    game_load_status as string
 endtype
 
 

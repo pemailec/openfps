@@ -103,7 +103,7 @@ function Terrain_New():
             Terrain(TerrainX,TerrainZ).LOD_1 = reserve free object()
             `Terrain(TerrainX,TerrainZ).LOD_2 = reserve free object()
             `Terrain(TerrainX,TerrainZ).LOD_3 = reserve free object()
-            clone object Terrain(TerrainX,TerrainZ).LOD_1,Terrain_Internal_LOD_1
+            clone object Terrain(TerrainX,TerrainZ).LOD_1,Terrain_Internal_LOD_2
             `clone object Terrain(TerrainX,TerrainZ).LOD_2,Terrain_Internal_LOD_2 //adjust these to change the LODS
             `clone object Terrain(TerrainX,TerrainZ).LOD_3,Terrain_Internal_LOD_3
             position object Terrain(TerrainX,TerrainZ).LOD_1,TerrainX*16,0,TerrainZ*16
@@ -189,7 +189,7 @@ function Terrain_Refresh_Near(x,z,radius):
             x2 = (TerrainX * 16)
             z2 = (TerrainZ * 16)
             dist# = Terrain_GetDistance(x,0,z,x2,0,z2)
-            if dist#<(radius*2) then Terrain_Refresh_Chunk(TerrainX,TerrainZ)
+            if dist#<(radius*8) then Terrain_Refresh_Chunk(TerrainX,TerrainZ)
         Next TerrainZ
     next TerrainX
 endfunction

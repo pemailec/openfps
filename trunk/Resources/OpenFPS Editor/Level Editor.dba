@@ -162,73 +162,135 @@ ENDFUNCTION
 function Spectator_Init():
     dim SpectatorCameras() as t_SpectatorCamera
     global NumSpectatorCameras
+    global SpectatorCameraUniqueId as integer
+    SpectatorCameraUniqueId = 0
+    global FirstSelectedItem as integer
 ENDFUNCTION
 
-function Spectator_Add():
-    array insert at bottom SpectatorCameras()
-    SpectatorCameras(NumSpectatorCameras).name = "<new camera>"
-    SpectatorCameras(NumSpectatorCameras).x = EditorUI.CameraX
-    SpectatorCameras(NumSpectatorCameras).y = EditorUI.CameraY
-    SpectatorCameras(NumSpectatorCameras).z = EditorUI.CameraZ
-    SpectatorCameras(NumSpectatorCameras).rx = EditorUI.CameraRX
-    SpectatorCameras(NumSpectatorCameras).ry = EditorUI.CameraRY
-    SpectatorCameras(NumSpectatorCameras).rz = EditorUI.CameraRZ
+function Spectator_Apply_Ents():
+    numitems = itemCount(EditorUI.SpectatorList)
+    for i = 0 to numitems - 1:
+        removeitem EditorUI.SpectatorList,0
+    next i
+    
+    NumSpectatorCameras = 0
+    for i = 0 to NumEntities-1:
+        if EntGetAttribute(i,"spectator_camera")="1":
+            additem EditorUI.SpectatorList,EntGetAttribute(i,"name")
+            NumSpectatorCameras = NumSpectatorCameras + 1
+        endif
+    next i
+    
+endfunction
 
+remstart
+function Spectator_Refresh_Ents():
+    for i = 0 to NumEntities-1:
+        if EntGetAttribute(i,"spectator_camera")="1":
+            EntDelete(EntGetName(i))
+        endif
+    next i
+    if NumSpectatorCameras > 0:
+    for n = 0 to NumSpectatorCameras - 1:
+        entAdd("SpectatorCamera_"+str$(SpectatorCameraUniqueId))
+        ref = entgetreference("SpectatorCamera_"+str$(SpectatorCameraUniqueId))
+        entAddAttribute(ref,"spectator_camera","1")
+        entAddAttribute(ref,"name",SpectatorCameras(n).name)
+        entAddAttribute(ref,"x",str$(SpectatorCameras(n).x))
+        entAddAttribute(ref,"y",str$(SpectatorCameras(n).y))
+        entAddAttribute(ref,"z",str$(SpectatorCameras(n).z))
+        entAddAttribute(ref,"rx",str$(SpectatorCameras(n).rx))
+        entAddAttribute(ref,"ry",str$(SpectatorCameras(n).ry))
+        entAddAttribute(ref,"rz",str$(SpectatorCameras(n).rz))
+        SpectatorCameraUniqueId = SpectatorCameraUniqueId + 1
+    next n
+    endif
+ENDFUNCTION
+remend
+`Spectator_Apply_Ents()
+
+function Spectator_Add():
+    
+    entAdd("SpectatorCamera_"+str$(SpectatorCameraUniqueId))
+    ref = entgetreference("SpectatorCamera_"+str$(SpectatorCameraUniqueId))
+    entAddAttribute(ref,"spectator_camera","1")
+    entAddAttribute(ref,"name","<new camera>")
+    entAddAttribute(ref,"x",str$(EditorUI.CameraX))
+    entAddAttribute(ref,"y",str$(EditorUI.CameraY))
+    entAddAttribute(ref,"z",str$(EditorUI.CameraZ))
+    entAddAttribute(ref,"rx",str$(EditorUI.CameraRX))
+    entAddAttribute(ref,"ry",str$(EditorUI.CameraRY))
+    entAddAttribute(ref,"rz",str$(EditorUI.CameraRZ))
     UI_Editor_AddToConsole("Added <new camera>")
-        additem EditorUI.SpectatorList,SpectatorCameras(NumSpectatorCameras).name
-        selectitem EditorUI.SpectatorList,itemCount(EditorUI.SpectatorList)-1
-    NumSpectatorCameras = NumSpectatorCameras + 1
+    SpectatorCameraUniqueId = SpectatorCameraUniqueId + 1
+    Spectator_Apply_Ents()
+    selectitem EditorUI.SpectatorList,itemCount(EditorUI.SpectatorList)-1
+    
 ENDFUNCTION
 
 function Spectator_Rename(newname$):
     if selecteditem(EditorUI.SpectatorList) > -1:
-        SpectatorCameras(selecteditem(EditorUI.SpectatorList)).name = newname$
-        changeitem EditorUI.SpectatorList,selecteditem(EditorUI.SpectatorList),newname$
+        for i = 0 to NumEntities-1:
+            if EntGetAttribute(i,"name")=itemText(EditorUI.SpectatorList,selecteditem(EditorUI.SpectatorList)):
+                EntSetAttribute(i,"name",newname$)
+            endif
+        next i
         UI_Editor_AddToConsole("Renamed camera to "+newname$)
+        Spectator_Apply_Ents()
     endif
 ENDFUNCTION
 
 function Spectator_Set():
     if selecteditem(EditorUI.SpectatorList) > -1:
         id = selecteditem(EditorUI.SpectatorList)
-        SpectatorCameras(id).x = EditorUI.CameraX
-        SpectatorCameras(id).y = EditorUI.CameraY
-        SpectatorCameras(id).z = EditorUI.CameraZ
-        SpectatorCameras(id).rz = EditorUI.CameraRX
-        SpectatorCameras(id).ry = EditorUI.CameraRY
-        SpectatorCameras(id).rz = EditorUI.CameraRZ
+        for i = 0 to NumEntities-1:
+            if EntGetAttribute(i,"name")=itemText(EditorUI.SpectatorList,selecteditem(EditorUI.SpectatorList)):
+                entSetAttribute(i,"x",str$(EditorUI.CameraX))
+                entSetAttribute(i,"y",str$(EditorUI.CameraY))
+                entSetAttribute(i,"z",str$(EditorUI.CameraZ))
+                entSetAttribute(i,"rx",str$(EditorUI.CameraRX))
+                entSetAttribute(i,"ry",str$(EditorUI.CameraRY))
+                entSetAttribute(i,"rz",str$(EditorUI.CameraRZ))
+            endif
+        next i
         UI_Editor_AddToConsole("Set camera pos/rot.")
+        Spectator_Apply_Ents()
     endif
 endfunction
 
 function Spectator_SetCamera():
     if selecteditem(EditorUI.SpectatorList) > -1:
         id = selecteditem(EditorUI.SpectatorList)
-        EditorUI.CameraX = SpectatorCameras(id).x
-        EditorUI.CameraY = SpectatorCameras(id).y
-        EditorUI.CameraZ = SpectatorCameras(id).z
-        EditorUI.CameraRX = SpectatorCameras(id).rx
-        EditorUI.CameraRY = SpectatorCameras(id).ry
-        EditorUI.CameraRZ = SpectatorCameras(id).rz
-        cx# = EditorUI.CameraRX
-        cy# = EditorUI.CameraRY
-        ncx# = cx#
-        ncy# = cy#
+        for i = 0 to NumEntities-1:
+            if EntGetAttribute(i,"name")=itemText(EditorUI.SpectatorList,selecteditem(EditorUI.SpectatorList)):
+                EditorUI.CameraX = ent_GetFloat(i,"x")
+                EditorUI.CameraY = ent_GetFloat(i,"y")
+                EditorUI.CameraZ = ent_GetFloat(i,"z")
+                EditorUI.CameraRX = ent_GetFloat(i,"rx")
+                EditorUI.CameraRY = ent_GetFloat(i,"ry")
+                EditorUI.CameraRZ = ent_GetFloat(i,"rz")
+                cx# = EditorUI.CameraRX
+                cy# = EditorUI.CameraRY
+                ncx# = cx#
+                ncy# = cy#
+            endif
+        next i
     endif
 endfunction
 
 function Spectator_Delete():
+    selectitem EditorUI.SpectatorList,FirstSelectedItem
     if selecteditem(EditorUI.SpectatorList) > -1:
-        array delete element SpectatorCameras(selecteditem(EditorUI.SpectatorList))
+        for i = 0 to NumEntities-1:
+            if EntGetAttribute(i,"name")=itemText(EditorUI.SpectatorList,selecteditem(EditorUI.SpectatorList)):
+                EntDelete(EntGetName(i))
+            endif
+        next i
         UI_Editor_AddToConsole("Deleted camera.")
-        removeitem EditorUI.SpectatorList,selecteditem(EditorUI.SpectatorList)
-        NumSpectatorCameras = NumSpectatorCameras - 1
+        Spectator_Apply_Ents()
     endif
 endfunction
 
-function Spectator_UpdateList():
-    //dont do anything stupid
-ENDFUNCTION
 
 function WndProc(hwnd, msg, wparam, lparam)
     select msg

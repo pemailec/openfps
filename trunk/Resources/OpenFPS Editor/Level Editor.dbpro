@@ -5,21 +5,21 @@ project name=Level Editor
 
 ; **** source file information ****
 main=Level Editor.dba
-LineMain=209
+LineMain=63
 include1=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\Timer\module_Timer.dba
 LineInclude1=0
 include2=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\Interface\module_UI_editor.dba
-LineInclude2=772
+LineInclude2=823
 include3=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\Interface\module_UI_editor_constants.dba
 LineInclude3=0
 include4=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\Effects\module_DynamicSky.dba
-LineInclude4=354
+LineInclude4=0
 include5=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\World\module_World_Editor.dba
 LineInclude5=42
 include6=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\Entities\Module_Entity.dba
 LineInclude6=4
 include7=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\Terrain\module_Terrain.dba
-LineInclude7=346
+LineInclude7=105
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
@@ -42,7 +42,7 @@ CommandLineArguments=
 app title=OpenFPS Level Editor
 
 ; graphics mode options: fullscreen, window, desktop, fulldesktop, hidden
-graphics mode=window
+graphics mode=fulldesktop
 fullscreen resolution=1280x720x32
 
 ; arbitrary sizes are valid for windowed mode
