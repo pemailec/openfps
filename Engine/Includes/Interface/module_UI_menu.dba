@@ -358,6 +358,7 @@ Case "button_training"
 UI_Menu_SetMode(M_MENU_TRAININGPROMPT)
 endcase
 Case "button_yestrain"
+remstart
 Network_Server_Init()
 Network_Server_SetFlag("setname","TestServer")
 Network_Server_SetFlag("setdescription","Test description")
@@ -365,6 +366,8 @@ Network_Server_SetFlag("setlevel","Media\Levels\test.xnt")
 Network_Server_SetFlag("setport","20188")
 Network_Server_Start()
 Network_Connect("127.0.0.1",20188)
+remend
+Game_Trigger_Load("Media\Levels\archipelago.xnt")
 Endcase
 Case "button_reload"
 `GameManager_End()
@@ -378,7 +381,7 @@ UI_FadeManager.state=UI_FADEIN
 UI_FadeManager.target=M_MENU_CREDITS
 Endcase
 Case "button_endgame"
-`GameManager_End()
+Game_Trigger_End()
 Endcase
 Case "button_returntogame"
 Game.paused = 0
@@ -465,6 +468,7 @@ Endfunction
 
 Function UI_Render_U_MENU_MAIN():
 ui_RenderBackdrop()
+`if ui_Gadgetexist("button_quit")=0 then UI_menu_Setmode(M_MENU_MAIN)
 `ButtonSinCurve=wrapvalue(ButtonSinCurve+5.0*TBM)
 `UI_SetGadgetDiffuse("button_training",215+(sin(ButtonSinCurve)*40),215+(sin(ButtonSinCurve)*40),215+(sin(ButtonSinCurve)*40))
 Endfunction
@@ -902,7 +906,6 @@ Endfunction
 Function UI_Render_M_ENGINE_LOADING():
 Global LoadingString As String
 LoadingString = "Loading..."
-UI_EnableWindowsCursor()
 Endfunction
 
 Function UI_Render_U_ENGINE_LOADING():
@@ -910,6 +913,10 @@ Function UI_Render_U_ENGINE_LOADING():
 `UI_PutWindow(-24,-24,(Screen.Width/UI_mywindow.yrow)+2,(Screen.Height/UI_mywindow.yrow)+2)
 ik paste image MenuImageBlack,0,0,screen.width,screen.height
 UI_CenterText(3,Screen.Width/2,(Screen.Height/2)-40,LoadingString)
+if UI_FadeManager.state=UI_NORMAL:
+    if Game.game_load_status = "loading" and Game_Running = 0 then Game_Load(Game.game_load_target) : Game.game_load_status = ""
+    if Game.game_load_status = "quitting" and Game_Running = 1 then Game_End() : Game.game_load_status = ""
+endif
 Endfunction
 
 //M_ENGINE_PAUSED
@@ -998,11 +1005,13 @@ Ik Paste Image MenuImage13,0,120,Screen.Width,124
 D3d_Box 0,Screen.Height-120,Screen.Width,Screen.Height,d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200),rgb(0,0,0),rgb(0,0,0)
 Ik Paste Image MenuImage13,0,Screen.Height-124,Screen.Width,Screen.Height-120
 If Game.state = Game_WAITTOJOIN:
-UI_CenterText(3,Screen.Width/2,48,"Waiting to Join... ")
+UI_CenterText(3,Screen.Width/2,48,EntGetAttribute(EntGetReference("root"),"displayname"))
 ui_showmouse()
 else: 
 ui_hidemouse()
 UI_AlphaText(3,Screen.Width/2-(UI_stringmap(3,258).ascii*5),48,"~bSPECTATING "+chr$(230),250)
+UI_CenterText(1,Screen.Width/2,70,SpectatorCameras(CurrentSpectatorCamera).name)
+
 If UI_GadgetExist("button_joingame"):
 UI_DeleteGadget("button_joingame")
 UI_DeleteGadget("button_endgame")
@@ -1107,9 +1116,9 @@ OldCurrentTime = CurrentTime
 `		line1$="June 23rd, 2013    "
 `		line2$="United Special Task Force    "
 `		line3$="Location: USMC Training Camp"+line0$
-line1$=EntGetAttribute(EntGetReference("root"),"title_line1")`"Summer 2013.    "
-line2$=EntGetAttribute(EntGetReference("root"),"title_line2")`"Four years in the making.   "
-line3$=EntGetAttribute(EntGetReference("root"),"title_line3")`"OpenFPS is here. "+line0$
+line1$=EntGetAttribute(EntGetReference("root"),"title_screen_line1")`"Summer 2013.    "
+line2$=EntGetAttribute(EntGetReference("root"),"title_screen_line2")`"Four years in the making.   "
+line3$=EntGetAttribute(EntGetReference("root"),"title_screen_line3")`"OpenFPS is here. "+line0$
 line4$="<spacekey to continue> "
 If CurrentTime>(len(line1$)+len(line2$)+len(line3$)) And Audio_Playing(TitleTypewriter):
 Audio_stop(TitleTypewriter)

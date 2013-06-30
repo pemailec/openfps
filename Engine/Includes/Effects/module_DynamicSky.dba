@@ -236,8 +236,6 @@ function initWeather()
 		`Texture Object skyMesh,skyMeshCloudsimg
 		`scale object texture skyMesh,10,10
 
-  exclude object off SkyboxObj
-  exclude object on skyMesh
 endfunction
 
 function updateWeather()

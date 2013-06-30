@@ -470,7 +470,7 @@ function UI_Editor_Update():
             if id = EditorUI.DialogNewCancelBTN then Setgadgetvisible EditorUI.DialogNew,0
             if id = EditorUI.CameraSpeedSlider then setgadgettext EditorUI.CameraSpeedLabel,"Speed: "+str$(EditorUI.CameraMoveSpeed)
             if id = EditorUI.Spectatorlistaddnew then EditorUI.DialogNameType = 1 : if getgadgetvisible(EditorUI.DialogName)=0: UI_Editor_AddToConsole("Name dialog opened") : UI_Editor_NameDialog("") : Spectator_Add(): endif
-            if id = EditorUI.Spectatorlistrename and selecteditem(EditorUI.SpectatorList)>-1 then EditorUI.DialogNameType = 2 : UI_Editor_AddToConsole("Name dialog opened") : UI_Editor_NameDialog(SpectatorCameras(selecteditem(EditorUI.SpectatorList)).name)
+            if id = EditorUI.Spectatorlistrename and selecteditem(EditorUI.SpectatorList)>-1 then EditorUI.DialogNameType = 2 : UI_Editor_AddToConsole("Name dialog opened") : UI_Editor_NameDialog(itemtext(EditorUI.SpectatorList,selecteditem(EditorUI.SpectatorList)))
             if id = EditorUI.Spectatorlistdelete then Spectator_Delete()
             if id = EditorUI.SpectatorListSet then Spectator_Set()
             if id = EditorUI.DialogNameCreateBTN then newname$ = UI_Editor_CloseNameDialog() : Spectator_Rename(newname$)
@@ -506,7 +506,7 @@ function UI_Editor_Update():
     resizeGadget EditorUI.currentmodeframe,260,GET WINDOW CLIENT HEIGHT()-200
     editorUI.CurrentTool = selecteditem(EditorUI.Modegadget)
     set window title "OpenFPS Level Editor - " + FileName
-    Spectator_UpdateList()
+    `Spectator_UpdateList()
     //update gadgets
     if editorUI.CurrentTool = editorUI.CurrentToolOld:
     else
@@ -797,7 +797,7 @@ function UI_Editor_CheckNew():
         //make a new level with the name text$
         FileName = "Media\Levels\" + getgadgettext(EditorUI.DialogNewTextbox) + ".xnt"
         World_Editor_New()
-        EntSave(FileName) : Terrain_Save(UI_Editor_GenerateTerrainFileName())
+        EntSave(FileName) : Terrain_Save(UI_Editor_GenerateTerrainFileName()) : Spectator_Apply_Ents()
         setgadgetvisible EditorUI.DialogNew,0,1
     endif
 endfunction
@@ -827,7 +827,7 @@ endfunction
 
 function UI_Editor_DoOpenPrompt():
     filenamenew$=openDialog("Save File As","Level Files (*.xnt)|*.xnt",0,"Media\Levels\") 
-    if len(filenamenew$)>1 then filename = filenamenew$ : EntLoad(filename) : Terrain_Load(UI_Editor_GenerateTerrainFileName())
+    if len(filenamenew$)>1 then filename = filenamenew$ : EntLoad(filename) : Terrain_Load(UI_Editor_GenerateTerrainFileName()) : Spectator_Apply_Ents()
     World_Editor_Apply()
 endfunction
 

@@ -129,17 +129,10 @@ VSOutput VS(VSInput In, VSOutput Out)
 //-----------------
 PSOutput PS(VSOutput In, PSOutput Out)
 { float4 rgbColours1 = tex2D(maskSample1, In.maskUV);
-  float4 rgbColours2 = tex2D(maskSample2, In.maskUV);
   float4 baseColour;
-  float4 baseColour2;
-  float4 baseColour3;
   baseColour  = tex2D(detailSample1, In.UV) * rgbColours1.r;
   baseColour += tex2D(detailSample2, In.UV) * rgbColours1.g;
   baseColour += tex2D(detailSample3, In.UV) * rgbColours1.b;
-
-  baseColour += tex2D(detailSample4, In.UV) * rgbColours2.r;
-  baseColour += tex2D(detailSample5, In.UV) * rgbColours2.g;
-  baseColour += tex2D(detailSample6, In.UV) * rgbColours2.b;
 
   float4 diffuse = saturate(dot(normalize(In.normal), -lightDirection));
   float4 lighting = diffuse * lightColour + ambientColour;
