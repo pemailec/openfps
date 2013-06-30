@@ -1,0 +1,110 @@
+//////////////////////////////////////////////////////////////
+//   OpenFPS
+//   LEVEL EDITOR SOURCE
+//////////////////////////////////////////////////////////////
+// module_WORLD_EDITOR
+
+type t_EditorWorld
+    filename as string
+    unique_id as string
+    displayname as string
+    title_screen_enabled as integer
+    title_screen_line1 as string
+    title_screen_line2 as string
+    title_screen_line3 as string
+    sky_dynamic_enabled as integer
+    sky_dynamic_timeofday as integer
+    water_enabled as integer
+    water_height as integer
+endtype
+
+function World_Editor_Init():
+    global EditorWorld as t_EditorWorld
+    global FileName as string : FileName = "Untitled Level"
+    World_Editor_New()
+ENDFUNCTION
+
+function World_Editor_New():
+    DeleteAllEntities()
+    EntAdd("root")
+    ref = EntGetReference("root")
+    EntAddAttribute(ref,"filename","null")
+    EntAddAttribute(ref,"displayname","")
+    EntAddAttribute(ref,"unique_id","0")
+    EntAddAttribute(ref,"title_screen_enabled","0")
+    EntAddAttribute(ref,"title_screen_line1","")
+    EntAddAttribute(ref,"title_screen_line2","")
+    EntAddAttribute(ref,"title_screen_line3","")
+    EntAddAttribute(ref,"sky_dynamic_enabled","0")
+    EntAddAttribute(ref,"sky_dynamic_timeofday","0")
+    EntAddAttribute(ref,"water_enabled","0")
+    EntAddAttribute(ref,"water_height","0")
+    World_Editor_Apply()
+    Terrain_New()
+    World_Editor_UpdateWorld()
+ENDFUNCTION
+
+function World_Editor_Update():
+    ref = EntGetReference("root")
+    EntSetAttribute(ref,"filename","null")
+    EntSetAttribute(ref,"displayname",getgadgettext(EditorUI.LevelNameTextbox))
+    EntSetAttribute(ref,"unique_id","0")
+    EntSetAttribute(ref,"title_screen_enabled",str$(getchecked(EditorUI.UseLevelTitle)))
+    EntSetAttribute(ref,"title_screen_line1",getgadgettext(EditorUI.LevelTitleLine1))
+    EntSetAttribute(ref,"title_screen_line2",getgadgettext(EditorUI.LevelTitleLine2))
+    EntSetAttribute(ref,"title_screen_line3",getgadgettext(EditorUI.LevelTitleLine3))
+    EntSetAttribute(ref,"sky_dynamic_enabled",str$(getchecked(EditorUI.UseDynamicSky)))
+    EntSetAttribute(ref,"sky_dynamic_timeofday",str$(getTrackbarPosition(EditorUI.TimeOfDaySlider)))
+    EntSetAttribute(ref,"water_enabled",str$(getchecked(EditorUI.ShowWaterPlain)))
+    EntSetAttribute(ref,"water_height",str$(getTrackbarPosition(EditorUI.WaterHeightSlider)))
+    World_Editor_UpdateWorld()
+ENDFUNCTION
+
+function World_Editor_Apply():
+    ref = EntGetReference("root")
+    setgadgettext EditorUI.LevelNameTextbox,EntGetAttribute(ref,"displayname")
+    setchecked EditorUI.UseLevelTitle,Ent_GetInt(ref,"title_screen_enabled")
+    setgadgettext EditorUI.LevelTitleLine1,EntGetAttribute(ref,"title_screen_line1")
+    setgadgettext EditorUI.LevelTitleLine2,EntGetAttribute(ref,"title_screen_line2")
+    setgadgettext EditorUI.LevelTitleLine3,EntGetAttribute(ref,"title_screen_line3")
+    setchecked EditorUI.UseDynamicSky,Ent_GetInt(ref,"sky_dynamic_enabled")
+    settrackbarposition EditorUI.TimeOfDaySlider,Ent_GetInt(ref,"sky_dynamic_timeofday")
+    setGWTime( Ent_GetInt(ref,"sky_dynamic_timeofday") , 0 , 0 )
+    setchecked EditorUI.ShowWaterPlain,Ent_GetInt(ref,"water_enabled")
+    settrackbarposition EditorUI.WaterHeightSlider,Ent_GetInt(ref,"water_height")
+ENDFUNCTION
+
+function World_Editor_UpdateWorld():
+    setGWTime( Ent_GetInt(ref,"sky_dynamic_timeofday") , 0 , 0 )
+    if Ent_GetInt(ref,"sky_dynamic_enabled"):
+      exclude object on SkyboxObj
+      exclude object off skyMesh
+    else
+      exclude object off SkyboxObj
+      exclude object on skyMesh
+    endif
+    exclude object on WaterPlain
+    if Ent_GetInt(ref,"water_enabled"):
+        exclude object off WaterPlain
+        position object WaterPlain,128,getTrackbarPosition(EditorUI.WaterHeightSlider),128
+    endif
+ENDFUNCTION
+
+function World_Editor_Display():
+    numitems = itemCount(EditorUI.Variable_window_list)
+    for i = 0 to numitems - 1:
+        removeitem EditorUI.Variable_window_list,0
+    next i
+    ref = EntGetReference("root")
+    additem EditorUI.Variable_window_list,"filename = " + entGetAttribute(ref,"filename")
+    additem EditorUI.Variable_window_list,"displayname = " + entGetAttribute(ref,"displayname")
+    additem EditorUI.Variable_window_list,"unique_id = " + entGetAttribute(ref,"unique_id")
+    additem EditorUI.Variable_window_list,"title_screen_enabled = " + entGetAttribute(ref,"title_screen_enabled")
+    additem EditorUI.Variable_window_list,"title_screen_line1 = " + entGetAttribute(ref,"title_screen_line1")
+    additem EditorUI.Variable_window_list,"title_screen_line2 = " + entGetAttribute(ref,"title_screen_line2")
+    additem EditorUI.Variable_window_list,"title_screen_line3 = " + entGetAttribute(ref,"title_screen_line3")
+    additem EditorUI.Variable_window_list,"sky_dynamic_enabled = " + entGetAttribute(ref,"sky_dynamic_enabled")
+    additem EditorUI.Variable_window_list,"sky_dynamic_timeofday = " + entGetAttribute(ref,"sky_dynamic_timeofday")
+    additem EditorUI.Variable_window_list,"water_enabled = " + entGetAttribute(ref,"water_enabled")
+    additem EditorUI.Variable_window_list,"water_height = " + entGetAttribute(ref,"water_height")
+ENDFUNCTION

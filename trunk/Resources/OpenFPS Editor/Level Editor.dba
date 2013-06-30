@@ -1,0 +1,253 @@
+//////////////////////////////////////////////////////////////
+//   OpenFPS
+//   LEVEL EDITOR SOURCE
+//////////////////////////////////////////////////////////////
+// Changelog:
+// version Alpha 0.1: First upload to SVN. Simple framework.
+
+type t_SpectatorCamera
+    name as string
+    x as float
+    y as float
+    z as float
+    rx as float
+    ry as float
+    rz as float
+endtype
+
+//////////////////////////////////////////////////////////////
+// Standard Setup
+//////////////////////////////////////////////////////////////
+
+Set Message Callback "WndProc"
+
+Sync on
+Sync Rate 0
+Backdrop Off
+Disable Escapekey
+autocam off
+
+set dir "..\..\Engine"
+
+Sky_Create()
+
+//Init systems
+TBM_Init()
+Ent_Init()
+Spectator_Init()
+UI_Editor_Init()
+Camera_Init()
+DSky_Init()
+Terrain_Init()
+World_Editor_Init()
+
+//////////////////////////////////////////////////////////////
+// Editor Init
+//////////////////////////////////////////////////////////////
+
+Global ScreenWidth : ScreenWidth = Screen Width()
+Global ScreenHeight : ScreenHeight = Screen Height()
+Global BackgroundColor : BackgroundColor = Rgb(128,128,128)
+
+global WaterPlain : WaterPlain = reserve free object()
+global WaterPlainTex : WaterPlainTex = reserve free image()
+load image "Media\Materials\Engine\Water.png",WaterPlainTex
+make object plain WaterPlain,512,512,4,4
+texture object WaterPlain,WaterPlainTex
+scale object Texture WaterPlain,32,32
+set alpha mapping on WaterPlain,80
+exclude object on WaterPlain
+
+//////////////////////////////////////////////////////////////
+// Main Loop
+//////////////////////////////////////////////////////////////
+
+Do
+    //update timer system
+    TBM_Update()
+    Ent_Update()
+    
+    //update camera movement
+    Camera_Update()
+    Sky_Update()
+    DSky_Update()
+    
+    //update ui system
+    UI_Editor_Update()
+    World_Editor_Update()
+    Terrain_Update()
+    
+    //sync
+    sync
+    if EditorUI.QuitFlag = 1 then exit
+Loop
+
+UI_Editor_Terminate()
+end
+
+//////////////////////////////////////////////////////////////
+// Misc functions
+//////////////////////////////////////////////////////////////
+
+function Sky_Create():
+    //unmanaged skybox setup
+    Global SkyboxImg : SkyboxImg = Reserve Free Image()
+    Global Skyboxfx : Skyboxfx = Reserve Free Effect()
+    Global SkyboxObj : SkyboxObj = Reserve Free Object()
+    make object sphere SkyboxObj,-2000,5,5
+    Load Image "Media\Materials\Cubemaps\Cube0.dds",SkyboxImg,2
+    Load Effect "media\Shaders\SkyBox.fx",SkyboxFx,0
+    Set Object Effect SkyboxObj,SkyboxFx
+    Texture Object SkyboxObj,0,SkyboxImg
+    `set object transparency SkyboxObj,2
+ENDFUNCTION
+
+function Sky_Update():
+    //update skybox
+    position object SkyboxObj,camera position x(),camera position y(),camera position z()
+ENDFUNCTION
+
+function Camera_Init():
+    global cr#
+    global cf#
+    global m_c
+    global ncr#
+    global ncf#
+    global cx#
+    global cy#
+    global ncx#
+    global ncy#
+ENDFUNCTION
+
+function Camera_Update():
+    if EditorUI.CameraMode = 0:
+    cr#=0:cf#=0
+    m_c = 0
+    If mouseclick()=2 : m_c = 1 : hide mouse : position mouse desktop width()/2,desktop height()/2: else : show mouse : endif
+    If Rightkey()=1 Or Keystate(32)=1 Then cr#=-EditorUI.CameraMoveSpeed*TBM*m_c
+    If Leftkey()=1 Or Keystate(30)=1 Then cr#=EditorUI.CameraMoveSpeed*TBM*m_c
+    If Upkey()=1 Or Keystate(17)=1 Then cf#=EditorUI.CameraMoveSpeed*TBM*m_c
+    If Downkey()=1 Or Keystate(31)=1 Then cf#=-EditorUI.CameraMoveSpeed*TBM*m_c
+    ncr#=tbm_curvevalue(cr#,ncr#,5)
+    ncf#=tbm_curvevalue(cf#,ncf#,5)
+    cx#=cx#+(EditorUI.mmy*0.2*m_c)
+    cy#=cy#+(EditorUI.mmx*0.2*m_c)
+    if cx#>80 then cx#=80
+    if cx#<-80  then cx#=-80
+    ncx#=tbm_curveangle(cx#,ncx#,2)
+    ncy#=tbm_curveangle(cy#,ncy#,2)
+    move camera ncf#
+    rotate camera 0,wrapvalue(ncy#-90),0
+    move camera ncr#
+    rotate camera 0,wrapvalue(ncy#+90),0
+    Rotate Camera ncx#,ncy#,0
+    EditorUI.CameraX = camera position x()
+    EditorUI.CameraY = camera position y()
+    EditorUI.CameraZ = camera position z()
+    EditorUI.CameraRX = camera angle x()
+    EditorUI.CameraRY = camera angle y()
+    EditorUI.CameraRZ = camera angle z()
+    endif
+    if EditorUI.CameraMode = 1:
+        position camera EditorUI.CameraX,EditorUI.CameraY,EditorUI.CameraZ
+        rotate camera EditorUI.CameraRX,EditorUI.CameraRY,EditorUI.CameraRZ
+    endif
+    if EditorUI.CameraMode = 2:
+        Spectator_SetCamera()
+        position camera EditorUI.CameraX,EditorUI.CameraY,EditorUI.CameraZ
+        rotate camera EditorUI.CameraRX,EditorUI.CameraRY,EditorUI.CameraRZ
+    endif
+ENDFUNCTION
+
+function Spectator_Init():
+    dim SpectatorCameras() as t_SpectatorCamera
+    global NumSpectatorCameras
+ENDFUNCTION
+
+function Spectator_Add():
+    array insert at bottom SpectatorCameras()
+    SpectatorCameras(NumSpectatorCameras).name = "<new camera>"
+    SpectatorCameras(NumSpectatorCameras).x = EditorUI.CameraX
+    SpectatorCameras(NumSpectatorCameras).y = EditorUI.CameraY
+    SpectatorCameras(NumSpectatorCameras).z = EditorUI.CameraZ
+    SpectatorCameras(NumSpectatorCameras).rx = EditorUI.CameraRX
+    SpectatorCameras(NumSpectatorCameras).ry = EditorUI.CameraRY
+    SpectatorCameras(NumSpectatorCameras).rz = EditorUI.CameraRZ
+
+    UI_Editor_AddToConsole("Added <new camera>")
+        additem EditorUI.SpectatorList,SpectatorCameras(NumSpectatorCameras).name
+        selectitem EditorUI.SpectatorList,itemCount(EditorUI.SpectatorList)-1
+    NumSpectatorCameras = NumSpectatorCameras + 1
+ENDFUNCTION
+
+function Spectator_Rename(newname$):
+    if selecteditem(EditorUI.SpectatorList) > -1:
+        SpectatorCameras(selecteditem(EditorUI.SpectatorList)).name = newname$
+        changeitem EditorUI.SpectatorList,selecteditem(EditorUI.SpectatorList),newname$
+        UI_Editor_AddToConsole("Renamed camera to "+newname$)
+    endif
+ENDFUNCTION
+
+function Spectator_Set():
+    if selecteditem(EditorUI.SpectatorList) > -1:
+        id = selecteditem(EditorUI.SpectatorList)
+        SpectatorCameras(id).x = EditorUI.CameraX
+        SpectatorCameras(id).y = EditorUI.CameraY
+        SpectatorCameras(id).z = EditorUI.CameraZ
+        SpectatorCameras(id).rz = EditorUI.CameraRX
+        SpectatorCameras(id).ry = EditorUI.CameraRY
+        SpectatorCameras(id).rz = EditorUI.CameraRZ
+        UI_Editor_AddToConsole("Set camera pos/rot.")
+    endif
+endfunction
+
+function Spectator_SetCamera():
+    if selecteditem(EditorUI.SpectatorList) > -1:
+        id = selecteditem(EditorUI.SpectatorList)
+        EditorUI.CameraX = SpectatorCameras(id).x
+        EditorUI.CameraY = SpectatorCameras(id).y
+        EditorUI.CameraZ = SpectatorCameras(id).z
+        EditorUI.CameraRX = SpectatorCameras(id).rx
+        EditorUI.CameraRY = SpectatorCameras(id).ry
+        EditorUI.CameraRZ = SpectatorCameras(id).rz
+        cx# = EditorUI.CameraRX
+        cy# = EditorUI.CameraRY
+        ncx# = cx#
+        ncy# = cy#
+    endif
+endfunction
+
+function Spectator_Delete():
+    if selecteditem(EditorUI.SpectatorList) > -1:
+        array delete element SpectatorCameras(selecteditem(EditorUI.SpectatorList))
+        UI_Editor_AddToConsole("Deleted camera.")
+        removeitem EditorUI.SpectatorList,selecteditem(EditorUI.SpectatorList)
+        NumSpectatorCameras = NumSpectatorCameras - 1
+    endif
+endfunction
+
+function Spectator_UpdateList():
+    //dont do anything stupid
+ENDFUNCTION
+
+function WndProc(hwnd, msg, wparam, lparam)
+    select msg
+        case 0x5
+            //resize!
+            `set display mode lparam && 0xFFFF, lparam >> 16, 32
+            `print "Resizing..."
+        endcase
+        case 0x10
+            UI_Editor_DoQuitPrompt()
+            if EditorUI.Quitflag > -1:
+                stop current message
+            else:
+                set message callback ""
+            Endif
+        endcase
+    endselect
+Endfunction 0
+
+//////////////////////////////////////////////////////////////
+// End of code
+//////////////////////////////////////////////////////////////
