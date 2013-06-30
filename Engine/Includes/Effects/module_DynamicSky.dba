@@ -1,0 +1,369 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - OPENFPS 3d SKY MODULE
+//  Concept and code by thenerd, Summer 2012!
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  DOCUMENTATION
+//////////////////////////////////////////////////////////////
+// Renders a 3d sky based on the time of day.
+//
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  CONSTANTS
+//////////////////////////////////////////////////////////////
+
+#constant SKYSHADER "Media/shaders/sky_gradient_sm2.fx"
+
+//////////////////////////////////////////////////////////////
+//  UDTS
+//////////////////////////////////////////////////////////////
+
+type str_GWTime
+   elasped    as float
+   increment  as dword
+   curtimer   as dword   
+   setSec     as byte
+   setMin     as byte   
+   setHour    as byte
+   second     as byte
+   minute     as byte
+   hour       as byte  
+   multiplier as float
+endtype
+
+Type str_vec3RGB
+   r as float
+   g as float
+   b as float   
+endtype
+
+type str_WeatherColor
+   ambient as str_vec3RGB
+   clouds_lower as str_vec3RGB
+   clouds_upper as str_vec3RGB
+   fog as str_vec3RGB
+   horizon as str_vec3RGB
+   sky_lower as str_vec3RGB
+   sky_upper as str_vec3RGB
+   stars as str_vec3RGB
+   sun as str_vec3RGB
+   sunlight as str_vec3RGB
+endtype
+
+type str_WeatherFog 
+   day_near as float
+   day_far as float 
+   night_near as float
+   night_far as float   
+endtype
+
+type str_WeatherCloud
+   texture_lower as string
+   texture_upper as string  
+   speed_lower as float
+   speed_upper as float
+   scale_lower as float
+   scale_upper as float
+   tint_lower as str_vec3RGB
+   tint_upper as str_vec3RGB   
+endtype
+
+type str_Weather
+   id As String
+	current as str_WeatherColor
+   day as str_WeatherColor
+   night as str_WeatherColor   
+   sunrise as str_WeatherColor
+   sunset as str_WeatherColor
+   fog_distance as str_WeatherFog
+   cloud as  str_WeatherCloud
+   wind_speed as float
+   trans_delta as float 
+   sun_glare as float    
+   sun_damage as float      
+Endtype
+
+//////////////////////////////////////////////////////////////
+//  FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+Function DSky_Init():
+	global Sky_Inited as boolean : Sky_Inited = 1
+	initGWTime()
+	setGWTimeMultiplier(0)
+	initWeather()
+Endfunction
+
+Function Sky_SetActiveCamera():
+Endfunction
+
+Function DSky_Update():
+	if Sky_Inited<1 then DSky_Init()
+	updateGWTime()
+	updateWeather()
+endfunction
+
+Function DSky_Terminate():
+Endfunction
+
+function initGWTime()
+   global gwTime as str_GWTime
+   gwTime.multiplier = 0.0
+   gwTime.increment = 0.0
+   gwTime.second = 0
+   gwTime.minute = 0
+   gwTime.hour = 0   
+   gwTime.elasped = 0.0
+   gwTime.curtimer = timer()
+endfunction
+
+`the game world time factor
+function setGWTimeMultiplier( value as float )
+   gwTime.multiplier = value
+endfunction
+
+function setGWTime( hour , minute , second )
+   gwTime.setHour = hour
+   gwTime.setMin  = minute
+   gwTime.setSec  = second
+endfunction
+
+function updateGWTime()
+   gwTime.second = 0
+   gwTime.minute = 0
+   gwTime.hour = gwTime.setHour
+   
+endfunction
+
+`returns the amount of seconds pick
+function getGWTimeSec( hour , minute , second )
+  sec = second + ( minute * 60 ) + ( hour * 3600 )
+endfunction sec
+
+`returns the current amount of second
+function getCurGWTimeSec()
+   curSec = gwTime.second + ( gwTime.minute * 60 ) + ( gwTime.hour * 3600 )
+Endfunction curSec
+
+
+function initWeather()
+
+   #constant FOG_LEVEL              =  -0.32
+   #constant HORIZON_LEVEL          =  0.0
+   #constant SKY_LOWER_LEVEL        =  0.32
+   #constant SKY_UPPER_LEVEL        =  0.64
+   global FX_SKY_GRADIENT : FX_SKY_GRADIENT =Reserve Free Effect()
+   global VEC4_FX_SKY_GRADIENT : VEC4_FX_SKY_GRADIENT = Reserve Free Vector()
+     
+   global dim weather() as str_Weather
+
+   null = make vector4( VEC4_FX_SKY_GRADIENT )
+   
+   global tempWeather as str_Weather
+   tempWeather.id =  "clear"
+
+   tempWeather.day.fog.r = .39
+   tempWeather.day.fog.g = .57
+   tempWeather.day.fog.b = .74
+   tempWeather.day.horizon.r = .59
+   tempWeather.day.horizon.g = .74
+   tempWeather.day.horizon.b = .92
+   tempWeather.day.sky_lower.r = .59
+   tempWeather.day.sky_lower.g = .77 
+   tempWeather.day.sky_lower.b = .94
+   tempWeather.day.sky_upper.r = .59 
+   tempWeather.day.sky_upper.g = .77 
+   tempWeather.day.sky_upper.b = .94
+
+   tempWeather.night.fog.r = .01
+   tempWeather.night.fog.g = .06
+   tempWeather.night.fog.b = .1
+   tempWeather.night.horizon.r = .01
+   tempWeather.night.horizon.g = .05
+   tempWeather.night.horizon.b = .11
+   tempWeather.night.sky_lower.r = .01
+   tempWeather.night.sky_lower.g = .06
+   tempWeather.night.sky_lower.b = .12
+   tempWeather.night.sky_upper.r = .0 
+   tempWeather.night.sky_upper.g = .01 
+   tempWeather.night.sky_upper.b = .04 
+   
+   tempWeather.sunset.fog.r = .28
+   tempWeather.sunset.fog.g = .29
+   tempWeather.sunset.fog.b = .38
+   tempWeather.sunset.horizon.r = .93
+   tempWeather.sunset.horizon.g = .44
+   tempWeather.sunset.horizon.b = .27
+   tempWeather.sunset.sky_lower.r = .83
+   tempWeather.sunset.sky_lower.g = .52 
+   tempWeather.sunset.sky_lower.b = .48
+   tempWeather.sunset.sky_upper.r = .43 
+   tempWeather.sunset.sky_upper.g = .42 
+   tempWeather.sunset.sky_upper.b = .54 
+   
+   tempWeather.sunrise.fog.r = .33
+   tempWeather.sunrise.fog.g = .38
+   tempWeather.sunrise.fog.b = .49
+   tempWeather.sunrise.horizon.r = .95
+   tempWeather.sunrise.horizon.g = .62
+   tempWeather.sunrise.horizon.b = .5
+   tempWeather.sunrise.sky_lower.r = .89
+   tempWeather.sunrise.sky_lower.g = .85 
+   tempWeather.sunrise.sky_lower.b = .77
+   tempWeather.sunrise.sky_upper.r = .58 
+   tempWeather.sunrise.sky_upper.g = .69 
+   tempWeather.sunrise.sky_upper.b = .78 
+
+   global skyMesh as integer 
+   skyMesh = Reserve Free Object() `[Temp]
+   make object sphere skyMesh , 128,16,16 `48,48
+   set object cull skyMesh , 0
+   Scale Object skyMesh , 1000 , 1000 , 1000
+	
+   global skyMeshCloudsimg as integer 
+   skyMeshCloudsimg = Reserve Free image() `[Temp]
+	`Load Image "media/textures/game/clouds1.png",skyMeshCloudsimg
+   
+   load effect SKYSHADER , FX_SKY_GRADIENT , 0
+   set effect constant float FX_SKY_GRADIENT , "FOG_LEVEL" , FOG_LEVEL
+   set effect constant float FX_SKY_GRADIENT , "HORIZON_LEVEL" , HORIZON_LEVEL
+   set effect constant float FX_SKY_GRADIENT , "SKY_LOWER_LEVEL" , SKY_LOWER_LEVEL
+   set effect constant float FX_SKY_GRADIENT , "SKY_UPPER_LEVEL" , SKY_UPPER_LEVEL
+   
+   set object effect skyMesh , FX_SKY_GRADIENT
+		`Texture Object skyMesh,skyMeshCloudsimg
+		`scale object texture skyMesh,10,10
+
+  exclude object off SkyboxObj
+  exclude object on skyMesh
+endfunction
+
+function updateWeather()
+
+   position object skyMesh, camera position x(), camera position y(), camera position z()
+	
+   `needs an array to sort out duration overlapping
+   remstart
+   updateSkyGradient( getGWTimeSec(5,0,0) , getGWTimeSec(4,0,0) , tempWeather.day.fog , tempWeather.day.fog , "fogColor"  )
+   updateSkyGradient( getGWTimeSec(5,0,0) , getGWTimeSec(4,0,0) , tempWeather.day.horizon , tempWeather.day.horizon , "horizonColor"  )
+   updateSkyGradient( getGWTimeSec(5,0,0) , getGWTimeSec(5,0,0) , tempWeather.day.sky_lower , tempWeather.day.sky_lower , "skyLowerColor"  )
+   updateSkyGradient( getGWTimeSec(5,0,0) , getGWTimeSec(4,0,0) , tempWeather.day.sky_upper , tempWeather.day.sky_upper , "skyUpperColor"  )
+   
+	updateSkyGradient( getGWTimeSec(10,0,0) , getGWTimeSec(2,0,0) , tempWeather.day.fog , tempWeather.day.fog , "fogColor"  )
+   updateSkyGradient( getGWTimeSec(10,0,0) , getGWTimeSec(2,0,0) , tempWeather.day.horizon , tempWeather.day.horizon , "horizonColor"  )
+   updateSkyGradient( getGWTimeSec(10,30,0) , getGWTimeSec(2,0,0) , tempWeather.day.sky_lower , tempWeather.day.sky_lower , "skyLowerColor"  )
+   updateSkyGradient( getGWTimeSec(10,0,0) , getGWTimeSec(2,0,0) , tempWeather.day.sky_upper , tempWeather.day.sky_upper , "skyUpperColor"  )
+
+   updateSkyGradient( getGWTimeSec(16,0,0) , getGWTimeSec(4,0,0) , tempWeather.day.fog , tempWeather.day.fog , "fogColor"  )
+   updateSkyGradient( getGWTimeSec(16,0,0) , getGWTimeSec(4,0,0) , tempWeather.day.horizon , tempWeather.day.horizon , "horizonColor"  )
+   updateSkyGradient( getGWTimeSec(16,0,0) , getGWTimeSec(3,0,0) , tempWeather.day.sky_lower , tempWeather.day.sky_lower , "skyLowerColor"  )
+   updateSkyGradient( getGWTimeSec(16,0,0) , getGWTimeSec(4,0,0) , tempWeather.day.sky_upper , tempWeather.day.sky_upper , "skyUpperColor"  )
+
+   updateSkyGradient( getGWTimeSec(20,0,0) , getGWTimeSec(3,0,0) , tempWeather.day.fog , tempWeather.day.fog , "fogColor"  )
+   updateSkyGradient( getGWTimeSec(20,0,0) , getGWTimeSec(3,0,0) , tempWeather.day.horizon , tempWeather.day.horizon , "horizonColor"  )
+   updateSkyGradient( getGWTimeSec(18,0,0) , getGWTimeSec(5,0,0) , tempWeather.day.sky_lower , tempWeather.day.sky_lower , "skyLowerColor"  )
+   updateSkyGradient( getGWTimeSec(20,0,0) , getGWTimeSec(3,0,0) , tempWeather.day.sky_upper , tempWeather.day.sky_upper , "skyUpperColor"  )
+  remend
+   updateSkyGradient( getGWTimeSec(5,0,0) , getGWTimeSec(4,0,0) , tempWeather.night.fog , tempWeather.sunrise.fog , "fogColor"  )
+   updateSkyGradient( getGWTimeSec(5,0,0) , getGWTimeSec(4,0,0) , tempWeather.night.horizon , tempWeather.sunrise.horizon , "horizonColor"  )
+   updateSkyGradient( getGWTimeSec(5,0,0) , getGWTimeSec(5,0,0) , tempWeather.night.sky_lower , tempWeather.sunrise.sky_lower , "skyLowerColor"  )
+   updateSkyGradient( getGWTimeSec(5,0,0) , getGWTimeSec(4,0,0) , tempWeather.night.sky_upper , tempWeather.sunrise.sky_upper , "skyUpperColor"  )
+   
+   updateSkyGradient( getGWTimeSec(10,0,0) , getGWTimeSec(2,0,0) , tempWeather.sunrise.fog , tempWeather.day.fog , "fogColor"  )
+   updateSkyGradient( getGWTimeSec(10,0,0) , getGWTimeSec(2,0,0) , tempWeather.sunrise.horizon , tempWeather.day.horizon , "horizonColor"  )
+   updateSkyGradient( getGWTimeSec(10,30,0) , getGWTimeSec(2,0,0) , tempWeather.sunrise.sky_lower , tempWeather.day.sky_lower , "skyLowerColor"  )
+   updateSkyGradient( getGWTimeSec(10,0,0) , getGWTimeSec(2,0,0) , tempWeather.sunrise.sky_upper , tempWeather.day.sky_upper , "skyUpperColor"  )
+
+   updateSkyGradient( getGWTimeSec(16,0,0) , getGWTimeSec(4,0,0) , tempWeather.day.fog , tempWeather.sunset.fog , "fogColor"  )
+   updateSkyGradient( getGWTimeSec(16,0,0) , getGWTimeSec(4,0,0) , tempWeather.day.horizon , tempWeather.sunset.horizon , "horizonColor"  )
+   updateSkyGradient( getGWTimeSec(16,0,0) , getGWTimeSec(3,0,0) , tempWeather.day.sky_lower , tempWeather.sunset.sky_lower , "skyLowerColor"  )
+   updateSkyGradient( getGWTimeSec(16,0,0) , getGWTimeSec(4,0,0) , tempWeather.day.sky_upper , tempWeather.sunset.sky_upper , "skyUpperColor"  )
+
+   updateSkyGradient( getGWTimeSec(20,0,0) , getGWTimeSec(3,0,0) , tempWeather.sunset.fog , tempWeather.night.fog , "fogColor"  )
+   updateSkyGradient( getGWTimeSec(20,0,0) , getGWTimeSec(3,0,0) , tempWeather.sunset.horizon , tempWeather.night.horizon , "horizonColor"  )
+   updateSkyGradient( getGWTimeSec(18,0,0) , getGWTimeSec(5,0,0) , tempWeather.sunset.sky_lower , tempWeather.night.sky_lower , "skyLowerColor"  )
+   updateSkyGradient( getGWTimeSec(20,0,0) , getGWTimeSec(3,0,0) , tempWeather.sunset.sky_upper , tempWeather.night.sky_upper , "skyUpperColor"  )
+
+endfunction
+
+function updateSkyGradient( startTime , duration , oldColor as str_vec3RGB , toColor as str_vec3RGB , updateLevel as string )
+   
+   local updateTime as integer
+   local finalColor as Str_vec3RGB
+   local newColor as Str_vec3RGB
+   local upColor as Str_vec3RGB   
+   
+   `oldColor/toColor RGB range is based on the shader, so it not 0-255 but 0.0 to 1.0
+   `timeCurrentSec() = return the total amount of seconds pasted within 24 hours (60*60*24)
+   
+   `doesn't matter what time you start out  
+   if getCurGWTimeSec() >= startTime and getCurGWTimeSec() < startTime + duration
+      if updateTime < duration
+         updateTime = getCurGWTimeSec() - startTime
+
+         `work out if were increasing of decreasing
+         if oldColor.r > toColor.r
+            newColor.r = oldColor.r - toColor.r
+            else
+            newColor.r = toColor.r - oldColor.r
+         endif
+
+         if oldColor.g > toColor.g
+            newColor.g = oldColor.g - toColor.g
+            else
+            newColor.g = toColor.g - oldColor.g
+         endif
+
+         if oldColor.b > toColor.b
+            newColor.b = oldColor.b - toColor.b
+            else
+            newColor.b = toColor.b - oldColor.b
+         endif
+
+         `work out what we need to add/subtract to the oldColor
+         upColor.r = ( updateTime * newColor.r ) / duration
+         upColor.g = ( updateTime * newColor.g ) / duration
+         upColor.b = ( updateTime * newColor.b ) / duration
+
+         `update finalColor
+         if toColor.r > oldColor.r
+            finalColor.r = oldColor.r + upColor.r
+            else
+            finalColor.r = oldColor.r - upColor.r
+         endif
+
+         if toColor.g > oldColor.g
+            finalColor.g = oldColor.g + upColor.g
+            else
+            finalColor.g = oldColor.g - upColor.g
+         endif
+
+         if toColor.b > oldColor.b
+            finalColor.b = oldColor.b + upColor.b
+            else
+            finalColor.b = oldColor.b - upColor.b
+         endif
+         
+         `update finalColor
+			if updatelevel = "horizonColor":
+			tempWeather.current.horizon.r = finalColor.r
+			tempWeather.current.horizon.g = finalColor.g
+			tempWeather.current.horizon.b = finalColor.b
+			color ambient light rgb(finalColor.r*255,finalColor.g*255,finalColor.b*255)
+			endif
+         set vector4 VEC4_FX_SKY_GRADIENT , finalColor.r , finalColor.g , finalColor.b , 0.0
+         set effect constant vector FX_SKY_GRADIENT , updateLevel , VEC4_FX_SKY_GRADIENT
+      else
+         updateTime = 0
+			if updatelevel = "horizonColor":
+			tempWeather.current.horizon.r = toColor.r
+			tempWeather.current.horizon.g = toColor.g
+			tempWeather.current.horizon.b = toColor.b
+			endif
+         set vector4 VEC4_FX_SKY_GRADIENT , toColor.r , toColor.r , toColor.r , 0.0
+         set effect constant vector FX_SKY_GRADIENT , updateLevel , VEC4_FX_SKY_GRADIENT
+      endif
+   endif
+endfunction

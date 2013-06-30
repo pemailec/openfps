@@ -1,0 +1,640 @@
+//////////////////////////////////////////////////////////////
+//   OpenFPS
+//   LEVEL EDITOR SOURCE
+//////////////////////////////////////////////////////////////
+// module_UI_EDITOR
+
+type t_EditorUI
+    CurrentID as integer
+    Font as integer
+    Quitflag as integer
+    Windowgadget as integer
+    Modegadget as integer
+    CurrentTool as integer
+    CurrentToolOld as integer
+    currentmodeframe as integer
+    panel_right_main as integer
+    panel_right_top as integer
+    About_Window as integer
+    About_Panel as integer
+    About_Button as integer
+    Dialog_Window as integer
+    Dialog_Panel as integer
+    Dialog_Button_Open as integer
+    Dialog_Button_Delete as integer
+    Dialog_Button_New as integer
+    Dialog_Button_Close as integer
+    MenuClick as integer
+    Menu_Main as integer
+    Menu_File as integer
+    Menu_Edit as integer
+    Menu_Level as integer
+    Menu_Scripting as integer
+    Menu_Entities as integer
+    Menu_Terrain as integer
+    Menu_Sound as integer
+    Menu_Game as integer
+    Menu_Tools as integer
+    Menu_Window as integer
+    Menu_Help as integer
+    Menu_File_Sub as integer
+    Menu_FileNew as integer
+    Menu_FileSave as integer
+    Menu_FileSaveAs as integer
+    Menu_FileSaveCopy as integer
+    Menu_FileOpen as integer
+    Menu_FileClose as integer
+    Menu_FileQuit as integer
+    Menu_Edit_Sub as integer
+    Menu_Level_Sub as integer
+    Menu_Level_Viewvars as integer
+    Menu_Scripting_Sub as integer
+    Menu_Entities_Sub as integer
+    Menu_Terrain_Sub as integer
+    Menu_Sound_Sub as integer
+    Menu_Game_Sub as integer
+    Menu_GameTest as integer
+    Menu_GameOpen as integer
+    Menu_Tools_Sub as integer
+    Menu_Window_Sub as integer
+    Menu_Help_Sub as integer
+    Menu_Help_Gotoforums  as integer
+    Menu_Help_About as integer
+    UI_Statusbar as integer
+    UI_Statuspanel1 as integer
+    UI_Statuspanel2 as integer
+    DialogNew as integer
+    DialogNewLabel as integer
+    DialogNewTextbox as integer
+    DialogNewCreateBTN as integer
+    DialogNewCancelBTN as integer
+    DialogNewErrorLabel as integer
+    SpectatorList as integer 
+    CameraSpeedSlider as integer 
+    CameraSpeedLabel as integer 
+    CameraModeLock as integer 
+    ToggleSpectatorMode as integer 
+    SpectatorListLabel as integer 
+    SpectatorListaddnew as integer 
+    SpectatorListSet as integer 
+    SpectatorListdelete as integer 
+    SpectatorListrename as integer 
+    SpectatorListsetmain as integer 
+    DialogName as integer
+    DialogNameLabel as integer
+    DialogNameTextbox as integer
+    DialogNameCreateBTN as integer
+    DialogNameCancelBTN as integer
+    DialogNameErrorLabel as integer
+    DialogNameType as integer
+    TimeOfDaySlider as integer
+    TimeOfdayLabel as integer
+    UseDynamicSky as integer
+    WaterHeightSlider as integer
+    WaterHeightLabel as integer
+    ShowWaterPlain as integer
+    LevelNameLabel as integer
+    LevelNameTextbox as integer
+    UseLevelTitle as integer
+    LevelTitleLine1 as integer
+    LevelTitleLine2 as integer
+    LevelTitleLine3 as integer
+    Variable_window as integer
+    Variable_window_list as integer
+    Variable_window_close as integer
+    CameraMode as integer
+    CameraX as float
+    CameraY as float
+    CameraZ as float
+    CameraRX as float
+    CameraRY as float
+    CameraRZ as float
+    CameraMoveSpeed as float
+    mmx as float
+    mmy as float
+endtype
+
+//////////////////////////////////////////////////////////////
+// Constants
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+// Startup Functions
+//////////////////////////////////////////////////////////////
+
+function UI_Editor_Init():
+    global EditorUI as t_EditorUI
+    EditorUI.Menu_Main=createMenu(0)
+    EditorUI.MenuClick =0x401
+    EditorUI.UI_Statusbar = createStatusBar(0)
+    EditorUI.Font = createFont("Arial",8,1,0,0) 
+    addStatusPanel EditorUI.UI_Statusbar, 200
+    addStatusPanel EditorUI.UI_Statusbar, 300
+    addStatusPanel EditorUI.UI_Statusbar, 400
+    setStatusText EditorUI.UI_Statusbar,1,"OpenFPS Editor - DEV VERSION"
+    UI_Editor_SetStatusText("BiG BroTher is watching you...")
+    EditorUI.UI_Statuspanel1 = 1
+    EditorUI.UI_Statuspanel2 = 2
+    applyFont EditorUI.UI_Statusbar,EditorUI.Font
+    
+    EditorUI.About_Window = createWindow((desktop width()/2)-240,(desktop height()/2)-160,480,320,"OpenFPS Editor - About",WINDOW_FIXED,WINDOW_TOOLWINDOW,0,0)
+    `Setgadgetvisible EditorUI.About_Window,0
+    EditorUI.About_Panel = createPanel(0,0,480,320,EditorUI.About_Window) 
+    EditorUI.About_Button = createbutton(310,255,140,30,"Okay",0,EditorUI.About_Window)
+    Setpanelimage EditorUI.About_Panel,"Media\Images\Interface\editor\about.bmp"
+    bringtofront EditorUI.About_Button
+    Setgadgetalpha EditorUI.About_Window,200
+    setgadgetvisible EditorUI.About_Window,0
+    applyFont EditorUI.About_Window,EditorUI.Font
+    applyFont EditorUI.About_Button,EditorUI.Font
+    
+    EditorUI.DialogNew=createWindow(161,291,443,136,"New Level File",WINDOW_FIXED,WINDOW_TOOLWINDOW,0,0)
+    EditorUI.DialogNewLabel=createLabel(10,10,75,20,"Level Name:",EditorUI.DialogNew)
+    EditorUI.DialogNewTextbox=createEdit(10,30,405,25,0,EditorUI.DialogNew)
+    EditorUI.DialogNewCreateBTN=createButton(260,62,75,25,"Create",0,EditorUI.DialogNew)
+    EditorUI.DialogNewCancelBTN=createButton(340,62,75,25,"Cancel",0,EditorUI.DialogNew)
+    EditorUI.DialogNewErrorLabel=createLabel(130,10,250,15,"Name cannot contain spaces!",EditorUI.DialogNew)
+    setgadgetvisible EditorUI.DialogNewErrorLabel,0
+    setgadgetvisible EditorUI.DialogNew,0
+    applyFont EditorUI.DialogNewLabel,EditorUI.Font
+    applyFont EditorUI.DialogNewTextbox,EditorUI.Font
+    applyFont EditorUI.DialogNewCreateBTN,EditorUI.Font
+    applyFont EditorUI.DialogNewCancelBTN,EditorUI.Font
+    applyFont EditorUI.DialogNewErrorLabel,EditorUI.Font
+    
+    EditorUI.DialogName=createWindow(161,291,443,136,"Set Name",WINDOW_FIXED,WINDOW_TOOLWINDOW,0,0)
+    EditorUI.DialogNameLabel=createLabel(10,10,75,20,"Name:",EditorUI.DialogName)
+    EditorUI.DialogNameTextbox=createEdit(10,30,405,25,0,EditorUI.DialogName)
+    EditorUI.DialogNameCreateBTN=createButton(260,62,75,25,"Okay",0,EditorUI.DialogName)
+    EditorUI.DialogNameCancelBTN=createButton(340,62,75,25,"Cancel",0,EditorUI.DialogName)
+    setgadgetvisible EditorUI.DialogName,0
+    applyFont EditorUI.DialogNameLabel,EditorUI.Font
+    applyFont EditorUI.DialogNameTextbox,EditorUI.Font
+    applyFont EditorUI.DialogNameCreateBTN,EditorUI.Font
+    applyFont EditorUI.DialogNameCancelBTN,EditorUI.Font
+    
+    
+    
+    EditorUI.panel_right_main = createPanel(0,0,280,0,0) 
+    setGadgetAlign EditorUI.panel_right_main,ALIGN_RIGHT 
+    EditorUI.panel_right_top = createListBox(10,10,260,160,EditorUI.panel_right_main)
+    `setGadgetEnabled EditorUI.panel_right_top,0
+    UI_Editor_AddToConsole("OpenFPS Editor - DEV VERSION")
+    UI_Editor_AddToConsole("============================")
+    UI_Editor_AddToConsole("Editor coded by thenerd")
+    UI_Editor_AddToConsole("Summer 2013")
+    UI_Editor_AddToConsole("============================")
+    `setPanelBorderStyle EditorUI.panel_right_top,BORDER_FLAT
+    applyFont EditorUI.panel_right_top,EditorUI.Font
+    
+    EditorUI.Modegadget = createComboBox(10,170,260,160,EditorUI.panel_right_main) 
+    addItem EditorUI.Modegadget,"Camera Mode"
+    addItem EditorUI.Modegadget,"Entity Edit"
+    addItem EditorUI.Modegadget,"Terrain Edit"
+    addItem EditorUI.Modegadget,"Level Attribute Edit"
+    EditorUI.currentmodeframe = createFrame(10,170,260,400,"Mode View",EditorUI.panel_right_main) 
+    selectitem EditorUI.Modegadget,0
+    applyFont EditorUI.Modegadget,EditorUI.Font
+    editorUI.CurrentToolOld = -1
+    
+    EditorUI.CameraSpeedSlider=createTrackBar(64,49,180,30,0,EditorUI.currentmodeframe)
+    EditorUI.CameraSpeedLabel=createLabel(16,50,45,29,"Move Speed",EditorUI.currentmodeframe)
+    EditorUI.CameraModeLock=createCheckBox(11,95,230,20,"Lock Camera Position / Rotation",EditorUI.currentmodeframe)
+    EditorUI.ToggleSpectatorMode=createCheckBox(11,121,238,24,"Use Spectator Mode",EditorUI.currentmodeframe)
+    EditorUI.SpectatorList=createListBox(12,180,157,199,EditorUI.currentmodeframe)
+    EditorUI.SpectatorListLabel=createLabel(12,153,180,20,"Spectator Camera List",EditorUI.currentmodeframe)
+    EditorUI.SpectatorListaddnew=createButton(174,179,75,25,"Add New",0,EditorUI.currentmodeframe)
+    EditorUI.SpectatorListSet=createButton(174,207,75,25,"Set Value",0,EditorUI.currentmodeframe)
+    EditorUI.SpectatorListdelete=createButton(174,291,75,25,"Delete",0,EditorUI.currentmodeframe)
+    EditorUI.SpectatorListrename=createButton(174,263,75,25,"Rename",0,EditorUI.currentmodeframe)
+    EditorUI.SpectatorListsetmain=createButton(174,235,75,25,"Set As Main",0,EditorUI.currentmodeframe)
+    settrackbarrange EditorUI.CameraSpeedSlider,1,10
+    settrackbarposition EditorUI.CameraSpeedSlider,5
+    setgadgetvisible EditorUI.SpectatorList,0
+    setgadgetvisible EditorUI.CameraSpeedSlider,0
+    setgadgetvisible EditorUI.CameraSpeedLabel,0
+    setgadgetvisible EditorUI.CameraModeLock,0
+    setgadgetvisible EditorUI.ToggleSpectatorMode,0
+    setgadgetvisible EditorUI.SpectatorListLabel,0
+    setgadgetvisible EditorUI.SpectatorListaddnew,0
+    setgadgetvisible EditorUI.SpectatorListSet,0
+    setgadgetvisible EditorUI.SpectatorListdelete,0
+    setgadgetvisible EditorUI.SpectatorListrename,0
+    setgadgetvisible EditorUI.SpectatorListsetmain,0
+    applyFont EditorUI.SpectatorList,EditorUI.Font
+    applyFont EditorUI.CameraSpeedSlider,EditorUI.Font
+    applyFont EditorUI.CameraSpeedLabel,EditorUI.Font
+    applyFont EditorUI.CameraModeLock,EditorUI.Font
+    applyFont EditorUI.ToggleSpectatorMode,EditorUI.Font
+    applyFont EditorUI.SpectatorListLabel,EditorUI.Font
+    applyFont EditorUI.SpectatorListaddnew,EditorUI.Font
+    applyFont EditorUI.SpectatorListSet,EditorUI.Font
+    applyFont EditorUI.SpectatorListdelete,EditorUI.Font
+    applyFont EditorUI.SpectatorListrename,EditorUI.Font
+    applyFont EditorUI.SpectatorListsetmain,EditorUI.Font
+    applyFont EditorUI.Modegadget,EditorUI.Font
+
+    EditorUI.TimeOfDaySlider=createTrackBar(64,78,180,30,0,EditorUI.currentmodeframe)
+    EditorUI.TimeOfdayLabel=createLabel(9,78,55,29,"Time Of Day",EditorUI.currentmodeframe)
+    EditorUI.UseDynamicSky=createCheckBox(11,47,230,20,"Dynamic Sky",EditorUI.currentmodeframe)
+    setgadgetvisible EditorUI.TimeOfDaySlider,0
+    setgadgetvisible EditorUI.TimeOfdayLabel,0
+    setgadgetvisible EditorUI.UseDynamicSky,0
+    applyFont EditorUI.TimeOfDaySlider,EditorUI.Font
+    applyFont EditorUI.TimeOfdayLabel,EditorUI.Font
+    applyFont EditorUI.UseDynamicSky,EditorUI.Font
+    settrackbarrange EditorUI.TimeOfDaySlider,5,20
+    
+    EditorUI.WaterHeightSlider=createTrackBar(64,78+80,180,30,0,EditorUI.currentmodeframe)
+    EditorUI.WaterHeightLabel=createLabel(9,78+80,55,29,"Water Height",EditorUI.currentmodeframe)
+    EditorUI.ShowWaterPlain=createCheckBox(11,47+80,230,20,"Use Water",EditorUI.currentmodeframe)
+    setgadgetvisible EditorUI.WaterHeightSlider,0
+    setgadgetvisible EditorUI.WaterHeightLabel,0
+    setgadgetvisible EditorUI.ShowWaterPlain,0
+    applyFont EditorUI.WaterHeightSlider,EditorUI.Font
+    applyFont EditorUI.WaterHeightLabel,EditorUI.Font
+    applyFont EditorUI.ShowWaterPlain,EditorUI.Font
+    settrackbarrange EditorUI.WaterHeightSlider,0,16
+    
+    EditorUI.LevelNameLabel=createLabel(9,208,120,20,"Level Display Name",EditorUI.currentmodeframe)
+    EditorUI.LevelNameTextbox=createEdit(9,230,230,24,0,EditorUI.currentmodeframe)
+    setgadgetvisible EditorUI.LevelNameLabel,0
+    setgadgetvisible EditorUI.LevelNameTextbox,0
+    applyFont EditorUI.LevelNameLabel,EditorUI.Font
+    applyFont EditorUI.LevelNameTextbox,EditorUI.Font
+    
+    EditorUI.UseLevelTitle=createCheckBox(11,255,230,20,"Use Title Screen",EditorUI.currentmodeframe)
+    EditorUI.LevelTitleLine1=createEdit(9,255+25,230,25,0,EditorUI.currentmodeframe)
+    EditorUI.LevelTitleLine2=createEdit(9,255+55,230,25,0,EditorUI.currentmodeframe)
+    EditorUI.LevelTitleLine3=createEdit(9,255+85,230,25,0,EditorUI.currentmodeframe)
+    setgadgetvisible EditorUI.UseLevelTitle,0
+    setgadgetvisible EditorUI.LevelTitleLine1,0
+    setgadgetvisible EditorUI.LevelTitleLine2,0
+    setgadgetvisible EditorUI.LevelTitleLine3,0
+    applyFont EditorUI.UseLevelTitle,EditorUI.Font
+    applyFont EditorUI.LevelTitleLine1,EditorUI.Font
+    applyFont EditorUI.LevelTitleLine2,EditorUI.Font
+    applyFont EditorUI.LevelTitleLine3,EditorUI.Font
+     
+    //File, Edit, Level, Scripting, Entities, Terrain, Sound, Game, Tools, Window, Help
+    EditorUI.Menu_File = UI_Editor_GenID()
+    EditorUI.Menu_Edit = UI_Editor_GenID()
+    EditorUI.Menu_Level = UI_Editor_GenID()
+    EditorUI.Menu_Scripting = UI_Editor_GenID()
+    EditorUI.Menu_Entities = UI_Editor_GenID()
+    EditorUI.Menu_Terrain = UI_Editor_GenID()
+    EditorUI.Menu_Sound = UI_Editor_GenID()
+    EditorUI.Menu_Game = UI_Editor_GenID()
+    EditorUI.Menu_Tools = UI_Editor_GenID()
+    EditorUI.Menu_Window = UI_Editor_GenID()
+    EditorUI.Menu_Help = UI_Editor_GenID()
+    addMenuItem EditorUI.Menu_Main,"File",EditorUI.Menu_File
+    addMenuItem EditorUI.Menu_Main,"Edit",EditorUI.Menu_Edit
+    addMenuItem EditorUI.Menu_Main,"Level",EditorUI.Menu_Level
+    addMenuItem EditorUI.Menu_Main,"Scripting",EditorUI.Menu_Scripting
+    addMenuItem EditorUI.Menu_Main,"Entities",EditorUI.Menu_Entities
+    addMenuItem EditorUI.Menu_Main,"Terrain",EditorUI.Menu_Terrain
+    addMenuItem EditorUI.Menu_Main,"Sound",EditorUI.Menu_Sound
+    addMenuItem EditorUI.Menu_Main,"Game",EditorUI.Menu_Game
+    addMenuItem EditorUI.Menu_Main,"Tools",EditorUI.Menu_Tools
+    addMenuItem EditorUI.Menu_Main,"Window",EditorUI.Menu_Window
+    addMenuItem EditorUI.Menu_Main,"Help",EditorUI.Menu_Help
+    EditorUI.Menu_File_Sub=createSubMenu(EditorUI.Menu_Main,EditorUI.Menu_File)
+    EditorUI.Menu_Edit_Sub=createSubMenu(EditorUI.Menu_Main,EditorUI.Menu_Edit)
+    EditorUI.Menu_Level_Sub=createSubMenu(EditorUI.Menu_Main,EditorUI.Menu_Level)
+    EditorUI.Menu_Scripting_Sub=createSubMenu(EditorUI.Menu_Main,EditorUI.Menu_Scripting)
+    EditorUI.Menu_Entities_Sub=createSubMenu(EditorUI.Menu_Main,EditorUI.Menu_Entities)
+    EditorUI.Menu_Terrain_Sub=createSubMenu(EditorUI.Menu_Main,EditorUI.Menu_Terrain)
+    EditorUI.Menu_Sound_Sub=createSubMenu(EditorUI.Menu_Main,EditorUI.Menu_Sound)
+    EditorUI.Menu_Game_Sub=createSubMenu(EditorUI.Menu_Main,EditorUI.Menu_Game)
+    EditorUI.Menu_Tools_Sub=createSubMenu(EditorUI.Menu_Main,EditorUI.Menu_Tools)
+    EditorUI.Menu_Window_Sub=createSubMenu(EditorUI.Menu_Main,EditorUI.Menu_Window)
+    EditorUI.Menu_Help_Sub=createSubMenu(EditorUI.Menu_Main,EditorUI.Menu_Help)
+    EditorUI.Menu_FileNew = UI_Editor_GenID()
+    EditorUI.Menu_FileSave = UI_Editor_GenID()
+    EditorUI.Menu_FileSaveAs = UI_Editor_GenID()
+    EditorUI.Menu_FileSaveCopy = UI_Editor_GenID()
+    EditorUI.Menu_FileOpen = UI_Editor_GenID()
+    EditorUI.Menu_FileClose = UI_Editor_GenID()
+    EditorUI.Menu_FileQuit = UI_Editor_GenID()
+    EditorUI.Menu_Help_Gotoforums = UI_Editor_GenID()
+    EditorUI.Menu_Help_About = UI_Editor_GenID()
+    addMenuItem EditorUI.Menu_File_Sub,"New...",EditorUI.Menu_FileNew
+    addMenuItem EditorUI.Menu_File_Sub,"Open",EditorUI.Menu_FileOpen
+    addMenuSplitter EditorUI.Menu_File_Sub
+    addMenuItem EditorUI.Menu_File_Sub,"Close",EditorUI.Menu_FileClose
+    setMenuItemEnabled EditorUI.Menu_File_Sub,EditorUI.Menu_FileClose,0
+    addMenuItem EditorUI.Menu_File_Sub,"Save",EditorUI.Menu_FileSave
+    addMenuItem EditorUI.Menu_File_Sub,"Save As...",EditorUI.Menu_FileSaveAs
+    addMenuItem EditorUI.Menu_File_Sub,"Save Copy",EditorUI.Menu_FileSaveCopy
+    addMenuSplitter EditorUI.Menu_File_Sub
+    Addmenuitem EditorUI.Menu_File_Sub,"Quit Editor",EditorUI.Menu_FileQuit
+    
+    EditorUI.Menu_Level_Viewvars = UI_Editor_GenID()
+    Addmenuitem EditorUI.Menu_Level_Sub,"View Environment Variables",EditorUI.Menu_Level_Viewvars
+    
+    EditorUI.Variable_window = createWindow(0,0,467,597,"View Environment Variables",WINDOW_FIXED ,WINDOW_TOOLWINDOW,0,0)
+    EditorUI.Variable_window_list = createlistbox(0,0,460,520,EditorUI.Variable_window)
+    EditorUI.Variable_window_close = createButton(0,510,460,60,"Close",0,EditorUI.Variable_window)
+    applyFont EditorUI.Variable_window_list,EditorUI.Font
+    applyFont EditorUI.Variable_window_close,EditorUI.Font
+    setgadgetvisible EditorUI.Variable_window,0
+    `Setgadgetalpha EditorUI.Variable_window,200
+    
+    
+    EditorUI.Menu_GameTest = UI_Editor_GenID()
+    EditorUI.Menu_GameOpen = UI_Editor_GenID()
+    Addmenuitem EditorUI.Menu_Game_Sub,"Test Game",EditorUI.Menu_GameTest
+    addMenuSplitter EditorUI.Menu_Game_Sub
+    Addmenuitem EditorUI.Menu_Game_Sub,"Open Current OpenFPS Build",EditorUI.Menu_GameOpen
+    
+    Addmenuitem EditorUI.Menu_Help_Sub,"Go To Forum Thread",EditorUI.Menu_Help_Gotoforums
+    addMenuSplitter EditorUI.Menu_Help_Sub
+    Addmenuitem EditorUI.Menu_Help_Sub,"About...",EditorUI.Menu_Help_About
+    
+    
+ENDFUNCTION
+
+function UI_Editor_GenID():
+    returnid = EditorUi.CurrentID
+    inc EditorUi.CurrentID,1
+endfunction returnid
+
+//////////////////////////////////////////////////////////////
+// Update Functions
+//////////////////////////////////////////////////////////////
+
+function UI_Editor_Update():
+    EditorUI.mmx = mousemovex()
+    EditorUI.mmy = mousemovey()
+    //get events
+    getEvent
+    select EventType()
+        case 0x401
+            id = Eventdata()
+            if id = EditorUI.Menu_FileNew then UI_Editor_DoNewPrompt()
+            if id = EditorUI.Menu_FileSave then UI_Editor_DoSave()
+            if id = EditorUI.Menu_FileSaveAs then UI_Editor_DoSaveAsPrompt()
+            if id = EditorUI.Menu_FileSaveCopy then UI_Editor_DoSaveCopyPrompt()
+            if id = EditorUI.Menu_FileOpen then UI_Editor_DoOpenPrompt()
+            if id = EditorUI.Menu_FileClose then UI_Editor_DoCloseFile()
+            if id = EditorUI.Menu_FileQuit then UI_Editor_DoQuitPrompt() //quit prompt
+            if id = EditorUI.Menu_Help_Gotoforums then execute file "http://forum.thegamecreators.com/?m=forum_view&t=154924&b=1","","",0 //forum thread link
+            if id = EditorUI.Menu_Help_About then Setgadgetvisible EditorUI.About_Window,1,1 : UI_Editor_AddToConsole("About")
+            if id = EditorUI.Menu_GameOpen then execute file "OpenFPS.exe","-editor","",0 : UI_Editor_AddToConsole("Running OpenFPS.exe -editor")
+            if id = EditorUI.Menu_GameTest then errormessage "Feature not implemented" : UI_Editor_AddToConsole("Feature not implemented")
+            if id = EditorUI.Menu_Level_Viewvars then setgadgetvisible EditorUI.Variable_window,1,1 : World_Editor_Display()
+        endcase
+        case 0x202
+            id = Eventsource()
+            if id = EditorUI.Variable_window_close then setgadgetvisible EditorUI.Variable_window,0,1
+            if id = EditorUI.About_Button then Setgadgetvisible EditorUI.About_Window,0
+            if id = EditorUI.DialogNewCreateBTN then UI_Editor_CheckNew()
+            if id = EditorUI.DialogNewCancelBTN then Setgadgetvisible EditorUI.DialogNew,0
+            if id = EditorUI.CameraSpeedSlider then setgadgettext EditorUI.CameraSpeedLabel,"Speed: "+str$(EditorUI.CameraMoveSpeed)
+            if id = EditorUI.Spectatorlistaddnew then EditorUI.DialogNameType = 1 : if getgadgetvisible(EditorUI.DialogName)=0: UI_Editor_AddToConsole("Name dialog opened") : UI_Editor_NameDialog("") : Spectator_Add(): endif
+            if id = EditorUI.Spectatorlistrename and selecteditem(EditorUI.SpectatorList)>-1 then EditorUI.DialogNameType = 2 : UI_Editor_AddToConsole("Name dialog opened") : UI_Editor_NameDialog(SpectatorCameras(selecteditem(EditorUI.SpectatorList)).name)
+            if id = EditorUI.Spectatorlistdelete then Spectator_Delete()
+            if id = EditorUI.SpectatorListSet then Spectator_Set()
+            if id = EditorUI.DialogNameCreateBTN then newname$ = UI_Editor_CloseNameDialog() : Spectator_Rename(newname$)
+            if id = EditorUI.DialogNameCancelBTN and EditorUI.DialogNameType = 1 then nullstr$ = UI_Editor_CloseNameDialog() : Spectator_Delete() //new
+            if id = EditorUI.DialogNameCancelBTN and EditorUI.DialogNameType = 2 then nullstr$ = UI_Editor_CloseNameDialog()
+            if id = EditorUI.ToggleSpectatorMode:
+                setgadgetenabled EditorUI.SpectatorListSet,1
+                setgadgetenabled EditorUI.Spectatorlistdelete,1
+                setgadgetenabled EditorUI.Spectatorlistaddnew,1
+                if getchecked(EditorUI.ToggleSpectatorMode)=1:
+                    setgadgetenabled EditorUI.SpectatorListSet,0
+                setgadgetenabled EditorUI.Spectatorlistdelete,0
+                setgadgetenabled EditorUI.Spectatorlistaddnew,0
+                endif
+            endif
+        endcase
+    endselect
+    //update ui elements
+    setStatusText EditorUI.UI_Statusbar,2,"Current FPS : "+str$(screen fps())+" / CPU : ?"  + " / Polygons : " + str$(statistic(1))
+    selectItem EditorUI.panel_right_top,-1
+    resizeGadget EditorUI.currentmodeframe,260,GET WINDOW CLIENT HEIGHT()-200
+    editorUI.CurrentTool = selecteditem(EditorUI.Modegadget)
+    set window title "OpenFPS Level Editor - " + FileName
+    Spectator_UpdateList()
+    //update gadgets
+    if editorUI.CurrentTool = editorUI.CurrentToolOld:
+    else
+    select editorUI.CurrentTool
+        case 0
+            //camera
+            UI_Editor_AddToConsole("Camera Tool Mode")
+            UI_Editor_HideAll()
+            setgadgetvisible EditorUI.SpectatorList,1
+            setgadgetvisible EditorUI.CameraSpeedSlider,1
+            setgadgetvisible EditorUI.CameraSpeedLabel,1
+            setgadgetvisible EditorUI.CameraModeLock,1
+            setgadgetvisible EditorUI.ToggleSpectatorMode,1
+            setgadgetvisible EditorUI.SpectatorListLabel,1
+            setgadgetvisible EditorUI.SpectatorListaddnew,1
+            setgadgetvisible EditorUI.SpectatorListSet,1
+            setgadgetvisible EditorUI.SpectatorListdelete,1
+            setgadgetvisible EditorUI.SpectatorListrename,1
+            setgadgetvisible EditorUI.SpectatorListsetmain,1
+        endcase
+        case 1
+            //entity
+            UI_Editor_AddToConsole("Entity Tool Mode")
+            UI_Editor_HideAll()
+        endcase
+        case 2
+            //terrain
+            UI_Editor_AddToConsole("Terrain Tool Mode")
+            UI_Editor_HideAll()
+        endcase
+        case 3
+            //level
+            UI_Editor_AddToConsole("Level Tool Mode")
+            UI_Editor_HideAll()
+            setgadgetvisible EditorUI.TimeOfDaySlider,1
+            setgadgetvisible EditorUI.TimeOfdayLabel,1
+            setgadgetvisible EditorUI.UseDynamicSky,1
+            setgadgetvisible EditorUI.WaterHeightSlider,1
+            setgadgetvisible EditorUI.WaterHeightLabel,1
+            setgadgetvisible EditorUI.ShowWaterPlain,1
+            setgadgetvisible EditorUI.LevelNameLabel,1
+            setgadgetvisible EditorUI.LevelNameTextbox,1
+            setgadgetvisible EditorUI.UseLevelTitle,1
+            setgadgetvisible EditorUI.LevelTitleLine1,1
+            setgadgetvisible EditorUI.LevelTitleLine2,1
+            setgadgetvisible EditorUI.LevelTitleLine3,1
+        endcase
+    endselect
+    editorUI.CurrentToolOld = editorUI.CurrentTool
+    endif
+    //persistant parts
+    select editorUI.CurrentTool
+        case 0
+            //camera
+            EditorUI.CameraMode = 0
+            if getchecked(EditorUI.CameraModeLock)=1 then EditorUI.CameraMode = 1
+            if getchecked(EditorUI.ToggleSpectatorMode)=1 then EditorUI.CameraMode = 2
+            EditorUI.CameraMoveSpeed = (getTrackbarPosition(EditorUI.CameraSpeedSlider))/10.0
+        endcase
+        case 1
+            `EditorUI.CameraMode = 1
+            if KEYSTATE(46) and keystate(56) then selectitem EditorUI.Modegadget,0
+            //entity
+        endcase
+        case 2
+            `EditorUI.CameraMode = 1
+            if KEYSTATE(46) and keystate(56) then selectitem EditorUI.Modegadget,0
+            //terrain
+            pick = pick object(mousex(),mousey(),1,2000)
+            if pick:
+                pick_x# = get pick vector x()+camera position x()
+                pick_y# = get pick vector y()+camera position y()
+                pick_z# = get pick vector z()+camera position z()
+                if mouseclick()=1:
+                    Terrain_Deform(pick_x#,pick_y#,pick_z#,1.0+(-2.0*CONTROLKEY()))
+                endif
+            endif
+        endcase
+        case 3
+            `EditorUI.CameraMode = 1
+            if KEYSTATE(46) and keystate(56) then selectitem EditorUI.Modegadget,0
+            //level
+        endcase
+    endselect
+    //update camera view
+    
+    x1# = 260.0
+    x2# = GET WINDOW CLIENT WIDTH()
+    
+    x_scaled# = ( x1# / x2# ) * screen width()
+    set camera view 0,0,screen width()-x_scaled#,screen height()
+    `set camera aspect (screen width()-x_scaled#)/screen height()
+ENDFUNCTION
+
+function UI_Editor_HideAll():
+        setgadgetvisible EditorUI.SpectatorList,0
+        setgadgetvisible EditorUI.CameraSpeedSlider,0
+        setgadgetvisible EditorUI.CameraSpeedLabel,0
+        setgadgetvisible EditorUI.CameraModeLock,0
+        setgadgetvisible EditorUI.ToggleSpectatorMode,0
+        setgadgetvisible EditorUI.SpectatorListLabel,0
+        setgadgetvisible EditorUI.SpectatorListaddnew,0
+        setgadgetvisible EditorUI.SpectatorListSet,0
+        setgadgetvisible EditorUI.SpectatorListdelete,0
+        setgadgetvisible EditorUI.SpectatorListrename,0
+        setgadgetvisible EditorUI.SpectatorListsetmain,0
+        setgadgetvisible EditorUI.TimeOfDaySlider,0
+        setgadgetvisible EditorUI.TimeOfdayLabel,0
+        setgadgetvisible EditorUI.UseDynamicSky,0
+        setgadgetvisible EditorUI.WaterHeightSlider,0
+        setgadgetvisible EditorUI.WaterHeightLabel,0
+        setgadgetvisible EditorUI.ShowWaterPlain,0
+        setgadgetvisible EditorUI.LevelNameLabel,0
+        setgadgetvisible EditorUI.LevelNameTextbox,0
+        setgadgetvisible EditorUI.UseLevelTitle,0
+        setgadgetvisible EditorUI.LevelTitleLine1,0
+        setgadgetvisible EditorUI.LevelTitleLine2,0
+        setgadgetvisible EditorUI.LevelTitleLine3,0
+endfunction
+
+function UI_Editor_SetStatusText(status$):
+    setStatusText EditorUI.UI_Statusbar,3,status$
+endfunction
+
+function UI_Editor_NameDialog(inputtext$):
+    returnstring$ = ""
+    setgadgettext EditorUI.DialogNameTextbox,inputtext$
+    setgadgetvisible EditorUI.DialogName,1,1
+ENDFUNCTION returnstring$
+
+function UI_Editor_CloseNameDialog():
+    returnstring$ = getgadgettext(EditorUI.DialogNameTextbox)
+    setgadgetvisible EditorUI.DialogName,0,1
+ENDFUNCTION returnstring$
+
+function UI_Editor_AddToConsole(status$):
+        var_time$=Get Date$()
+        var_month$ = left$(var_time$,2)
+        var_day$ = mid$(var_time$,4) + mid$(var_time$,5)
+        var_year$ = "20" + right$(var_time$,2)
+
+        var_time$=Get Time$()
+        var_hour$ = left$(var_time$,2)
+        var_minutes$ = mid$(var_time$,4) + mid$(var_time$,5)
+        var_seconds$ = right$(var_time$,2)
+        `var_time$=var_time$+" "+var_hour$+":"+var_minutes$+":"+var_seconds$+") "
+        
+    additem EditorUI.panel_right_top,"("+var_time$+") "+status$
+endfunction
+
+//////////////////////////////////////////////////////////////
+// Terminate Functions
+//////////////////////////////////////////////////////////////
+
+function UI_Editor_Terminate():
+    
+ENDFUNCTION
+
+function UI_Editor_DoQuitPrompt():
+    UI_Editor_AddToConsole("Displaying quit prompt...")
+    if len(filename)>1 and filename <> "Untitled Level":
+        quit=questionMessage("Save before quitting?","Quit Editor")
+        if quit > -1 then EditorUI.QuitFlag = 1
+        if quit = 1 then EntSave(FileName)
+    else
+        quit=questionMessage("Are you sure you want to quit?","Quit Editor")
+        if quit > -1 then EditorUI.QuitFlag = 1
+    endif
+ENDFUNCTION
+
+function UI_Editor_CheckNew():
+    text$=getGadgetText(EditorUI.DialogNewTextbox)
+    error = 0
+    for x=1 to len(text$)
+        if mid$(text$,x)=" " then setgadgetvisible EditorUI.DialogNewErrorLabel,1 : error = 1
+    next x
+    if error = 0:
+        //make a new level with the name text$
+        FileName = "Media\Levels\" + getgadgettext(EditorUI.DialogNewTextbox) + ".xnt"
+        World_Editor_New()
+        EntSave(FileName)
+        setgadgetvisible EditorUI.DialogNew,0,1
+    endif
+endfunction
+
+function UI_Editor_DoNewPrompt():
+    setgadgetvisible EditorUI.DialogNew,1,1
+    setgadgetvisible EditorUI.DialogNewErrorLabel,0
+endfunction
+
+function UI_Editor_DoSave():
+    if Filename = "Untitled Level":
+        UI_Editor_DoSaveAsPrompt()
+    else
+        if len(filename)>1 then EntSave(filename)
+    endif
+endfunction
+
+function UI_Editor_DoSaveAsPrompt():
+    filenamenew$=saveDialog("Save File As","Level Files (*.xnt)|*.xnt","Media\Levels\") 
+    if len(filenamenew$)>1 then filename = filenamenew$ : EntSave(filename)
+endfunction
+
+function UI_Editor_DoSaveCopyPrompt():
+    filenamenew$=saveDialog("Save File As","Level Files (*.xnt)|*.xnt","Media\Levels\") 
+    if len(filenamenew$)>1 then EntSave(filenamenew$)
+endfunction
+
+function UI_Editor_DoOpenPrompt():
+    filenamenew$=openDialog("Save File As","Level Files (*.xnt)|*.xnt",0,"Media\Levels\") 
+    if len(filenamenew$)>1 then filename = filenamenew$ : EntLoad(filename)
+    World_Editor_Apply()
+endfunction
+
+function UI_Editor_DoCloseFile():
+endfunction
+
+//////////////////////////////////////////////////////////////
+// End of code
+//////////////////////////////////////////////////////////////

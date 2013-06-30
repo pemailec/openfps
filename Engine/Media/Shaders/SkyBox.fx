@@ -51,7 +51,8 @@
 //--------------
     float4 PS(output IN)  : COLOR
      {		
-	return texCUBE(cubeMap,IN.View);
+	float4 output = texCUBE(cubeMap,IN.View);
+	return output;
      }
 
 //--------------

@@ -1,0 +1,8 @@
+;Rainbow GUI Layout File
+;version 1.05
+window name="DialogNew" x="161" y="291" width="443" height="136" parent="" text="New Level File" enabled="1" visible="1" align="0" winborder="2"
+label name="DialogNewLabel" x="10" y="10" width="75" height="20" parent="DialogNew" text="Level Name:" enabled="1" visible="1" align="0" border="1"
+edit name="DialogNewTextbox" x="10" y="30" width="405" height="25" parent="DialogNew" text="DialogNewTextbox" enabled="1" visible="1" align="0"
+button name="DialogNewCreateBTN" x="260" y="62" width="75" height="25" parent="DialogNew" text="Create" enabled="1" visible="1" align="0"
+button name="DialogNewCancelBTN" x="340" y="62" width="75" height="25" parent="DialogNew" text="Cancel" enabled="1" visible="1" align="0"
+label name="Gadget6" x="130" y="10" width="150" height="15" parent="DialogNew" text="Name cannot contain spaces!" enabled="1" visible="1" align="0" border="0"

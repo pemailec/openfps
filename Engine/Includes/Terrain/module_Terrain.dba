@@ -69,14 +69,14 @@ function Terrain_Init():
     global Terrain_TEX4 as integer : Terrain_TEX4 = reserve free image()
     global Terrain_TEX5 as integer : Terrain_TEX5 = reserve free image()
     global Terrain_TEX6 as integer : Terrain_TEX6 = reserve free image()
-    load image "Media\textures\grass.jpg",Terrain_TEX1
-    load image "Media\textures\dirt.jpg",Terrain_TEX2
-    load image "Media\textures\sand.jpg",Terrain_TEX3
-    load image "Media\textures\rockface.jpg",Terrain_TEX4
-    load image "Media\textures\grass2.jpg",Terrain_TEX5
-    load image "Media\textures\path.jpg",Terrain_TEX6
+    load image "Media\Materials\Terrain\grass.jpg",Terrain_TEX1
+    load image "Media\Materials\Terrain\dirt.jpg",Terrain_TEX2
+    load image "Media\Materials\Terrain\sand.jpg",Terrain_TEX3
+    load image "Media\Materials\Terrain\rockface.jpg",Terrain_TEX4
+    load image "Media\Materials\Terrain\grass2.jpg",Terrain_TEX5
+    load image "Media\Materials\Terrain\path.jpg",Terrain_TEX6
     global Terrain_SHADER as integer : Terrain_SHADER = reserve free effect()
-    load effect "Media\gg_blend_and_per_pixel.fx",Terrain_SHADER,0
+    load effect "Media\Materials\Terrain\gg_blend_and_per_pixel.fx",Terrain_SHADER,0
     
     exclude object on Terrain_Internal_LOD_1
     exclude object on Terrain_Internal_LOD_2
@@ -115,7 +115,7 @@ function Terrain_New():
             Terrain(TerrainX,TerrainZ).Texture_4 = Terrain_TEX4
             Terrain(TerrainX,TerrainZ).Texture_5 = Terrain_TEX5
             Terrain(TerrainX,TerrainZ).Texture_6 = Terrain_TEX6
-            ik create image Terrain(TerrainX,TerrainZ).Mask_1,16,16,rgb(255,0,0)
+            ik create image Terrain(TerrainX,TerrainZ).Mask_1,16,16,rgb(0,0,255)
             ik create image Terrain(TerrainX,TerrainZ).Mask_2,16,16,rgb(0,0,0)
             GenShader:
             set object effect current_object,Terrain_SHADER

@@ -1,0 +1,6 @@
+;Rainbow GUI Layout File
+;version 1.05
+frame name="Gadget1" x="20" y="25" width="260" height="400" parent="" text="Frame" enabled="1" visible="1" align="0"
+trackbar name="TimeOfDaySlider" x="64" y="78" width="180" height="30" parent="Gadget1" text="" enabled="1" visible="1" align="0" style="0"
+label name="TimeOfdayLabel" x="9" y="78" width="70" height="29" parent="Gadget1" text="Time Of Day" enabled="1" visible="1" align="0" border="0"
+checkbox name="UseDynamicSky" x="11" y="47" width="230" height="20" parent="Gadget1" text="Dynamic Sky" enabled="1" visible="1" align="0"

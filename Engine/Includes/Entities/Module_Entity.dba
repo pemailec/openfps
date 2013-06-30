@@ -278,7 +278,6 @@ ENDFUNCTION return_string
 function Ent_Update():
     //update entity system
 	 EntHandleEntities()
-	 if KEYSTATE(41) then EntListDebug()
 	y=60 : x= 10
 	 `UI_Text(1,x,y,"OpenFPS Entities - "+str$(NumEntities)+" Current") : y=y+12
 	
@@ -307,6 +306,7 @@ function Ent_Update():
     next i
 ENDFUNCTION
 
+remstart
 function EntListDebug():
     y = 0
     UI_ScaledText(3,0,y,"OpenFPS Entities:",50,250):y=y+16
@@ -330,6 +330,7 @@ function EntListDebug():
     endif
     next i
 ENDFUNCTION
+remend
 
 function EntHandleEntities():
 	//handle some entities
