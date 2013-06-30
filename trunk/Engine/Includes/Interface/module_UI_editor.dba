@@ -102,6 +102,25 @@ type t_EditorUI
     Variable_window as integer
     Variable_window_list as integer
     Variable_window_close as integer
+    BrushRadiusSlider as integer
+    BrushRadiusLabel as integer
+    TerrainToolsLabel as integer
+    ButtonRaise as integer
+    ButtonFlatten as integer
+    ButtonLower as integer
+    ButtonSmooth as integer
+    ButtonPaint as integer
+    LabelBrushTexture
+    BrushTextureCombobox as integer
+    ReconfigureTerrainTexturesButton as integer
+    BrushSpeedSlider as integer
+    BrushSpeedLabel as integer
+    ButtonMod2 as integer
+    ButtonMod3 as integer
+    ButtonMod1 as integer
+    Terrainmode as integer
+    BrushSpeed as float
+    BrushRadius as float
     CameraMode as integer
     CameraX as float
     CameraY as float
@@ -275,7 +294,65 @@ function UI_Editor_Init():
     applyFont EditorUI.LevelTitleLine1,EditorUI.Font
     applyFont EditorUI.LevelTitleLine2,EditorUI.Font
     applyFont EditorUI.LevelTitleLine3,EditorUI.Font
-     
+    
+    //terrain tab
+    EditorUI.BrushRadiusSlider=createTrackBar(59,78,185,26,0,EditorUI.currentmodeframe)
+    EditorUI.BrushRadiusLabel=createLabel(9,78,55,26,"Brush Radius",EditorUI.currentmodeframe)
+    EditorUI.TerrainToolsLabel=createLabel(9,50,175,20,"Current Tool: null",EditorUI.currentmodeframe)
+    EditorUI.ButtonRaise=createButton(74,169,45,45,"Raise",0,EditorUI.currentmodeframe)
+    EditorUI.ButtonFlatten=createButton(74,214,45,45,"Flatten",0,EditorUI.currentmodeframe)
+    EditorUI.ButtonLower=createButton(74,259,45,45,"Lower",0,EditorUI.currentmodeframe)
+    EditorUI.ButtonSmooth=createButton(119,214,55,45,"Smooth",0,EditorUI.currentmodeframe)
+    EditorUI.ButtonPaint=createButton(29,214,45,45,"Paint",0,EditorUI.currentmodeframe)
+    EditorUI.LabelBrushTexture=createLabel(14,329,50,30,"Brush Texture",EditorUI.currentmodeframe)
+    EditorUI.BrushTextureCombobox=createComboBox(64,324,176,100,EditorUI.currentmodeframe)
+    EditorUI.ReconfigureTerrainTexturesButton=createButton(64,344,175,20,"Reconfigure",0,EditorUI.currentmodeframe)
+    EditorUI.BrushSpeedSlider=createTrackBar(59,121,185,33,0,EditorUI.currentmodeframe)
+    EditorUI.BrushSpeedLabel=createLabel(9,119,50,35,"Brush Speed",EditorUI.currentmodeframe)
+    EditorUI.ButtonMod2=createButton(174,214,80,45,"Smooth All",0,EditorUI.currentmodeframe)
+    EditorUI.ButtonMod3=createButton(174,259,80,45,"Mod 3",0,EditorUI.currentmodeframe)
+    EditorUI.ButtonMod1=createButton(174,169,80,45,"Refresh All",0,EditorUI.currentmodeframe)
+    addItem EditorUI.BrushTextureCombobox,"Layer 1"
+    addItem EditorUI.BrushTextureCombobox,"Layer 2"
+    addItem EditorUI.BrushTextureCombobox,"Layer 3"
+    selectitem EditorUI.BrushTextureCombobox,0
+    settrackbarrange EditorUI.BrushSpeedSlider,1,20
+    settrackbarrange EditorUI.BrushRadiusSlider,4,32
+    EditorUI.TerrainMode = -1
+    setgadgetvisible EditorUI.BrushRadiusSlider,0
+    setgadgetvisible EditorUI.BrushRadiusLabel,0
+    setgadgetvisible EditorUI.TerrainToolsLabel,0
+    setgadgetvisible EditorUI.ButtonRaise,0
+    setgadgetvisible EditorUI.ButtonFlatten,0
+    setgadgetvisible EditorUI.ButtonLower,0
+    setgadgetvisible EditorUI.ButtonSmooth,0
+    setgadgetvisible EditorUI.ButtonPaint,0
+    setgadgetvisible EditorUI.LabelBrushTexture,0
+    setgadgetvisible EditorUI.BrushTextureCombobox,0
+    setgadgetvisible EditorUI.ReconfigureTerrainTexturesButton,0
+    setgadgetvisible EditorUI.BrushSpeedSlider,0
+    setgadgetvisible EditorUI.BrushSpeedLabel,0
+    setgadgetvisible EditorUI.ButtonMod2,0
+    setgadgetvisible EditorUI.ButtonMod3,0
+    setgadgetvisible EditorUI.ButtonMod1,0
+
+    applyFont EditorUI.BrushRadiusSlider,EditorUI.Font
+    applyFont EditorUI.BrushRadiusLabel,EditorUI.Font
+    applyFont EditorUI.TerrainToolsLabel,EditorUI.Font
+    applyFont EditorUI.ButtonRaise,EditorUI.Font
+    applyFont EditorUI.ButtonFlatten,EditorUI.Font
+    applyFont EditorUI.ButtonLower,EditorUI.Font
+    applyFont EditorUI.ButtonSmooth,EditorUI.Font
+    applyFont EditorUI.ButtonPaint,EditorUI.Font
+    applyFont EditorUI.LabelBrushTexture,EditorUI.Font
+    applyFont EditorUI.BrushTextureCombobox,EditorUI.Font
+    applyFont EditorUI.ReconfigureTerrainTexturesButton,EditorUI.Font
+    applyFont EditorUI.BrushSpeedSlider,EditorUI.Font
+    applyFont EditorUI.BrushSpeedLabel,EditorUI.Font
+    applyFont EditorUI.ButtonMod2,EditorUI.Font
+    applyFont EditorUI.ButtonMod3,EditorUI.Font
+    applyFont EditorUI.ButtonMod1,EditorUI.Font
+
     //File, Edit, Level, Scripting, Entities, Terrain, Sound, Game, Tools, Window, Help
     EditorUI.Menu_File = UI_Editor_GenID()
     EditorUI.Menu_Edit = UI_Editor_GenID()
@@ -409,6 +486,18 @@ function UI_Editor_Update():
                 setgadgetenabled EditorUI.Spectatorlistaddnew,0
                 endif
             endif
+            if id = EditorUI.ButtonRaise then Editor_Terrain_SwitchMode(0)
+            if id = EditorUI.ButtonFlatten then Editor_Terrain_SwitchMode(1)
+            if id = EditorUI.ButtonLower then Editor_Terrain_SwitchMode(2)
+            if id = EditorUI.ButtonSmooth  then Editor_Terrain_SwitchMode(3)
+            if id = EditorUI.ButtonPaint  then Editor_Terrain_SwitchMode(4)
+            if id = EditorUI.ButtonMod2 then Editor_Terrain_SwitchMode(5)
+            if id = EditorUI.ButtonMod3 then Editor_Terrain_SwitchMode(6)
+            if id = EditorUI.ButtonMod1 then Editor_Terrain_SwitchMode(7)
+            if id = EditorUI.BrushSpeedSlider then setgadgettext EditorUI.BrushSpeedLabel,"Speed: "+str$(EditorUI.BrushSpeed)
+            if id = EditorUI.BrushRadiusSlider then setgadgettext EditorUI.BrushRadiusLabel,"Radius: "+str$(EditorUI.BrushRadius)
+            if id = EditorUI.ButtonMod1 then Terrain_Refresh()
+            if id = EditorUI.ButtonMod2 then Terrain_Smooth()
         endcase
     endselect
     //update ui elements
@@ -447,6 +536,22 @@ function UI_Editor_Update():
             //terrain
             UI_Editor_AddToConsole("Terrain Tool Mode")
             UI_Editor_HideAll()
+            setgadgetvisible EditorUI.BrushRadiusSlider,1
+            setgadgetvisible EditorUI.BrushRadiusLabel,1
+            setgadgetvisible EditorUI.TerrainToolsLabel,1
+            setgadgetvisible EditorUI.ButtonRaise,1
+            setgadgetvisible EditorUI.ButtonFlatten,1
+            setgadgetvisible EditorUI.ButtonLower,1
+            setgadgetvisible EditorUI.ButtonSmooth,1
+            setgadgetvisible EditorUI.ButtonPaint,1
+            setgadgetvisible EditorUI.LabelBrushTexture,1
+            setgadgetvisible EditorUI.BrushTextureCombobox,1
+            setgadgetvisible EditorUI.ReconfigureTerrainTexturesButton,1
+            setgadgetvisible EditorUI.BrushSpeedSlider,1
+            setgadgetvisible EditorUI.BrushSpeedLabel,1
+            setgadgetvisible EditorUI.ButtonMod2,1
+            setgadgetvisible EditorUI.ButtonMod3,1
+            setgadgetvisible EditorUI.ButtonMod1,1
         endcase
         case 3
             //level
@@ -485,14 +590,47 @@ function UI_Editor_Update():
         case 2
             `EditorUI.CameraMode = 1
             if KEYSTATE(46) and keystate(56) then selectitem EditorUI.Modegadget,0
+            EditorUI.BrushSpeed = getTrackbarPosition(EditorUI.BrushSpeedSlider)/10.0
+            EditorUI.BrushRadius = getTrackbarPosition(EditorUI.BrushRadiusSlider)
             //terrain
             pick = pick object(mousex(),mousey(),1,2000)
             if pick:
                 pick_x# = get pick vector x()+camera position x()
                 pick_y# = get pick vector y()+camera position y()
                 pick_z# = get pick vector z()+camera position z()
-                if mouseclick()=1:
-                    Terrain_Deform(pick_x#,pick_y#,pick_z#,1.0+(-2.0*CONTROLKEY()))
+                if mouseclick()=1 and mousePosX(EditorUI.panel_right_main)=-1:
+                    select EditorUI.TerrainMode
+                        case 0
+                            //raise
+                            Terrain_Deform(pick_x#,pick_y#,pick_z#,EditorUI.BrushSpeed,EditorUI.BrushRadius)
+                        endcase
+                        case 1
+                            //flatten
+                            `Terrain_Flatten(pick_x#,pick_y#,pick_z#,0-EditorUI.BrushSpeed,EditorUI.BrushRadius)
+                        endcase
+                        case 2
+                            //Lower
+                            Terrain_Deform(pick_x#,pick_y#,pick_z#,0-EditorUI.BrushSpeed,EditorUI.BrushRadius)
+                        endcase
+                        case 3
+                            //Smooth
+                            Terrain_SmoothTool(pick_x#,pick_y#,pick_z#,EditorUI.BrushSpeed,EditorUI.BrushRadius)
+                        endcase
+                        case 4
+                            //Paint
+                            paintlayer = selecteditem(EditorUI.BrushTextureCombobox)
+                            Terrain_Paint(pick_x#,pick_y#,pick_z#,paintlayer,EditorUI.BrushRadius,0.5)
+                        endcase
+                        case 5
+                            //MOD1
+                        endcase
+                        case 6
+                            //MOD2
+                        endcase
+                        case 7
+                            //MOD3
+                        endcase
+                    endselect
                 endif
             endif
         endcase
@@ -536,6 +674,53 @@ function UI_Editor_HideAll():
         setgadgetvisible EditorUI.LevelTitleLine1,0
         setgadgetvisible EditorUI.LevelTitleLine2,0
         setgadgetvisible EditorUI.LevelTitleLine3,0
+        setgadgetvisible EditorUI.BrushRadiusSlider,0
+        setgadgetvisible EditorUI.BrushRadiusLabel,0
+        setgadgetvisible EditorUI.TerrainToolsLabel,0
+        setgadgetvisible EditorUI.ButtonRaise,0
+        setgadgetvisible EditorUI.ButtonFlatten,0
+        setgadgetvisible EditorUI.ButtonLower,0
+        setgadgetvisible EditorUI.ButtonSmooth,0
+        setgadgetvisible EditorUI.ButtonPaint,0
+        setgadgetvisible EditorUI.LabelBrushTexture,0
+        setgadgetvisible EditorUI.BrushTextureCombobox,0
+        setgadgetvisible EditorUI.ReconfigureTerrainTexturesButton,0
+        setgadgetvisible EditorUI.BrushSpeedSlider,0
+        setgadgetvisible EditorUI.BrushSpeedLabel,0
+        setgadgetvisible EditorUI.ButtonMod2,0
+        setgadgetvisible EditorUI.ButtonMod3,0
+        setgadgetvisible EditorUI.ButtonMod1,0
+endfunction
+        
+        
+function Editor_Terrain_SwitchMode(newmode):
+    EditorUI.TerrainMode = newmode
+    select newmode
+        case 0
+            setgadgettext EditorUI.TerrainToolsLabel,"Current Tool: Raise"
+        endcase
+        case 1
+            setgadgettext EditorUI.TerrainToolsLabel,"Current Tool: Flatten"
+        endcase
+        case 2
+            setgadgettext EditorUI.TerrainToolsLabel,"Current Tool: Lower"
+        endcase
+        case 3
+            setgadgettext EditorUI.TerrainToolsLabel,"Current Tool: Smooth"
+        endcase
+        case 4
+            setgadgettext EditorUI.TerrainToolsLabel,"Current Tool: Paint"
+        endcase
+        case 5
+            setgadgettext EditorUI.TerrainToolsLabel,"Current Tool: MOD1"
+        endcase
+        case 6
+            setgadgettext EditorUI.TerrainToolsLabel,"Current Tool: MOD2"
+        endcase
+        case 7
+            setgadgettext EditorUI.TerrainToolsLabel,"Current Tool: MOD3"
+        endcase
+    endselect
 endfunction
 
 function UI_Editor_SetStatusText(status$):
@@ -576,12 +761,26 @@ function UI_Editor_Terminate():
     
 ENDFUNCTION
 
+function UI_Editor_GenerateTerrainFileName():
+        lastslash = 0
+        for i = 0 to len(filename):
+            if mid$(filename,i)="\" then lastslash = i
+        next i
+        terrain_filename$ = right$(filename,len(filename) - lastslash)
+        UI_Editor_AddToConsole(terrain_filename$)
+        terrain_filename$ = left$(terrain_filename$,len(terrain_filename$)-4)
+        UI_Editor_AddToConsole(terrain_filename$)
+        terrain_filename_new$ = "Media\Terrains\"+terrain_filename$
+        UI_Editor_AddToConsole(terrain_filename_new$)
+ENDFUNCTION terrain_filename_new$
+
 function UI_Editor_DoQuitPrompt():
     UI_Editor_AddToConsole("Displaying quit prompt...")
     if len(filename)>1 and filename <> "Untitled Level":
         quit=questionMessage("Save before quitting?","Quit Editor")
         if quit > -1 then EditorUI.QuitFlag = 1
-        if quit = 1 then EntSave(FileName)
+        
+        if quit = 1 then EntSave(FileName) : Terrain_Save(UI_Editor_GenerateTerrainFileName())
     else
         quit=questionMessage("Are you sure you want to quit?","Quit Editor")
         if quit > -1 then EditorUI.QuitFlag = 1
@@ -598,7 +797,7 @@ function UI_Editor_CheckNew():
         //make a new level with the name text$
         FileName = "Media\Levels\" + getgadgettext(EditorUI.DialogNewTextbox) + ".xnt"
         World_Editor_New()
-        EntSave(FileName)
+        EntSave(FileName) : Terrain_Save(UI_Editor_GenerateTerrainFileName())
         setgadgetvisible EditorUI.DialogNew,0,1
     endif
 endfunction
@@ -612,23 +811,23 @@ function UI_Editor_DoSave():
     if Filename = "Untitled Level":
         UI_Editor_DoSaveAsPrompt()
     else
-        if len(filename)>1 then EntSave(filename)
+        if len(filename)>1 then EntSave(filename) : Terrain_Save(UI_Editor_GenerateTerrainFileName())
     endif
 endfunction
 
 function UI_Editor_DoSaveAsPrompt():
     filenamenew$=saveDialog("Save File As","Level Files (*.xnt)|*.xnt","Media\Levels\") 
-    if len(filenamenew$)>1 then filename = filenamenew$ : EntSave(filename)
+    if len(filenamenew$)>1 then filename = filenamenew$ : EntSave(filename) : Terrain_Save(UI_Editor_GenerateTerrainFileName())
 endfunction
 
 function UI_Editor_DoSaveCopyPrompt():
     filenamenew$=saveDialog("Save File As","Level Files (*.xnt)|*.xnt","Media\Levels\") 
-    if len(filenamenew$)>1 then EntSave(filenamenew$)
+    if len(filenamenew$)>1 then EntSave(filenamenew$) : Terrain_Save(UI_Editor_GenerateTerrainFileName())
 endfunction
 
 function UI_Editor_DoOpenPrompt():
     filenamenew$=openDialog("Save File As","Level Files (*.xnt)|*.xnt",0,"Media\Levels\") 
-    if len(filenamenew$)>1 then filename = filenamenew$ : EntLoad(filename)
+    if len(filenamenew$)>1 then filename = filenamenew$ : EntLoad(filename) : Terrain_Load(UI_Editor_GenerateTerrainFileName())
     World_Editor_Apply()
 endfunction
 

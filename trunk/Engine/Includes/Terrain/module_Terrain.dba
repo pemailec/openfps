@@ -46,9 +46,9 @@ function Terrain_Init():
     position object Terrain_Internal_LOD_2,16*1,0,0
     position object Terrain_Internal_LOD_3,16*2,0,0
     //FVF_XYZ=0x002 , FVF_NORMAL=0x010, FVF_DIFFUSE=0x040, FVF_TEX0=0x000, FVF_TEX1=0x100, FVF_TEX2=0x200, FVF_TEX3=0x300, FVF_TEX4=0x400, FVF_TEX5=0x500, FVF_TEX6=0x600, FVF_TEX7=0x700, FVF_TEX8=0x800
-    convert object fvf Terrain_Internal_LOD_1,0x002 || 0x010 || 0x040 || 0x800
-    convert object fvf Terrain_Internal_LOD_2,0x002 || 0x010 || 0x040 || 0x800
-    convert object fvf Terrain_Internal_LOD_3,0x002 || 0x010 || 0x040 || 0x800
+    convert object fvf Terrain_Internal_LOD_1,274 `0x002 || 0x010 || 0x040 || 0x800
+    convert object fvf Terrain_Internal_LOD_2,274 `0x002 || 0x010 || 0x040 || 0x800
+    convert object fvf Terrain_Internal_LOD_3,274 `0x002 || 0x010 || 0x040 || 0x800
     
     remstart
     set object wireframe Terrain_Internal_LOD_1,1
@@ -69,12 +69,18 @@ function Terrain_Init():
     global Terrain_TEX4 as integer : Terrain_TEX4 = reserve free image()
     global Terrain_TEX5 as integer : Terrain_TEX5 = reserve free image()
     global Terrain_TEX6 as integer : Terrain_TEX6 = reserve free image()
+    global Terrain_TEX_MASK_R as integer : Terrain_TEX_MASK_R = reserve free image()
+    global Terrain_TEX_MASK_G as integer : Terrain_TEX_MASK_G = reserve free image()
+    global Terrain_TEX_MASK_B as integer : Terrain_TEX_MASK_B = reserve free image()
     load image "Media\Materials\Terrain\grass.jpg",Terrain_TEX1
     load image "Media\Materials\Terrain\dirt.jpg",Terrain_TEX2
     load image "Media\Materials\Terrain\sand.jpg",Terrain_TEX3
     load image "Media\Materials\Terrain\rockface.jpg",Terrain_TEX4
     load image "Media\Materials\Terrain\grass2.jpg",Terrain_TEX5
     load image "Media\Materials\Terrain\path.jpg",Terrain_TEX6
+    load image "Media\Materials\Terrain\mask_r.png",Terrain_TEX_MASK_R
+    load image "Media\Materials\Terrain\mask_g.png",Terrain_TEX_MASK_G
+    load image "Media\Materials\Terrain\mask_b.png",Terrain_TEX_MASK_B
     global Terrain_SHADER as integer : Terrain_SHADER = reserve free effect()
     load effect "Media\Materials\Terrain\gg_blend_and_per_pixel.fx",Terrain_SHADER,0
     
@@ -95,17 +101,17 @@ function Terrain_New():
     for TerrainX = 0 to 15:
         For TerrainZ = 0 to 15:
             Terrain(TerrainX,TerrainZ).LOD_1 = reserve free object()
-            Terrain(TerrainX,TerrainZ).LOD_2 = reserve free object()
-            Terrain(TerrainX,TerrainZ).LOD_3 = reserve free object()
+            `Terrain(TerrainX,TerrainZ).LOD_2 = reserve free object()
+            `Terrain(TerrainX,TerrainZ).LOD_3 = reserve free object()
             clone object Terrain(TerrainX,TerrainZ).LOD_1,Terrain_Internal_LOD_1
-            clone object Terrain(TerrainX,TerrainZ).LOD_2,Terrain_Internal_LOD_2 //adjust these to change the LODS
-            clone object Terrain(TerrainX,TerrainZ).LOD_3,Terrain_Internal_LOD_3
+            `clone object Terrain(TerrainX,TerrainZ).LOD_2,Terrain_Internal_LOD_2 //adjust these to change the LODS
+            `clone object Terrain(TerrainX,TerrainZ).LOD_3,Terrain_Internal_LOD_3
             position object Terrain(TerrainX,TerrainZ).LOD_1,TerrainX*16,0,TerrainZ*16
-            position object Terrain(TerrainX,TerrainZ).LOD_2,TerrainX*16,0,TerrainZ*16
-            position object Terrain(TerrainX,TerrainZ).LOD_3,TerrainX*16,0,TerrainZ*16
+            `position object Terrain(TerrainX,TerrainZ).LOD_2,TerrainX*16,0,TerrainZ*16
+            `position object Terrain(TerrainX,TerrainZ).LOD_3,TerrainX*16,0,TerrainZ*16
             exclude object on Terrain(TerrainX,TerrainZ).LOD_1
-            exclude object on Terrain(TerrainX,TerrainZ).LOD_2
-            exclude object on Terrain(TerrainX,TerrainZ).LOD_3
+            `exclude object on Terrain(TerrainX,TerrainZ).LOD_2
+            `exclude object on Terrain(TerrainX,TerrainZ).LOD_3
             current_object = Terrain(TerrainX,TerrainZ).LOD_1
             Terrain(TerrainX,TerrainZ).Mask_1 = reserve free image()
             Terrain(TerrainX,TerrainZ).Mask_2 = reserve free image()
@@ -115,8 +121,8 @@ function Terrain_New():
             Terrain(TerrainX,TerrainZ).Texture_4 = Terrain_TEX4
             Terrain(TerrainX,TerrainZ).Texture_5 = Terrain_TEX5
             Terrain(TerrainX,TerrainZ).Texture_6 = Terrain_TEX6
-            ik create image Terrain(TerrainX,TerrainZ).Mask_1,16,16,rgb(0,0,255)
-            ik create image Terrain(TerrainX,TerrainZ).Mask_2,16,16,rgb(0,0,0)
+            ik create render target Terrain(TerrainX,TerrainZ).Mask_1,32,32,rgb(0,0,255)
+            ik create render target Terrain(TerrainX,TerrainZ).Mask_2,32,32,rgb(0,0,0)
             GenShader:
             set object effect current_object,Terrain_SHADER
             texture object current_object,0,Terrain(TerrainX,TerrainZ).Mask_1
@@ -127,8 +133,8 @@ function Terrain_New():
             texture object current_object,5,Terrain(TerrainX,TerrainZ).Texture_4
             texture object current_object,6,Terrain(TerrainX,TerrainZ).Texture_5
             texture object current_object,7,Terrain(TerrainX,TerrainZ).Texture_6
-            if current_object = Terrain(TerrainX,TerrainZ).LOD_1 then current_object = Terrain(TerrainX,TerrainZ).LOD_2 : goto GenShader
-            if current_object = Terrain(TerrainX,TerrainZ).LOD_2 then current_object = Terrain(TerrainX,TerrainZ).LOD_3 : goto GenShader
+            `if current_object = Terrain(TerrainX,TerrainZ).LOD_1 then current_object = Terrain(TerrainX,TerrainZ).LOD_2 : goto GenShader
+            `if current_object = Terrain(TerrainX,TerrainZ).LOD_2 then current_object = Terrain(TerrainX,TerrainZ).LOD_3 : goto GenShader
             Terrain(TerrainX,TerrainZ).LOD_OVERRIDE = 0
         Next TerrainZ
     next TerrainX
@@ -160,13 +166,30 @@ function Terrain_Smooth():
     Terrain_Refresh()
 ENDFUNCTION
 
-function Terrain_Refresh_Near(x,z):
+function Terrain_Paint(x as float,y as float,z as float,color as integer,radius as float,hardness as float):
+    x = (x + 8)*2
+    z = (z + 8)*2
+    if color = 0 then image = Terrain_TEX_MASK_R
+    if color = 1 then image = Terrain_TEX_MASK_G
+    if color = 2 then image = Terrain_TEX_MASK_B
+    for TerrainX = 0 to 15:
+        For TerrainZ = 0 to 15:
+            x2 = (TerrainX * 32)
+            z2 = (TerrainZ * 32)
+            x_real = x - x2
+            z_real = 32-(z - z2)
+            ik paste image on image image,Terrain(TerrainX,TerrainZ).Mask_1,x_real-radius,z_real-radius,x_real+radius,z_real+radius
+        Next TerrainZ
+    next TerrainX
+ENDFUNCTION
+
+function Terrain_Refresh_Near(x,z,radius):
     for TerrainX = 0 to 15:
         For TerrainZ = 0 to 15:
             x2 = (TerrainX * 16)
             z2 = (TerrainZ * 16)
             dist# = Terrain_GetDistance(x,0,z,x2,0,z2)
-            if dist#<32 then Terrain_Refresh_Chunk(TerrainX,TerrainZ)
+            if dist#<(radius*2) then Terrain_Refresh_Chunk(TerrainX,TerrainZ)
         Next TerrainZ
     next TerrainX
 endfunction
@@ -179,10 +202,10 @@ function Terrain_Refresh():
     next TerrainX
 ENDFUNCTION
 
-function Terrain_Deform(x as float,y as float,z as float,delta as float):
+function Terrain_Deform(x as float,y as float,z as float,delta as float,radius as float):
     x = x + 8
     z = z + 8
-    size = 8
+    size = radius
     for x_delta = 0-size to size:
         for z_delta = 0-size to size:
             ratio_x# = ((x_delta + size) / (size * 2.0)) * 180.0
@@ -207,7 +230,59 @@ function Terrain_Deform(x as float,y as float,z as float,delta as float):
     Terrain_Refresh_Chunk(int((x+1)/16),int(z/16))
     Terrain_Refresh_Chunk(int((x+1)/16),int((z+1)/16))
     remend
-    Terrain_Refresh_Near((x),(z))
+    Terrain_Refresh_Near((x),(z),size)
+ENDFUNCTION
+
+function Terrain_Flatten(x as float,y as float,z as float,delta as float,radius as float):
+    x = x + 8
+    z = z + 8
+    size = radius
+    height_base# = Heightfield(int(clamp(x,0,255)),int(clamp(z,0,255)))
+    
+    for x_delta = 0-size to size:
+        for z_delta = 0-size to size:
+            
+            pos_real_x#=int(clamp(x+x_delta,0,255))
+            pos_real_z#=int(clamp(z+z_delta,0,255))
+            distance# =  Terrain_GetDistance(x,0,z,pos_real_x#,0,pos_real_z#)
+            if distance# < radius:
+            ratio# = clamp(distance# / radius,0,1)
+            if (x+x_delta) < 256 and (x+x_delta) > -1:
+            if (z+z_delta) < 256 and (z+z_delta) > -1:
+            height_real# = Heightfield(int(clamp(x+x_delta,0,255)),int(clamp(z+z_delta,0,255)))
+            height_average# = (height_real# * (1-ratio#)) + (height_base# * (ratio#))
+            height_current# = Heightfield(int(clamp(x+x_delta,0,255)),int(clamp(z+z_delta,0,255)))
+            Heightfield(int(clamp(x+x_delta,0,255)),int(clamp(z+z_delta,0,255))) = height_current#
+            endif : endif : endif
+        next z_delta
+    next x_delta
+    Terrain_Refresh_Near((x),(z),size)
+ENDFUNCTION
+
+function Terrain_SmoothTool(x as float,y as float,z as float,delta as float,radius as float):
+    x = x + 8
+    z = z + 8
+    size = radius
+    height_base# = Heightfield(int(clamp(x,0,255)),int(clamp(z,0,255)))
+   
+    for x_delta = 0-size to size:
+        for z_delta = 0-size to size:
+            pos_real_x#=int(clamp(x+x_delta,0,255))
+            pos_real_z#=int(clamp(z+z_delta,0,255))
+            distance# =  Terrain_GetDistance(x,0,z,pos_real_x#,0,pos_real_z#)
+            if distance# < radius:
+            if (x+x_delta) < 256 and (x+x_delta) > -1:
+            if (z+z_delta) < 256 and (z+z_delta) > -1:
+                sample1#=(Heightfield(int((x+x_delta)),int((z+z_delta)))*0.50)
+                sample2#=(Heightfield(clamp(int((x+x_delta))+1,0,255),int((z+z_delta)))*0.125)
+                sample3#=(Heightfield(clamp(int((x+x_delta))-1,0,255),int((z+z_delta)))*0.125)
+                sample4#=(Heightfield(int((x+x_delta)),clamp(int((z+z_delta))+1,0,255))*0.125)
+                sample5#=(Heightfield(int((x+x_delta)),clamp(int((z+z_delta))-1,0,255))*0.125)
+                Heightfield(int(x+x_delta),int(z+z_delta)) = sample1#+sample2#+sample3#+sample4#+sample5#
+            endif : endif : endif
+        next z_delta
+    next x_delta
+    Terrain_Refresh_Near((x),(z),size)
 ENDFUNCTION
 
 function Terrain_Refresh_Chunk(x,z):
@@ -233,38 +308,62 @@ function Terrain_Refresh_Chunk(x,z):
                 if height#<current_object_minheight# then current_object_minheight# = height#
             endif
         next v
+        //normals time!
+        Set Object Normals current_object
+        unlock vertexdata
+        set object smoothing current_object, 100
         unlock vertexdata
     Next i
-    if current_object = Terrain(x,z).LOD_1 then current_object = Terrain(x,z).LOD_2 : goto GenVertices
-    if current_object = Terrain(x,z).LOD_2 then current_object = Terrain(x,z).LOD_3 : goto GenVertices
+    `if current_object = Terrain(x,z).LOD_1 then current_object = Terrain(x,z).LOD_2 : goto GenVertices
+    `if current_object = Terrain(x,z).LOD_2 then current_object = Terrain(x,z).LOD_3 : goto GenVertices
     Terrain(x,z).LOD_OVERRIDE = 0 : if (current_object_maxheight# - current_object_minheight#) < 0.1 then Terrain(x,z).LOD_OVERRIDE = 1
-    Set Object Normals current_object
     calculate object bounds current_object
     endif
     endif
 endfunction
 
+
 function Terrain_Load(file$):
     if TerrainExists = 1 then Terrain_Delete()
     Terrain_New()
+    
+    rename file file$+".terr",file$+".zip"
+    OPEN FILE BLOCK file$+".zip",1
+    
     read_file = reserve free file()
-    open to read read_file,file$
+    `LOAD FILE FROM BLOCK 1,file$+"_temp.terr",read_file
+    EXTRACT FILE FROM BLOCK 1,"terrain_data.terr","Media\Terrains\"
+    open to read read_file,"Media\Terrains\terrain_data.terr"
     header$ = "" : read string read_file, header$
     if header$="OpenFPS_Terrain"
         for TerrainX = 0 to 255:
             For TerrainZ = 0 to 255:
                 read float read_file,Heightfield(TerrainX,TerrainZ)
             Next TerrainZ
-        next TerrainX
+        next Terrain
     endif
-    Terrain_Refresh()
     close file read_file
+    delete file "Media\Terrains\terrain_data.terr"
+    
+    for TerrainX = 0 to 15:
+        For TerrainZ = 0 to 15:
+            if image exist(Terrain(TerrainX,TerrainZ).Mask_1) then delete image Terrain(TerrainX,TerrainZ).Mask_1
+            LOAD IMAGE FROM BLOCK 1,"Terrain_"+str$(TerrainX)+"_"+str$(TerrainZ)+".bmp",Terrain(TerrainX,TerrainZ).Mask_1
+            ik convert to render target Terrain(TerrainX,TerrainZ).Mask_1
+            texture object Terrain(TerrainX,TerrainZ).LOD_1,0,Terrain(TerrainX,TerrainZ).Mask_1
+        Next TerrainZ
+    next TerrainX
+    CLOSE FILE BLOCK 1
+    rename file file$+".zip",file$+".terr"
+    Terrain_Refresh()
 ENDFUNCTION
 
 function Terrain_Save(file$):
-    if file exist(file$) then delete file file$
+    if file exist(file$+".terr") then delete file file$+".terr"
+    CREATE FILE BLOCK 1,file$+".zip"
+    file_temp$="terrain_data.terr"
     save_file = reserve free file()
-    open to write save_file,file$
+    open to write save_file,file_temp$
     write string save_file,"OpenFPS_Terrain"
         for TerrainX = 0 to 255:
             For TerrainZ = 0 to 255:
@@ -273,19 +372,30 @@ function Terrain_Save(file$):
         next TerrainX
     write string save_file,"OpenFPS_Terrain_End"
     close file save_file
+    ADD FILE TO BLOCK 1,file_temp$
+    delete file file_temp$
+    for TerrainX = 0 to 15:
+        For TerrainZ = 0 to 15:
+            ADD IMAGE TO BLOCK 1,Terrain(TerrainX,TerrainZ).Mask_1,"Terrain_"+str$(TerrainX)+"_"+str$(TerrainZ)+".bmp"
+        Next TerrainZ
+    next TerrainX
+    CLOSE FILE BLOCK 1
+    rename file file$+".zip",file$+".terr"
+    
 ENDFUNCTION
 
 function Terrain_Delete():
     for TerrainX = 0 to 15:
         For TerrainZ = 0 to 15:
             if object exist(Terrain(TerrainX,TerrainZ).LOD_1) then delete object Terrain(TerrainX,TerrainZ).LOD_1
-            if object exist(Terrain(TerrainX,TerrainZ).LOD_2) then delete object Terrain(TerrainX,TerrainZ).LOD_2
-            if object exist(Terrain(TerrainX,TerrainZ).LOD_3) then delete object Terrain(TerrainX,TerrainZ).LOD_3
+            `if object exist(Terrain(TerrainX,TerrainZ).LOD_2) then delete object Terrain(TerrainX,TerrainZ).LOD_2
+            `if object exist(Terrain(TerrainX,TerrainZ).LOD_3) then delete object Terrain(TerrainX,TerrainZ).LOD_3
             if image exist(Terrain(TerrainX,TerrainZ).Mask_1) then delete image Terrain(TerrainX,TerrainZ).Mask_1
             if image exist(Terrain(TerrainX,TerrainZ).Mask_2) then delete image Terrain(TerrainX,TerrainZ).Mask_2
         Next TerrainZ
     next TerrainX
     TerrainExists = 0
+    clear array Heightfield()
 endfunction
 
 function Terrain_Update():
@@ -299,7 +409,8 @@ function Terrain_Update():
         //refresh LOD if Terrain_Lod_Ticker is active
         if TickLoop  = 1:
         distance# = Terrain_GetDistance(CamX,CamY,CamZ,TerrainX*16,0,TerrainZ*16)
-        `exclude object off Terrain(TerrainX,TerrainZ).LOD_1
+        exclude object off Terrain(TerrainX,TerrainZ).LOD_1
+        remstart
         if Terrain(TerrainX,TerrainZ).LOD_OVERRIDE = 0:
         exclude object on Terrain(TerrainX,TerrainZ).LOD_1
         exclude object on Terrain(TerrainX,TerrainZ).LOD_2
@@ -324,6 +435,7 @@ function Terrain_Update():
             exclude object on Terrain(TerrainX,TerrainZ).LOD_2
             exclude object off Terrain(TerrainX,TerrainZ).LOD_3
         endif
+        remend
         endif
         Next TerrainZ
     next TerrainX
