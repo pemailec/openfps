@@ -15,6 +15,7 @@
 //////////////////////////////////////////////////////////////
 
 #constant CONFIGFILE "Config\game.cfg"
+#constant OPENFPS_DB "Media\OpenFPS.db3"
 
 //////////////////////////////////////////////////////////////
 // Functions
@@ -116,6 +117,20 @@ Function SYS_Init():
     d3d_init
     
     //////////////////////////////////////
+    // Do SQL DATABASE setup
+    //////////////////////////////////////
+    
+    Game.Database = 1
+    null = SQLITE OPEN DATABASE(Game.Database,OPENFPS_DB,"User","")
+    //query a value to test it!
+    query$ = "SELECT Translation FROM [OpenFPS_Language] LIMIT 0,1"
+    null = SQLITE BEGIN SQL QUERY(Game.Database,query$)
+    null = SQLITE FIRST RECORD ROW(Game.Database)
+    title$= SQLITE RECORD CURRENT ROW STRING$(Game.Database,1)
+    set window title title$
+    null = SQLITE FINISH SQL QUERY(Game.Database)
+    
+    //////////////////////////////////////
     // wait for valid screen
     //////////////////////////////////////
     
@@ -153,8 +168,9 @@ Function SYS_Sync():
 
 Endfunction
 
-//SYS_Terminate() - Terminates the system module (empty)
+//SYS_Terminate() - Terminates the system module
 Function SYS_Terminate():
+    null = SQLITE CLOSE DATABASE(Game.Database)
 Endfunction
 
 function Engine_Check_EditorFlag():

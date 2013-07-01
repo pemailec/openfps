@@ -376,6 +376,9 @@ endcase
 case "button_chat"
     menu_chatenabled = 1 - menu_chatenabled
 endcase
+case "button_joingame"
+    Game_Join()
+endcase
 Case "button_credits"
 UI_FadeManager.state=UI_FADEIN
 UI_FadeManager.target=M_MENU_CREDITS
@@ -996,7 +999,7 @@ Endfunction
 
 Function UI_Render_U_ENGINE_DEFAULT():
 //paste game view
-Ik Paste Image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height,cc_Shader
+Ik Paste Image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height `,cc_Shader
 Camera_PostUIRender() //render 2d elements of the game
 Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
 `Paste Image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
@@ -1004,19 +1007,20 @@ D3d_Box 0,0,Screen.Width,120,rgb(0,0,0),rgb(0,0,0),d3d_rgba(0,0,0,200),d3d_rgba(
 Ik Paste Image MenuImage13,0,120,Screen.Width,124
 D3d_Box 0,Screen.Height-120,Screen.Width,Screen.Height,d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200),rgb(0,0,0),rgb(0,0,0)
 Ik Paste Image MenuImage13,0,Screen.Height-124,Screen.Width,Screen.Height-120
-If Game.state = Game_WAITTOJOIN:
-UI_CenterText(3,Screen.Width/2,48,EntGetAttribute(EntGetReference("root"),"displayname"))
-ui_showmouse()
-else: 
-ui_hidemouse()
-UI_AlphaText(3,Screen.Width/2-(UI_stringmap(3,258).ascii*5),48,"~bSPECTATING "+chr$(230),250)
-UI_CenterText(1,Screen.Width/2,70,SpectatorCameras(CurrentSpectatorCamera).name)
-
-If UI_GadgetExist("button_joingame"):
-UI_DeleteGadget("button_joingame")
-UI_DeleteGadget("button_endgame")
+If Game.state = GAME_SPECTATE:
+    UI_CenterText(3,Screen.Width/2,48,EntGetAttribute(EntGetReference("root"),"displayname"))
+    ui_showmouse()
 endif
-Paste Image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
+if Game.state = GAME_WAIT_FOR_SERVER:
+    ui_hidemouse()
+    UI_CenterText(3,Screen.Width/2,48,"Joining...")
+    `UI_CenterText(1,Screen.Width/2,70,SpectatorCameras(CurrentSpectatorCamera).name)
+
+    If UI_GadgetExist("button_joingame"):
+        UI_DeleteGadget("button_joingame")
+        UI_DeleteGadget("button_endgame")
+    endif
+    `Paste Image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
 endif
 
 remstart

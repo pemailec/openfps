@@ -41,6 +41,7 @@ Endtype
 
 //t_game - stores various game settings that don't fit anywhere.
 Type t_Game
+    Database as integer
     NetworkName As String
     NetworkPort As dword
     Network_PFProcess As Integer

@@ -121,6 +121,24 @@ type t_EditorUI
     Terrainmode as integer
     BrushSpeed as float
     BrushRadius as float
+    EntityEditorTabs as integer
+    EntityEditorLevelTree as integer
+    EntityEditorLevelTreeRefresh as integer
+    EntityEditLabel as integer
+    EntityEditName as integer
+    EntityEditRename as integer
+    EntityEditDelete as integer
+    EntityEditPanel as integer
+    EntityEditorTabSelected as integer
+    EntityEditorTabLevelMain as integer
+    EntityEditorPopupMenu as integer
+    EntityEditorPopupMenu_New as integer
+    EntityEditorPopupMenu_Delete as integer
+    EntityEditorPopupMenu_EditAttrib as integer
+    EntityEditorPopupMenu_Refresh as integer
+    EntityEditorDummyObject as integer
+    EntityEditorIcon as integer
+    TabImageList as integer
     CameraMode as integer
     CameraX as float
     CameraY as float
@@ -352,6 +370,42 @@ function UI_Editor_Init():
     applyFont EditorUI.ButtonMod2,EditorUI.Font
     applyFont EditorUI.ButtonMod3,EditorUI.Font
     applyFont EditorUI.ButtonMod1,EditorUI.Font
+    
+    EditorUI.TabImageList=createImageList(16,16)
+
+    addImageListItem EditorUI.TabImageList,get dir$()+"\Media\Images\Interface\editor\database_edit.bmp"
+    addImageListItem EditorUI.TabImageList,get dir$()+"\Media\Images\Interface\editor\bricks.bmp"
+    addImageListItem EditorUI.TabImageList,get dir$()+"\Media\Images\Interface\editor\script_code.bmp"
+    addImageListItem EditorUI.TabImageList,get dir$()+"\Media\Images\Interface\editor\brick_link.bmp"
+    
+    EditorUI.EntityEditorTabs=createTabs(9,29,235,355,0,EditorUI.currentmodeframe)
+    EditorUI.EntityEditorLevelTree=createTreeView(19,59,215,315,EditorUI.currentmodeframe)
+    EditorUI.EntityEditorLevelTreeRefresh=createButton(19,380,215,40,"Refresh",0,EditorUI.currentmodeframe)
+    applyFont EditorUI.EntityEditorTabs,EditorUI.Font
+    applyFont EditorUI.EntityEditorLevelTree,EditorUI.Font
+    applyFont EditorUI.EntityEditorLevelTreeRefresh,EditorUI.Font
+    setgadgetvisible EditorUI.EntityEditorTabs,0
+    setgadgetvisible EditorUI.EntityEditorLevelTree,0
+    setgadgetvisible EditorUI.EntityEditorLevelTreeRefresh,0
+    bringtofront EditorUI.EntityEditorLevelTree
+    bringtofront EditorUI.EntityEditorLevelTreeRefresh
+    setTreeViewImageList EditorUI.EntityEditorLevelTree,EditorUI.TabImageList,0
+    EditorUI.EntityEditorTabLevelMain=addTreeViewItem(EditorUI.EntityEditorLevelTree,0,0,"Level")
+    
+    addTab EditorUI.EntityEditorTabs,"Placement"
+    addTab EditorUI.EntityEditorTabs,"Level Tree"
+
+    EditorUI.EntityEditorPopupMenu=createPopupMenu()
+    EditorUI.EntityEditorPopupMenu_New = UI_Editor_GenID()
+    EditorUI.EntityEditorPopupMenu_Delete = UI_Editor_GenID()
+    EditorUI.EntityEditorPopupMenu_EditAttrib = UI_Editor_GenID()
+    EditorUI.EntityEditorPopupMenu_Refresh = UI_Editor_GenID()
+    addMenuItem EditorUI.EntityEditorPopupMenu,"New Entity",EditorUI.EntityEditorPopupMenu_New
+    addMenuItem EditorUI.EntityEditorPopupMenu,"Delete Entity",EditorUI.EntityEditorPopupMenu_Delete
+    addmenusplitter EditorUI.EntityEditorPopupMenu
+    addMenuItem EditorUI.EntityEditorPopupMenu,"Edit Attribute",EditorUI.EntityEditorPopupMenu_EditAttrib
+    addmenusplitter EditorUI.EntityEditorPopupMenu
+    addMenuItem EditorUI.EntityEditorPopupMenu,"Refresh",EditorUI.EntityEditorPopupMenu_Refresh
 
     //File, Edit, Level, Scripting, Entities, Terrain, Sound, Game, Tools, Window, Help
     EditorUI.Menu_File = UI_Editor_GenID()
@@ -429,6 +483,12 @@ function UI_Editor_Init():
     addMenuSplitter EditorUI.Menu_Help_Sub
     Addmenuitem EditorUI.Menu_Help_Sub,"About...",EditorUI.Menu_Help_About
     
+    EditorUI.EntityEditorDummyObject = reserve free image()
+    EditorUI.EntityEditorIcon = reserve free image()
+    load image "Media\Images\Interface\editor\brick.png",EditorUI.EntityEditorIcon
+    make object sphere EditorUI.EntityEditorDummyObject,1,2,2
+    exclude object on EditorUI.EntityEditorDummyObject
+    
     
 ENDFUNCTION
 
@@ -498,12 +558,14 @@ function UI_Editor_Update():
             if id = EditorUI.BrushRadiusSlider then setgadgettext EditorUI.BrushRadiusLabel,"Radius: "+str$(EditorUI.BrushRadius)
             if id = EditorUI.ButtonMod1 then Terrain_Refresh()
             if id = EditorUI.ButtonMod2 then Terrain_Smooth()
+            if id = EditorUI.EntityEditorLevelTreeRefresh then Refresh_EntityList()
         endcase
     endselect
     //update ui elements
     setStatusText EditorUI.UI_Statusbar,2,"Current FPS : "+str$(screen fps())+" / CPU : ?"  + " / Polygons : " + str$(statistic(1))
     selectItem EditorUI.panel_right_top,-1
     resizeGadget EditorUI.currentmodeframe,260,GET WINDOW CLIENT HEIGHT()-200
+    resizeGadget EditorUI.EntityEditorTabs,235,GET WINDOW CLIENT HEIGHT()-250
     editorUI.CurrentTool = selecteditem(EditorUI.Modegadget)
     set window title "OpenFPS Level Editor - " + FileName
     `Spectator_UpdateList()
@@ -531,6 +593,8 @@ function UI_Editor_Update():
             //entity
             UI_Editor_AddToConsole("Entity Tool Mode")
             UI_Editor_HideAll()
+            setgadgetvisible EditorUI.EntityEditorTabs,1
+            selecttab EditorUI.EntityEditorTabs,0
         endcase
         case 2
             //terrain
@@ -574,6 +638,7 @@ function UI_Editor_Update():
     editorUI.CurrentToolOld = editorUI.CurrentTool
     endif
     //persistant parts
+    Editor_Render_Entities()
     select editorUI.CurrentTool
         case 0
             //camera
@@ -586,6 +651,8 @@ function UI_Editor_Update():
             `EditorUI.CameraMode = 1
             if KEYSTATE(46) and keystate(56) then selectitem EditorUI.Modegadget,0
             //entity
+            EditorUI.EntityEditorTabSelected = Select_Entity_Mode(EditorUI.EntityEditorTabSelected)
+            
         endcase
         case 2
             `EditorUI.CameraMode = 1
@@ -690,8 +757,78 @@ function UI_Editor_HideAll():
         setgadgetvisible EditorUI.ButtonMod2,0
         setgadgetvisible EditorUI.ButtonMod3,0
         setgadgetvisible EditorUI.ButtonMod1,0
+        setgadgetvisible EditorUI.EntityEditorTabs,0
+        setgadgetvisible EditorUI.EntityEditorLevelTree,0
+        setgadgetvisible EditorUI.EntityEditorLevelTreeRefresh,0
 endfunction
-        
+
+function Select_Entity_Mode(i):
+    i_new= selectedtab(EditorUI.EntityEditorTabs)
+    if i_new = i:
+    else:
+    select i_new
+        case 0
+            setgadgetvisible EditorUI.EntityEditorLevelTree,0
+            setgadgetvisible EditorUI.EntityEditorLevelTreeRefresh,0
+        endcase
+        case 1
+            setgadgetvisible EditorUI.EntityEditorLevelTree,1
+            setgadgetvisible EditorUI.EntityEditorLevelTreeRefresh,1
+            Refresh_EntityList()
+        endcase
+    endselect
+    endif
+ENDFUNCTION i_new
+
+function Refresh_EntityList():
+    removeTreeViewItem EditorUI.EntityEditorLevelTree,EditorUI.EntityEditorTabLevelMain
+    EditorUI.EntityEditorTabLevelMain=addTreeViewItem(EditorUI.EntityEditorLevelTree,0,0,"Level")
+    parent = EditorUI.EntityEditorTabLevelMain
+    for i = 0 to NumEntities-1:
+        icon = 1
+     if Entities(i).name = "root" then icon = 3
+    currententity = addTreeViewItem(EditorUI.EntityEditorLevelTree,parent,icon,Entities(i).name)
+    if Entities(i).attributes.arraysize>0:
+         // list entity attributes
+         local dim tempattributes() as string
+         local dim tempvalues() as string
+         link array tempattributes(),Entities(i).attributes.ptr
+         link array tempvalues(),Entities(i).values.ptr
+         for ii = 0 to Entities(i).attributes.arraysize-1:
+              if array index valid(tempattributes(ii)):
+                item$ = tempattributes(ii)+" = "+tempvalues(ii)
+                null = addTreeViewItem(EditorUI.EntityEditorLevelTree,currententity,2,item$)
+              endif
+         next ii
+         unlink array tempattributes()
+         unlink array tempvalues()
+         undim tempattributes()
+         undim tempvalues()  
+    endif
+    next i
+    
+    // 0 is main icon
+    // 1 is bricks icon
+    // 2 is script icon
+ENDFUNCTION
+
+function Editor_Render_Entities():
+    for i = 0 to NumEntities-1:
+        x# = Ent_GetFloat(i,"x")
+        y# = Ent_GetFloat(i,"y")
+        z# = Ent_GetFloat(i,"y")
+        position object EditorUI.EntityEditorDummyObject,x#,y#,z#
+        if object in screen(EditorUI.EntityEditorDummyObject):
+            sx = object screen x(EditorUI.EntityEditorDummyObject)
+            sy = object screen y(EditorUI.EntityEditorDummyObject)
+            if x# + y# + z# <> 0.0:
+                paste image EditorUI.EntityEditorIcon,sx-8,sy-8,1
+                center text sx,sy + 10,Entities(i).name
+            endif
+        endif
+    next i
+    
+ENDFUNCTION
         
 function Editor_Terrain_SwitchMode(newmode):
     EditorUI.TerrainMode = newmode
