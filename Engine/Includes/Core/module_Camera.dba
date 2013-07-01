@@ -298,14 +298,14 @@ Position Object SkyboxObject,Skybox_X#,Skybox_Y#,Skybox_Z#
 Position Object SkyboxSunObject,Skybox_X#,Skybox_Y#,Skybox_Z#
 Rotate Object SkyboxSunObject,328,346,0
 Move Object SkyboxSunObject,1000
-DSky_update()
 if Game_Running:
-    if Ent_GetInt(EntGetReference("root"),"sky_dynamic_enabled")=1
-      exclude object on SkyboxObj
+    if EntGetAttribute(EntGetReference("root"),"sky_dynamic_enabled")="1"
+      exclude object on SkyboxObject
       exclude object off skyMesh
-        setGWTime( Ent_GetInt(EntGetReference("root"),"sky_dynamic_timeofday") , 0 , 0 )
+      setGWTime( Ent_GetInt(EntGetReference("root"),"sky_dynamic_timeofday") , 0 , 0 )
+        DSky_update()
     else:
-      exclude object off SkyboxObj
+      exclude object off SkyboxObject
       exclude object on skyMesh
     endif
 ENDIF
@@ -370,6 +370,7 @@ ENDFUNCTION
 
 function Camera_Spectator_Update():
     mc = mouseclick()
+    if mousey()>(120) and mousey()<(Screen.Height-120):
     if mc = 1 and mc_toggle = 0:
         mc_toggle = 1
         CurrentSpectatorCamera = CurrentSpectatorCamera + 1
@@ -377,6 +378,7 @@ function Camera_Spectator_Update():
     if mc = 2 and mc_toggle = 0:
         mc_toggle = 1
         CurrentSpectatorCamera = CurrentSpectatorCamera - 1
+    endif
     endif
     if mc = 0 then mc_toggle = 0
     if CurrentSpectatorCamera < 0 then CurrentSpectatorCamera = NumSpectatorCameras -1

@@ -280,7 +280,7 @@ function Ent_Update():
 	 EntHandleEntities()
 	y=60 : x= 10
 	 `UI_Text(1,x,y,"OpenFPS Entities - "+str$(NumEntities)+" Current") : y=y+12
-	EntListDebug()
+	`EntListDebug()
     for i = 0 to NumEntities-1:
     Entityname$=Entities(i).name
     Entityptr$=str$(Entities(i).attributes.ptr)

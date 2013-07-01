@@ -10,6 +10,9 @@
 // Constants
 //////////////////////////////////////////////////////////////
 
+#constant GAME_SPECTATE 0
+#constant GAME_WAIT_FOR_SERVER 1
+
 //////////////////////////////////////////////////////////////
 // UDTS
 //////////////////////////////////////////////////////////////
@@ -25,7 +28,7 @@ ENDFUNCTION
 function Game_Update():
     if Game_Running = 1:
         //game modules updated here!
-        Camera_Spectator_Update()
+        if game.state = GAME_SPECTATE then Camera_Spectator_Update()
     endif
 ENDFUNCTION
 
@@ -57,6 +60,7 @@ function Game_Load(file$):
         UI_FadeManager.target=M_ENGINE_DEFAULT
     endif
     Game_Running = 1
+    Game.state = GAME_SPECTATE
     UI_WriteLog(UI_GREEN,"* Loaded level file and started game.")
 ENDFUNCTION
 
@@ -73,6 +77,10 @@ function Game_Trigger_End():
     UI_FadeManager.state=UI_FADEIN
     UI_FadeManager.target=M_ENGINE_LOADING
 endfunction
+
+function Game_Join():
+    Game.state = GAME_WAIT_FOR_SERVER
+ENDFUNCTION
 
 function Game_End():
     if Game_Running = 1:
