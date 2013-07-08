@@ -5,9 +5,9 @@ project name=OpenFPS
 
 ; **** source file information ****
 main=Includes\Core\module_Core.dba
-LineMain=6
+LineMain=0
 include1=Includes\System\module_System.dba
-LineInclude1=115
+LineInclude1=132
 include2=Includes\Timer\module_Timer.dba
 LineInclude2=0
 include3=Includes\Interface\module_UI.dba
@@ -15,25 +15,27 @@ LineInclude3=0
 include4=Includes\Input\module_Input.dba
 LineInclude4=0
 include5=Includes\Interface\module_UI_menu.dba
-LineInclude5=1009
+LineInclude5=369
 include6=Includes\Core\module_Datatypes.dba
-LineInclude6=43
+LineInclude6=72
 include7=Includes\Core\module_Game.dba
 LineInclude7=12
 include8=Includes\Core\module_Camera.dba
 LineInclude8=370
-include9=Includes\Model\module_Model.dba
-LineInclude9=0
-include10=Includes\Entities\Module_Entity.dba
-LineInclude10=282
-include11=Includes\Audio\module_Audio.dba
-LineInclude11=0
-include12=Includes\Networking\module_Network.dba
-LineInclude12=5
-include13=Includes\Terrain\module_Terrain.dba
-LineInclude13=386
-include14=Includes\Effects\module_DynamicSky.dba
-LineInclude14=0
+include9=Includes\Entities\Module_Entity.dba
+LineInclude9=112
+include10=Includes\Audio\module_Audio.dba
+LineInclude10=0
+include11=Includes\Networking\module_Network.dba
+LineInclude11=5
+include12=Includes\Terrain\module_Terrain.dba
+LineInclude12=386
+include13=Includes\Effects\module_DynamicSky.dba
+LineInclude13=0
+include14=Includes\Effects\module_Flare.dba
+LineInclude14=18
+include15=Includes\Model\module_Model.dba
+LineInclude15=62
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone

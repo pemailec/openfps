@@ -217,7 +217,7 @@ function initWeather()
    tempWeather.sunrise.sky_upper.b = .78 
 
    global skyMesh as integer 
-   skyMesh = Reserve Free Object() `[Temp]
+   skyMesh = 8000 `[Temp]
    make object sphere skyMesh , 128,16,16 `48,48
    set object cull skyMesh , 0
    Scale Object skyMesh , 1000 , 1000 , 1000

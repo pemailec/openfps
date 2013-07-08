@@ -17,102 +17,69 @@ remend
 // UDTS
 //////////////////////////////////////////////////////////////
 
-Type t_MDL_DbEntry
-	name As String
-	filename As String
-	obj_number As Integer
-	obj_scale As t_3dVector
-	obj_matstr As String
-	obj_matid as integer
-endtype
-
 //////////////////////////////////////////////////////////////
 // Main Functions
 //////////////////////////////////////////////////////////////
 
-Function MDL_Init():
-	Dim MDL_Database() As t_MDL_DbEntry
-	Global MDL_Database_NumItems As Integer
-Endfunction
+//////////////////////////////////////////////////////////////
+// Entity System Model
+//////////////////////////////////////////////////////////////
 
-Function MDL_Update():
-Endfunction
-
-Function MDL_Terminate():
-	MDL_Database_Clear()
-	undim MDL_Database()
-Endfunction
-
-//fills the model database.
-Function MDL_Database_Fill():
-	MDL_Database_Clear()
-	Set Dir "Media\Models\"
-	perform checklist for files
-	For t=1 To Checklist Quantity()
-		file$=checklist string$(t)
-		If Right$(file$,4)=".zip":
-			MDL_Database_AddItem(file$)
-		endif
-	next t
-	MDL_Database_ListItems()
-	Set Dir "..\.."
-Endfunction
-
-//loads an item by file name (zip package)
-Function MDL_Database_AddItem(filename as string):
-	Array Insert At Bottom MDL_Database()
-	if file exist(filename):
-		open file block filename,2
-		Extract File From Block 2,"config.cfg","data"
-		lua load file "data\config.cfg"
-		MDL_Database(MDL_Database_NumItems).filename = Lua String$("File")
-		MDL_Database(MDL_Database_NumItems).name = lua string$("Name")
-		MDL_Database(MDL_Database_NumItems).obj_matstr = lua string$("Texture")
-		Extract File From Block 2,MDL_Database(MDL_Database_NumItems).obj_matstr,"data"
-		MDL_Database(MDL_Database_NumItems).obj_number = reserve free object()
-		MDL_Database(MDL_Database_NumItems).obj_matid = reserve free image()
-		Load Object From Block 2,MDL_Database(MDL_Database_NumItems).filename,MDL_Database(MDL_Database_NumItems).obj_number
-		Load Image "data\"+MDL_Database(MDL_Database_NumItems).obj_matstr,MDL_Database(MDL_Database_NumItems).obj_matid
-		MDL_Database(MDL_Database_NumItems).obj_scale.x = Lua Float("Scale")
-		MDL_Database(MDL_Database_NumItems).obj_scale.y = lua float("Scale")
-		MDL_Database(MDL_Database_NumItems).obj_scale.z = lua float("Scale")
-		texture object MDL_Database(MDL_Database_NumItems).obj_number,MDL_Database(MDL_Database_NumItems).obj_matid
-		`exclude object on MDL_Database(MDL_Database_NumItems).obj_number
-		delete file "data\config.cfg"
-		delete file "data\"+MDL_Database(MDL_Database_NumItems).obj_matstr
-		close file block 2
-		MDL_Database_NumItems = MDL_Database_NumItems + 1
-		ui_writelog(UI_Yellow,"(MDL) Loaded file from "+filename)
-	endif
-Endfunction
-
-//removes an item by reference name (not implemented yet)
-Function MDL_Database_RemoveItem(name as string):
+function Entity_Model_Add(x#,y#,z#)
+    i = 0
+    while ent_Getexists("ent_model_"+str$(i))
+        i = i + 1
+    endwhile
+    entAdd("ent_model_"+str$(i))
+    ref = entgetreference("ent_model_"+str$(i))
+    entAddAttribute(ref,"name","ent_model_"+str$(i))
+    entAddAttribute(ref,"type","ent_model")
+    entAddAttribute(ref,"modelname","Media\models\text_error\error2.x")
+    entAddAttribute(ref,"x",str$(x#))
+    entAddAttribute(ref,"y",str$(y#))
+    entAddAttribute(ref,"z",str$(z#))
+    entAddAttribute(ref,"rx",str$(0))
+    entAddAttribute(ref,"ry",str$(0))
+    entAddAttribute(ref,"rz",str$(0))
+    entAddAttribute(ref,"sx",str$(100))
+    entAddAttribute(ref,"sy",str$(100))
+    entAddAttribute(ref,"sz",str$(100))
 endfunction
 
-//lists the current database contents to the log.
-Function MDL_Database_ListItems():
-	ui_writelog(UI_Yellow,"(MDL) Database Contents:")
-	If MDL_Database_NumItems>0:
-		For i = 0 To (MDL_Database_NumItems - 1):
-			ui_writelog(UI_Yellow,"(MDL)"+MDL_Database(i).name+", "+MDL_Database(i).filename+", object id = "+str$(MDL_Database(i).obj_number))
-		Next i
-	else
-		ui_writelog(UI_Yellow,"(MDL) Database is empty.")
-	endif
-	ui_writelog(UI_Yellow,"(MDL) End MDL Database Log")
-Endfunction
-
-Function MDL_Database_Clear():
-	If MDL_Database_NumItems>0:
-		For i = 0 To (MDL_Database_NumItems - 1):
-			delete object MDL_Database(i).obj_number
-		next i
-	endif
-	Clear Array MDL_Database()
-	MDL_Database_NumItems = 0
-	ui_writelog(UI_Yellow,"(MDL) Flushed database.")
+function Entity_Model_Update(i)
+    if Ent_GetInt(i,"modelid")=0:
+        modelid = reserve free object()
+        entAddAttribute(i,"modelid",str$(modelid))
+        entAddAttribute(i,"modelloaded","0")
+        make object cube modelid,1
+        `ui_writelog(UI_Blue,"Set modelid for "+Entities(i).name)
+    else
+        if Ent_GetInt(i,"modelloaded")=0:
+            file$ = EntGetAttribute(i,"modelname")
+            if file exist(file$):
+                delete object Ent_GetInt(i,"modelid")
+                entSetAttribute(i,"modelloaded","1")
+                load object file$,Ent_GetInt(i,"modelid")
+            `ui_writelog(UI_Blue,"Loaded model for "+Entities(i).name)
+            endif
+        endif
+        position object Ent_GetInt(i,"modelid"),Ent_GetFloat(i,"x"),Ent_GetFloat(i,"y"),Ent_GetFloat(i,"z")
+        rotate object Ent_GetInt(i,"modelid"),Ent_GetFloat(i,"rx"),Ent_GetFloat(i,"ry"),Ent_GetFloat(i,"rz")
+        scale object Ent_GetInt(i,"modelid"),Ent_GetFloat(i,"sx"),Ent_GetFloat(i,"sy"),Ent_GetFloat(i,"sz")
+    endif
 endfunction
+
+//reload model:
+
+function Entity_Model_Set(i,file$):
+    EntSetAttribute(i,"modelname",file$)
+    entSetAttribute(i,"modelloaded","0")
+endfunction
+
+function Entity_Model_Delete(i)
+    modelid = Ent_GetInt(i,"modelid")
+    delete object modelid
+ENDFUNCTION
 
 //////////////////////////////////////////////////////////////
 // End of code

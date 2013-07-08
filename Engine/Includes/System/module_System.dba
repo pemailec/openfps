@@ -120,6 +120,7 @@ Function SYS_Init():
     // Do SQL DATABASE setup
     //////////////////////////////////////
     
+    remstart
     Game.Database = 1
     null = SQLITE OPEN DATABASE(Game.Database,OPENFPS_DB,"User","")
     //query a value to test it!
@@ -129,6 +130,7 @@ Function SYS_Init():
     title$= SQLITE RECORD CURRENT ROW STRING$(Game.Database,1)
     set window title title$
     null = SQLITE FINISH SQL QUERY(Game.Database)
+    remend
     
     //////////////////////////////////////
     // wait for valid screen
@@ -163,6 +165,22 @@ Function SYS_Sync():
         winsock clean up
         end
     endif
+    
+    if keystate(63) and Game.screenshotflag = 0 :
+        tempimage = reserve free image()
+        Get Image tempimage,0,0,Screen.Width,Screen.Height,3
+        n = 1
+        file$ = "Media\Images\Screenshots\openfps_"+str$(n)+".jpg"
+        while file exist(file$):
+            n = n + 1
+            file$ = "Media\Images\Screenshots\openfps_"+str$(n)+".jpg"
+        endwhile
+        save image file$,tempimage
+        `ik create image
+        delete image tempimage
+        Game.screenshotflag = 1
+    endif
+    if keystate(63)=0 then Game.screenshotflag = 0
     
     Sync
 

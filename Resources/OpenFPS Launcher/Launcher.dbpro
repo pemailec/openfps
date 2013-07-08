@@ -5,7 +5,7 @@ project name=Launcher
 
 ; **** source file information ****
 main=Launcher.dba
-LineMain=50
+LineMain=16
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone

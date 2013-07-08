@@ -1,0 +1,12 @@
+;Rainbow GUI Layout File
+;version 1.05
+frame name="Gadget1" x="25" y="15" width="260" height="400" parent="" text="Frame" enabled="1" visible="1" align="0"
+tabs name="EntityEditorTabs" x="9" y="29" width="235" height="355" parent="Gadget1" text="" enabled="1" visible="1" align="0" items="Level Tree|Properties|Placement"
+treeview name="EntityEditorLevelTree" x="19" y="59" width="215" height="315" parent="Gadget1" text="" enabled="1" visible="1" align="0"
+panel name="EntityPropertiesPanel" x="13" y="53" width="225" height="325" parent="Gadget1" text="" enabled="1" visible="1" align="0" border="0"
+edit name="EntityNameView" x="5" y="6" width="215" height="20" parent="EntityPropertiesPanel" text="" enabled="1" visible="1" align="0"
+panel name="AttributesHeader" x="6" y="30" width="100" height="21" parent="EntityPropertiesPanel" text="Attributes" enabled="1" visible="1" align="0" border="2"
+panel name="ValuesHeader" x="106" y="30" width="110" height="21" parent="EntityPropertiesPanel" text="Values" enabled="1" visible="1" align="0" border="2"
+listbox name="AttributesList" x="6" y="51" width="100" height="225" parent="EntityPropertiesPanel" text="" enabled="1" visible="1" align="0" items=""
+listbox name="ValuesList" x="106" y="51" width="110" height="225" parent="EntityPropertiesPanel" text="" enabled="1" visible="1" align="0" items=""
+button name="EditValueButton" x="6" y="280" width="210" height="40" parent="EntityPropertiesPanel" text="Edit Selected Value" enabled="1" visible="1" align="0"
