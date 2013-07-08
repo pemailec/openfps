@@ -76,6 +76,7 @@ Type t_Game
     ServerIP as string
     game_load_target as string
     game_load_status as string
+    screenshotflag as integer
 endtype
 
 

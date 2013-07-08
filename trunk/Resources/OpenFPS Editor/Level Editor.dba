@@ -27,6 +27,8 @@ Backdrop Off
 Disable Escapekey
 autocam off
 
+change mouse 2
+
 set dir "..\..\Engine"
 
 Sky_Create()
@@ -58,6 +60,8 @@ scale object Texture WaterPlain,32,32
 set alpha mapping on WaterPlain,80
 exclude object on WaterPlain
 
+Editor_initGizmo()
+
 //////////////////////////////////////////////////////////////
 // Main Loop
 //////////////////////////////////////////////////////////////
@@ -73,9 +77,11 @@ Do
     DSky_Update()
     
     //update ui system
+    Editor_UpdateGizmo()
     UI_Editor_Update()
     World_Editor_Update()
     Terrain_Update()
+    
     
     //sync
     sync
@@ -93,7 +99,7 @@ function Sky_Create():
     //unmanaged skybox setup
     Global SkyboxImg : SkyboxImg = Reserve Free Image()
     Global Skyboxfx : Skyboxfx = Reserve Free Effect()
-    Global SkyboxObj : SkyboxObj = Reserve Free Object()
+    Global SkyboxObj : SkyboxObj = 8001
     make object sphere SkyboxObj,-2000,5,5
     Load Image "Media\Materials\Cubemaps\Cube0.dds",SkyboxImg,2
     Load Effect "media\Shaders\SkyBox.fx",SkyboxFx,0
@@ -123,7 +129,7 @@ function Camera_Update():
     if EditorUI.CameraMode = 0:
     cr#=0:cf#=0
     m_c = 0
-    If mouseclick()=2 : m_c = 1 : hide mouse : position mouse desktop width()/2,desktop height()/2: else : show mouse : endif
+    If mouseclick()=2 and Gizmo_Down=0 : m_c = 1 : hide mouse : position mouse desktop width()/2,desktop height()/2: else : show mouse : endif
     If Rightkey()=1 Or Keystate(32)=1 Then cr#=-EditorUI.CameraMoveSpeed*TBM*m_c
     If Leftkey()=1 Or Keystate(30)=1 Then cr#=EditorUI.CameraMoveSpeed*TBM*m_c
     If Upkey()=1 Or Keystate(17)=1 Then cf#=EditorUI.CameraMoveSpeed*TBM*m_c
@@ -215,6 +221,7 @@ function Spectator_Add():
     ref = entgetreference("SpectatorCamera_"+str$(SpectatorCameraUniqueId))
     entAddAttribute(ref,"spectator_camera","1")
     entAddAttribute(ref,"name","<new camera>")
+    entAddAttribute(ref,"type","ent_spectatorcamera")
     entAddAttribute(ref,"x",str$(EditorUI.CameraX))
     entAddAttribute(ref,"y",str$(EditorUI.CameraY))
     entAddAttribute(ref,"z",str$(EditorUI.CameraZ))
@@ -290,6 +297,86 @@ function Spectator_Delete():
         Spectator_Apply_Ents()
     endif
 endfunction
+
+function Editor_InitGizmo():
+    global Editor_Gizmo_X as integer
+    global Editor_Gizmo_Y as integer
+    global Editor_Gizmo_Z as integer
+    global Editor_Gizmo_shader as integer
+    Editor_Gizmo_shader_x = reserve free effect()
+    Editor_Gizmo_shader_y = reserve free effect()
+    Editor_Gizmo_shader_z = reserve free effect()
+    Load effect "Media\Shaders\color.fx",Editor_Gizmo_shader_x,0
+    Load effect "Media\Shaders\color.fx",Editor_Gizmo_shader_y,0
+    Load effect "Media\Shaders\color.fx",Editor_Gizmo_shader_z,0
+    vec = find free vector()
+    null = make vector4(vec)
+    set vector4 vec,1.0,0.0,0.0,0.6
+    set effect constant vector editor_gizmo_shader_x,"lightColour",vec
+    set vector4 vec,0.0,1.0,0.0,0.6
+    set effect constant vector editor_gizmo_shader_y,"lightColour",vec
+    set vector4 vec,0.0,0.0,1.0,0.6
+    set effect constant vector editor_gizmo_shader_z,"lightColour",vec
+    null = delete vector4(vec)
+    Editor_Gizmo_X = reserve free object()
+    Editor_Gizmo_Y = reserve free object()
+    Editor_Gizmo_Z = reserve free object()
+    make object box Editor_Gizmo_X,0.2,0.2,4 : set object effect Editor_Gizmo_X,Editor_Gizmo_shader_x
+    make object box Editor_Gizmo_Y,0.2,0.2,4 : set object effect Editor_Gizmo_Y,Editor_Gizmo_shader_y
+    make object box Editor_Gizmo_Z,0.2,0.2,4 : set object effect Editor_Gizmo_Z,Editor_Gizmo_shader_z
+    set object transparency Editor_Gizmo_X,2
+    set object transparency Editor_Gizmo_Y,2
+    set object transparency Editor_Gizmo_Z,2
+    yrotate object Editor_Gizmo_X,90
+    xrotate object Editor_Gizmo_Y,90
+    disable object zdepth Editor_Gizmo_X
+    disable object zdepth Editor_Gizmo_Y
+    disable object zdepth Editor_Gizmo_Z
+    global Gizmo_Down as integer
+    global Gizmo_mode as integer
+    Gizmo_Down = 0
+        exclude object on Editor_Gizmo_X
+        exclude object on Editor_Gizmo_Y
+        exclude object on Editor_Gizmo_Z
+ENDFUNCTION
+
+function Editor_UpdateGizmo():
+    if EditorUI.EntityCurrentSelected > -1:
+        exclude object off Editor_Gizmo_X
+        exclude object off Editor_Gizmo_Y
+        exclude object off Editor_Gizmo_Z
+        x# = Ent_GetFloat(EditorUI.EntityCurrentSelected,"x")
+        y# = Ent_GetFloat(EditorUI.EntityCurrentSelected,"y")
+        z# = Ent_GetFloat(EditorUI.EntityCurrentSelected,"z")
+        position object Editor_Gizmo_X,x#,y#,z#
+        position object Editor_Gizmo_Y,x#,y#,z#
+        position object Editor_Gizmo_Z,x#,y#,z#
+        pick = pick object(mousex(),mousey(),editor_Gizmo_X,Editor_Gizmo_Z)
+        if pick > 0 and Gizmo_Down = 0:
+            if pick = Editor_Gizmo_X and mouseclick()=1 then Gizmo_Down = 1 : Gizmo_mode = 0
+            if pick = Editor_Gizmo_Y and mouseclick()=1 then Gizmo_Down = 1 : Gizmo_mode = 1
+            if pick = Editor_Gizmo_Z and mouseclick()=1 then Gizmo_Down = 1 : Gizmo_mode = 2
+        endif
+        if mouseclick()=0 then Gizmo_Down = 0
+        if Gizmo_Down =1:
+            x# = x#
+            y# = y#
+            z# = z#
+            if Gizmo_mode = 0 then x# = x# + (EditorUI.mmx*0.1)
+            if Gizmo_mode = 1 then y# = y# + (EditorUI.mmy*-0.1)
+            if Gizmo_mode = 2 then z# = z# + (EditorUI.mmx*-0.1)
+            EntSetAttribute(EditorUI.EntityCurrentSelected,"x",str$(x#))
+            EntSetAttribute(EditorUI.EntityCurrentSelected,"y",str$(y#))
+            EntSetAttribute(EditorUI.EntityCurrentSelected,"z",str$(z#))
+        endif
+    else:
+        exclude object on Editor_Gizmo_X
+        exclude object on Editor_Gizmo_Y
+        exclude object on Editor_Gizmo_Z
+    endif
+    
+endfunction
+    
 
 
 function WndProc(hwnd, msg, wparam, lparam)

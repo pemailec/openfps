@@ -22,6 +22,7 @@ Function Network_Init():
     UI_WriteLog(UI_Blue,"Got Client IP:"+Game.ip)
     UI_WriteLog(UI_Blue,"Connecting to master server...")
     global ClientMasterServer
+    remstart
     ClientMasterServer = Winsock Connect(Game.ServerIP,Game.serverport)
     global MasterserverOnline
     MasterserverOnline = 1
@@ -30,6 +31,8 @@ Function Network_Init():
         MasterserverOnline = 0
         winsock delete channel ClientMasterServer
     endif
+    remend
+        MasterserverOnline = 0
     global NetworkUsersOnline : NetworkUsersOnline = 0
     dim MasterServerChat(8) as string //actually 0..7
     

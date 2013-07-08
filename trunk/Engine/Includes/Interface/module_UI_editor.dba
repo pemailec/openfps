@@ -138,7 +138,31 @@ type t_EditorUI
     EntityEditorPopupMenu_Refresh as integer
     EntityEditorDummyObject as integer
     EntityEditorIcon as integer
+    EntityEditPanel as integer
+    EntityTypeLabel as integer
+    EntityTypeCombobox as integer
+    EntitySnapToGrid as integer
+    EntityStartPlace as integer
+    EntityPropertiesLabel as integer
+    EntityIconCanvas as integer
+    EntityNameEdit as integer
+    EntityModelSelect as integer
+    EntityModelName as integer
+    EntityNameWarning as integer
+    EntityPropsWarning as integer
+    EntityPlaceModeDummy as integer
+    EntityPlaceMode as integer
+    EntityCurrentSelected as integer
+    EntityTabFlag as integer
     TabImageList as integer
+    EntityPropertiesPanel as integer
+    EntityNameView as integer
+    AttributesHeader as integer
+    ValuesHeader as integer
+    AttributesList as integer
+    ValuesList as integer
+    EditValueButton as integer
+    EntityCurrentSelectedTab as integer
     CameraMode as integer
     CameraX as float
     CameraY as float
@@ -167,7 +191,7 @@ function UI_Editor_Init():
     EditorUI.Font = createFont("Arial",8,1,0,0) 
     addStatusPanel EditorUI.UI_Statusbar, 200
     addStatusPanel EditorUI.UI_Statusbar, 300
-    addStatusPanel EditorUI.UI_Statusbar, 400
+    addStatusPanel EditorUI.UI_Statusbar, 500
     setStatusText EditorUI.UI_Statusbar,1,"OpenFPS Editor - DEV VERSION"
     UI_Editor_SetStatusText("BiG BroTher is watching you...")
     EditorUI.UI_Statuspanel1 = 1
@@ -391,6 +415,7 @@ function UI_Editor_Init():
     bringtofront EditorUI.EntityEditorLevelTreeRefresh
     setTreeViewImageList EditorUI.EntityEditorLevelTree,EditorUI.TabImageList,0
     EditorUI.EntityEditorTabLevelMain=addTreeViewItem(EditorUI.EntityEditorLevelTree,0,0,"Level")
+    `setPanelBorderStyle EditorUI.EntityEditorLevelTree,2
     
     addTab EditorUI.EntityEditorTabs,"Placement"
     addTab EditorUI.EntityEditorTabs,"Level Tree"
@@ -406,7 +431,86 @@ function UI_Editor_Init():
     addMenuItem EditorUI.EntityEditorPopupMenu,"Edit Attribute",EditorUI.EntityEditorPopupMenu_EditAttrib
     addmenusplitter EditorUI.EntityEditorPopupMenu
     addMenuItem EditorUI.EntityEditorPopupMenu,"Refresh",EditorUI.EntityEditorPopupMenu_Refresh
+    
 
+        
+    EditorUI.EntityEditPanel=createPanel(13,53,225,325,EditorUI.currentmodeframe)
+    setPanelBorderStyle EditorUI.EntityEditPanel,BORDER_NONE
+    EditorUI.EntityTypeLabel=createLabel(3,3,120,15,"Entity Class:",EditorUI.EntityEditPanel)
+    EditorUI.EntityTypeCombobox=createComboBox(3,20,210,100,EditorUI.EntityEditPanel)
+    EditorUI.EntitySnapToGrid=createCheckBox(8,48,105,20,"Snap To Grid",EditorUI.EntityEditPanel)
+    EditorUI.EntityStartPlace=createButton(3,73,210,40,"Place",0,EditorUI.EntityEditPanel)
+    EditorUI.EntityPropertiesLabel=createLabel(3,41,155,20,"Entity Properties:",EditorUI.EntityEditPanel)
+    EditorUI.EntityIconCanvas=createCanvas(4,57,64,64,EditorUI.EntityEditPanel)
+    EditorUI.EntityNameEdit=createEdit(73,61,140,22,0,EditorUI.EntityEditPanel)
+    EditorUI.EntityModelSelect=createButton(4,150,209,23,"Choose Model",0,EditorUI.EntityEditPanel)
+    EditorUI.EntityModelName=createEdit(5,128,208,20,0,EditorUI.EntityEditPanel)
+    EditorUI.EntityNameWarning=createLabel(73,88,140,30,"* Will be changed if name is already taken",EditorUI.EntityEditPanel)
+    EditorUI.EntityPropsWarning=createLabel(5,175,205,30,"Properties not available until after placement...",EditorUI.EntityEditPanel)
+    //add two types of entities as a test
+    addItem EditorUI.EntityTypeCombobox,"ent_flare"
+    addItem EditorUI.EntityTypeCombobox,"ent_model"  
+    selectitem EditorUI.EntityTypeCombobox,0
+    
+    
+    CanvasImage  = reserve free image()
+    load image "Media\Images\Interface\editor\bricks.bmp",CanvasImage
+    ik resize image CanvasImage,64,64,0
+    drawImage EditorUI.EntityIconCanvas,0,0,CanvasImage
+    
+    setgadgetvisible EditorUI.EntityIconCanvas,0
+    setgadgetvisible EditorUI.EntityPropertiesLabel,0
+    setgadgetvisible EditorUI.EntityNameEdit,0
+    setgadgetvisible EditorUI.EntityNameWarning,0
+    
+    applyFont EditorUI.EntityTypeLabel,EditorUI.Font
+    applyFont EditorUI.EntityTypeCombobox,EditorUI.Font
+    applyFont EditorUI.EntitySnapToGrid,EditorUI.Font
+    applyFont EditorUI.EntityStartPlace,EditorUI.Font
+    applyFont EditorUI.EntityPropertiesLabel,EditorUI.Font
+    applyFont EditorUI.EntityIconCanvas,EditorUI.Font
+    applyFont EditorUI.EntityNameEdit,EditorUI.Font
+    applyFont EditorUI.EntityModelSelect,EditorUI.Font
+    applyFont EditorUI.EntityModelName,EditorUI.Font
+    applyFont EditorUI.EntityNameWarning,EditorUI.Font
+    applyFont EditorUI.EntityPropsWarning,EditorUI.Font
+    setgadgetvisible EditorUI.EntityEditPanel,0
+    
+    setgadgetvisible EditorUI.EntityModelSelect,0
+    setgadgetvisible EditorUI.EntityModelName,0
+    setgadgetvisible EditorUI.EntityPropsWarning,0
+    
+
+    EditorUI.EntityPropertiesPanel=createPanel(13,53,225,325,EditorUI.currentmodeframe)
+    EditorUI.EntityNameView=createEdit(5,6,215,20,0,EditorUI.EntityPropertiesPanel)
+    EditorUI.AttributesHeader=createPanel(6,30,100,21,EditorUI.EntityPropertiesPanel)
+    EditorUI.ValuesHeader=createPanel(106,30,110,21,EditorUI.EntityPropertiesPanel)
+    EditorUI.AttributesList=createListBox(6,51,210,225,EditorUI.EntityPropertiesPanel)
+    `EditorUI.ValuesList=createListBox(106,51,110,225,EditorUI.EntityPropertiesPanel)
+    EditorUI.EditValueButton=createButton(6,280,210,40,"Edit Selected Value",0,EditorUI.EntityPropertiesPanel)
+    setPanelBorderStyle EditorUI.ValuesHeader,2
+    setPanelBorderStyle EditorUI.AttributesHeader,2
+    setgadgettext EditorUI.ValuesHeader,"Values"
+    setgadgettext EditorUI.AttributesHeader,"Attributes"
+    setgadgetenabled EditorUI.EntityNameView,0
+    applyFont EditorUI.EntityNameView,EditorUI.Font
+    applyFont EditorUI.AttributesHeader,EditorUI.Font
+    applyFont EditorUI.ValuesHeader,EditorUI.Font
+    applyFont EditorUI.AttributesList,EditorUI.Font
+    `applyFont EditorUI.ValuesList,EditorUI.Font
+    applyFont EditorUI.EditValueButton,EditorUI.Font
+    setgadgetvisible EditorUI.EntityPropertiesPanel,0
+    bringtofront EditorUI.EntityPropertiesPanel
+    
+    tempeffect = reserve free effect()
+    load effect "media\shaders\color.fx",tempeffect,0
+    EditorUI.EntityPlaceModeDummy = reserve free object()
+    make object cube EditorUI.EntityPlaceModeDummy,1
+    exclude object on EditorUI.EntityPlaceModeDummy
+    disable object zdepth EditorUI.EntityPlaceModeDummy
+    set object effect EditorUI.EntityPlaceModeDummy,tempeffect
+    EditorUI.EntityPlaceMode = 0
+    
     //File, Edit, Level, Scripting, Entities, Terrain, Sound, Game, Tools, Window, Help
     EditorUI.Menu_File = UI_Editor_GenID()
     EditorUI.Menu_Edit = UI_Editor_GenID()
@@ -483,13 +587,13 @@ function UI_Editor_Init():
     addMenuSplitter EditorUI.Menu_Help_Sub
     Addmenuitem EditorUI.Menu_Help_Sub,"About...",EditorUI.Menu_Help_About
     
-    EditorUI.EntityEditorDummyObject = reserve free image()
+    EditorUI.EntityEditorDummyObject = reserve free object()
     EditorUI.EntityEditorIcon = reserve free image()
     load image "Media\Images\Interface\editor\brick.png",EditorUI.EntityEditorIcon
     make object sphere EditorUI.EntityEditorDummyObject,1,2,2
     exclude object on EditorUI.EntityEditorDummyObject
     
-    
+    EditorUI.EntityCurrentSelected = -1
 ENDFUNCTION
 
 function UI_Editor_GenID():
@@ -559,6 +663,18 @@ function UI_Editor_Update():
             if id = EditorUI.ButtonMod1 then Terrain_Refresh()
             if id = EditorUI.ButtonMod2 then Terrain_Smooth()
             if id = EditorUI.EntityEditorLevelTreeRefresh then Refresh_EntityList()
+            if id = EditorUI.EntityStartPlace:
+                if EditorUI.EntityPlaceMode = 0:
+                    exclude object off EditorUI.EntityPlaceModeDummy
+                    EditorUI.EntityPlaceMode = 1
+                    setgadgettext EditorUI.EntityStartPlace,"Cancel"
+                else:
+                    exclude object on EditorUI.EntityPlaceModeDummy
+                    EditorUI.EntityPlaceMode = 0
+                    setgadgettext EditorUI.EntityStartPlace,"Place"
+                endif
+            endif
+            if id = EditorUI.EditValueButton then file$ = opendialog("Load model","DirectX Files (*.x)|*.x|DBO Files (*.dbo)|*.dbo") : Entity_Model_Set(EditorUI.EntityCurrentSelected,file$)
         endcase
     endselect
     //update ui elements
@@ -588,6 +704,8 @@ function UI_Editor_Update():
             setgadgetvisible EditorUI.SpectatorListdelete,1
             setgadgetvisible EditorUI.SpectatorListrename,1
             setgadgetvisible EditorUI.SpectatorListsetmain,1
+            UI_Editor_SetStatusText("Ready - Camera Mode")
+            EditorUI.CameraMode = 0
         endcase
         case 1
             //entity
@@ -595,6 +713,9 @@ function UI_Editor_Update():
             UI_Editor_HideAll()
             setgadgetvisible EditorUI.EntityEditorTabs,1
             selecttab EditorUI.EntityEditorTabs,0
+            EditorUI.EntityEditorTabSelected = -1
+            EditorUI.CameraMode = 0
+            UI_Editor_SetStatusText("Entity Mode - Right-click for entity options")
         endcase
         case 2
             //terrain
@@ -616,6 +737,8 @@ function UI_Editor_Update():
             setgadgetvisible EditorUI.ButtonMod2,1
             setgadgetvisible EditorUI.ButtonMod3,1
             setgadgetvisible EditorUI.ButtonMod1,1
+            UI_Editor_SetStatusText("Ready - Terrain Mode")
+            EditorUI.CameraMode = 0
         endcase
         case 3
             //level
@@ -633,12 +756,13 @@ function UI_Editor_Update():
             setgadgetvisible EditorUI.LevelTitleLine1,1
             setgadgetvisible EditorUI.LevelTitleLine2,1
             setgadgetvisible EditorUI.LevelTitleLine3,1
+            UI_Editor_SetStatusText("Ready - Level Edit Mode")
+            EditorUI.CameraMode = 0
         endcase
     endselect
     editorUI.CurrentToolOld = editorUI.CurrentTool
     endif
     //persistant parts
-    Editor_Render_Entities()
     select editorUI.CurrentTool
         case 0
             //camera
@@ -650,9 +774,130 @@ function UI_Editor_Update():
         case 1
             `EditorUI.CameraMode = 1
             if KEYSTATE(46) and keystate(56) then selectitem EditorUI.Modegadget,0
+            if EditorUI.EntityEditorTabSelected = 1 and (KEYSTATE(83)+KEYSTATE(14))>0:
+                selecteditemcurrent = selecteditem(EditorUI.EntityEditorLevelTree)
+                UI_Editor_AddToConsole("Deleting " + str$(selecteditemcurrent) + "...")
+                if selecteditemcurrent > -1:
+                    text$ = itemtext(EditorUI.EntityEditorLevelTree,selecteditemcurrent)
+                    if Ent_GetExists(text$):
+                        UI_Editor_AddToConsole("Deleting " + text$ + "...")
+                        EntDelete(text$)
+                        removeitem EditorUI.EntityEditorLevelTree,selecteditemcurrent
+                        selectitem EditorUI.EntityEditorLevelTree,-1
+                    endif
+                endif
+            else:
+            endif
             //entity
             EditorUI.EntityEditorTabSelected = Select_Entity_Mode(EditorUI.EntityEditorTabSelected)
+            if EditorUI.EntityPlaceMode = 0:
+                if mouseclick()=1 and mousePosX(EditorUI.panel_right_main)=-1 and Gizmo_Down = 0:
+                    //temporarily shift terrain
+                    Terrain_ShiftY(-1000)
+                    position object Editor_Gizmo_X,0,-1000,0
+                    position object Editor_Gizmo_Y,0,-1000,0
+                    position object Editor_Gizmo_Z,0,-1000,0
+                    EditorUI.EntityCurrentSelected = -1
+                    EditorUI.EntityTabFlag = 1
+                    pick = pick object(mousex(),mousey(),1,10000)
+                    Terrain_ShiftY(0)
+                    if pick > 0:
+                        for i=0 to NumEntities-1:
+                        if Entities(i).attributes.arraysize>0:
+                             // list entity attributes
+                             local dim tempattributes() as string
+                             local dim tempvalues() as string
+                             link array tempattributes(),Entities(i).attributes.ptr
+                             link array tempvalues(),Entities(i).values.ptr
+                             for ii = 0 to Entities(i).attributes.arraysize-1:
+                                  if array index valid(tempattributes(ii)):
+                                    if tempattributes(ii)="modelid":
+                                        if tempvalues(ii)=str$(pick):
+                                            EditorUI.EntityCurrentSelected = i
+                                            if getgadgettext(EditorUI.EntityNameView) = Entities(i).name:
+                                            else
+                                                Editor_Build_AttribsList(i)
+                                            endif
+                                        endif
+                                    endif
+                                  endif
+                             next ii
+                             unlink array tempattributes()
+                             unlink array tempvalues()
+                             undim tempattributes()
+                             undim tempvalues()  
+                        endif
+                        next i
+                    endif
+                    `if EditorUI.EntityCurrentSelected <> EditorUI.EntityCurrentSelectedTab and tabCount(EditorUI.EntityEditorTabs)=3:
+                    `    removetab EditorUI.EntityEditorTabs,2
+                    `    selecttab EditorUI.EntityEditorTabs,0
+                    `    EditorUI.EntityCurrentSelectedTab = EditorUI.EntityCurrentSelected
+                    `endif
+                endif
+            endif
+            If EditorUI.EntityCurrentSelected > -1:
+                if KEYSTATE(14) or KEYSTATE(83) then EntDelete(EntGetName(EditorUI.EntityCurrentSelected)) : EditorUI.EntityCurrentSelected = -1
+                If EditorUI.EntityCurrentSelected > -1:
+                Editor_Refresh_AttribsList(EditorUI.EntityCurrentSelected)
+                if KEYSTATE(50):
+                    file$ = opendialog("Open File","DirectX Files (*.x)|*.x|DBO Files (*.dbo)|*.dbo",0,"Media\Models\")
+                    Entity_Model_Set(EditorUI.EntityCurrentSelected,file$)
+                endif
+                endif
+            endif
+            if EditorUI.EntityTabFlag = 1:
+                if EditorUI.EntityCurrentSelected > -1:
+                    if tabCount(EditorUI.EntityEditorTabs)=2:
+                        addtab EditorUI.EntityEditorTabs,"Properties" 
+                        selecttab EditorUI.EntityEditorTabs,2
+                    endif
+                else
+                    if tabCount(EditorUI.EntityEditorTabs)=3:
+                        removetab EditorUI.EntityEditorTabs,2
+                        selecttab EditorUI.EntityEditorTabs,0
+                        EditorUI.EntityEditorTabSelected = Select_Entity_Mode(EditorUI.EntityEditorTabSelected)
+                    endif
+                endif
+                EditorUI.EntityTabFlag = 0
+            endif
             
+            Editor_Render_Entities()
+            if EditorUI.EntityPlaceMode = 1:
+            position object EditorUI.EntityPlaceModeDummy,0,-10000,0
+            pick = pick object(mousex(),mousey(),1,2000)
+            if pick > 0:
+                pick_x# = get pick vector x()+camera position x()
+                pick_y# = get pick vector y()+camera position y()
+                pick_z# = get pick vector z()+camera position z()
+                sx = object screen x(EditorUI.EntityPlaceModeDummy)
+                sy = object screen y(EditorUI.EntityPlaceModeDummy)
+                snaptogrid = getchecked(EditorUI.EntitySnapToGrid)
+                if snaptogrid =1 then position object EditorUI.EntityPlaceModeDummy,int(pick_x#),int(pick_y#),int(pick_z#)
+                if snaptogrid =0 then position object EditorUI.EntityPlaceModeDummy,(pick_x#),(pick_y#),(pick_z#)
+                if mouseclick()=1 and mousePosX(EditorUI.panel_right_main)=-1:
+                    //place the new entity
+                    UI_Editor_AddToConsole("Placing Entity...")
+                    
+                    entitytype$ = itemtext(EditorUI.EntityTypeCombobox,selecteditem(EditorUI.EntityTypeCombobox))
+                    //entity types to add (quite a few!)
+                    //this definitely needs to be automated in the future
+                    //see about an SQL database?
+                    select entitytype$
+                        case "ent_flare"
+                            Entity_Flare_Add(pick_x#,pick_y#,pick_z#)
+                        endcase
+                        case "ent_model"
+                            Entity_Model_Add(pick_x#,pick_y#,pick_z#)
+                        endcase
+                    endselect
+                    
+                    exclude object on EditorUI.EntityPlaceModeDummy
+                    EditorUI.EntityPlaceMode = 0
+                    setgadgettext EditorUI.EntityStartPlace,"Place"
+                endif
+            endif
+            endif
         endcase
         case 2
             `EditorUI.CameraMode = 1
@@ -686,7 +931,7 @@ function UI_Editor_Update():
                         case 4
                             //Paint
                             paintlayer = selecteditem(EditorUI.BrushTextureCombobox)
-                            Terrain_Paint(pick_x#,pick_y#,pick_z#,paintlayer,EditorUI.BrushRadius,0.5)
+                            if ticker(QtrSecondTicker) then Terrain_Paint(pick_x#,pick_y#,pick_z#,paintlayer,EditorUI.BrushRadius,0.5)
                         endcase
                         case 5
                             //MOD1
@@ -760,6 +1005,8 @@ function UI_Editor_HideAll():
         setgadgetvisible EditorUI.EntityEditorTabs,0
         setgadgetvisible EditorUI.EntityEditorLevelTree,0
         setgadgetvisible EditorUI.EntityEditorLevelTreeRefresh,0
+        setgadgetvisible EditorUI.EntityEditPanel,0
+        setgadgetvisible EditorUI.EntityPropertiesPanel,0
 endfunction
 
 function Select_Entity_Mode(i):
@@ -770,11 +1017,21 @@ function Select_Entity_Mode(i):
         case 0
             setgadgetvisible EditorUI.EntityEditorLevelTree,0
             setgadgetvisible EditorUI.EntityEditorLevelTreeRefresh,0
+            setgadgetvisible EditorUI.EntityPropertiesPanel,0
+            setgadgetvisible EditorUI.EntityEditPanel,1
         endcase
         case 1
             setgadgetvisible EditorUI.EntityEditorLevelTree,1
             setgadgetvisible EditorUI.EntityEditorLevelTreeRefresh,1
+            setgadgetvisible EditorUI.EntityEditPanel,0
+            setgadgetvisible EditorUI.EntityPropertiesPanel,0
             Refresh_EntityList()
+        endcase
+        case 2
+            setgadgetvisible EditorUI.EntityEditorLevelTree,0
+            setgadgetvisible EditorUI.EntityEditorLevelTreeRefresh,0
+            setgadgetvisible EditorUI.EntityEditPanel,0
+            setgadgetvisible EditorUI.EntityPropertiesPanel,1
         endcase
     endselect
     endif
@@ -806,24 +1063,82 @@ function Refresh_EntityList():
          undim tempvalues()  
     endif
     next i
+    selectitem EditorUI.EntityEditorLevelTree,1
     
     // 0 is main icon
     // 1 is bricks icon
     // 2 is script icon
 ENDFUNCTION
 
+function Editor_Build_AttribsList(i):
+    n = itemCount(EditorUI.AttributesList)
+    while n > -1
+        removeitem EditorUI.AttributesList,n
+        `removeitem EditorUI.ValuesList,0
+        n = n -1
+    endwhile
+    
+    setgadgettext EditorUI.EntityNameView,Entities(i).name
+    if Entities(i).attributes.arraysize>0:
+         // list entity attributes
+         local dim tempattributes() as string
+         local dim tempvalues() as string
+         link array tempattributes(),Entities(i).attributes.ptr
+         link array tempvalues(),Entities(i).values.ptr
+         for ii = 0 to Entities(i).attributes.arraysize-1:
+              if array index valid(tempattributes(ii)):
+                additem EditorUI.AttributesList,tempattributes(ii)+" = "+tempvalues(ii)
+              endif
+         next ii
+         unlink array tempattributes()
+         unlink array tempvalues()
+         undim tempattributes()
+         undim tempvalues()  
+    endif
+ENDFUNCTION
+
+function Editor_Refresh_AttribsList(i):
+    //assumes list has already been properly built
+    n = 0
+    
+    setgadgettext EditorUI.EntityNameView,Entities(i).name
+    if Entities(i).attributes.arraysize>0:
+         // list entity attributes
+         local dim tempattributes() as string
+         local dim tempvalues() as string
+         link array tempattributes(),Entities(i).attributes.ptr
+         link array tempvalues(),Entities(i).values.ptr
+         for ii = 0 to Entities(i).attributes.arraysize-1:
+              if array index valid(tempattributes(ii)):
+                changeitem EditorUI.AttributesList,n,tempattributes(ii)+" = "+tempvalues(ii)
+                n = n + 1
+              endif
+         next ii
+         unlink array tempattributes()
+         unlink array tempvalues()
+         undim tempattributes()
+         undim tempvalues()  
+    endif
+ENDFUNCTION
+
 function Editor_Render_Entities():
     for i = 0 to NumEntities-1:
         x# = Ent_GetFloat(i,"x")
         y# = Ent_GetFloat(i,"y")
-        z# = Ent_GetFloat(i,"y")
+        z# = Ent_GetFloat(i,"z")
+        `distance# = Terrain_GetDistance(x#,y#,z#,EditorUI.CameraX,EditorUI.CameraY,EditorUI.CameraZ)
         position object EditorUI.EntityEditorDummyObject,x#,y#,z#
         if object in screen(EditorUI.EntityEditorDummyObject):
             sx = object screen x(EditorUI.EntityEditorDummyObject)
             sy = object screen y(EditorUI.EntityEditorDummyObject)
             if x# + y# + z# <> 0.0:
-                paste image EditorUI.EntityEditorIcon,sx-8,sy-8,1
-                center text sx,sy + 10,Entities(i).name
+                if EditorUI.EntityCurrentSelected = i:
+                    paste image EditorUI.EntityEditorIcon,sx-8,sy-8,1
+                    center text sx,sy + 10,Entities(i).name + " <selected>"
+                else
+                    paste image EditorUI.EntityEditorIcon,sx-8,sy-8,1
+                    center text sx,sy + 10,Entities(i).name
+                endif
             endif
         endif
     next i

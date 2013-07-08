@@ -5,21 +5,25 @@ project name=Level Editor
 
 ; **** source file information ****
 main=Level Editor.dba
-LineMain=27
+LineMain=13
 include1=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\Timer\module_Timer.dba
-LineInclude1=0
+LineInclude1=48
 include2=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\Interface\module_UI_editor.dba
-LineInclude2=491
+LineInclude2=933
 include3=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\Interface\module_UI_editor_constants.dba
 LineInclude3=0
 include4=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\Effects\module_DynamicSky.dba
-LineInclude4=0
+LineInclude4=219
 include5=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\World\module_World_Editor.dba
 LineInclude5=91
 include6=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\Entities\Module_Entity.dba
-LineInclude6=308
+LineInclude6=110
 include7=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\Terrain\module_Terrain.dba
-LineInclude7=105
+LineInclude7=0
+include8=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\Effects\module_Flare.dba
+LineInclude8=83
+include9=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\Model\module_Model.dba
+LineInclude9=79
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
@@ -58,6 +62,9 @@ media root path=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Resources\Op
 icon1=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Media\Images\Interface\OpenFPS.ico
 
 ; **** Cursors ****
+cursorarrow=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Resources\OpenFPS Editor\Media\aero_arrow.cur
+cursorwait=C:\Users\Chris\Desktop\Development\Game Dev\openfps\Resources\OpenFPS Editor\Media\aero_link.cur
+pointer2=Media\cross_i.cur
 
 ; **** Version Info ****
 VerComments=

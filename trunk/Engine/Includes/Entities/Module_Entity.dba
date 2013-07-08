@@ -18,6 +18,8 @@ function Ent_Init():
     //Init entity system
     global NumEntities
     dim Entities() as EntReference
+    //init entity types
+    Entity_Flare_Init()
 ENDFUNCTION
 
 function EntSave(file$):
@@ -36,9 +38,33 @@ function EntSave(file$):
          link array tempvalues(),Entities(i).values.ptr
          for ii = 0 to Entities(i).attributes.arraysize-1:
               if array index valid(tempattributes(ii)):
-              WRITE LONG file_temp,2
-              WRITE STRING file_temp,tempattributes(ii)
-              WRITE STRING file_temp,tempvalues(ii)
+              skip = 0
+              select tempattributes(ii)
+                    //list of skippable attributes
+                    case "id"
+                        skip = 1
+                    endcase
+                    case "modelid"
+                        skip = 1
+                    endcase
+                    case "fx"
+                        skip = 1
+                    endcase
+                    case "alpha"
+                        skip = 1
+                    endcase
+                    case "rr"
+                        skip = 1
+                    endcase
+                    case "loaded"
+                        skip = 1
+                    endcase
+              endselect
+              if skip = 0:
+                  WRITE LONG file_temp,2
+                  WRITE STRING file_temp,tempattributes(ii)
+                  WRITE STRING file_temp,tempvalues(ii)
+              endif
               endif
          next ii
          unlink array tempattributes()
@@ -83,22 +109,13 @@ function EntLoad(file$):
 ENDFUNCTION
 
 function DeleteAllEntities():
-    for i = 0 to NumEntities-1:
-        local dim tempattributes() as string
-        local dim tempvalues() as string
-        link array tempattributes(),Entities(i).attributes.ptr
-        link array tempvalues(),Entities(i).values.ptr
-        undim tempattributes()
-        undim tempvalues()
-        Entities(i).attributes.ptr=0
-        Entities(i).values.ptr=0
-        clear array item Entities(),i
-        array delete element Entities(),i
-        dec NumEntities,1
-    next i
-	 undim Entities()
-    NumEntities=0
-   Ent_Init()
+    While NumEntities > 0:
+        `UI_Editor_AddToConsole("Removing entity "+str$(n))
+        EntDelete(EntGetName(NumEntities - 1))
+    Endwhile
+	 `undim Entities()
+    `NumEntities=0
+   `Ent_Init()
 ENDFUNCTION
 
 function GetNumEntities():
@@ -126,6 +143,20 @@ function EntDelete(name as string):
     //Delete entity
     for i = 0 to NumEntities-1:
         if Entities(i).name = name:
+            //delete dependencies
+            type_attrib$="null"
+            type_attrib$=EntGetAttribute(i,"type")
+            Select type_attrib$
+                case "ent_spectatorcamera"
+                    //do nothing, this entities are just placeholders
+                endcase
+                case "ent_flare"
+                    Entity_Flare_Delete(i)
+                endcase
+                case "ent_model"
+                    Entity_Model_Delete(i)
+                endcase
+            endselect
             local dim tempattributes() as string
             local dim tempvalues() as string
             link array tempattributes(),Entities(i).attributes.ptr
@@ -331,15 +362,22 @@ function EntListDebug():
 ENDFUNCTION
 
 function EntHandleEntities():
-	//handle some entities
-	// 3d / engine entities handled in module_engine!!
-	for i=0 to NumEntities-1:
-		type_attrib$="null"
-		type_attrib$=EntGetAttribute(i,"type")
-		//moved to engine
-		Select type_attrib$
-		endselect
-	next i
+    //handle all the entities
+    for i=0 to NumEntities-1:
+    type_attrib$="null"
+    type_attrib$=EntGetAttribute(i,"type")
+    Select type_attrib$
+        case "ent_spectatorcamera"
+            //do nothing, this entities are just placeholders
+        endcase
+        case "ent_flare"
+            Entity_Flare_Update(i)
+        endcase
+        case "ent_model"
+            Entity_Model_Update(i)
+        endcase
+    endselect
+    next i
 Endfunction
 
 //////////////////////////////////////////////////////////////////////////

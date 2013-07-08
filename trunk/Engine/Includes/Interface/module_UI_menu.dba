@@ -367,7 +367,7 @@ Network_Server_SetFlag("setport","20188")
 Network_Server_Start()
 Network_Connect("127.0.0.1",20188)
 remend
-Game_Trigger_Load("Media\Levels\archipelago.xnt")
+Game_Trigger_Load("Media\Levels\training.xnt")
 Endcase
 Case "button_reload"
 `GameManager_End()

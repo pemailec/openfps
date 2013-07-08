@@ -107,6 +107,7 @@ function Terrain_New():
             `clone object Terrain(TerrainX,TerrainZ).LOD_2,Terrain_Internal_LOD_2 //adjust these to change the LODS
             `clone object Terrain(TerrainX,TerrainZ).LOD_3,Terrain_Internal_LOD_3
             position object Terrain(TerrainX,TerrainZ).LOD_1,TerrainX*16,0,TerrainZ*16
+            sc_setupobject Terrain(TerrainX,TerrainZ).LOD_1,1,0
             `position object Terrain(TerrainX,TerrainZ).LOD_2,TerrainX*16,0,TerrainZ*16
             `position object Terrain(TerrainX,TerrainZ).LOD_3,TerrainX*16,0,TerrainZ*16
             exclude object on Terrain(TerrainX,TerrainZ).LOD_1
@@ -189,7 +190,7 @@ function Terrain_Refresh_Near(x,z,radius):
             x2 = (TerrainX * 16)
             z2 = (TerrainZ * 16)
             dist# = Terrain_GetDistance(x,0,z,x2,0,z2)
-            if dist#<(radius*8) then Terrain_Refresh_Chunk(TerrainX,TerrainZ)
+            if dist#<(radius*4) then Terrain_Refresh_Chunk(TerrainX,TerrainZ)
         Next TerrainZ
     next TerrainX
 endfunction
@@ -198,6 +199,16 @@ function Terrain_Refresh():
     for TerrainX = 0 to 15:
         For TerrainZ = 0 to 15:
             Terrain_Refresh_Chunk(TerrainX,TerrainZ)
+        Next TerrainZ
+    next TerrainX
+ENDFUNCTION
+
+//shift the terrain down / up
+//useful for getting it out of the way of pick object
+function Terrain_ShiftY(delta as integer):
+    for TerrainX = 0 to 15:
+        For TerrainZ = 0 to 15:
+            position object Terrain(TerrainX,TerrainZ).LOD_1,TerrainX*16,delta,TerrainZ*16
         Next TerrainZ
     next TerrainX
 ENDFUNCTION
@@ -318,6 +329,8 @@ function Terrain_Refresh_Chunk(x,z):
     `if current_object = Terrain(x,z).LOD_2 then current_object = Terrain(x,z).LOD_3 : goto GenVertices
     Terrain(x,z).LOD_OVERRIDE = 0 : if (current_object_maxheight# - current_object_minheight#) < 0.1 then Terrain(x,z).LOD_OVERRIDE = 1
     calculate object bounds current_object
+    sc_updateobject current_object
+    sc_setupobject current_object,1,0
     endif
     endif
 endfunction
