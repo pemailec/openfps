@@ -1,0 +1,56 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - GEOLOCATION MODULE
+//  Concept and code by thenerd, Spring 2013!
+//////////////////////////////////////////////////////////////
+// returns location data based on a user's fps.
+// This is run in a separate process so the game isn't held up.
+//////////////////////////////////////////////////////////////
+
+#constant SQLITE_APP "Media\Databases\Shell\sqlite3.exe"
+
+//////////////////////////////////////////////////////////////
+// Functions
+//////////////////////////////////////////////////////////////
+
+function Location_Grab():
+    global Geolocation_Loaded as integer
+    global Geolocation_IPID as string
+    global Geolocation_Abbreviation as string
+    global Geolocation_Country as string
+    Geolocation_Abbreviation = "null"
+    Geolocation_Country = "UNKNOWN"
+    split string Game.ip,"."
+    w = 16777216*val(SPLIT WORD$(1))
+    x = 65536*val(SPLIT WORD$(2))
+    y = 256*val(SPLIT WORD$(3))
+    z = val(SPLIT WORD$(4))
+    Geolocation_IPID = str$(abs(w+x+y+z))
+    query$ = "SELECT i, abbreviation, name FROM OpenFPS_LocationDB WHERE start_value <= "+Geolocation_IPID+" AND end_value >= "+Geolocation_IPID+""
+    UI_WriteLog(UI_Blue,"CALLED GEOLOCATION API")
+    null = SQLITE BEGIN SQL QUERY(Game.Database,query$)
+    null = SQLITE FIRST RECORD ROW(Game.Database)
+    Geolocation_Abbreviation = SQLITE RECORD CURRENT ROW STRING$(Game.Database,1)
+    Geolocation_Country = SQLITE RECORD CURRENT ROW STRING$(Game.Database,2)
+    null = SQLITE FINISH SQL QUERY(Game.Database)
+    UI_WriteLog(UI_Blue,"GEOLOCATION ABBREVIATION: "+Geolocation_Abbreviation)
+    UI_WriteLog(UI_Blue,"GEOLOCATION COUNTRY: "+Geolocation_Country)
+    Geolocation_Loaded = 1
+ENDFUNCTION
+
+function Location_GetString():
+    local country as string
+    country = Geolocation_Country
+ENDFUNCTION country
+
+function Location_Icon_Load():
+    if Geolocation_Loaded = 1:
+    directory$ = "Media\Databases\Shell\Icons\"
+    abbreviation$ = Geolocation_Abbreviation
+    file$ = directory$ + abbreviation$ +".png"
+    local image as integer
+    image = reserve free image()
+    load image file$,image
+    endif
+ENDFUNCTION image
+
+//////////////////////////////////////////////////////////////

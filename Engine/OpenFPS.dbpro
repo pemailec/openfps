@@ -5,7 +5,7 @@ project name=OpenFPS
 
 ; **** source file information ****
 main=Includes\Core\module_Core.dba
-LineMain=9
+LineMain=0
 include1=Includes\System\module_System.dba
 LineInclude1=114
 include2=Includes\Timer\module_Timer.dba
