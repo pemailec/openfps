@@ -17,7 +17,7 @@
 
 Function Network_Init(): 
     UI_WriteLog(UI_Blue,"Network Module Started.")
-    Game.ip = Network_GetIP()
+    Game.ip = "181.192.0.0" `Network_GetIP()
     Winsock Make
     UI_WriteLog(UI_Blue,"Got Client IP:"+Game.ip)
     UI_WriteLog(UI_Blue,"Connecting to master server...")
@@ -35,6 +35,13 @@ Function Network_Init():
         MasterserverOnline = 0
     global NetworkUsersOnline : NetworkUsersOnline = 0
     dim MasterServerChat(8) as string //actually 0..7
+    
+    //call geolocation API to determine location
+    Location_Grab()
+    global Location_Name as string
+    global Location_Icon as integer
+    Location_Name = Location_GetString()
+    Location_Icon = Location_Icon_Load()
     
 Endfunction
 

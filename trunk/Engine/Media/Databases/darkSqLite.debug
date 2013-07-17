@@ -1,9 +1,0 @@
-Debug Set ON
-DBsetDatabase: OpenFPS.db3
-Database Opened: not an error
-SQL error: malformed database schema - unrecognized token: "`"
-Records returned: 0
-DBdoSql: SELECT Element , Translation , rowid FROM OpenFPS_Language LIMIT 0,100
-DBGetRecordCount: 
-DBGetRecord: 
-Debug Set OFF

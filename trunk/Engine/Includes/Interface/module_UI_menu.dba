@@ -1305,6 +1305,9 @@ paste image MenuImage4,0,0,1
 `texture object MenuScreenObject,MenuImage4
 UI_PutWindow(-24,-24,16,MenuSidebarHeight)
 Paste Image MenuImage5,31,35,1
+    //geolocation
+    paste image Location_Icon,10,Screen.Height - 20
+    UI_ScaledText(3,26,Screen.Height - 20,Location_Name,50,250)
 
 //draw soldier
 
