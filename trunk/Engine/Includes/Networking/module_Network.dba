@@ -17,7 +17,7 @@
 
 Function Network_Init(): 
     UI_WriteLog(UI_Blue,"Network Module Started.")
-    Game.ip = "181.192.0.0" `Network_GetIP()
+    Game.ip = Network_GetIP()
     Winsock Make
     UI_WriteLog(UI_Blue,"Got Client IP:"+Game.ip)
     UI_WriteLog(UI_Blue,"Connecting to master server...")
