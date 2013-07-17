@@ -15,8 +15,7 @@
 //////////////////////////////////////////////////////////////
 
 #constant CONFIGFILE "Config\game.cfg"
-#constant OPENFPS_DB "Media\OpenFPS.db3"
-
+#constant OPENFPS_DB "Media\Databases\OpenFPS.db3"
 //////////////////////////////////////////////////////////////
 // Functions
 //////////////////////////////////////////////////////////////
@@ -120,17 +119,8 @@ Function SYS_Init():
     // Do SQL DATABASE setup
     //////////////////////////////////////
     
-    remstart
     Game.Database = 1
     null = SQLITE OPEN DATABASE(Game.Database,OPENFPS_DB,"User","")
-    //query a value to test it!
-    query$ = "SELECT Translation FROM [OpenFPS_Language] LIMIT 0,1"
-    null = SQLITE BEGIN SQL QUERY(Game.Database,query$)
-    null = SQLITE FIRST RECORD ROW(Game.Database)
-    title$= SQLITE RECORD CURRENT ROW STRING$(Game.Database,1)
-    set window title title$
-    null = SQLITE FINISH SQL QUERY(Game.Database)
-    remend
     
     //////////////////////////////////////
     // wait for valid screen
@@ -181,6 +171,7 @@ Function SYS_Sync():
         Game.screenshotflag = 1
     endif
     if keystate(63)=0 then Game.screenshotflag = 0
+    
     
     Sync
 
