@@ -10,9 +10,6 @@
 // Constants
 //////////////////////////////////////////////////////////////
 
-#constant GAME_SPECTATE 0
-#constant GAME_WAIT_FOR_SERVER 1
-
 //////////////////////////////////////////////////////////////
 // UDTS
 //////////////////////////////////////////////////////////////
@@ -39,7 +36,7 @@ function Game_Load(file$):
     //this module takes over the ui coding from here.
     if Game_Running = 1 then Game_End()
     local filename as string
-    filename = file$
+    filename = "Media\Levels\"+file$
     UI_WriteLog(UI_GREEN,"* Loading level file "+file$)
     EntLoad(filename)
     lastslash = 0
@@ -51,32 +48,16 @@ function Game_Load(file$):
     terrain_filename_new$ = "Media\Terrains\"+terrain_filename$
     Terrain_Load(terrain_filename_new$)
     Camera_Spectator_Generate()
-    //start with ui module
-    if Ent_GetInt(EntGetReference("root"),"title_screen_enabled")=1:
-        UI_FadeManager.state=UI_FADEIN
-        UI_FadeManager.target=M_ENGINE_LEVEL_TITLE
-    else
-        UI_FadeManager.state=UI_FADEIN
-        UI_FadeManager.target=M_ENGINE_DEFAULT
-    endif
     Game_Running = 1
     Game.state = GAME_SPECTATE
     UI_WriteLog(UI_GREEN,"* Loaded level file and started game.")
+    if Game_InitSound = 0:
+        global Game_InitSound as integer
+        Game_InitSound = Audio_Load("Media\Sounds\Game\game_join\join2.wav")
+    endif
+    Audio_StopAll()
+    `Audio_Play(Game_InitSound)
 ENDFUNCTION
-
-function Game_Trigger_Load(file$):
-    Game.game_load_target = file$
-    Game.game_load_status = "loading"
-    UI_FadeManager.state=UI_FADEIN
-    UI_FadeManager.target=M_ENGINE_LOADING
-endfunction
-
-function Game_Trigger_End():
-    Game.game_load_target = ""
-    Game.game_load_status = "quitting"
-    UI_FadeManager.state=UI_FADEIN
-    UI_FadeManager.target=M_ENGINE_LOADING
-endfunction
 
 function Game_Join():
     Game.state = GAME_WAIT_FOR_SERVER

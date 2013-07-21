@@ -83,7 +83,6 @@ Load Image "Media\Images\Interface\button-gray.png",MenuImage7
 Load Image "Media\Images\Interface\feather.png",MenuImage8
 Load Image "Media\Images\Interface\menu-background-metal.png",MenuImage9
 Load Image "Media\Images\Interface\button-menu.png",MenuImage10
-Load Image "Media\Images\Interface\menu-red-line.png",MenuImage13
 Load Image "media\images\interface\Crosshair.png",CrosshairIMG
 Load Image "media\images\interface\black.png",MenuImageBlack
 Load Image "media\images\interface\ingame-health-energy.png",menuImage14
@@ -115,6 +114,8 @@ RainSound = Audio_Load("Media\Sounds\Loops\Ambience\rain-6.mp3")
 
 global cc_Shader as integer : cc_Shader = 2
 Ik Load Effect "Media\Shaders\cc.fx",cc_Shader
+
+MenuImage13 = Dxs Create Sprite("Media\Images\Interface\menu-red-line.png")
 
 //character wave animation for button
 Global CharacterWaveIcon
@@ -215,7 +216,6 @@ Global MenuImage7 : MenuImage7 = Reserve Free Image()
 Global MenuImage8 : MenuImage8 = Reserve Free Image()
 global MenuImage9 : MenuImage9 = Reserve Free Image()
 Global MenuImage10 : MenuImage10 = Reserve Free Image()
-Global MenuImage13 : MenuImage13 = Reserve Free Image()
 Global MenuImage14 : menuImage14 = Reserve Free Image()
 Global MenuImage15 : menuImage15 = Reserve Free Image()
 Global MenuImage16 : menuImage16 = Reserve Free Image()
@@ -238,6 +238,8 @@ Global Menu3dObj As Integer : Menu3dObj = Reserve Free Object()
 Global Menu3dObjFX As Integer : Menu3dObjFX = Reserve Free effect()
 Global Menu3dRTarget As Integer : Menu3dRTarget = Reserve Free Image()
 Global loadingpercent As Integer : loadingpercent = 0
+global MenuBG_StandardSinR as float
+global MenuBG_StandardSin as float
 Global prompttextone$
 global prompttexttwo$
 Global prompttitle$
@@ -246,6 +248,7 @@ global CampaignSave_Selected as integer
 Global campaignsave_scrolloffset As Integer
 global menu_chatenabled as integer
 global menu_chatoffsetx as float
+Global MenuImage13
 menu_chatoffsetx = Screen.Width
 global menu_chatoffsety as float
 dim MenuUI_DrawCalls(1,64) as string
@@ -307,7 +310,7 @@ Endfunction
 
 Function UI_Menu_CheckGadgets():
 If mouseclick()=1 and MenuUI.mouseclickflag=0
-UI_WriteLog(UI_Yellow,"// MENU MODULE //: Clicked mouse on "+UI_MouseOveredGadget$)
+if len(UI_MouseOveredGadget$)>1 then UI_WriteLog(UI_Yellow,"// MENU MODULE //: Clicked mouse on "+UI_MouseOveredGadget$)
 If UI_MouseOveredGadget$=" ": else: UI_PlayMouseClickSND() : endif
 Select UI_MouseOveredGadget$
 Case "button_quit"
@@ -367,7 +370,8 @@ Network_Server_SetFlag("setport","20188")
 Network_Server_Start()
 Network_Connect("127.0.0.1",20188)
 remend
-Game_Trigger_Load("Media\Levels\training.xnt")
+Server_Start("Media\Scripts\Server.training.cfg")
+Client_Start("localhost",25565)
 Endcase
 Case "button_reload"
 `GameManager_End()
@@ -384,7 +388,7 @@ UI_FadeManager.state=UI_FADEIN
 UI_FadeManager.target=M_MENU_CREDITS
 Endcase
 Case "button_endgame"
-Game_Trigger_End()
+Network_CloseConnections()
 Endcase
 Case "button_returntogame"
 Game.paused = 0
@@ -624,6 +628,11 @@ Y=Y+100
 UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
 UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
 UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Okay")
+if GenericPromptSound = 0:
+    global GenericPromptSound as integer
+    GenericPromptSound = Audio_Load("Media\Sounds\Game\message2.wav")
+ENDIF
+Audio_Play(GenericPromptSound)
 Endfunction
 
 Function UI_Render_U_MENU_GENERICPROMPT():
@@ -916,10 +925,6 @@ Function UI_Render_U_ENGINE_LOADING():
 `UI_PutWindow(-24,-24,(Screen.Width/UI_mywindow.yrow)+2,(Screen.Height/UI_mywindow.yrow)+2)
 ik paste image MenuImageBlack,0,0,screen.width,screen.height
 UI_CenterText(3,Screen.Width/2,(Screen.Height/2)-40,LoadingString)
-if UI_FadeManager.state=UI_NORMAL:
-    if Game.game_load_status = "loading" and Game_Running = 0 then Game_Load(Game.game_load_target) : Game.game_load_status = ""
-    if Game.game_load_status = "quitting" and Game_Running = 1 then Game_End() : Game.game_load_status = ""
-endif
 Endfunction
 
 //M_ENGINE_PAUSED
@@ -999,14 +1004,28 @@ Endfunction
 
 Function UI_Render_U_ENGINE_DEFAULT():
 //paste game view
-Ik Paste Image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height `,cc_Shader
+Ik Paste Image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height`,cc_Shader_Filmgrain
 Camera_PostUIRender() //render 2d elements of the game
 Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
 `Paste Image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
 D3d_Box 0,0,Screen.Width,120,rgb(0,0,0),rgb(0,0,0),d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200)
-Ik Paste Image MenuImage13,0,120,Screen.Width,124
+
+dxs begin sprite render MenuImage13
+dxs set sprite scale MenuImage13,(Screen.Width/30.0)*100,100.0
+dxs update sprite MenuImage13
+DXS DRAW SPRITE MenuImage13,0,120
+dxs end sprite render MenuImage13
+
+D3d_Box 0,124,Screen.Width,240,d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,0),d3d_rgba(0,0,0,0)
+`ui_centertext(3,Screen.Width/2,160,EntGetAttribute(EntGetReference("root"),"displayname"))
+
 D3d_Box 0,Screen.Height-120,Screen.Width,Screen.Height,d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200),rgb(0,0,0),rgb(0,0,0)
-Ik Paste Image MenuImage13,0,Screen.Height-124,Screen.Width,Screen.Height-120
+dxs begin sprite render MenuImage13
+dxs set sprite scale MenuImage13,(Screen.Width/30.0)*100,100.0
+dxs update sprite MenuImage13
+DXS DRAW SPRITE MenuImage13,0,Screen.Height-124
+dxs end sprite render MenuImage13
+
 If Game.state = GAME_SPECTATE:
     UI_CenterText(3,Screen.Width/2,48,EntGetAttribute(EntGetReference("root"),"displayname"))
     ui_showmouse()
@@ -1236,6 +1255,7 @@ global JoinGameStartTime as integer : JoinGameStartTime = hitimer(1)
 Endfunction
 
 Function UI_Render_U_MENU_JOINGAME():
+    remstart
 ik paste image MenuImageBlack,0,0,screen.width,screen.height
 UI_CenterIconText(3,Screen.Width/2,Screen.Height/2,chr$(136)+" Joining Game... ",1) `+str$(clamp(10-Client.autofailtime,0,10))
     if Client.init = 1 and Client.auth = 1:
@@ -1247,6 +1267,7 @@ UI_CenterIconText(3,Screen.Width/2,Screen.Height/2,chr$(136)+" Joining Game... "
     y = 0
     UI_ScaledText(3,0,y,"Waiting for connect...",50,250):y=y+16
     endif
+    remend
 Endfunction
 
 Function UI_Render_M_SINGLEPLAYER_CHOOSE():
@@ -1298,10 +1319,12 @@ Function UI_Render_U_SINGLEPLAYER_NEW():
 ui_RenderBackdrop()
 ui_putwindow(UI_Display.Middlewidth-((UI_mywindow.xwidth*35)/2),UI_Display.Middleheight-((UI_mywindow.yrow*15)/2),35,15)
 endfunction
-
 //Standard render backdrop
 Function ui_RenderBackdrop():
-paste image MenuImage4,0,0,1
+    MenuBG_StandardSinR = MenuBG_StandardSinR + (0.6 * TBM)
+    MenuBG_StandardSin = Sin(MenuBG_StandardSinR)
+    paste image MenuImage4,MenuBG_StandardSin*20,0,0
+    paste image MenuImage4,0,0,1
 `texture object MenuScreenObject,MenuImage4
 UI_PutWindow(-24,-24,16,MenuSidebarHeight)
 Paste Image MenuImage5,31,35,1

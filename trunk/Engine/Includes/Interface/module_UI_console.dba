@@ -88,7 +88,8 @@ Function UI_Console_Update():
 	If Console.active=1:
 		
 		Console.height=clamp(Console.height+(20*TBM),0,200)
-		For i = 1 To 8:
+		UI_AlphaText(1,4,-200+Console.height+16,"~r[ ~b OPENFPS ENGINE revision "+Game.revision+" ~r Frametime: "+str$(Game.frametimeavg)+" ms ]",250)
+		For i = 2 To 8:
 			UI_AlphaText(1,4,-200+Console.height+i*16,ConsoleLines(i-1).prefixcolormodifier+"["+Consolelines(i-1).prefix+"]~w "+ConsoleLines(i-1).Messagetext,250)
 		Next i
 		If Ticker(QtrSecondTicker) then cursor_toggle=1-cursor_toggle

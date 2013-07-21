@@ -43,6 +43,12 @@ DSky_Init()
 Terrain_Init()
 World_Editor_Init()
 
+SET AMBIENT LIGHT 90
+make light 1
+SET POINT LIGHT 1,0,0,0
+COLOR LIGHT 1,255,100,100
+SET LIGHT RANGE 1,128
+
 //////////////////////////////////////////////////////////////
 // Editor Init
 //////////////////////////////////////////////////////////////
@@ -67,6 +73,7 @@ Editor_initGizmo()
 //////////////////////////////////////////////////////////////
 
 Do
+POSITION LIGHT 1,camera position x(),camera position y(),camera position z()
     //update timer system
     TBM_Update()
     Ent_Update()

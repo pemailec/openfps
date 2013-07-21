@@ -5,31 +5,31 @@ project name=OpenFPS
 
 ; **** source file information ****
 main=Includes\Core\module_Core.dba
-LineMain=0
+LineMain=10
 include1=Includes\System\module_System.dba
-LineInclude1=114
+LineInclude1=181
 include2=Includes\Timer\module_Timer.dba
-LineInclude2=0
+LineInclude2=61
 include3=Includes\Interface\module_UI.dba
-LineInclude3=0
+LineInclude3=3523
 include4=Includes\Input\module_Input.dba
-LineInclude4=0
+LineInclude4=72
 include5=Includes\Interface\module_UI_menu.dba
-LineInclude5=1307
+LineInclude5=312
 include6=Includes\Core\module_Datatypes.dba
-LineInclude6=72
+LineInclude6=79
 include7=Includes\Core\module_Game.dba
-LineInclude7=12
+LineInclude7=38
 include8=Includes\Core\module_Camera.dba
 LineInclude8=370
 include9=Includes\Entities\Module_Entity.dba
-LineInclude9=112
+LineInclude9=24
 include10=Includes\Audio\module_Audio.dba
 LineInclude10=0
 include11=Includes\Networking\module_Network.dba
-LineInclude11=19
+LineInclude11=24
 include12=Includes\Terrain\module_Terrain.dba
-LineInclude12=386
+LineInclude12=340
 include13=Includes\Effects\module_DynamicSky.dba
 LineInclude13=0
 include14=Includes\Effects\module_Flare.dba
@@ -38,6 +38,14 @@ include15=Includes\Model\module_Model.dba
 LineInclude15=62
 include16=Includes\Networking\module_Geolocation.dba
 LineInclude16=37
+include17=Includes\Networking\module_NetworkServer.dba
+LineInclude17=65
+include18=Includes\Networking\module_NetworkClient.dba
+LineInclude18=82
+include19=Includes\Networking\module_NetworkMasterServer.dba
+LineInclude19=38
+include20=Includes\Interface\module_UI_console.dba
+LineInclude20=90
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
