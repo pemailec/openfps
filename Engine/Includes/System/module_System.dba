@@ -79,7 +79,7 @@ Function SYS_Init():
     endif
     
     //Apply display settings
-    Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,0,0
+    Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,0,2
     if Screen.Fullscreen=1 and Game.Debug = 0 then set window off
     If Screen.Fullscreen=0 Then Set Window On
     
@@ -99,6 +99,9 @@ Function SYS_Init():
     //center window
     window = Get Dbpro Window ()
     Position Window window,(desktop width()/2)-(Get Window Client width(window)/2),(desktop height()/2)-(Get Window Client Height(window)/2)
+    
+    //setup message callback
+    set message callback "WndProcSystem"
     
     //////////////////////////////////////
     // Do standard Dbpro setup
@@ -121,6 +124,7 @@ Function SYS_Init():
     
     Game.Database = 1
     null = SQLITE OPEN DATABASE(Game.Database,OPENFPS_DB,"User","")
+    Game.revision = "300+"
     
     //////////////////////////////////////
     // wait for valid screen
@@ -172,9 +176,11 @@ Function SYS_Sync():
     endif
     if keystate(63)=0 then Game.screenshotflag = 0
     
-    
     Sync
-
+    
+    Game.frametime = (hitimer(100000) - Game.frame_last)/100.0
+    Game.frametimeavg = (Game.frametime*0.2) + (Game.frametimeavg*0.8)
+    Game.frame_last = hitimer(100000)
 Endfunction
 
 //SYS_Terminate() - Terminates the system module
@@ -191,6 +197,15 @@ function Engine_Check_EditorFlag():
         `Game_Start(Game.editor_file)
     endif
 ENDFUNCTION
+
+function WndProcSystem(hwnd as dword, msg as dword, wparam as dword, lparam as dword)
+  select msg
+    case 0x0010
+      stop current message
+      Game.Terminate = 1
+    endcase
+  endselect
+endfunction 0
 
 //////////////////////////////////////////////////////////////
 // End of code

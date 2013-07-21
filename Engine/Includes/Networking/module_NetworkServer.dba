@@ -1,0 +1,237 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - NETWORK MODULE
+//  Concept and code by thenerd, Summer 2012!
+//////////////////////////////////////////////////////////////
+// 
+// Module for SERVER system
+//
+//////////////////////////////////////////////////////////////
+//  CONSTANTS
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  UDTS
+//////////////////////////////////////////////////////////////
+
+type t_NetworkServer
+    listname as string
+    displayname as string
+    mapfile as string
+    ip as string
+    port as integer
+    maxplayers as integer
+    state as integer
+    listenchannel as integer
+    numclients as integer
+endtype
+
+//////////////////////////////////////////////////////////////
+//  MAIN FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+function Server_Start(configfile_temp as string):
+    Lua Load File configfile_temp
+    Global Server as t_NetworkServer
+    Server.listname = lua string$("ServerListName")
+    Server.displayname = lua string$("ServerDisplayName")
+    Server.mapfile =lua string$("MapFile")
+    Server.ip = lua string$("ip")
+    Server.port = lua int("port")
+    Server.maxplayers = lua int("maxplayers")
+    Server.state = JOINING
+    Network.GameServer = 1
+    ui_Writelog(UI_Blue,"SERVER: Started "+Server.mapfile)
+ENDFUNCTION
+
+function Server_Update():
+    select Server.state
+        case JOINING
+            if MenuUI.mode=M_ENGINE_LOADING and UI_FadeManager.state=UI_NORMAL:
+                //trigger load
+                Game_Load(Server.mapfile)
+                ui_Writelog(UI_Blue,"SERVER: Loaded "+Server.mapfile)
+                Server.state = ACTIVE
+                //start up server
+                ui_Writelog(UI_Blue,"SERVER is active")
+            endif
+        endcase
+        case IDLE
+        endcase
+    endselect
+ENDFUNCTION
+
+function Server_Terminate():
+    Network.GameServer = 0
+    ui_Writelog(UI_Blue,"SERVER: Terminated")
+    Game_End()
+ENDFUNCTION
+
+//////////////////////////////////////////////////////////////
+//  End of code
+//////////////////////////////////////////////////////////////
+
+//old code:
+remstart
+type t_Server
+    server_name as string
+    server_description as string
+    server_password_enabled as integer
+    server_password_string as string
+    level_name as string
+    starttime as integer
+    started as integer
+    init as integer
+    auth as integer
+    autofailtime as integer
+    port as integer
+    listenchannel as integer
+    numclients as integer
+    offline as integer
+endtype
+
+Type t_ServerClient
+    name as string
+    ip as string
+    channel_tcp As Dword
+    target_ip As String
+    target_port As Integer
+    local_port as integer
+Endtype
+
+function Network_Server_Init():
+    if Server.init = 0:
+        global Server as t_server
+        Server.server_name = "DefaultServer"
+        Server.server_description = "DefaultDescription"
+        Server.server_password_enabled = 0
+        Server.server_password_string = ""
+        Server.level_name = ""
+        Server.init = 1
+        Server.port = 20188 //default
+        Server.starttime = hitimer(1)
+    else
+        ui_writelog(UI_Red,"Server already running!")
+    endif
+ENDFUNCTION
+
+function Network_Server_Start():
+    if Server.init = 1:
+        if Server.started = 0:
+        if MasterserverOnline = 1:
+        Winsock Make Packet
+        Winsock Add String "cl_startserver"
+        Winsock Add String Server.server_name
+        Winsock Send Tcp Packet ClientMasterServer
+            ui_writelog(UI_Blue,"Started server in online mode.")
+        else
+            Server.offline = 1
+            Server.auth = 1
+            ui_writelog(UI_Blue,"Started server in offline mode.")
+        endif
+        dim ServerClients() as t_ServerClient
+        Server.ListenChannel = Winsock Listen(Server.port)
+        Server.started = 1
+        endif
+    endif
+ENDFUNCTION
+
+function Network_Server_Start_Accept(key as string):
+    if key = Server.server_name:
+    Server.auth = 1
+    endif
+ENDFUNCTION
+
+function Network_Server_SetFlag(flag as string,value as string):
+    if server.init = 1:
+    select flag
+        case "setname"
+            Server.server_name = value
+        endcase
+        case "setdescription"
+            Server.server_description = value
+        endcase
+        case "addpassword"
+            Server.server_password_enabled = 1
+            Server.server_password_string = value
+        endcase
+        case "removepassword"
+            Server.server_password_enabled = 0
+            Server.server_password_string = ""
+        endcase
+        case "setlevel"
+            Server.level_name = ""
+        endcase
+        case "setport"
+            Server.port = val(value)
+        endcase
+    endselect
+    endif
+ENDFUNCTION
+
+function Network_Server_Update():
+    if Server.init = 1 and Server.started = 1:
+        if Server.auth = 0:
+            Server.autofailtime = hitimer(1) - Server.starttime
+            if Server.autofailtime > 10:
+                //if it's been 10 seconds without a response, display error
+                //and shut down the server
+                ui_writelog(ui_blue,"Server startup response timed out.")
+                Network_Server_Stop()
+            endif
+        else 
+            //main server code
+            //first, check listen channel for new connections
+            If (winsock channel Data waiting(Server.listenchannel)):
+                //adding a new client
+                Array Insert At Bottom ServerClients()
+                ServerClients(Server.NumClients).name="newclient"
+                ServerClients(Server.NumClients).channel_tcp=winsock accept(Server.listenchannel)
+                Server.NumClients=Server.NumClients+1
+            Endif
+            
+            //loop through client TCP messages
+            If Server.NumClients>0:
+            For CurrentClient = 0 To Server.NumClients-1:
+                If Winsock Channel Data Waiting(ServerClients(CurrentClient).channel_tcp):
+                    Winsock recv message ServerClients(CurrentClient).channel_tcp
+                    if WINSOCK CHANNEL DATA LEN(ServerClients(CurrentClient).channel_tcp)>0:
+                    Winsock Split Data ServerClients(CurrentClient).channel_tcp
+                    While Winsock Packet Count(ServerClients(CurrentClient).channel_tcp)>0:
+                        Winsock Fetch Packet ServerClients(CurrentClient).channel_tcp
+                        Local packet_header As String
+                        packet_header = Winsock Read String$()
+                        Select packet_header
+                            Case "cl_getdata"
+                                //send back a packet with startup data
+                                Winsock Make Packet
+                                Winsock Add String "sv_pushdata"
+                                Winsock Add String "OpenFPS"
+                                Winsock Add String Server.server_name
+                                Winsock Add String Server.server_description
+                                Winsock Add String Server.level_name
+                                Winsock Send Tcp Packet ServerClients(CurrentClient).channel_tcp
+                            Endcase
+                        Endselect
+                    endwhile
+                    else
+                        winsock disconnect ServerClients(CurrentClient).channel_tcp
+                        array delete element ServerClients(CurrentClient)
+                        Server.NumClients = Server.NumClients - 1
+                    endif
+                endif
+            Next CurrentClient
+            endif
+            
+            //check UDP messages
+        endif
+    endif
+ENDFUNCTION
+
+function Network_Server_Stop():
+    if Server.init = 1:
+        Server.init = 0
+        undim ServerClients()
+        ui_writelog(ui_blue,"Server shut down.")
+    endif
+ENDFUNCTION
+remend

@@ -64,14 +64,14 @@ Function Input_Init():
 
 	//ACTIVE CONSTANTS
 	Game_Input.KEY_ZOOM = 44
-	Game_Input.KEY_VIEWOBJECTIVES  = 6
-	Game_Input.KEY_VIEWPLAYERS  = 15
-	Game_Input.KEY_USE  = 18
-	Game_Input.KEY_CHAT  = 21
-	Game_Input.KEY_VOICECHAT = 47
-	Game_Input.KEY_PAUSE = 1
-	Game_Input.KEY_CONSOLE  = 41
-	UI_WriteLog(UI_Green,"Input: Initialized.")
+Game_Input.KEY_VIEWOBJECTIVES  = 6
+Game_Input.KEY_VIEWPLAYERS  = 15
+Game_Input.KEY_USE  = 18
+Game_Input.KEY_CHAT  = 21
+Game_Input.KEY_VOICECHAT = 47
+Game_Input.KEY_PAUSE = 1
+Game_Input.KEY_CONSOLE  = 41
+UI_WriteLog(UI_Green,"Input: Initialized.")
 Endfunction
 
 //Input_Grab() - returns a string containing the current user input.

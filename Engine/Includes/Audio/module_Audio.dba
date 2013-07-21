@@ -97,6 +97,13 @@ Function Audio_Stop(id As integer):
     stop audio AudioReferences(id).id
 Endfunction
 
+Function Audio_StopAll():
+    For a = 0 To Num_AudioReferences - 1:
+        AudioReferences(a).state = STATE_STOPPED
+        stop audio AudioReferences(a).id
+    next a
+endfunction
+
 Function Audio_Playing(id As integer):
     playing = audio playing(AudioReferences(id).id)
 Endfunction playing

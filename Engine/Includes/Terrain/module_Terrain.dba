@@ -31,6 +31,12 @@ type T_TerrainChunk
     Mask_2 as integer
 endtype
 
+type Normals
+    x as float
+    y as float
+    z as float
+endtype
+
 //////////////////////////////////////////////////////////////
 //  FUNCTIONS
 //////////////////////////////////////////////////////////////
@@ -90,6 +96,7 @@ function Terrain_Init():
     dim Terrain(16,16) as T_TerrainChunk
     //wow this is a lot of data ... 256kb to be exact!
     dim Heightfield(256,256) as float
+    dim HeightfieldNormals(256,256) as Normals
     global TerrainExists as boolean
     global Terrain_LOD_Ticker as integer : Terrain_LOD_Ticker = reserve free ticker()
     make ticker Terrain_Lod_Ticker,500
@@ -185,6 +192,7 @@ function Terrain_Paint(x as float,y as float,z as float,color as integer,radius 
 ENDFUNCTION
 
 function Terrain_Refresh_Near(x,z,radius):
+    Terrain_Refresh_Normals()
     for TerrainX = 0 to 15:
         For TerrainZ = 0 to 15:
             x2 = (TerrainX * 16)
@@ -196,6 +204,7 @@ function Terrain_Refresh_Near(x,z,radius):
 endfunction
 
 function Terrain_Refresh():
+    Terrain_Refresh_Normals()
     for TerrainX = 0 to 15:
         For TerrainZ = 0 to 15:
             Terrain_Refresh_Chunk(TerrainX,TerrainZ)
@@ -296,6 +305,42 @@ function Terrain_SmoothTool(x as float,y as float,z as float,delta as float,radi
     Terrain_Refresh_Near((x),(z),size)
 ENDFUNCTION
 
+
+
+function Terrain_Refresh_Normals():
+remstart
+for x = 0 to 255:
+    for z = 0 to 255:
+        h1#=Heightfield(x-1,z)
+        h2#=Heightfield(x+1,z)
+        h3#=Heightfield(x,z)
+        h4#=Heightfield(x,z-1)
+        h5#=Heightfield(x,z+1)
+        HeightfieldNormals(x,z).x = 
+        HeightfieldNormals(x,z).y = 
+        HeightfieldNormals(x,z).z = 
+    next z
+next x
+
+// # P.xy store the position for which we want to calculate the normals
+  // # height() here is a function that return the height at a point in the terrain
+
+  // read neightbor heights using an arbitrary small offset
+  vec3 off = vec3(1.0, 1.0, 0.0);
+  float hL = height(P.xy - off.xz);
+  float hR = height(P.xy + off.xz);
+  float hD = height(P.xy - off.zy);
+  float hU = height(P.xy + off.zy);
+
+  // deduce terrain normal
+  N.x = hL - hR;
+  N.y = hD - hU;
+  N.z = 2.0;
+  N = normalize(N);
+  remend
+  
+ENDFUNCTION
+
 function Terrain_Refresh_Chunk(x,z):
     if x > -1 and x < 16:
     if z > -1 and z < 16:
@@ -318,11 +363,12 @@ function Terrain_Refresh_Chunk(x,z):
                 if height#>current_object_maxheight# then current_object_maxheight# = height#
                 if height#<current_object_minheight# then current_object_minheight# = height#
             endif
+            //normals time!
+            xxx = clamp(int(pos_real_x#)+8,0,255)
+            zzz = clamp(int(pos_real_z#)+8,0,255)
+            Set vertexdata Normals v,HeightfieldNormals(xxx,zzz).x,HeightfieldNormals(xxx,zzz).y,HeightfieldNormals(xxx,zzz).z
+
         next v
-        //normals time!
-        Set Object Normals current_object
-        unlock vertexdata
-        set object smoothing current_object, 100
         unlock vertexdata
     Next i
     `if current_object = Terrain(x,z).LOD_1 then current_object = Terrain(x,z).LOD_2 : goto GenVertices

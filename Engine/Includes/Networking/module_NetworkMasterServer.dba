@@ -1,0 +1,261 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - NETWORK MODULE
+//  Concept and code by thenerd, Summer 2012!
+//////////////////////////////////////////////////////////////
+// 
+// Module for MASTER SERVER system
+//
+//////////////////////////////////////////////////////////////
+//  CONSTANTS
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  UDTS
+//////////////////////////////////////////////////////////////
+
+Type t_MasterServerClient
+    name as string
+    ip as string
+    channel_tcp As Dword
+    target_ip As String
+    target_port As Integer
+    local_port as integer
+Endtype
+
+//////////////////////////////////////////////////////////////
+//  CLIENT FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+function Network_MasterServer_Connect():
+    UI_WriteLog(UI_Blue,"Connecting to master server...")
+    remstart
+    global ClientMasterServer
+    ClientMasterServer = Winsock Connect(Game.ServerIP,Game.serverport)
+    Network.MasterServerOnline = 1
+    if WINSOCK CHANNEL ERROR(ClientMasterServer):
+        ui_writelog(UI_RED,winsock channel error msg$(ClientMasterServer))
+        MasterserverOnline = 0
+        winsock delete channel ClientMasterServer
+    endif
+    remend
+    global NetworkUsersOnline : NetworkUsersOnline = 0
+    dim MasterServerChat(8) as string //actually 0..7
+    
+ENDFUNCTION
+
+function Network_MasterServer_Update():
+    if Winsock Channel Data Waiting(ClientMasterServer):
+        //check incoming data from server (TCP)
+        Winsock recv message ClientMasterServer
+        Winsock Split Data ClientMasterServer
+        While Winsock Packet Count(ClientMasterServer)>0:
+        Winsock Fetch Packet ClientMasterServer
+        Local packet_header As String
+        packet_header = Winsock Read String$()
+        Select packet_header
+            Case "msv_info"
+                //update number of users variable
+                NetworkUsersOnline = winsock read int()
+            endcase
+            case "msv_chat"
+                //add new chat line
+                message$ = winsock read string$()
+                ui_writelog(UI_Blue,"Chat: "+message$)
+                array delete element MasterServerChat(),0
+                array insert at bottom MasterServerChat()
+                MasterServerChat(7) = message$
+                menu_chatoffsety = ui_mywindow.yrow+2
+            endcase
+            case "msv_startserver_accept"
+                message$ = winsock read string$()
+                `Network_Server_Start_Accept(message$)
+            endcase
+        Endselect
+        endwhile
+    Endif
+endfunction
+
+function Network_MasterServer_Disconnect():
+    UI_WriteLog(UI_Blue,"Disconnecting from master server.")
+    Winsock Make Packet
+    Winsock Add String "disconnect"
+    Winsock Send Tcp Packet ClientMasterServer
+    WINSOCK DISCONNECT ClientMasterServer
+    Network.MasterServerOnline = 0
+endfunction
+
+function Network_SendMessage(message$):
+    Winsock Make Packet
+    Winsock Add String "cl_chat"
+    winsock add string message$
+    Winsock Send Tcp Packet ClientMasterServer
+ENDFUNCTION
+
+//////////////////////////////////////////////////////////////
+//  MASTER SERVER FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+//master server code
+//run by using the -server flag
+function Network_LoopMasterServer():
+    sync off : hide window
+    Open Console "OpenFPS Engine - DEVELOPER MODE / RUNNING MASTER SERVER"
+    Print To Console
+    Set Console On Top 0
+    CLEAR CONSOLE
+    SET CURSOR 0,0
+    Print "//////////////////////////////////////////////////////////////"
+    Print "//  OpenFPS Game Engine - MASTER SERVER"
+    Print "//////////////////////////////////////////////////////////////"
+    Print "// Only run this program if you intend to host the master server!"
+    print "// The master server provides services for the entire game."
+    print "// *This is the wrong program if you want to host a game server!*"
+    print "// *To host a game server, start a multiplayer game through the*"
+    print "// *main menu. Press any key if you really want to host..."
+    Print "//////////////////////////////////////////////////////////////"
+    nullstr$ = GET CONSOLE CHAR$ ( )
+    CLEAR CONSOLE
+    SET CURSOR 0,0
+    Print "//////////////////////////////////////////////////////////////"
+    Print "//  OpenFPS Game Engine - MASTER SERVER"
+    Print "//////////////////////////////////////////////////////////////"
+    Print "// Starting up..."
+    Print "//////////////////////////////////////////////////////////////"
+    //password entered successfully
+    Game.ip = Network_GetIP()
+    startTime = timer()
+    global MasterServerMaxClients : MasterServerMaxClients = 24
+    global MasterServerNumClients : MasterServerNumClients = 0
+    Winsock Make
+    global MasterServerListenChannel as integer 
+    MasterServerListenChannel = Winsock Listen(Game.ServerPort)
+    dim MasterServerClients() as t_MasterServerClient
+    dim servertextlines() as string
+    global numservertextlines as integer
+    global SlowUpdateCurrentClient as integer
+    make ticker 1,6000
+    do
+        CLEAR CONSOLE
+        SET CURSOR 0,0
+        Print "//////////////////////////////////////////////////////////////"
+        Print "//  OpenFPS Game Engine - MASTER SERVER"
+        Print "//////////////////////////////////////////////////////////////"
+        Print "// Server running. IP: ",Game.ip
+        print "// Time online: "+elapsedTime(startTime)
+        print "// Current clients connected: (",MasterServerNumClients,"/",MasterServerMaxClients,")"
+        WINSOCK REFRESH CHANNELS
+        If Winsock Error() then print "WINSOCK ERROR - "+winsock error msg$()
+        If (winsock channel Data waiting(MasterServerListenChannel)):
+            //adding a new client
+            Array Insert At Bottom MasterServerClients()
+            MasterServerClients(MasterServerNumClients).name="newclient"
+            MasterServerClients(MasterServerNumClients).channel_tcp=winsock accept(MasterServerListenChannel)
+            MasterServerNumClients=MasterServerNumClients+1
+            SvPrint("A new client connected to the master server!")
+        Endif
+        
+        If MasterServerNumClients>0:
+            For CurrentClient = 0 To MasterServerNumClients-1:
+                If Winsock Channel Data Waiting(MasterServerClients(CurrentClient).channel_tcp):
+                    Winsock recv message MasterServerClients(CurrentClient).channel_tcp
+                    if WINSOCK CHANNEL DATA LEN(MasterServerClients(CurrentClient).channel_tcp)>0:
+                    Winsock Split Data MasterServerClients(CurrentClient).channel_tcp
+                    While Winsock Packet Count(MasterServerClients(CurrentClient).channel_tcp)>0:
+                        Winsock Fetch Packet MasterServerClients(CurrentClient).channel_tcp
+                        Local packet_header As String
+                        packet_header = Winsock Read String$()
+                        Select packet_header
+                            Case "init"
+                                `Winsock Make Packet
+                                `Winsock Add String "udpinit"
+                                `Winsock Send Tcp Packet ServerClients(CurrentClient).tcp
+                            Endcase
+                            Case "cl_chat"
+                                message$ = Winsock Read String$()
+                                svprint("Chat message:"+message$)
+                                //relay message to all the clients
+                                For CurrentClientMSG = 0 To MasterServerNumClients-1:
+                                    Winsock Make Packet
+                                    Winsock Add String "msv_chat"
+                                    winsock add string message$
+                                    Winsock Send Tcp Packet MasterServerClients(CurrentClientMSG).channel_tcp
+                                Next CurrentClientMSG
+                            Endcase
+                            case "cl_startserver"
+                                SvPrint("Authorized a new server!")
+                                servername$ = Winsock Read String$()
+                                Winsock Make Packet
+                                Winsock Add String "msv_startserver_accept"
+                                winsock add string servername$
+                                Winsock Send Tcp Packet MasterServerClients(CurrentClient).channel_tcp
+                            endcase
+                            case "disconnect"
+                                disconnectflag = 1
+                            endcase
+                        Endselect
+                    endwhile
+                    endif
+                    if disconnectflag = 1:
+                        SvPrint("Client disconnected.")
+                        winsock disconnect MasterServerClients(CurrentClient).channel_tcp
+                        array delete element MasterServerClients(CurrentClient)
+                        MasterServerNumClients = MasterServerNumClients - 1
+                        disconnectflag = 0
+                    endif
+                endif
+            Next CurrentClient
+        endif
+        
+        //update clients every ~6 seconds
+        if ticker(1):
+        if MasterServerNumClients>0:
+        For CurrentClient = 0 To MasterServerNumClients-1:
+            Winsock Make Packet
+            Winsock Add String "msv_info"
+            winsock add int MasterServerNumClients
+            Winsock Send Tcp Packet MasterServerClients(CurrentClient).channel_tcp
+        Next CurrentClient
+        endif
+        endif
+        
+        for i = 0 to numservertextlines-1:
+            print servertextlines(i)
+        next i
+        
+        nice wait 100
+    loop
+    end
+ENDFUNCTION
+
+function SvPrint(stringf$):
+    Array Insert At Bottom servertextlines()
+    servertextlines(numservertextlines)=stringf$
+    numservertextlines = numservertextlines + 1
+ENDFUNCTION
+
+function elapsedTime(timeStart)
+    currentTime=TIMER()
+    currentTime = currentTime - timeStart
+    currentTime = currentTime / 1000
+    remainingSeconds = currentTime mod 360
+    if remainingSeconds > 59 rem at least a minutes' worth of seconds
+        minutes = remainingSeconds /  60
+        seconds = remainingSeconds mod 60
+    else
+        seconds = remainingSeconds
+    endif
+    if currentTime > 359 rem at least an hours' worth of seconds
+        hours = currentTime / 360
+    endif 
+    hours$ = str$(hours)
+    minutes$ = str$(minutes)
+    seconds$ = str$(secondS)
+    if len(hours$) < 2 then hours$ = "0" + hours$
+    if len(minutes$) < 2 then minutes$ = "0" + minutes$
+    if len(seconds$) < 2 then seconds$ = "0" + seconds$
+    dispTime$ = hours$ + ":" + minutes$ + ":" + seconds$
+endfunction dispTime$
+
+//////////////////////////////////////////////////////////////
+//  End of code
+//////////////////////////////////////////////////////////////

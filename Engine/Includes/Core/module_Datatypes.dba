@@ -77,48 +77,13 @@ Type t_Game
     game_load_target as string
     game_load_status as string
     screenshotflag as integer
+    revision as string
+    frame_last as float
+    frametime as float
+    frametimeavg as float
 endtype
 
 
-
-type t_Server
-    server_name as string
-    server_description as string
-    server_password_enabled as integer
-    server_password_string as string
-    level_name as string
-    starttime as integer
-    started as integer
-    init as integer
-    auth as integer
-    autofailtime as integer
-    port as integer
-    listenchannel as integer
-    numclients as integer
-    offline as integer
-endtype
-
-Type t_ServerClient
-    name as string
-    ip as string
-    channel_tcp As Dword
-    target_ip As String
-    target_port As Integer
-    local_port as integer
-Endtype
-
-type t_Client
-    client_name as string
-    server_channel as integer
-    init as integer
-    auth as integer
-    autofailtime as integer
-    server_ip as string
-    server_port as integer
-    server_name as string
-    server_description as string
-    level_name as string
-endtype
 
 //t_image - stores an image id and its width and height
 Type t_Image

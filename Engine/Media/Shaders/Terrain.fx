@@ -30,7 +30,7 @@ float4 LightColor
 float4 AmbiColor : Ambient
 <
     string UIName =  "Ambient Light Color";
-> = {0.01f, 0.01f, 0.01f, 1.0f};
+> = {0.1f, 0.1f, 0.01f, 1.0f};
 
 float4 SurfColor : Diffuse
 <
