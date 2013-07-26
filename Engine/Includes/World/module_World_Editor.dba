@@ -84,10 +84,6 @@ function World_Editor_UpdateWorld():
       exclude object on skyMesh
     endif
     exclude object on WaterPlain
-    if Ent_GetInt(ref,"water_enabled"):
-        exclude object off WaterPlain
-        position object WaterPlain,128,getTrackbarPosition(EditorUI.WaterHeightSlider),128
-    endif
 ENDFUNCTION
 
 function World_Editor_Display():

@@ -1,0 +1,2 @@
+These DLLs have been precompiled in Visual Studio to improve calculation efficiency.
+They need to be added to the Dbpro Plugins-user folder in order to compile the source.

@@ -1,0 +1,7 @@
+C:\Users\Airslide\Documents\Visual Studio 2010\Projects\Example\TestExample\bin\Debug\TestExample.exe
+C:\Users\Airslide\Documents\Visual Studio 2010\Projects\Example\TestExample\bin\Debug\TestExample.pdb
+C:\Users\Airslide\Documents\Visual Studio 2010\Projects\Example\TestExample\bin\Debug\Example.dll
+C:\Users\Airslide\Documents\Visual Studio 2010\Projects\Example\TestExample\bin\Debug\Example.pdb
+C:\Users\Airslide\Documents\Visual Studio 2010\Projects\Example\TestExample\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\Airslide\Documents\Visual Studio 2010\Projects\Example\TestExample\obj\x86\Debug\TestExample.exe
+C:\Users\Airslide\Documents\Visual Studio 2010\Projects\Example\TestExample\obj\x86\Debug\TestExample.pdb

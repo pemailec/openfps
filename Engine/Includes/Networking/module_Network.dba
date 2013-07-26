@@ -30,6 +30,7 @@ Function Network_Init():
     Winsock Make
     UI_WriteLog(UI_Blue,"Got Client IP:"+Game.ip)
     
+    `RUDP_Init()
     Network_MasterServer_Connect()
     
     //call geolocation API to determine location
@@ -44,6 +45,7 @@ Endfunction
 Function Network_Update():
     WINSOCK REFRESH CHANNELS
     
+    `RUDP_Update()
     if Network.MasterServerOnline = 1 then Network_MasterServer_Update()
     if Network.GameServer = 1 then Server_Update() //server
     if Network.GameClient = 1 then Client_Update() //client
@@ -58,6 +60,7 @@ endfunction
 Function Network_Terminate():
     if MasterserverOnline = 1 then Network_MasterServer_Disconnect()
     Network_CloseConnections()
+    `RUDP_Terminate()
     winsock clean up
 Endfunction
 

@@ -29,6 +29,7 @@ type T_TerrainChunk
     Texture_6 as integer
     Mask_1 as integer
     Mask_2 as integer
+    HighestPoint as float
 endtype
 
 type Normals
@@ -52,9 +53,9 @@ function Terrain_Init():
     position object Terrain_Internal_LOD_2,16*1,0,0
     position object Terrain_Internal_LOD_3,16*2,0,0
     //FVF_XYZ=0x002 , FVF_NORMAL=0x010, FVF_DIFFUSE=0x040, FVF_TEX0=0x000, FVF_TEX1=0x100, FVF_TEX2=0x200, FVF_TEX3=0x300, FVF_TEX4=0x400, FVF_TEX5=0x500, FVF_TEX6=0x600, FVF_TEX7=0x700, FVF_TEX8=0x800
-    convert object fvf Terrain_Internal_LOD_1,274 `0x002 || 0x010 || 0x040 || 0x800
-    convert object fvf Terrain_Internal_LOD_2,274 `0x002 || 0x010 || 0x040 || 0x800
-    convert object fvf Terrain_Internal_LOD_3,274 `0x002 || 0x010 || 0x040 || 0x800
+    convert object fvf Terrain_Internal_LOD_1,0x002 || 0x010 || 0x040 || 0x800
+    convert object fvf Terrain_Internal_LOD_2,0x002 || 0x010 || 0x040 || 0x800
+    convert object fvf Terrain_Internal_LOD_3,0x002 || 0x010 || 0x040 || 0x800
     
     remstart
     set object wireframe Terrain_Internal_LOD_1,1
@@ -100,6 +101,9 @@ function Terrain_Init():
     global TerrainExists as boolean
     global Terrain_LOD_Ticker as integer : Terrain_LOD_Ticker = reserve free ticker()
     make ticker Terrain_Lod_Ticker,500
+    
+    WaterInitVariables()
+    
 ENDFUNCTION
 
 //creates a default terrain
@@ -259,21 +263,15 @@ function Terrain_Flatten(x as float,y as float,z as float,delta as float,radius 
     size = radius
     height_base# = Heightfield(int(clamp(x,0,255)),int(clamp(z,0,255)))
     
+D3D_LINE3D x-radius, y, z-radius, x-radius, y, z+radius,rgb(255,0,0),0
+D3D_LINE3D x-radius, y, z+radius, x+radius, y, z+radius,rgb(255,0,0),0
+D3D_LINE3D x+radius, y, z-radius, x+radius, y, z+radius,rgb(255,0,0),0
+D3D_LINE3D x-radius, y, z-radius, x-radius, y, z+radius,rgb(255,0,0),0
     for x_delta = 0-size to size:
         for z_delta = 0-size to size:
-            
-            pos_real_x#=int(clamp(x+x_delta,0,255))
-            pos_real_z#=int(clamp(z+z_delta,0,255))
-            distance# =  Terrain_GetDistance(x,0,z,pos_real_x#,0,pos_real_z#)
-            if distance# < radius:
-            ratio# = clamp(distance# / radius,0,1)
-            if (x+x_delta) < 256 and (x+x_delta) > -1:
-            if (z+z_delta) < 256 and (z+z_delta) > -1:
-            height_real# = Heightfield(int(clamp(x+x_delta,0,255)),int(clamp(z+z_delta,0,255)))
-            height_average# = (height_real# * (1-ratio#)) + (height_base# * (ratio#))
-            height_current# = Heightfield(int(clamp(x+x_delta,0,255)),int(clamp(z+z_delta,0,255)))
+            height_current#=height_base#
             Heightfield(int(clamp(x+x_delta,0,255)),int(clamp(z+z_delta,0,255))) = height_current#
-            endif : endif : endif
+
         next z_delta
     next x_delta
     Terrain_Refresh_Near((x),(z),size)
@@ -308,37 +306,7 @@ ENDFUNCTION
 
 
 function Terrain_Refresh_Normals():
-remstart
-for x = 0 to 255:
-    for z = 0 to 255:
-        h1#=Heightfield(x-1,z)
-        h2#=Heightfield(x+1,z)
-        h3#=Heightfield(x,z)
-        h4#=Heightfield(x,z-1)
-        h5#=Heightfield(x,z+1)
-        HeightfieldNormals(x,z).x = 
-        HeightfieldNormals(x,z).y = 
-        HeightfieldNormals(x,z).z = 
-    next z
-next x
-
-// # P.xy store the position for which we want to calculate the normals
-  // # height() here is a function that return the height at a point in the terrain
-
-  // read neightbor heights using an arbitrary small offset
-  vec3 off = vec3(1.0, 1.0, 0.0);
-  float hL = height(P.xy - off.xz);
-  float hR = height(P.xy + off.xz);
-  float hD = height(P.xy - off.zy);
-  float hU = height(P.xy + off.zy);
-
-  // deduce terrain normal
-  N.x = hL - hR;
-  N.y = hD - hU;
-  N.z = 2.0;
-  N = normalize(N);
-  remend
-  
+terrainNormalGenerator()
 ENDFUNCTION
 
 function Terrain_Refresh_Chunk(x,z):
@@ -357,7 +325,9 @@ function Terrain_Refresh_Chunk(x,z):
             pos_real_z#=get vertexdata position z(v)+object position z(current_object)
             xx#=get vertexdata position x(v)
             zz#=get vertexdata position z(v)
-            set vertexdata position v,xx#,Heightfield(clamp(int(pos_real_x#+8),0,255),clamp(int(pos_real_z#+8),0,255)),zz#
+            yy#=(Heightfield(clamp(int(pos_real_x#+8),0,255),clamp(int(pos_real_z#+8),0,255)))
+            set vertexdata position v,xx#,yy#,zz#
+            if Terrain(x,z).HighestPoint < yy# then Terrain(x,z).HighestPoint = yy#
             height#=Heightfield(clamp(int(pos_real_x#+8),0,255),clamp(int(pos_real_z#+8),0,255))
             if current_object = Terrain(x,z).LOD_1:
                 if height#>current_object_maxheight# then current_object_maxheight# = height#
@@ -366,7 +336,7 @@ function Terrain_Refresh_Chunk(x,z):
             //normals time!
             xxx = clamp(int(pos_real_x#)+8,0,255)
             zzz = clamp(int(pos_real_z#)+8,0,255)
-            Set vertexdata Normals v,HeightfieldNormals(xxx,zzz).x,HeightfieldNormals(xxx,zzz).y,HeightfieldNormals(xxx,zzz).z
+           Set vertexdata Normals v,HeightfieldNormals(xxx,zzz).x,HeightfieldNormals(xxx,zzz).y,HeightfieldNormals(xxx,zzz).z
 
         next v
         unlock vertexdata
@@ -377,6 +347,7 @@ function Terrain_Refresh_Chunk(x,z):
     calculate object bounds current_object
     sc_updateobject current_object
     sc_setupobject current_object,1,0
+    KD SetObjectAnisotropicFilteringOn current_object
     endif
     endif
 endfunction
@@ -412,6 +383,10 @@ function Terrain_Load(file$):
             texture object Terrain(TerrainX,TerrainZ).LOD_1,0,Terrain(TerrainX,TerrainZ).Mask_1
         Next TerrainZ
     next TerrainX
+    
+    //load water
+    Water_LoadFoamMap()
+    
     CLOSE FILE BLOCK 1
     rename file file$+".zip",file$+".terr"
     Terrain_Refresh()
@@ -438,6 +413,7 @@ function Terrain_Save(file$):
             ADD IMAGE TO BLOCK 1,Terrain(TerrainX,TerrainZ).Mask_1,"Terrain_"+str$(TerrainX)+"_"+str$(TerrainZ)+".bmp"
         Next TerrainZ
     next TerrainX
+    Water_SaveFoamMap()
     CLOSE FILE BLOCK 1
     rename file file$+".zip",file$+".terr"
     
@@ -468,7 +444,13 @@ function Terrain_Update():
         //refresh LOD if Terrain_Lod_Ticker is active
         if TickLoop  = 1:
         distance# = Terrain_GetDistance(CamX,CamY,CamZ,TerrainX*16,0,TerrainZ*16)
-        exclude object off Terrain(TerrainX,TerrainZ).LOD_1
+        waterenabled = Ent_GetInt(EntGetReference("root"),"water_enabled")
+        wtrheight#=Ent_GetInt(EntGetReference("root"),"water_height")
+        if waterenabled = 1 and Terrain(TerrainX,TerrainZ).HighestPoint<wtrheight#:
+            exclude object on Terrain(TerrainX,TerrainZ).LOD_1
+        else
+            exclude object off Terrain(TerrainX,TerrainZ).LOD_1
+        endif
         remstart
         if Terrain(TerrainX,TerrainZ).LOD_OVERRIDE = 0:
         exclude object on Terrain(TerrainX,TerrainZ).LOD_1
@@ -518,4 +500,20 @@ Endfunction thisDistance2#
 //////////////////////////////////////////////////////////////
 //  End of code
 //////////////////////////////////////////////////////////////
+
+function terrainNormalGenerator()
+    null=make vector3(111)
+    for x = 0 to 255:
+        for z = 0 to 255:
+            dzx# = Heightfield(max(0,x-1), z) - Heightfield(min(255,x+1), z)
+            dzz# = Heightfield(x, max(0,z-1)) - Heightfield(x, min(255,z+1))
+            set vector3 111,dzx#,1,dzz#
+            normalize vector3 111,111
+            HeightfieldNormals(x,z).x = x vector3(111)
+            HeightfieldNormals(x,z).y = y vector3(111)
+            HeightfieldNormals(x,z).z = z vector3(111)
+        next z 
+    next x
+    delete vector3 111
+endfunction
 

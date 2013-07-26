@@ -36,7 +36,7 @@ float4 SurfColor : Diffuse
 <
     string UIName =  "Surface Color";
     string UIType = "Color";
-> = {1.0f, 1.0f, 1.0f, 1.0f};
+> = {0.7f, 1.0f, 1.0f, 1.0f};
 
 /************* TEXTURES **************/
 

@@ -10,10 +10,12 @@ float4 eyePos : CameraPosition;
 //-----------------
 // tweaks
 //-----------------
-float4 lightDirection = {0.57735, -0.57735, 0.57735, 1.0};    
+float4 lightDirection = {0.25, -0.5, -0.5, 1.0};    
 float4 lightColour = {1.0, 1.0, 1.0, 1.0};    
 float4 ambientColour = {0.25, 0.25, 0.25, 1.0};     
-float2 repeatScale = {16.0, 16.0};
+float2 repeatScale1 = {16.0, 16.0};
+float2 repeatScale2 = {4.0, 4.0};
+float2 repeatScale3= {16.0, 16.0};
 
 texture maskMap1 <string ResourceName = "";>;
 sampler2D maskSample1 = sampler_state
@@ -119,7 +121,7 @@ struct PSOutput { float4 colour : color; };
 VSOutput VS(VSInput In, VSOutput Out)
 { Out.pos = mul(In.pos, mWVP);
   Out.maskUV = In.UV;
-  Out.UV = In.UV * repeatScale;
+  Out.UV = In.UV;
   Out.normal = normalize(mul(In.normal, (float3x3) mW));
   return Out;
 }
@@ -130,9 +132,9 @@ VSOutput VS(VSInput In, VSOutput Out)
 PSOutput PS(VSOutput In, PSOutput Out)
 { float4 rgbColours1 = tex2D(maskSample1, In.maskUV);
   float4 baseColour;
-  baseColour  = tex2D(detailSample1, In.UV) * rgbColours1.r;
-  baseColour += tex2D(detailSample2, In.UV) * rgbColours1.g;
-  baseColour += tex2D(detailSample3, In.UV) * rgbColours1.b;
+  baseColour  = tex2D(detailSample1, In.UV* repeatScale1) * rgbColours1.r;
+  baseColour += tex2D(detailSample2, In.UV* repeatScale2) * rgbColours1.g;
+  baseColour += tex2D(detailSample3, In.UV* repeatScale3) * rgbColours1.b;
 
   float4 diffuse = saturate(dot(normalize(In.normal), -lightDirection));
   float4 lighting = diffuse * lightColour + ambientColour;

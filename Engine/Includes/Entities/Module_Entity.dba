@@ -20,6 +20,7 @@ function Ent_Init():
     dim Entities() as EntReference
     //init entity types
     Entity_Flare_Init()
+    Entity_Grass_Init()
 ENDFUNCTION
 
 function EntSave(file$):
@@ -156,6 +157,9 @@ function EntDelete(name as string):
                 case "ent_model"
                     Entity_Model_Delete(i)
                 endcase
+                case "ent_grass"
+                    Entity_Grass_Delete(i)
+                endcase
             endselect
             local dim tempattributes() as string
             local dim tempvalues() as string
@@ -288,6 +292,7 @@ ENDFUNCTION returnfloat
 
 function EntGetAttribute(id, attribute_name as string):
     // get entity attribute
+    `UI_WriteLog(UI_Yellow,"Fetch "+attribute_name)
     local dim tempattributes() as string
     local dim tempvalues() as string
     link array tempattributes(),Entities(id).attributes.ptr
@@ -362,6 +367,8 @@ function EntListDebug():
 ENDFUNCTION
 
 function EntHandleEntities():
+    //handle general updates
+    Entity_Grass_UpdateHandler()
     //handle all the entities
     for i=0 to NumEntities-1:
     type_attrib$="null"
@@ -372,6 +379,9 @@ function EntHandleEntities():
         endcase
         case "ent_flare"
             Entity_Flare_Update(i)
+        endcase
+        case "ent_grass"
+            Entity_Grass_Update(i)
         endcase
         case "ent_model"
             Entity_Model_Update(i)
