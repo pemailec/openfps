@@ -48,6 +48,8 @@ type t_EditorUI
     Menu_Edit_Sub as integer
     Menu_Level_Sub as integer
     Menu_Level_Viewvars as integer
+    Menu_Level_Genwaterfoam as integer
+    Menu_Level_Genwaterfoammap as integer
     Menu_Scripting_Sub as integer
     Menu_Entities_Sub as integer
     Menu_Terrain_Sub as integer
@@ -311,11 +313,14 @@ function UI_Editor_Init():
     EditorUI.ShowWaterPlain=createCheckBox(11,47+80,230,20,"Use Water",EditorUI.currentmodeframe)
     setgadgetvisible EditorUI.WaterHeightSlider,0
     setgadgetvisible EditorUI.WaterHeightLabel,0
+    setChecked EditorUI.ShowWaterPlain,1
     setgadgetvisible EditorUI.ShowWaterPlain,0
+    
     applyFont EditorUI.WaterHeightSlider,EditorUI.Font
     applyFont EditorUI.WaterHeightLabel,EditorUI.Font
     applyFont EditorUI.ShowWaterPlain,EditorUI.Font
     settrackbarrange EditorUI.WaterHeightSlider,0,16
+    settrackbarposition EditorUI.WaterHeightSlider,2
     
     EditorUI.LevelNameLabel=createLabel(9,208,120,20,"Level Display Name",EditorUI.currentmodeframe)
     EditorUI.LevelNameTextbox=createEdit(9,230,230,24,0,EditorUI.currentmodeframe)
@@ -449,6 +454,7 @@ function UI_Editor_Init():
     EditorUI.EntityPropsWarning=createLabel(5,175,205,30,"Properties not available until after placement...",EditorUI.EntityEditPanel)
     //add two types of entities as a test
     addItem EditorUI.EntityTypeCombobox,"ent_flare"
+    addItem EditorUI.EntityTypeCombobox,"ent_grass" 
     addItem EditorUI.EntityTypeCombobox,"ent_model"  
     selectitem EditorUI.EntityTypeCombobox,0
     
@@ -566,7 +572,11 @@ function UI_Editor_Init():
     Addmenuitem EditorUI.Menu_File_Sub,"Quit Editor",EditorUI.Menu_FileQuit
     
     EditorUI.Menu_Level_Viewvars = UI_Editor_GenID()
+    EditorUI.Menu_Level_Genwaterfoam = UI_Editor_GenID()
+    EditorUI.Menu_Level_Genwaterfoammap = UI_Editor_GenID()
     Addmenuitem EditorUI.Menu_Level_Sub,"View Environment Variables",EditorUI.Menu_Level_Viewvars
+    Addmenuitem EditorUI.Menu_Level_Sub,"Generate Water FoamMap",EditorUI.Menu_Level_Genwaterfoammap
+    Addmenuitem EditorUI.Menu_Level_Sub,"Generate Water FoamObject",EditorUI.Menu_Level_Genwaterfoam
     
     EditorUI.Variable_window = createWindow(0,0,467,597,"View Environment Variables",WINDOW_FIXED ,WINDOW_TOOLWINDOW,0,0)
     EditorUI.Variable_window_list = createlistbox(0,0,460,520,EditorUI.Variable_window)
@@ -625,6 +635,8 @@ function UI_Editor_Update():
             if id = EditorUI.Menu_GameOpen then execute file "OpenFPS.exe","-editor","",0 : UI_Editor_AddToConsole("Running OpenFPS.exe -editor")
             if id = EditorUI.Menu_GameTest then errormessage "Feature not implemented" : UI_Editor_AddToConsole("Feature not implemented")
             if id = EditorUI.Menu_Level_Viewvars then setgadgetvisible EditorUI.Variable_window,1,1 : World_Editor_Display()
+            if id = EditorUI.Menu_Level_Genwaterfoammap then Water_GenerateFoamMap()
+            if id = EditorUI.Menu_Level_Genwaterfoam then Water_CreateFoam()
         endcase
         case 0x202
             id = Eventsource()
@@ -890,6 +902,9 @@ function UI_Editor_Update():
                         case "ent_model"
                             Entity_Model_Add(pick_x#,pick_y#,pick_z#)
                         endcase
+                        case "ent_grass"
+                            Entity_Grass_Add(pick_x#,pick_y#,pick_z#)
+                        endcase
                     endselect
                     
                     exclude object on EditorUI.EntityPlaceModeDummy
@@ -918,7 +933,7 @@ function UI_Editor_Update():
                         endcase
                         case 1
                             //flatten
-                            `Terrain_Flatten(pick_x#,pick_y#,pick_z#,0-EditorUI.BrushSpeed,EditorUI.BrushRadius)
+                            Terrain_Flatten(pick_x#,pick_y#,pick_z#,EditorUI.BrushSpeed,EditorUI.BrushRadius)
                         endcase
                         case 2
                             //Lower

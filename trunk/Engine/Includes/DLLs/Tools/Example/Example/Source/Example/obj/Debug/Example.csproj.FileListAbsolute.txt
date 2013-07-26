@@ -1,0 +1,5 @@
+C:\Users\Airslide\Documents\Visual Studio 2010\Projects\Example\Example\bin\Debug\Example.dll
+C:\Users\Airslide\Documents\Visual Studio 2010\Projects\Example\Example\bin\Debug\Example.pdb
+C:\Users\Airslide\Documents\Visual Studio 2010\Projects\Example\Example\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\Airslide\Documents\Visual Studio 2010\Projects\Example\Example\obj\Debug\Example.dll
+C:\Users\Airslide\Documents\Visual Studio 2010\Projects\Example\Example\obj\Debug\Example.pdb

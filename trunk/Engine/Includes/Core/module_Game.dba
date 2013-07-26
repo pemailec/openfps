@@ -26,6 +26,7 @@ function Game_Update():
     if Game_Running = 1:
         //game modules updated here!
         if game.state = GAME_SPECTATE then Camera_Spectator_Update()
+        Water_Update()
     endif
 ENDFUNCTION
 
@@ -47,6 +48,7 @@ function Game_Load(file$):
     terrain_filename$ = left$(terrain_filename$,len(terrain_filename$)-4)
     terrain_filename_new$ = "Media\Terrains\"+terrain_filename$
     Terrain_Load(terrain_filename_new$)
+    Water_Init()
     Camera_Spectator_Generate()
     Game_Running = 1
     Game.state = GAME_SPECTATE
@@ -55,12 +57,13 @@ function Game_Load(file$):
         global Game_InitSound as integer
         Game_InitSound = Audio_Load("Media\Sounds\Game\game_join\join2.wav")
     endif
+    ui_menu_Setmode(M_ENGINE_DEFAULT)
     Audio_StopAll()
-    `Audio_Play(Game_InitSound)
+    Audio_Play(Game_InitSound)
 ENDFUNCTION
 
 function Game_Join():
-    Game.state = GAME_WAIT_FOR_SERVER
+    Game.state = GAME_SPECTATE
 ENDFUNCTION
 
 function Game_End():
@@ -68,6 +71,7 @@ function Game_End():
         Game_Running = 0
         Terrain_Delete()
         DeleteAllEntities()
+        Water_Terminate()
         Camera_Spectator_Clear()
         UI_FadeManager.state=UI_FADEIN
         UI_FadeManager.target=M_MENU_MAIN

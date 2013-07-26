@@ -1,0 +1,60 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - NETWORK SUBMODULE
+// Reliable UDP (RUDP) Protocol
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  CONSTANTS
+//////////////////////////////////////////////////////////////
+
+#CONSTANT UDP_CRITICAL 1
+#CONSTANT UDP_IMPORTANT 2
+#CONSTANT UDP_UNIMPORTANT 3
+
+//////////////////////////////////////////////////////////////
+//  UDTS
+//////////////////////////////////////////////////////////////
+
+type UDP_Connection
+    connected as integer
+    target_ip as integer
+    target_port as integer
+    local_ip as integer
+    local_port as integer
+    cache_output_array as integer
+    cache_input_array as integer
+endtype
+
+//////////////////////////////////////////////////////////////
+//  FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+function RUDP_Init():
+    dim RUDP_Connections() as UDP_Connection
+    global RUDP_Connections as integer
+ENDFUNCTION
+
+function RUDP_CreateConnect(remote_ip as string,remote_port as integer):
+
+endfunction index
+
+function RUDP_CreateListen(remote_ip as string,remote_port as integer):
+
+endfunction index
+
+//disconnects a channel. for now, doesn't delete it
+function RUDP_Disconnect(index):
+endfunction
+
+function RUDP_Update():
+    WINSOCK REFRESH CHANNELS
+
+ENDFUNCTION
+
+function RUDP_Terminate():
+    
+ENDFUNCTION
+
+//////////////////////////////////////////////////////////////
+//  End of Code
+//////////////////////////////////////////////////////////////

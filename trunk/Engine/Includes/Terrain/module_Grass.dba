@@ -1,0 +1,83 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - GRASS MODULE
+//  Concept and code by thenerd, Summer 2013!
+//  Subsection of Module_Entity
+//////////////////////////////////////////////////////////////
+
+function Entity_Grass_Init():
+    global Grass_Model as integer
+    Grass_model = reserve free object()
+    load object "Media\Models\grass.x",Grass_model
+    exclude object on Grass_Model
+    global Grass_Ticker as integer
+    Grass_ticker = find free ticker()
+    make ticker Grass_ticker,1000
+    global Grass_Texture as integer
+    Grass_Texture = reserve free image()
+    load image "Media\Materials\Engine\grass.png",Grass_Texture
+    global grass_update as integer
+ENDFUNCTION
+
+function Entity_Grass_Add(x#,y#,z#):
+    //add new entity
+    i = 0
+    while ent_Getexists("ent_grass_"+str$(i))
+        i = i + 1
+    endwhile
+    entAdd("ent_grass_"+str$(i))
+    ref = entgetreference("ent_grass_"+str$(i))
+    entAddAttribute(ref,"name","ent_grass_"+str$(i))
+    entAddAttribute(ref,"type","ent_grass")
+    entAddAttribute(ref,"x",str$(x#))
+    entAddAttribute(ref,"y",str$(y#))
+    entAddAttribute(ref,"z",str$(z#))
+ENDFUNCTION
+
+function entity_grass_updatehandler():
+    grass_update = ticker(Grass_ticker)
+ENDFUNCTION
+
+
+function Entity_Grass_Update(i):
+    if Ent_GetInt(i,"modelid")=0:
+        modelid = reserve free object()
+        EntAddAttribute(i,"modelid",str$(modelid))
+    endif
+    if object exist(Ent_GetInt(i,"modelid"))=0:
+        load object "Media\Models\grass.x",Ent_GetInt(i,"modelid")
+        set object cull Ent_GetInt(i,"modelid"),0
+        texture object Ent_GetInt(i,"modelid"),Grass_Texture
+        set object transparency Ent_GetInt(i,"modelid"),2
+        set object light Ent_GetInt(i,"modelid"),0
+    endif
+    if grass_update:
+    x#=Ent_GetFloat(i,"x")
+    z#=Ent_GetFloat(i,"z")
+    oldx#=x#
+    oldy#=1000
+    oldz#=z#
+    x#=x#
+    y#=-1000
+    z#=z#
+    collide=SC_rayCastGroup(1,oldx#,oldy#,oldz#,x#,y#,z#,0)
+    if collide>0       
+        newy#=SC_getStaticCollisionY()
+        normx#=SC_getCollisionNormalX()
+        normy#=SC_getCollisionNormalY()
+        normz#=SC_getCollisionNormalZ()
+        position object Ent_GetInt(i,"modelid"),x#,newy#,z#
+    endif
+    endif
+ENDFUNCTION
+
+function Entity_Grass_Delete(i):
+    delete object Ent_GetInt(i,"modelid")
+endfunction
+
+function Entity_Grass_Terminate():
+    
+ENDFUNCTION
+
+//////////////////////////////////////////////////////////////
+// End of code
+//////////////////////////////////////////////////////////////

@@ -25,12 +25,12 @@ function Location_Grab():
     y = 256*val(SPLIT WORD$(3))
     z = val(SPLIT WORD$(4))
     Geolocation_IPID = str$(abs(w+x+y+z))
-    query$ = "SELECT i, abbreviation, name FROM OpenFPS_LocationDB WHERE start_value <= "+Geolocation_IPID+" AND end_value >= "+Geolocation_IPID+""
+    query$ = "SELECT abbreviation, name FROM OpenFPS_LocationDB WHERE start_value <= "+Geolocation_IPID+" AND end_value >= "+Geolocation_IPID+""
     UI_WriteLog(UI_Blue,"CALLED GEOLOCATION API")
     null = SQLITE BEGIN SQL QUERY(Game.Database,query$)
     null = SQLITE FIRST RECORD ROW(Game.Database)
-    Geolocation_Abbreviation = SQLITE RECORD CURRENT ROW STRING$(Game.Database,1)
-    Geolocation_Country = SQLITE RECORD CURRENT ROW STRING$(Game.Database,2)
+    Geolocation_Abbreviation = SQLITE RECORD CURRENT ROW STRING$(Game.Database,0)
+    Geolocation_Country = SQLITE RECORD CURRENT ROW STRING$(Game.Database,1)
     null = SQLITE FINISH SQL QUERY(Game.Database)
     UI_WriteLog(UI_Blue,"GEOLOCATION ABBREVIATION: "+Geolocation_Abbreviation)
     UI_WriteLog(UI_Blue,"GEOLOCATION COUNTRY: "+Geolocation_Country)

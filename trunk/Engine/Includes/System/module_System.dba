@@ -15,7 +15,9 @@
 //////////////////////////////////////////////////////////////
 
 #constant CONFIGFILE "Config\game.cfg"
-#constant OPENFPS_DB "Media\Databases\OpenFPS.db3"
+#constant OPENFPS_DB1 "Media\Databases\OpenFPS_Location.db3"
+#constant OPENFPS_DB2 "Media\Databases\OpenFPS_Language.db3"
+
 //////////////////////////////////////////////////////////////
 // Functions
 //////////////////////////////////////////////////////////////
@@ -49,21 +51,23 @@ Function SYS_Init():
     
     //Load lua config
     Lua Make : Lua Load File CONFIGFILE
-    Screen.Width = 		lua Int("ScreenWidth")			//Screen Width
-    Screen.Height = 		lua Int("ScreenHeight")			//Screen Height
-    Screen.Depth = 		lua Int("ScreenDepth")			//Screen Depth
-    Screen.Vsync = 		lua Int("Vsync")					//Vertical Sync
-    Screen.Fullscreen =  lua Int("Fullscreen")			//Fullscreen/window
-    Screen.AA = 			lua Int("AA")						//Anti-aliasing
-    Game.NetworkPort = 	lua Int("Port")					//Port For multiplayer
-    Game.Debug =			lua int("Debug")
-    Game.option_sensitivity_old =            lua int("Sensitivity")
-    Game.option_volume_old =            lua int("Volume")
-    Game.gamma_old = lua int("Gamma")
-    Game.gamma = Game.gamma_old
-    Game.gamma_needs_refresh = 1
-    Game.ServerPort = lua int("ServerPort")
-    Game.ServerIP = lua string$("ServerIP")
+    Screen.Width      = lua Int("ScreenWidth")			//Screen Width
+    Screen.Height     = lua Int("ScreenHeight")			//Screen Height
+    Screen.Depth      = lua Int("ScreenDepth")			//Screen Depth
+    Screen.Vsync      = lua Int("Vsync")					//Vertical Sync
+    Screen.Fullscreen = lua Int("Fullscreen")			//Fullscreen/window
+    Screen.AA         = lua Int("AA")						//Anti-aliasing
+    Game.NetworkPort  = lua Int("Port")					//Port For multiplayer
+    Game.Debug        =	lua int("Debug")
+    Game.option_sensitivity_old = lua int("Sensitivity")
+    Game.option_volume_old      = lua int("Volume")
+    Game.gamma_old              = lua int("Gamma")
+    Game.gamma                  = Game.gamma_old
+    Game.gamma_needs_refresh    = 1
+    Game.ServerPort             = lua int("ServerPort")
+    Game.ServerIP               = lua string$("ServerIP")
+    
+    //check command prompt to see if game is running from Editor
     if left$(cl$(),7)="-editor":
         Screen.Width = 800
         Screen.Height = 600
@@ -73,18 +77,20 @@ Function SYS_Init():
         set window title "OpenFPS Engine - DEVELOPER MODE / RUNNING FROM EDITOR"
     endif
     
+    //check command prompt to see if game is running Master Server
     if left$(cl$(),7)="-server":
         Game.editor_flag = 2
         Network_LoopMasterServer()
     endif
     
     //Apply display settings
-    Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,0,2
+    Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,0,0
     if Screen.Fullscreen=1 and Game.Debug = 0 then set window off
     If Screen.Fullscreen=0 Then Set Window On
     
     UI_Menu_ApplyConfigvars()
     
+    //If in debug mode, start console
     If Game.Debug = 1:
         Open Console
         Print To Console
@@ -110,6 +116,9 @@ Function SYS_Init():
     Sync on : sync rate 0 : autocam off
     Disable Escapekey : change mouse 2
     
+    //turn on anisthropic filtering
+    KD SetAnisotropy 8
+    
     //////////////////////////////////////
     // Do plugin setup
     //////////////////////////////////////
@@ -123,7 +132,7 @@ Function SYS_Init():
     //////////////////////////////////////
     
     Game.Database = 1
-    null = SQLITE OPEN DATABASE(Game.Database,OPENFPS_DB,"User","")
+    null = SQLITE OPEN DATABASE(Game.Database,OPENFPS_DB1,"User","")
     Game.revision = "300+"
     
     //////////////////////////////////////
@@ -147,6 +156,7 @@ Function SYS_Sync():
     ENDIF
     If Screen.Fullscreen = 1 and Screen Invalid():
         //the screen is invalid. this causes a crash.
+        set window on
         Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,0,0
         reload display pointer
         UI_WriteLog(UI_RED,"Screen invalid.")

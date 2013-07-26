@@ -39,6 +39,8 @@
 #Constant M_MENU_SINGLEPLAYER_NEW 15
 #Constant M_ENGINE_LEVEL_TITLE 16
 #Constant M_MENU_SPLASH_BETA 17
+#Constant M_MENU_EXTRAS 18
+#Constant M_MENU_SCREENSHOTS 19
 
 //////////////////////////////////////////////////////////////
 //  UDTS
@@ -95,7 +97,7 @@ load image "Media\Materials\Engine\entity-debug.png",DebugIcon
 
 UI_WriteLog(UI_Yellow,"// MENU MODULE //: UI_Menu_CreateResources:Make Render Targets")
 Ik Create Render Target MenuImage3,600,240,0
-Ik Create Render Target MenuImage5,178,(60*5)
+Ik Create Render Target MenuImage5,178,(60*6)
 
 UI_WriteLog(UI_Yellow,"// MENU MODULE //: UI_Menu_CreateResources:Resize Images")
 xlogowidth=Screen.Width-(UI_mywindow.xwidth*16)-24
@@ -111,6 +113,8 @@ MenuSound = Audio_Load("Media\Sounds\Game\game_join\Quiet Morning.mp3")
 global RainSound as integer
 RainSound = Audio_Load("Media\Sounds\Loops\Ambience\rain-6.mp3")
 
+global Cam_Shader_Default as integer : Cam_Shader_Default = 3
+Ik Load Effect "Media\Shaders\CamShader.fx",Cam_Shader_Default
 
 global cc_Shader as integer : cc_Shader = 2
 Ik Load Effect "Media\Shaders\cc.fx",cc_Shader
@@ -199,6 +203,7 @@ x=0:y=0:paste image MenuImage7,x,y,1:UI_CenterText(3,x+(178/2)-8,y+11,"Single "+
 y=y+60:paste image MenuImage7,x,y,1:UI_CenterText(3,x+(178/2)-8,y+11,"Multi "+chr$(230)+chr$(230))
 y=y+60:paste image MenuImage7,x,y,1:UI_CenterText(3,x+(178/2)-8,y+11,"Training")
 y=y+60:paste image MenuImage7,x,y,1:UI_CenterText(3,x+(178/2)-8,y+11,"Options")
+y=y+60:paste image MenuImage7,x,y,1:UI_CenterText(3,x+(178/2)-8,y+11,"Extras")
 y=y+60:paste image MenuImage7,x,y,1:UI_CenterText(3,x+(178/2)-8,y+11,"Quit")
 Draw To Bitmap 0
 
@@ -269,6 +274,8 @@ MenuUI_DrawCalls(0,M_MENU_SINGLEPLAYER_CHOOSE)="UI_Render_M_SINGLEPLAYER_CHOOSE"
 MenuUI_DrawCalls(0,M_MENU_SINGLEPLAYER_NEW)="UI_Render_M_SINGLEPLAYER_NEW"
 MenuUI_DrawCalls(0,M_ENGINE_LEVEL_TITLE)="UI_Render_M_ENGINE_LEVEL_TITLE"
 MenuUI_DrawCalls(0,M_MENU_SPLASH_BETA)="UI_Render_M_MENU_SPLASH_BETA"
+MenuUI_DrawCalls(0,M_MENU_EXTRAS)="UI_Render_M_MENU_EXTRAS"
+MenuUI_DrawCalls(0,M_MENU_SCREENSHOTS)="UI_Render_M_MENU_SCREENSHOTS"
 
 MenuUI_DrawCalls(1,M_MENU_MAIN)="UI_Render_U_MENU_MAIN"
 MenuUI_DrawCalls(1,M_MENU_SINGLEPLAYER)="UI_Render_U_MENU_SINGLEPLAYER"
@@ -287,6 +294,8 @@ MenuUI_DrawCalls(1,M_MENU_SINGLEPLAYER_CHOOSE)="UI_Render_U_SINGLEPLAYER_CHOOSE"
 MenuUI_DrawCalls(1,M_MENU_SINGLEPLAYER_NEW)="UI_Render_U_SINGLEPLAYER_NEW"
 MenuUI_DrawCalls(1,M_ENGINE_LEVEL_TITLE)="UI_Render_U_ENGINE_LEVEL_TITLE"
 MenuUI_DrawCalls(1,M_MENU_SPLASH_BETA)="UI_Render_U_MENU_SPLASH_BETA"
+MenuUI_DrawCalls(1,M_MENU_EXTRAS)="UI_Render_U_MENU_EXTRAS"
+MenuUI_DrawCalls(1,M_MENU_SCREENSHOTS)="UI_Render_U_MENU_SCREENSHOTS"
 
 UI_WriteLog(UI_Green,"// MENU MODULE //: Menu Variables Setup")
 Endfunction
@@ -370,8 +379,9 @@ Network_Server_SetFlag("setport","20188")
 Network_Server_Start()
 Network_Connect("127.0.0.1",20188)
 remend
-Server_Start("Media\Scripts\Server.training.cfg")
-Client_Start("localhost",25565)
+`Server_Start("Media\Scripts\Server.training.cfg")
+`Client_Start("localhost",25565)
+Game_Load("oceantest.xnt")
 Endcase
 Case "button_reload"
 `GameManager_End()
@@ -388,12 +398,25 @@ UI_FadeManager.state=UI_FADEIN
 UI_FadeManager.target=M_MENU_CREDITS
 Endcase
 Case "button_endgame"
-Network_CloseConnections()
+`Network_CloseConnections()
+Game_End()
 Endcase
 Case "button_returntogame"
 Game.paused = 0
 UI_Menu_Setmode(M_ENGINE_DEFAULT)
 Endcase
+case "button_extras"
+ui_menu_setmode(M_MENU_EXTRAS)
+endcase
+case "button_screenshots"
+ui_menu_setmode(M_MENU_SCREENSHOTS)
+endcase
+case "button_screenshot_next"
+ScreenshotRefreshFlag = 1 : CurrentScreenshotI = CurrentScreenshotI + 1
+endcase
+case "button_screenshot_prev"
+ScreenshotRefreshFlag = 1 : CurrentScreenshotI = CurrentScreenshotI - 1
+endcase
 Case "button_loadsave"
 //load save
 UI_Menu_SetMode(M_MENU_GENERICPROMPT)
@@ -444,12 +467,19 @@ Endfunction
 
 // M_MENU_MAIN
 Function UI_Render_M_MENU_MAIN():
-y=360
+y=420
 x=120:y=y-60
 UI_AddCenterGadgetToScreen("button_quit",x,y,"UI_button")
 UI_AddMOuseOverImageToGadget("button_quit","UI_buttonhover")
 UI_AddTitleToGadget("button_quit",3,x-8,y-14,"Quit")
 UI_AddInfoToGadget("button_quit",1,"Quit Biostorm.",1)
+
+x=120:y=y-60
+UI_AddCenterGadgetToScreen("button_extras",x,y,"UI_button")`-gray")`
+UI_AddMOuseOverImageToGadget("button_extras","UI_buttonhover")
+UI_AddTitleToGadget("button_extras",3,x-8,y-14,"Extras")
+UI_AddInfoToGadget("button_extras",1,"View OpenFPS menu extras.",1)
+
 x=120:y=y-60
 UI_AddCenterGadgetToScreen("button_options",x,y,"UI_button")`-gray")`
 UI_AddMOuseOverImageToGadget("button_options","UI_buttonhover")
@@ -577,6 +607,75 @@ ik paste image CampaignLoad_holder,img_x,img_y,menu_additiveeffect
 Ik Paste Image MenuImage1,img_x,img_y,img_x + UI_mywindow.yrow*38,img_y + UI_mywindow.yrow*14
 
 Endfunction
+
+// M_MENU_EXTRAS
+Function UI_Render_M_MENU_EXTRAS():
+X=UI_Display.Middlewidth+6:Y=UI_Display.Middleheight-((UI_mywindow.yrow*15)/2)+90
+UI_AddCenterGadgettoScreen("button_screenshots",x,y,"UI_button")
+UI_AddMouseoverImageToGadget("button_screenshots","UI_buttonhover")
+UI_AddtitleToGadget("button_screenshots",3,x-8,y-14,"Screenshots")
+Y=y+60
+UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Back")
+Y=y+60
+Endfunction
+
+Function UI_Render_U_MENU_EXTRAS():
+ui_RenderBackdrop()
+ui_putwindow(UI_Display.Middlewidth-((UI_mywindow.xwidth*14)/2),UI_Display.Middleheight-((UI_mywindow.yrow*15)/2),14,15)
+X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-((UI_mywindow.yrow*15)/2)+20
+ui_Centertext(3,x,y,"Extras")
+Endfunction
+
+function UI_Render_M_MENU_SCREENSHOTS():  
+X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-170
+y=y+46
+y=y+240:y=y+44:x=x+200
+UI_AddCenterGadgettoScreen("button_backtomain",x,y,"UI_button")
+UI_AddMouseoverImageToGadget("button_backtomain","UI_buttonhover")
+UI_AddtitleToGadget("button_backtomain",3,x-8,y-14,"Cancel")    
+x=x+-200
+UI_AddCenterGadgettoScreen("button_screenshot_next",x,y,"UI_button")
+UI_AddMouseoverImageToGadget("button_screenshot_next","UI_buttonhover")
+UI_AddtitleToGadget("button_screenshot_next",3,x-8,y-14,"Next >")     
+x=x+-200
+UI_AddCenterGadgettoScreen("button_screenshot_prev",x,y,"UI_button")
+UI_AddMouseoverImageToGadget("button_screenshot_prev","UI_buttonhover")
+UI_AddtitleToGadget("button_screenshot_prev",3,x-8,y-14,"< Previous")  
+
+global CurrentScreenshotI
+global CurrentScreenshot
+CurrentScreenshot = reserve free image()
+global ScreenshotRefreshFlag
+CurrentScreenshotI = 3
+ScreenshotRefreshFlag = 1
+ENDFUNCTION
+function UI_Render_U_MENU_SCREENSHOTS():
+ui_RenderBackdrop()
+ui_putwindow(UI_Display.Middlewidth-((UI_mywindow.xwidth*41)/2),UI_Display.Middleheight-((UI_mywindow.yrow*24)/2),41,24)
+X=UI_Display.Middlewidth:Y=UI_Display.Middleheight-170
+UI_CenterText(3,x,y,"Saved Screenshots")
+UI_CenterText(1,x,y+24,"Press F5 at any time ingame to store a Screenshot")
+x=x-280
+y=y+40
+if ScreenshotRefreshFlag=1:
+    set dir "Media\Images\Screenshots\"
+    perform checklist for files
+    set dir "..\..\.."
+    ScreenshotRefreshFlag = 0
+    if CurrentScreenshotI > checklist quantity() then CurrentScreenshotI = 3
+    if CurrentScreenshotI < 3 then CurrentScreenshotI = checklist quantity()
+    if image exist(CurrentScreenshot) then delete image CurrentScreenshot
+    if file exist("Media\Images\Screenshots\"+checklist string$(CurrentScreenshotI))
+    load image "Media\Images\Screenshots\"+checklist string$(CurrentScreenshotI),CurrentScreenshot
+    ik resize image CurrentScreenshot,(380),(250),1
+    endif
+ENDIF
+if image exist(CurrentScreenshot):
+    paste image CurrentScreenshot,x,y,0
+ENDIF
+ENDFUNCTION
 
 // M_MENU_TRAININGPROMPT
 Function UI_Render_M_MENU_TRAININGPROMPT():
@@ -1004,7 +1103,7 @@ Endfunction
 
 Function UI_Render_U_ENGINE_DEFAULT():
 //paste game view
-Ik Paste Image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height`,cc_Shader_Filmgrain
+Ik Paste Image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height,Cam_Shader_Default
 Camera_PostUIRender() //render 2d elements of the game
 Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
 `Paste Image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
@@ -1026,21 +1125,23 @@ dxs update sprite MenuImage13
 DXS DRAW SPRITE MenuImage13,0,Screen.Height-124
 dxs end sprite render MenuImage13
 
-If Game.state = GAME_SPECTATE:
+`If Game.state = GAME_SPECTATE:
+if GetEntExist("root")
     UI_CenterText(3,Screen.Width/2,48,EntGetAttribute(EntGetReference("root"),"displayname"))
-    ui_showmouse()
 endif
-if Game.state = GAME_WAIT_FOR_SERVER:
-    ui_hidemouse()
-    UI_CenterText(3,Screen.Width/2,48,"Joining...")
+    ui_showmouse()
+`endif
+`if Game.state = GAME_WAIT_FOR_SERVER:
+`    ui_hidemouse()
+`    UI_CenterText(3,Screen.Width/2,48,"Joining...")
     `UI_CenterText(1,Screen.Width/2,70,SpectatorCameras(CurrentSpectatorCamera).name)
 
-    If UI_GadgetExist("button_joingame"):
-        UI_DeleteGadget("button_joingame")
-        UI_DeleteGadget("button_endgame")
-    endif
+`    If UI_GadgetExist("button_joingame"):
+`        UI_DeleteGadget("button_joingame")
+`        UI_DeleteGadget("button_endgame")
+`    endif
     `Paste Image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
-endif
+`endif
 
 remstart
 Select Client.values.state:

@@ -40,8 +40,10 @@ Spectator_Init()
 UI_Editor_Init()
 Camera_Init()
 DSky_Init()
+WaterInitVariables()
 Terrain_Init()
 World_Editor_Init()
+Particles_Init()
 
 SET AMBIENT LIGHT 90
 make light 1
@@ -67,7 +69,7 @@ set alpha mapping on WaterPlain,80
 exclude object on WaterPlain
 
 Editor_initGizmo()
-
+Water_Init()
 //////////////////////////////////////////////////////////////
 // Main Loop
 //////////////////////////////////////////////////////////////
@@ -82,13 +84,15 @@ POSITION LIGHT 1,camera position x(),camera position y(),camera position z()
     Camera_Update()
     Sky_Update()
     DSky_Update()
+    Water_Update()
     
     //update ui system
     Editor_UpdateGizmo()
     UI_Editor_Update()
     World_Editor_Update()
     Terrain_Update()
-    
+    Particles_Run()
+    Camera_PostUIRenderEditor()
     
     //sync
     sync
@@ -104,22 +108,63 @@ end
 
 function Sky_Create():
     //unmanaged skybox setup
-    Global SkyboxImg : SkyboxImg = Reserve Free Image()
+    Global SkyboxImage : SkyboxImage = Reserve Free Image()
     Global Skyboxfx : Skyboxfx = Reserve Free Effect()
     Global SkyboxObj : SkyboxObj = 8001
     make object sphere SkyboxObj,-2000,5,5
-    Load Image "Media\Materials\Cubemaps\Cube0.dds",SkyboxImg,2
+    Load Image "Media\Materials\Cubemaps\Cube0.dds",SkyboxImage,2
     Load Effect "media\Shaders\SkyBox.fx",SkyboxFx,0
     Set Object Effect SkyboxObj,SkyboxFx
-    Texture Object SkyboxObj,0,SkyboxImg
+    Texture Object SkyboxObj,0,SkyboxImage
     `set object transparency SkyboxObj,2
+    Global SkyboxSunObject As Integer : SkyboxSunObject = Reserve Free Object()
+    Global SkyboxSunFlare As Integer : SkyboxSunFlare = reserve free image()
+    Make Object Sphere SkyboxSunObject,2
+    Set Object Light SkyboxSunObject,0
+    Load Image "Media\Materials\Engine\Sunflare1.png",skyboxsunflare
+    Global SkyboxSunEffect As Integer : SkyboxSuneffect = 22
+    Ik Load Effect "Media\Shaders\BlendAdditive.fx",22
+    global skyboxsunalpha as float
+    hide light 0
 ENDFUNCTION
 
 function Sky_Update():
     //update skybox
     position object SkyboxObj,camera position x(),camera position y(),camera position z()
+    Position Object SkyboxSunObject,camera position x(),camera position y(),camera position z()
+    Rotate Object SkyboxSunObject,328,346,0
+    Move Object SkyboxSunObject,1000
 ENDFUNCTION
+Function Camera_PostUIRenderEditor():
 
+adx#=AngleDiff(object angle x(SkyboxSunObject),camera angle x())
+ady#=AngleDiff(object angle y(SkyboxSunObject),camera angle y())
+ad#=(abs(adx#)+abs(ady#))
+If ad#>30:
+ad#=30
+Endif
+add#=30 - ad#
+skyboxsunalpha = tbm_Curvevalue(add#,skyboxsunalpha,10)
+If Object In Screen(skyboxsunobject):
+Ik Set Blend Mode 15
+ik set effect float 22,"Alpha",add#/50.0
+Ik Paste Image SkyboxSunFlare,object Screen x(SkyboxSunObject)-(Screen Width()/6),object screen y(SkyboxSunObject)-(Screen Width()/6),object Screen x(SkyboxSunObject)+(Screen Width()/6),object screen y(SkyboxSunObject)+(Screen Width()/6),22
+ik set effect float 22,"Alpha",add#/120.0
+Ik Paste Image SkyboxSunFlare,object Screen x(SkyboxSunObject)-(Screen Width()/2),object screen y(SkyboxSunObject)-(Screen Width()/2),object Screen x(SkyboxSunObject)+(Screen Width()/2),object screen y(SkyboxSunObject)+(Screen Width()/2),22
+`ik set effect float 22,"Alpha",0.5
+`Ik Paste Image SkyboxSunFlare,object Screen x(SkyboxSunObject)-256,object screen y(SkyboxSunObject)-256,object Screen x(SkyboxSunObject)+256,object screen y(SkyboxSunObject)+256,22
+Ik Set Blend Mode 2
+Endif
+Endfunction
+
+function AngleDiff(a,b)
+dif = abs(a-b)
+if dif>180
+adiff = 360-dif
+else
+adiff = dif
+endif
+endfunction adiff
 function Camera_Init():
     global cr#
     global cf#
@@ -130,6 +175,10 @@ function Camera_Init():
     global cy#
     global ncx#
     global ncy#
+    position camera 128,64,-64
+    point camera 128,32,128
+    cx#=camera angle x()
+    cy#=camera angle y()
 ENDFUNCTION
 
 function Camera_Update():

@@ -265,7 +265,7 @@ Set Object Effect SkyboxObject,SkyboxShader
 Global SkyboxSunObject As Integer : SkyboxSunObject = Reserve Free Object()
 Global SkyboxSunFlare As Integer : SkyboxSunFlare = reserve free image()
 Make Object Sphere SkyboxSunObject,2
-Set Object Light 2,0
+Set Object Light SkyboxSunObject,0
 Load Image "Media\Materials\Engine\Sunflare1.png",skyboxsunflare
 Global SkyboxSunEffect As Integer : SkyboxSuneffect = 22
 Ik Load Effect "Media\Shaders\BlendAdditive.fx",22

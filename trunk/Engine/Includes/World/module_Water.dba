@@ -1,0 +1,239 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - WATER MODULE
+//  Concept and code by thenerd, Summer 2013!
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  DOCUMENTATION
+//////////////////////////////////////////////////////////////
+// Responsible for rendering the 3d water effect.
+//
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//  FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+function Water_Init():
+    global Water_IK_Effect : Water_IK_Effect = 8
+    global Water_FX_Main : Water_FX_Main = reserve free effect()
+    global Water_Normalmap_Base : Water_Normalmap_Base = reserve free image()
+    global Water_Normalmap_Base2 : Water_Normalmap_Base2 = reserve free image()
+    global Water_Normalmap_Anim_Start : Water_Normalmap_Anim_Start = reserve free image()
+    global Water_currenttex
+    global Water_Color_vector : Water_Color_vector = reserve free vector()
+    global Water_Ticker1 : Water_ticker1 = reserve free ticker()
+    global Water_Ticker2 : Water_ticker2 = reserve free ticker()
+    global Water_Ticker3 : Water_ticker3 = reserve free ticker()
+    global Water_Particles_Flag
+    Make Ticker Water_Ticker1,100
+    Make Ticker Water_Ticker2,20
+    Make Ticker Water_Ticker3,100
+    Water_currenttex = Water_Normalmap_Anim_Start
+    ik load effect "Media\Shaders\alpha.fx",Water_IK_Effect
+    Load Effect "Media\Shaders\EnvironmentBump.fx",Water_FX_Main,0
+    
+    Make Image Water_Normalmap_Base,256,256
+    Load Image "Media\Materials\Engine\Water\test.png",Water_Normalmap_Base2
+    For i = 0 To 15:
+        Make Image Water_Normalmap_Anim_Start+i,256,256
+        Ik Paste Image On Image Water_Normalmap_Base2,Water_Normalmap_Anim_Start+i,0-(i*256),0
+    Next i
+        
+    global Water_RAND_Tex : Water_RAND_Tex = reserve free image()
+    global Water_Ocean_Tex : Water_Ocean_Tex = reserve free image()
+    Load Image "Media\Materials\Engine\Water\random.png",Water_RAND_Tex
+    Load Image "Media\Materials\Engine\Water\oceantex.jpg",Water_Ocean_Tex
+    
+    global Water_Object : Water_Object = reserve free object()
+    MAKE OBJECT PLANE Water_Object,256,256,8,8
+    Texture Object Water_Object,0,Water_Ocean_Tex
+    texture object Water_Object,1,Water_Normalmap_Base
+    texture object Water_Object,2,SkyboxImage
+    scale object texture Water_Object,0,16,16
+    scale object texture Water_Object,1,16,16
+    Set Object Effect Water_Object,1
+    Set Object Cull Water_Object,0
+    Set Object Effect Water_Object,Water_FX_Main
+    
+    global Water_Object2 : Water_Object2 = reserve free object()
+    global Water_Object3 : Water_Object3 = reserve free object()
+    global Water_Object4 : Water_Object4 = reserve free object()
+    global Water_Object5 : Water_Object5 = reserve free object()
+    global Water_Object6 : Water_Object6 = reserve free object()
+    global Water_Object7 : Water_Object7 = reserve free object()
+    global Water_Object8 : Water_Object8 = reserve free object()
+    global Water_Object9 : Water_Object9 = reserve free object()
+    instance object Water_Object2,Water_Object
+    instance object Water_Object3,Water_Object
+    instance object Water_Object4,Water_Object
+    instance object Water_Object5,Water_Object
+    instance object Water_Object6,Water_Object
+    instance object Water_Object7,Water_Object
+    instance object Water_Object8,Water_Object
+    instance object Water_Object9,Water_Object
+    KD SetObjectAnisotropicFilteringOn Water_Object
+    
+    exclude object on Water_Object
+    exclude object on Water_Object2
+    exclude object on Water_Object3
+    exclude object on Water_Object4
+    exclude object on Water_Object5
+    exclude object on Water_Object6
+    exclude object on Water_Object7
+    exclude object on Water_Object8
+    exclude object on Water_Object9
+    
+    Water_CreateFoam()
+
+ENDFUNCTION
+
+function WaterInitVariables():
+    global WaterFoam_IMG_BASE : WaterFoam_IMG_BASE = 10000 `reserve free image()
+    global WaterFoam_IMG_RAND : WaterFoam_IMG_RAND = 10001 `reserve free image()
+    //create temporary images, these will be deleted later
+    make image WaterFoam_IMG_BASE,256,256
+    make image WaterFoam_IMG_RAND,256,256
+    
+    global WaterFoam_Obj : WaterFoam_Obj = reserve free object()
+    global WaterFoam_FX : WaterFoam_FX = reserve free effect()
+    global WaterFoam_BreakerImg : WaterFoam_BreakerImg = reserve free image()
+endfunction
+
+function Water_SaveFoamMap():
+    ADD IMAGE TO BLOCK 1,WaterFoam_IMG_BASE,"TerrainWaterMask_HM.bmp"
+    ADD IMAGE TO BLOCK 1,WaterFoam_IMG_RAND,"TerrainWaterMask_RAND.bmp"
+endfunction
+
+function Water_LoadFoamMap():
+    Water_DeleteFoamMap()
+    LOAD IMAGE FROM BLOCK 1,"TerrainWaterMask_HM.bmp",WaterFoam_IMG_BASE
+    LOAD IMAGE FROM BLOCK 1,"TerrainWaterMask_RAND.bmp",WaterFoam_IMG_RAND
+    Water_CreateFoam()
+ENDFUNCTION
+
+function Water_GenerateFoamMap():
+    Water_DeleteFoamMap()
+    ik create render target WaterFoam_IMG_BASE,256,256,rgb(255,255,255)
+    ik create render target WaterFoam_IMG_RAND,256,256,rgb(255,255,255)
+    `if Ent_GetInt(EntGetReference("root"),"water_enabled") and Ent_GetInt(EntGetReference("root"),"water_height")>0.1:
+    wtrheight#=Ent_GetInt(EntGetReference("root"),"water_height")
+    for x = 0 to 255:
+        for z = 0 to 255:
+            wtrheight#=Ent_GetInt(EntGetReference("root"),"water_height")
+            wtrheight_scaled#=(wtrheight#*2)
+            height#=clamp(Heightfield(x,z),0,wtrheight_scaled#)
+            `color = 128 - clamp(height#,0,128)
+            color_scaled# = ((wtrheight_scaled#-height#)/wtrheight_scaled#)*255.0
+            color = 255.0 - color_scaled#
+            ik dot WaterFoam_IMG_BASE,x,255-z,rgb(color,color,color)
+            randcolor = rnd(255)
+            ik dot WaterFoam_IMG_RAND,x,255-z,rgb(randcolor,randcolor,randcolor)
+        next z
+    next x
+    `endif
+    Water_CreateFoam()
+ENDFUNCTION
+
+function Water_DeleteFoam():
+    if object exist(WaterFoam_Obj) then delete object WaterFoam_Obj
+    if effect exist(WaterFoam_FX) then delete effect WaterFoam_FX
+    if image exist(WaterFoam_BreakerImg) then delete image WaterFoam_BreakerImg
+ENDFUNCTION
+
+function Water_DeleteFoamMap():
+    if image exist(WaterFoam_IMG_BASE) then delete image WaterFoam_IMG_BASE
+    if image exist(WaterFoam_IMG_RAND) then delete image WaterFoam_IMG_RAND
+ENDFUNCTION
+
+function Water_CreateFoam():
+    if Ent_GetInt(EntGetReference("root"),"water_enabled") and Ent_GetInt(EntGetReference("root"),"water_height")>0.1:
+        Water_DeleteFoam()
+        make object plain WaterFoam_Obj,256,256,4,4
+        convert object fvf WaterFoam_Obj,0x002 || 0x010 || 0x040 || 0x800
+        set object light WaterFoam_Obj,0
+        wtrheight#=Ent_GetInt(EntGetReference("root"),"water_height")
+        position object WaterFoam_Obj,120,0.01+wtrheight#,120
+        load effect "Media\Shaders\breakers.fx", WaterFoam_FX, 0
+        set object effect WaterFoam_Obj,WaterFoam_FX
+        load image "Media\Materials\Engine\Water\breaker.png",WaterFoam_BreakerImg
+        `texture object WaterFoam_Obj, WaterFoam_IMG_BASE
+        texture object WaterFoam_Obj, 0, WaterFoam_IMG_RAND
+        texture object WaterFoam_Obj, 1, WaterFoam_BreakerImg
+        texture object WaterFoam_Obj, 2, WaterFoam_IMG_BASE 
+        paste image WaterFoam_IMG_BASE,0,0
+    endif
+ENDFUNCTION
+
+function Water_Update():
+    exclude object on Water_Object
+    exclude object on Water_Object2
+    exclude object on Water_Object3
+    exclude object on Water_Object4
+    exclude object on Water_Object5
+    exclude object on Water_Object6
+    exclude object on Water_Object7
+    exclude object on Water_Object8
+    exclude object on Water_Object9
+    `exclude object on WaterFoam_Obj
+    if Ent_GetInt(EntGetReference("root"),"water_enabled"):
+        exclude object off Water_Object
+        exclude object off Water_Object2
+        exclude object off Water_Object3
+        exclude object off Water_Object4
+        exclude object off Water_Object5
+        exclude object off Water_Object6
+        exclude object off Water_Object7
+        exclude object off Water_Object8
+        exclude object off Water_Object9
+        `exclude object off WaterFoam_Obj
+        wtrheight#=Ent_GetInt(EntGetReference("root"),"water_height")
+        position object Water_Object,120,wtrheight#,120
+        position object Water_Object2,120+256,wtrheight#,120+256
+        position object Water_Object3,120+256,wtrheight#,120
+        position object Water_Object4,120+256,wtrheight#,120-256
+        position object Water_Object5,120-256,wtrheight#,120+256
+        position object Water_Object6,120-256,wtrheight#,120
+        position object Water_Object7,120-256,wtrheight#,120-256
+        position object Water_Object8,120,wtrheight#,120+256
+        position object Water_Object9,120,wtrheight#,120-256
+        Set Effect Constant Float Water_FX_Main,"actualtime",hitimer()
+    endif
+    //refresh water normal map texture
+    If Ticker(Water_Ticker1):
+        Water_currenttex = Water_currenttex + 1
+        If Water_currenttex > Water_Normalmap_Anim_Start + 15 Then Water_currenttex = Water_Normalmap_Anim_Start
+    Endif
+    if ticker(Water_Ticker2) then Ik Paste Image On Image Water_currenttex,Water_Normalmap_Base,0,0,Water_IK_Effect
+    scroll object texture Water_Object,0,0.001*TBM,0.001*TBM
+ENDFUNCTION
+
+function Water_Terminate():
+    ik delete effect Water_IK_Effect
+    delete effect Water_FX_Main
+    delete image Water_Normalmap_Base
+    delete image Water_Normalmap_Base2
+    delete ticker Water_Ticker1
+    delete ticker Water_Ticker2
+    delete ticker Water_Ticker3
+    For i = 0 To 15:
+        delete Image Water_Normalmap_Anim_Start+i
+    Next i
+    delete image Water_RAND_Tex
+    delete image Water_Ocean_Tex
+    delete object Water_Object
+    delete object Water_Object2
+    delete object Water_Object3
+    delete object Water_Object4
+    delete object Water_Object5
+    delete object Water_Object6
+    delete object Water_Object7
+    delete object Water_Object8
+    delete object Water_Object9
+    Water_DeleteFoam()
+    Water_DeleteFoamMap()
+ENDFUNCTION
+
+//////////////////////////////////////////////////////////////
+//  End of code
+//////////////////////////////////////////////////////////////
