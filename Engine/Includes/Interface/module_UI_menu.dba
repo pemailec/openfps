@@ -92,12 +92,12 @@ Load Image "media\images\interface\ingame-fixedchat.png",menuImage15
 Load Image "media\images\interface\menu-red-line2.png",menuImage16
 Load Image "media\images\interface\ingame-inventory.png",menuImage17
 Load Image "Media\Images\Interface\bgblur.png",MenuImage18
-
+load image "media\Images\Interface\loading\loadbg.png",menuImage21
 load image "Media\Materials\Engine\entity-debug.png",DebugIcon
 
 UI_WriteLog(UI_Yellow,"// MENU MODULE //: UI_Menu_CreateResources:Make Render Targets")
 Ik Create Render Target MenuImage3,600,240,0
-Ik Create Render Target MenuImage5,178,(60*6)
+Ik Create Render Target MenuImage5,178,(60*5)
 
 UI_WriteLog(UI_Yellow,"// MENU MODULE //: UI_Menu_CreateResources:Resize Images")
 xlogowidth=Screen.Width-(UI_mywindow.xwidth*16)-24
@@ -203,7 +203,6 @@ x=0:y=0:paste image MenuImage7,x,y,1:UI_CenterText(3,x+(178/2)-8,y+11,"Single "+
 y=y+60:paste image MenuImage7,x,y,1:UI_CenterText(3,x+(178/2)-8,y+11,"Multi "+chr$(230)+chr$(230))
 y=y+60:paste image MenuImage7,x,y,1:UI_CenterText(3,x+(178/2)-8,y+11,"Training")
 y=y+60:paste image MenuImage7,x,y,1:UI_CenterText(3,x+(178/2)-8,y+11,"Options")
-y=y+60:paste image MenuImage7,x,y,1:UI_CenterText(3,x+(178/2)-8,y+11,"Extras")
 y=y+60:paste image MenuImage7,x,y,1:UI_CenterText(3,x+(178/2)-8,y+11,"Quit")
 Draw To Bitmap 0
 
@@ -227,6 +226,7 @@ Global MenuImage16 : menuImage16 = Reserve Free Image()
 Global MenuImage17 : menuImage17 = Reserve Free Image()
 Global MenuImage18 : menuImage18 = Reserve Free Image()
 Global MenuImage20 : menuImage20 = Reserve Free Image()
+Global MenuImage21 : menuImage21 = Reserve Free Image()
 Global CampaignLoad_holder : CampaignLoad_holder = Reserve Free Image()
 Global MenuImageBlack : MenuImageBlack = Reserve Free Image()
 global DebugIcon : DebugIcon = reserve free image()
@@ -381,7 +381,7 @@ Network_Connect("127.0.0.1",20188)
 remend
 `Server_Start("Media\Scripts\Server.training.cfg")
 `Client_Start("localhost",25565)
-Game_Load("oceantest.xnt")
+Game_Load("Island.xnt")
 Endcase
 Case "button_reload"
 `GameManager_End()
@@ -467,19 +467,12 @@ Endfunction
 
 // M_MENU_MAIN
 Function UI_Render_M_MENU_MAIN():
-y=420
+y=360
 x=120:y=y-60
 UI_AddCenterGadgetToScreen("button_quit",x,y,"UI_button")
 UI_AddMOuseOverImageToGadget("button_quit","UI_buttonhover")
 UI_AddTitleToGadget("button_quit",3,x-8,y-14,"Quit")
 UI_AddInfoToGadget("button_quit",1,"Quit Biostorm.",1)
-
-x=120:y=y-60
-UI_AddCenterGadgetToScreen("button_extras",x,y,"UI_button")`-gray")`
-UI_AddMOuseOverImageToGadget("button_extras","UI_buttonhover")
-UI_AddTitleToGadget("button_extras",3,x-8,y-14,"Extras")
-UI_AddInfoToGadget("button_extras",1,"View OpenFPS menu extras.",1)
-
 x=120:y=y-60
 UI_AddCenterGadgetToScreen("button_options",x,y,"UI_button")`-gray")`
 UI_AddMOuseOverImageToGadget("button_options","UI_buttonhover")
@@ -1016,14 +1009,44 @@ Endfunction
 // M_ENGINE_LOADING
 Function UI_Render_M_ENGINE_LOADING():
 Global LoadingString As String
+global LoadingDisplayCompleted as integer
+LoadingDisplayCompleted = 1
+global LoadingStartTime as integer
+LoadingStartTime = hitimer()
 LoadingString = "Loading..."
+change mouse 3
 Endfunction
 
 Function UI_Render_U_ENGINE_LOADING():
 `paste image MenuImage9,0,0
 `UI_PutWindow(-24,-24,(Screen.Width/UI_mywindow.yrow)+2,(Screen.Height/UI_mywindow.yrow)+2)
+
 ik paste image MenuImageBlack,0,0,screen.width,screen.height
 UI_CenterText(3,Screen.Width/2,(Screen.Height/2)-40,LoadingString)
+remstart
+time = hitimer() - LoadingStartTime
+alpha = clamp((time/20.0),0,255)
+if alpha > 250 then LoadingDisplayCompleted = 1
+ik paste image menuImage21,0,0,screen.width,screen.height
+color = d3d_rgba(0,0,0,255-alpha)
+d3d_box 0,0,screen.width,screen.height,color
+ui_centertext(3,screen.width/2,screen.height/2,"Loading...")
+d3d_box 0,(screen.height/2)-80,screen.width,(screen.height/2)+80,color
+
+D3d_Box 0,0,Screen.Width,120,rgb(0,0,0),rgb(0,0,0),d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200)
+dxs begin sprite render MenuImage13
+dxs set sprite scale MenuImage13,(Screen.Width/30.0)*100,100.0
+dxs update sprite MenuImage13
+DXS DRAW SPRITE MenuImage13,0,120
+dxs end sprite render MenuImage13
+D3d_Box 0,124,Screen.Width,240,d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,0),d3d_rgba(0,0,0,0)
+D3d_Box 0,Screen.Height-120,Screen.Width,Screen.Height,d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200),rgb(0,0,0),rgb(0,0,0)
+dxs begin sprite render MenuImage13
+dxs set sprite scale MenuImage13,(Screen.Width/30.0)*100,100.0
+dxs update sprite MenuImage13
+DXS DRAW SPRITE MenuImage13,0,Screen.Height-124
+dxs end sprite render MenuImage13
+remend
 Endfunction
 
 //M_ENGINE_PAUSED
@@ -1103,7 +1126,7 @@ Endfunction
 
 Function UI_Render_U_ENGINE_DEFAULT():
 //paste game view
-Ik Paste Image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height,Cam_Shader_Default
+Ik Paste Image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height`,Cam_Shader_Default
 Camera_PostUIRender() //render 2d elements of the game
 Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
 `Paste Image CrosshairIMG,(Screen.Width/2)-image width(CrosshairIMG)/2,(Screen.Height/2)-image height(CrosshairIMG)/2,1
@@ -1534,7 +1557,7 @@ if MasterserverOnline:
 if NetworkUsersOnline =1 then ui_scaledtext(3,-10+Screen.Width-(len("1 user online.")*(UI_stringmap(3,258).ascii)*(70/100.0)),Screen.Height-24,"1 user online.",70,100)
 if NetworkUsersOnline > 1 then ui_scaledtext(3,-10+Screen.Width-(len(str$(NetworkUsersOnline)+" users online.")*(UI_stringmap(3,258).ascii)*(70/100.0)),Screen.Height-24,str$(NetworkUsersOnline)+" users online.",70,100)
 else
-ui_scaledtext(3,-10+Screen.Width-(len("Master server offline.")*(UI_stringmap(3,258).ascii)*(70/100.0)),Screen.Height-24,"Master server offline.",70,100)
+//ui_scaledtext(3,-10+Screen.Width-(len("Master server offline.")*(UI_stringmap(3,258).ascii)*(70/100.0)),Screen.Height-24,"Master server offline.",70,100)
 endif
 Endfunction
 

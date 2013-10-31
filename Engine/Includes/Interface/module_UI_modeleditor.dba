@@ -1,0 +1,138 @@
+//////////////////////////////////////////////////////////////
+//   OpenFPS
+//   LEVEL EDITOR SOURCE
+//////////////////////////////////////////////////////////////
+// module_UI_EDITOR
+
+//////////////////////////////////////////////////////////////
+//   function code
+//////////////////////////////////////////////////////////////
+
+function MDLEdit_CreateUI():
+    //create menu
+    global menu
+    global menuFile
+    global menuView
+    global menuHelp
+    #constant MENU_FILE 0
+    #constant MENU_NEW 1
+    #constant MENU_OPEN 2
+    #constant MENU_CLOSE 4
+    #constant MENU_SAVE 5
+    #constant MENU_SAVEAS 6
+    #constant MENU_EXITMODELEDITOR 8
+    #constant MENU_VIEW 9
+    #constant MENU_WIREFRAME 10
+    #constant MENU_HELP 11
+    #constant MENU_GOTOFORUMTHREAD 12
+    #constant MENU_ABOUT 14
+    
+    menu=createMenu(0)
+    addMenuItem menu,"File",0
+    menuFile=createSubMenu(menu,0)
+    addMenuItem menuFile,"New...",1
+    addMenuItem menuFile,"Open",2
+    addMenuSplitter menuFile
+    addMenuItem menuFile,"Close",4
+    addMenuItem menuFile,"Save",5
+    addMenuItem menuFile,"Save As...",6
+    addMenuSplitter menuFile
+    addMenuItem menuFile,"Exit Model Editor",8
+    addMenuItem menu,"View",9
+    menuView=createSubMenu(menu,9)
+    addMenuItem menuView,"Wireframe",10
+    addMenuItem menu,"Help",11
+    menuHelp=createSubMenu(menu,11)
+    addMenuItem menuHelp,"Go To Forum Thread",12
+    addMenuSplitter menuHelp
+    addMenuItem menuHelp,"About...",14
+    
+    //create gadgets
+    global statusbar
+    global editpanel
+    global tabgadget
+    statusbar=createStatusBar(0)
+    setGadgetAlign statusbar,4
+    editpanel=createPanel(625,0,320,600,0)
+    setPanelBorderStyle editpanel,0
+    setGadgetAlign editpanel,4
+    tabgadget=createTabs(0,0,320,0,0,editpanel)
+    setGadgetAlign tabgadget,1
+    bringtofront statusbar
+    addTab tabgadget,"Mesh"
+    addTab tabgadget,"Texture"
+    addTab tabgadget,"Visuals"
+    addTab tabgadget,"Animation"
+    addTab tabgadget,"Physics"
+    addTab tabgadget,"Properties"
+    
+    global meshpanel
+    global texpanel
+    global visualspanel
+    global animationpanel
+    global physicspanel
+    global propertiespanel
+    meshpanel = createPanel(4,24,310,600,tabgadget)
+    texpanel =createPanel(4,24,310,600,tabgadget)
+    visualspanel =createPanel(4,24,310,600,tabgadget)
+    animationpanel =createPanel(4,24,310,600,tabgadget)
+    physicspanel =createPanel(4,24,300,610,tabgadget)
+    propertiespanel =createPanel(4,24,300,610,tabgadget)
+    
+    global filepanel
+    global basemeshedit
+    global basemeshlabel
+    global basemeshloader
+    global compilemeshdata
+    global meshstatistics
+    global meshstatslist
+    global worldstateedit
+    filepanel=createFrame(7,7,290,215,"Files",meshpanel)
+    basemeshedit=createEdit(70,23,209,21,0,filepanel)
+    basemeshlabel=createLabel(9,26,55,20,"Base Mesh",filepanel)
+    setPanelBorderStyle basemeshlabel,1
+    basemeshloader=createButton(259,23,20,20,"//",0,filepanel)
+    compilemeshdata=createButton(4,164,280,45,"Compile Mesh Data",0,filepanel)
+    meshstatistics=createFrame(7,232,290,105,"Mesh Statistics",meshpanel)
+    meshstatslist=createListBox(9,21,270,69,meshstatistics)
+    worldstateedit=createFrame(7,347,290,105,"World State",meshpanel)
+    
+    //model loaded state
+    global ModelLoaded as integer
+    ModelLoaded = 0
+    global ModelUINeedsRefresh as integer
+    
+    //load bg image
+    load image "Media\Images\Interface\Editor\bg.png",1
+    
+ENDFUNCTION
+
+function MDLEdit_UpdateUI():
+    if ModelLoaded = 0:
+    for x = 0 to screen width() step 256:
+        for y = 0 to screen height() step 256
+            paste image 1,x,y
+        next y
+    next x
+    setgadgetvisible editpanel,0
+    setgadgettext statusbar,"No file loaded."
+    ModelUINeedsRefresh = 1
+    if spacekey()=1 then ModelLoaded = 1
+    else
+        if ModelUINeedsRefresh = 1:
+            setgadgetvisible editpanel,1
+            ModelUINeedsRefresh = 0
+            setgadgettext statusbar,"Ready."
+        endif
+        //do model stuff
+    endif
+    x1# = 320.0
+    x2# = GET WINDOW CLIENT WIDTH()
+    x_scaled# = ( x1# / x2# ) * screen width()
+    set camera view 0,0,screen width()-x_scaled#,screen height()
+    set camera aspect (screen width()-x_scaled#)/screen height()
+ENDFUNCTION
+
+//////////////////////////////////////////////////////////////
+//   end of code
+//////////////////////////////////////////////////////////////

@@ -16,7 +16,6 @@
 
 #constant CONFIGFILE "Config\game.cfg"
 #constant OPENFPS_DB1 "Media\Databases\OpenFPS_Location.db3"
-#constant OPENFPS_DB2 "Media\Databases\OpenFPS_Language.db3"
 
 //////////////////////////////////////////////////////////////
 // Functions
@@ -154,22 +153,23 @@ Function SYS_Sync():
         BO SET GAMMA gamma_temp,gamma_temp,gamma_temp
         Game.gamma_needs_refresh = 0
     ENDIF
+    
+    //display crash error dialog
     If Screen.Fullscreen = 1 and Screen Invalid():
         //the screen is invalid. this causes a crash.
         set window on
         Set Display Mode Screen.Width,Screen.Height,Screen.Depth,Screen.Vsync,0,0
         reload display pointer
         UI_WriteLog(UI_RED,"Screen invalid.")
-        Global CrashImage : CrashImage = Find Free Image()
-        Load Image "Media\Images\Interface\crash.png",CrashImage
-        Repeat
-            Ik Paste Image CrashImage,0,0,Screen.Width,Screen.Height
-            sync
-        Until Mouseclick()
+        UI_WriteLog(UI_RED,"(did you exit fullscreen?)")
+        UI_WriteLog(UI_RED,"Game forced to exit.")
+        message "OpenFPS Engine","Crap! The engine has crashed. Check the log for details!"
         winsock clean up
         end
     endif
     
+    //screenshot key
+    remstart
     if keystate(63) and Game.screenshotflag = 0 :
         tempimage = reserve free image()
         Get Image tempimage,0,0,Screen.Width,Screen.Height,3
@@ -185,9 +185,12 @@ Function SYS_Sync():
         Game.screenshotflag = 1
     endif
     if keystate(63)=0 then Game.screenshotflag = 0
+    remend
     
+    //sync
     Sync
     
+    //record frametime for debug purposes
     Game.frametime = (hitimer(100000) - Game.frame_last)/100.0
     Game.frametimeavg = (Game.frametime*0.2) + (Game.frametimeavg*0.8)
     Game.frame_last = hitimer(100000)
@@ -195,9 +198,12 @@ Endfunction
 
 //SYS_Terminate() - Terminates the system module
 Function SYS_Terminate():
+    //close the main database
     null = SQLITE CLOSE DATABASE(Game.Database)
 Endfunction
 
+//checks if you're running from the editor
+// in the future this will let you test levels
 function Engine_Check_EditorFlag():
     ui_writelog(UI_GREEN,"Command line:'"+cl$()+"'")
     ui_writelog(UI_GREEN,"File = "+Game.editor_file)
@@ -208,6 +214,7 @@ function Engine_Check_EditorFlag():
     endif
 ENDFUNCTION
 
+//windows message interception
 function WndProcSystem(hwnd as dword, msg as dword, wparam as dword, lparam as dword)
   select msg
     case 0x0010

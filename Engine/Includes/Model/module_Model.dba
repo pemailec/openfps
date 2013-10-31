@@ -2,13 +2,7 @@
 //  Game Engine Standard Modules - MDL MODULE
 //  Concept and code by thenerd, Spring 2013!
 //////////////////////////////////////////////////////////////
-remstart
-The model system will consist of two parts. the first part is
-the database system, which will be a list of models that has
-been loaded. These master copies will be invisible. the second
-part will be the visible world models, which will be duplicated
-from the database list.
-remend
+
 //////////////////////////////////////////////////////////////
 // Constants
 //////////////////////////////////////////////////////////////
@@ -21,11 +15,14 @@ remend
 // Main Functions
 //////////////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////////////
-// Entity System Model
-//////////////////////////////////////////////////////////////
+function Entity_Model_Init()
+    global ModelShader 
+    ModelShader = reserve free effect()
+    load effect "Media\Shaders\gg_simplelight.fx",ModelShader,0
+ENDFUNCTION
 
 function Entity_Model_Add(x#,y#,z#)
+    //get and set new name
     i = 0
     while ent_Getexists("ent_model_"+str$(i))
         i = i + 1
@@ -33,50 +30,216 @@ function Entity_Model_Add(x#,y#,z#)
     entAdd("ent_model_"+str$(i))
     ref = entgetreference("ent_model_"+str$(i))
     entAddAttribute(ref,"name","ent_model_"+str$(i))
-    entAddAttribute(ref,"type","ent_model")
-    entAddAttribute(ref,"modelname","Media\models\text_error\error2.x")
+    
+    //add initial attributes
+    entAddAttribute(ref,"type","mdl_static")
+    
+    //add matrix data
     entAddAttribute(ref,"x",str$(x#))
     entAddAttribute(ref,"y",str$(y#))
     entAddAttribute(ref,"z",str$(z#))
     entAddAttribute(ref,"rx",str$(0))
     entAddAttribute(ref,"ry",str$(0))
     entAddAttribute(ref,"rz",str$(0))
-    entAddAttribute(ref,"sx",str$(100))
-    entAddAttribute(ref,"sy",str$(100))
-    entAddAttribute(ref,"sz",str$(100))
+    entAddAttribute(ref,"scale",str$(100))
+    
+    //add model attribute
+    entAddAttribute(ref,"file","null")
+    entAddAttribute(ref,"loaded",str$(-1))
+    entAddAttribute(ref,"modelid",str$(-1))
+    entAddAttribute(ref,"textureid",str$(-1))
+    
 endfunction
 
 function Entity_Model_Update(i)
-    if Ent_GetInt(i,"modelid")=0:
-        modelid = reserve free object()
-        entAddAttribute(i,"modelid",str$(modelid))
-        entAddAttribute(i,"modelloaded","0")
-        make object cube modelid,1
-        `ui_writelog(UI_Blue,"Set modelid for "+Entities(i).name)
-    else
-        if Ent_GetInt(i,"modelloaded")=0:
-            file$ = EntGetAttribute(i,"modelname")
-            if file exist(file$):
-                delete object Ent_GetInt(i,"modelid")
-                entSetAttribute(i,"modelloaded","1")
-                load object file$,Ent_GetInt(i,"modelid")
-            `ui_writelog(UI_Blue,"Loaded model for "+Entities(i).name)
-            endif
+    if Ent_GetInt(i,"loaded")=0:
+        entAddAttribute(i,"loaded",str$(-1))
+        entAddAttribute(i,"modelid",str$(-1))
+        entAddAttribute(i,"textureid",str$(-1))
+    endif
+    if Ent_GetInt(i,"loaded")=-1:
+        modelfile$ = entGetAttribute(i,"file")
+        if file exist(modelfile$):
+            modelfile$ = left$(modelfile$,len(modelfile$)-5)
+            rename file modelfile$+".omdl",modelfile$+".zip"
+            if file exist("Media\Models\data\debug.txt") then delete file "Media\Models\data\debug.txt"
+            
+            OPEN FILE BLOCK modelfile$+".zip",1
+            EXTRACT FILE FROM BLOCK 1,"config.cfg","Media\Models\data\"
+            lua load file "Media\Models\data\config.cfg"
+            model_file$ = lua string$("File")
+            texture_file$ = lua string$("Texture")
+            EXTRACT FILE FROM BLOCK 1,model_file$,"Media\Models\data\"
+            EXTRACT FILE FROM BLOCK 1,texture_file$,"Media\Models\data\"
+            CLOSE FILE BLOCK 1
+            rename file modelfile$+".zip",modelfile$+".omdl"
+            
+            scale# = lua float("Scale")
+            entSetAttribute(i,"scale",str$(scale#))
+            
+            //load the model file
+            modelid = reserve free object()
+            textureid = reserve free image()
+            entSetAttribute(i,"modelid",str$(modelid))
+            entSetAttribute(i,"textureid",str$(textureid))
+            load object "Media\Models\data\"+model_file$,modelid
+            load image "Media\Models\data\"+texture_file$,textureid
+            texture object modelid,textureid
+            set object effect modelid,ModelShader
+            sc_setupobject modelid,1,0
+            sc_updateobject modelid
+           
+            //delete temp files
+            
         endif
-        position object Ent_GetInt(i,"modelid"),Ent_GetFloat(i,"x"),Ent_GetFloat(i,"y"),Ent_GetFloat(i,"z")
-        rotate object Ent_GetInt(i,"modelid"),Ent_GetFloat(i,"rx"),Ent_GetFloat(i,"ry"),Ent_GetFloat(i,"rz")
-        scale object Ent_GetInt(i,"modelid"),Ent_GetFloat(i,"sx"),Ent_GetFloat(i,"sy"),Ent_GetFloat(i,"sz")
+        EntSetAttribute(i,"loaded",str$(1))
+    else
+        mdlid=Ent_GetInt(i,"modelid")
+        if mdlid > 0:
+        position object mdlid,Ent_GetFloat(i,"x"),Ent_GetFloat(i,"y"),Ent_GetFloat(i,"z")
+        rotate object mdlid,Ent_GetFloat(i,"rx"),Ent_GetFloat(i,"ry"),Ent_GetFloat(i,"rz")
+        scale object mdlid,Ent_GetFloat(i,"scale"),Ent_GetFloat(i,"scale"),Ent_GetFloat(i,"scale")
+        sc_updateobject mdlid
+        sc_updateobject mdlid
+        endif
     endif
 endfunction
 
-//reload model:
-
-function Entity_Model_Set(i,file$):
-    EntSetAttribute(i,"modelname",file$)
-    entSetAttribute(i,"modelloaded","0")
+function Entity_Model_Reload(i):
+    mdlid=Ent_GetInt(i,"modelid")
+    if mdlid > 0:
+        delete object mdlid
+        sc_removeobject mdlid
+        entSetAttribute(i,"modelid",str$(-1))
+    ENDIF
+    EntSetAttribute(i,"loaded",str$(-1))
 endfunction
 
 function Entity_Model_Delete(i)
+    modelid = Ent_GetInt(i,"modelid")
+    delete object modelid
+    sc_removeobject modelid
+ENDFUNCTION
+
+
+//////////////////////////////////////////////////////////////
+// PhysicsModel Functions
+//////////////////////////////////////////////////////////////
+
+function Entity_phymodel_Add(x#,y#,z#)
+    //get and set new name
+    i = 0
+    while ent_Getexists("ent_phymodel_"+str$(i))
+        i = i + 1
+    endwhile
+    entAdd("ent_phymodel_"+str$(i))
+    ref = entgetreference("ent_phymodel_"+str$(i))
+    entAddAttribute(ref,"name","ent_phymodel_"+str$(i))
+    
+    //add initial attributes
+    entAddAttribute(ref,"type","mdl_physics")
+    
+    //add matrix data
+    entAddAttribute(ref,"x",str$(x#))
+    entAddAttribute(ref,"y",str$(y#))
+    entAddAttribute(ref,"z",str$(z#))
+    entAddAttribute(ref,"rx",str$(0))
+    entAddAttribute(ref,"ry",str$(0))
+    entAddAttribute(ref,"rz",str$(0))
+    entAddAttribute(ref,"scale",str$(100))
+    
+    //add model attribute
+    entAddAttribute(ref,"file","null")
+    entAddAttribute(ref,"loaded",str$(-1))
+    entAddAttribute(ref,"modelid",str$(-1))
+    entAddAttribute(ref,"textureid",str$(-1))
+    
+endfunction
+
+function Entity_phymodel_Update(i)
+    if Ent_GetInt(i,"loaded")=0:
+        entAddAttribute(i,"loaded",str$(-1))
+        entAddAttribute(i,"modelid",str$(-1))
+        entAddAttribute(i,"textureid",str$(-1))
+    endif
+    if Ent_GetInt(i,"loaded")=-1:
+        modelfile$ = entGetAttribute(i,"file")
+        if file exist(modelfile$):
+            modelfile$ = left$(modelfile$,len(modelfile$)-5)
+            rename file modelfile$+".omdl",modelfile$+".zip"
+            if file exist("Media\Models\data\debug.txt") then delete file "Media\Models\data\debug.txt"
+            
+            OPEN FILE BLOCK modelfile$+".zip",1
+            EXTRACT FILE FROM BLOCK 1,"config.cfg","Media\Models\data\"
+            lua load file "Media\Models\data\config.cfg"
+            model_file$ = lua string$("File")
+            texture_file$ = lua string$("Texture")
+            EXTRACT FILE FROM BLOCK 1,model_file$,"Media\Models\data\"
+            EXTRACT FILE FROM BLOCK 1,texture_file$,"Media\Models\data\"
+            CLOSE FILE BLOCK 1
+            rename file modelfile$+".zip",modelfile$+".omdl"
+            
+            scale# = lua float("Scale")
+            entSetAttribute(i,"scale",str$(scale#))
+            
+            //load the model file
+            modelid = reserve free object()
+            textureid = reserve free image()
+            entSetAttribute(i,"modelid",str$(modelid))
+            entSetAttribute(i,"textureid",str$(textureid))
+            load object "Media\Models\data\"+model_file$,modelid
+            load image "Media\Models\data\"+texture_file$,textureid
+            texture object modelid,textureid
+            set object effect modelid,ModelShader
+            
+            //setup physics here
+            //check if we're in the editor or ingame
+            if InEditor = 0:
+                position object modelid,Ent_GetFloat(i,"x"),Ent_GetFloat(i,"y"),Ent_GetFloat(i,"z")
+                rotate object modelid,Ent_GetFloat(i,"rx"),Ent_GetFloat(i,"ry"),Ent_GetFloat(i,"rz")
+                scale object modelid,Ent_GetFloat(i,"scale"),Ent_GetFloat(i,"scale"),Ent_GetFloat(i,"scale")
+                NDB_SetVector Ent_GetFloat(i,"scale"),Ent_GetFloat(i,"scale"),Ent_GetFloat(i,"scale")
+                Col = NDB_NewtonCreateConvexHullWithScale(modelid)
+                Body = NDB_NewtonCreateBody(Col)
+                NDB_BuildMatrix Ent_GetFloat(i,"rx"),Ent_GetFloat(i,"ry"),Ent_GetFloat(i,"rz"),Ent_GetFloat(i,"x"),Ent_GetFloat(i,"y"),Ent_GetFloat(i,"z")
+                NDB_NewtonBodySetMatrix Body
+                NDB_CalculateMISphereSolid 5, 1
+                NDB_NewtonBodySetMassMatrix Body, 10.0, 1.0, 1.0, 1.0
+                NDB_NewtonReleaseCollision Col
+                NDB_BodySetDBProData Body, modelid
+                NDB_NewtonBodySetDestructorCallback Body
+                NDB_BodySetGravity Body, 1
+            endif
+           
+            //delete temp files
+            
+        endif
+        EntSetAttribute(i,"loaded",str$(1))
+    else
+        mdlid=Ent_GetInt(i,"modelid")
+        if mdlid > 0:
+            //do update in physics module
+            //check if we're in the editor or ingame
+            if InEditor = 1:
+            position object mdlid,Ent_GetFloat(i,"x"),Ent_GetFloat(i,"y"),Ent_GetFloat(i,"z")
+            rotate object mdlid,Ent_GetFloat(i,"rx"),Ent_GetFloat(i,"ry"),Ent_GetFloat(i,"rz")
+            scale object mdlid,Ent_GetFloat(i,"scale"),Ent_GetFloat(i,"scale"),Ent_GetFloat(i,"scale")
+            endif
+        endif
+    endif
+endfunction
+
+function Entity_phymodel_Reload(i):
+    mdlid=Ent_GetInt(i,"modelid")
+    if mdlid > 0:
+        delete object mdlid
+        entSetAttribute(i,"modelid",str$(-1))
+    ENDIF
+    EntSetAttribute(i,"loaded",str$(-1))
+    //fix this later
+endfunction
+
+function Entity_phymodel_Delete(i)
     modelid = Ent_GetInt(i,"modelid")
     delete object modelid
 ENDFUNCTION

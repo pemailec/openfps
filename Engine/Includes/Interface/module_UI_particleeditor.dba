@@ -1,0 +1,68 @@
+//////////////////////////////////////////////////////////////
+//   OpenFPS
+//   LEVEL EDITOR SOURCE
+//////////////////////////////////////////////////////////////
+// module_UI_EDITOR
+
+//////////////////////////////////////////////////////////////
+//   function code
+//////////////////////////////////////////////////////////////
+
+function PRTCLEdit_CreateUI():
+    //create menu
+    global menu
+    global menuFile
+    global menuView
+    global menuHelp
+    #constant MENU_FILE 0
+    #constant MENU_NEW 1
+    #constant MENU_OPEN 2
+    #constant MENU_CLOSE 4
+    #constant MENU_SAVE 5
+    #constant MENU_SAVEAS 6
+    #constant MENU_EXITMODELEDITOR 8
+    #constant MENU_VIEW 9
+    #constant MENU_WIREFRAME 10
+    #constant MENU_HELP 11
+    #constant MENU_GOTOFORUMTHREAD 12
+    #constant MENU_ABOUT 14
+    
+    menu=createMenu(0)
+    addMenuItem menu,"File",0
+    menuFile=createSubMenu(menu,0)
+    addMenuItem menuFile,"New...",1
+    addMenuItem menuFile,"Open",2
+    addMenuSplitter menuFile
+    addMenuItem menuFile,"Close",4
+    addMenuItem menuFile,"Save",5
+    addMenuItem menuFile,"Save As...",6
+    addMenuSplitter menuFile
+    addMenuItem menuFile,"Exit Particle Editor",8
+    addMenuItem menu,"View",9
+    menuView=createSubMenu(menu,9)
+    addMenuItem menuView,"Wireframe",10
+    addMenuItem menu,"Help",11
+    menuHelp=createSubMenu(menu,11)
+    addMenuItem menuHelp,"Go To Forum Thread",12
+    addMenuSplitter menuHelp
+    addMenuItem menuHelp,"About...",14
+    
+    global EditorUIFont
+    EditorUIFont = createFont("Arial",9,1,0,0) 
+    
+    global TabGadget
+    TabGadget=createTabs(screen width()-200,0,200,screen height(),1,0)
+    addTab TabGadget,"Emitter"
+    addTab TabGadget,"Renderer"
+    addTab TabGadget,"Properties"
+    addTab TabGadget,"Tab"
+    applyFont TabGadget,EditorUIFont
+    
+ENDFUNCTION
+
+function PRTCLEdit_UpdateUI():
+ENDFUNCTION
+
+//////////////////////////////////////////////////////////////
+//   end of code
+//////////////////////////////////////////////////////////////

@@ -30,6 +30,7 @@ type T_TerrainChunk
     Mask_1 as integer
     Mask_2 as integer
     HighestPoint as float
+    PhysicsBody as integer
 endtype
 
 type Normals
@@ -161,7 +162,7 @@ function Terrain_Load_Heightmap(file$):
     for x = 0 to 255:
         for z = 0 to 255:
             color = ik point(heightmap,x,z)
-            Heightfield(x,z) = rgbr(color)
+            Heightfield(x,z) = (rgbr(color)) * 0.1
         next z
     next x
     delete image heightmap
@@ -347,23 +348,32 @@ function Terrain_Refresh_Chunk(x,z):
     calculate object bounds current_object
     sc_updateobject current_object
     sc_setupobject current_object,1,0
+    if Terrain(x,z).PhysicsBody = 0 and InEditor = 0:
+        col = NDB_NewtonCreateConvexHull(current_object)
+        Terrain(x,z).PhysicsBody = NDB_NewtonCreateBody( col )
+        NDB_BuildMatrix 0,0,0,x*16,0,z*16
+        NDB_NewtonBodySetMatrix Terrain(x,z).PhysicsBody
+    else
+        //don't do anything
+    endif
+    
     KD SetObjectAnisotropicFilteringOn current_object
     endif
     endif
 endfunction
 
 
-function Terrain_Load(file$):
+function Terrain_Load():
     if TerrainExists = 1 then Terrain_Delete()
     Terrain_New()
     
-    rename file file$+".terr",file$+".zip"
-    OPEN FILE BLOCK file$+".zip",1
+    `rename file file$+".terr",file$+".zip"
+    `OPEN FILE BLOCK file$+".zip",1
     
     read_file = reserve free file()
     `LOAD FILE FROM BLOCK 1,file$+"_temp.terr",read_file
-    EXTRACT FILE FROM BLOCK 1,"terrain_data.terr","Media\Terrains\"
-    open to read read_file,"Media\Terrains\terrain_data.terr"
+    EXTRACT FILE FROM BLOCK 1,"terrain_data.terr","Media\Levels"
+    open to read read_file,"Media\Levels\terrain_data.terr"
     header$ = "" : read string read_file, header$
     if header$="OpenFPS_Terrain"
         for TerrainX = 0 to 255:
@@ -373,7 +383,7 @@ function Terrain_Load(file$):
         next Terrain
     endif
     close file read_file
-    delete file "Media\Terrains\terrain_data.terr"
+    delete file "Media\Levels\terrain_data.terr"
     
     for TerrainX = 0 to 15:
         For TerrainZ = 0 to 15:
@@ -387,14 +397,14 @@ function Terrain_Load(file$):
     //load water
     Water_LoadFoamMap()
     
-    CLOSE FILE BLOCK 1
-    rename file file$+".zip",file$+".terr"
+    `CLOSE FILE BLOCK 1
+    `rename file file$+".zip",file$+".terr"
     Terrain_Refresh()
 ENDFUNCTION
 
-function Terrain_Save(file$):
-    if file exist(file$+".terr") then delete file file$+".terr"
-    CREATE FILE BLOCK 1,file$+".zip"
+function Terrain_Save():
+    `if file exist(file$+".terr") then delete file file$+".terr"
+    `CREATE FILE BLOCK 1,file$+".zip"
     file_temp$="terrain_data.terr"
     save_file = reserve free file()
     open to write save_file,file_temp$
@@ -414,8 +424,8 @@ function Terrain_Save(file$):
         Next TerrainZ
     next TerrainX
     Water_SaveFoamMap()
-    CLOSE FILE BLOCK 1
-    rename file file$+".zip",file$+".terr"
+    `CLOSE FILE BLOCK 1
+    `rename file file$+".zip",file$+".terr"
     
 ENDFUNCTION
 

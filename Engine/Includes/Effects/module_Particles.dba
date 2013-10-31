@@ -7,200 +7,76 @@
 //  CONSTANTS
 //////////////////////////////////////////////////////////////
 
+#constant PARTICLE_TEX_START 500
+
 //////////////////////////////////////////////////////////////
 //  UDTS
 //////////////////////////////////////////////////////////////
-
-Type t_ParticleType
-	Exist               As Boolean
-	Life                As Float
-	MaxLife             As Float
-	Alive               As Boolean
-	Style               As Integer
-	FrameStyle          As Integer
-	StartSize           As Float
-	IncSize             As Float
-	XVel                As Float
-	YVel                As Float
-	ZVel                As Float
-Endtype
 
 //////////////////////////////////////////////////////////////
 //  FUNCTIONS
 //////////////////////////////////////////////////////////////
 
-function Particles_Init():
-   Global ParticleBase     As Dword           : ParticleBase   = 2500 //particle start object
-   Global ParticleCount    As Dword           : ParticleCount  = 500 //num particles
-   Global CurrentParticle  As Dword
-	
-	Global ParticleDefaultImg : ParticleDefaultImg = Reserve Free Image()
-	load image "Media\Materials\Engine\particle_noisesphere.png",ParticleDefaultImg
-	
-   Dim Particle(ParticleCount) As t_ParticleType
-   CacheParticles()
-Endfunction
+function Entity_Particle_Init():
+    if ParticlesInited = 0
+        sp init
+        global SmokeMasterSystem as integer
+        SmokeMasterSystem = sp load system ("Media\Particles\SmokeSparks.xml",PARTICLE_TEX_START)
+        global ParticlesInited
+        ParticlesInited = 1
+    endif
+ENDFUNCTION
 
-Function CacheParticles()
+function Entity_SmokeParticle_Add(x#,y#,z#):
+    //add new entity
+    i = 0
+    while ent_Getexists("env_smoke_"+str$(i))
+        i = i + 1
+    endwhile
+    entAdd("env_smoke_"+str$(i))
+    ref = entgetreference("env_smoke_"+str$(i))
+    entAddAttribute(ref,"name","env_smoke_"+str$(i))
+    entAddAttribute(ref,"type","env_smoke")
+    entAddAttribute(ref,"x",str$(x#))
+    entAddAttribute(ref,"y",str$(y#))
+    entAddAttribute(ref,"z",str$(z#))
+ENDFUNCTION
 
-    For CP = 1 To ParticleCount
-        Particle = CP + ParticleBase
-        If Particle(CP).Exist = 0
-            Make Object Plain       Particle,100,100
-            Set Object Ambient      Particle,0
-            Set object Cull         Particle,0
-            Set Object Transparency Particle,2
-            Disable Object ZWrite   Particle
-            Exclude Object On       Particle
-            Hide object             Particle
-            Particle(CP).Exist      = 1
-        Endif
-    Next CP
-
-EndFunction
-
-Function SetObjectSpriteFrame(Object,Tile,SpriteX#,SpriteY#)
-        ShiftX#  = 1 / SpriteX#
-        ShiftY#  = 1 / SpriteY#
-        If Tile > 0
-            Across = Int ( Tile / SpriteX# )
-            v#      = ShiftY# * Across
-            u#      = Tile mod SpriteX#
-            u#      = u# * ShiftX#
-        Else
-            u# = 0
-            v# = 0
-        Endif
-    Lock VertexData For Limb Object,0
-        Set VertexData UV 0,u# + ShiftX#,v#
-        Set VertexData UV 1,u#,v#
-        Set VertexData UV 2,u# + ShiftX#,v# + ShiftY#
-        Set VertexData UV 3,u#,v#
-        Set VertexData UV 4,u#,v# + ShiftY#
-        Set VertexData UV 5,u# + ShiftX#,v# + ShiftY#
-    Unlock VertexData
-EndFunction
-Function AddParticle(X#,Y#,Z#,StartSize#,IncSize#,Life#,Texture,Style,FrameStyle,XVel#,YVel#,ZVel#)
-
-    CurrentParticle = CurrentParticle + 1
-    If CurrentParticle > ParticleCount Then CurrentParticle = 1
-    Particle = CurrentParticle + ParticleBase
-
-        Particle(CurrentParticle).MaxLife    = Life#
-        Particle(CurrentParticle).Life       = Life#
-        Particle(CurrentParticle).Alive      = 1
-        Particle(CurrentParticle).Style      = Style
-        Particle(CurrentParticle).StartSize  = StartSize#
-        Particle(CurrentParticle).IncSize    = IncSize#
-        Particle(CurrentParticle).FrameStyle = FrameStyle
-        Particle(CurrentParticle).XVel       = XVel#
-        Particle(CurrentParticle).YVel       = YVel#
-        Particle(CurrentParticle).ZVel       = ZVel#
-
-		  Select FrameStyle
-				//animated
-				Case 1
-					SetObjectSpriteFrame(Particle,0,4,4)
-				Endcase
-				//nonanimated
-				Case 0
-            SetObjectSpriteFrame(Particle,0,1,1)
-				Endcase
-			endselect
-
-			remstart
-        If Style = 0
-            Ghost Object Off        Particle
-        Endif
-        If Style = 1
-            Ghost Object On         Particle,2
-        Endif
-        If Style = 2
-            Ghost Object On         Particle,1
-        Endif
-        If Style = 3
-            Ghost Object On         Particle,2
-            `Rotate Object           Particle,0,AtanFull(X# - CPX (),Z# - CPZ ()),0
-            Y# = Y# + StartSize# * 0.5
-        Else
-            `Rotate Object           Particle,0,Rnd(360),0
-        Endif
-        If Style = 4
-            Ghost Object On         Particle,2
-            Disable Object ZDepth   Particle
-        Else
-            Enable Object ZDepth   Particle
-        Endif
-		  remend
-		  Select Style
-				Case 0
-					Ghost Object Off         Particle
-				Endcase
-				Case 1
-					Ghost Object On         Particle,0
-				endcase
-				Case 2
-					Ghost Object On         Particle,1
-				endcase
-			Endselect
-         Enable Object ZDepth   Particle
-        
-        Exclude Object Off   Particle
-        Show Object          Particle
-        Scale Object         Particle,StartSize#,StartSize#,StartSize#
-        Texture Object       Particle,Texture
-        Position Object      Particle,X#,Y#,Z#
-        `Point Object         Particle,CPX (),CPY (),CPZ ()
-        Move Object          Particle,StartSize#
-        `Roll Object Right    Particle,Rnd(360)
-        Set Alpha Mapping On Particle,100
-        Fade Object          Particle,100
-EndFunction Particle
-
-Function Particles_Run()
-    For RP = 1 To ParticleCount
-        If Particle(RP).Alive = 1
-            If Particle(RP).Life > 0
-                `Get % age
-                    Perc# = 1 - ( Particle(RP).Life / Particle(RP).MaxLife )
-                `Resize?
-                    If Particle(RP).IncSize > 0
-                        Scale# = Particle(RP).IncSize * Perc# + Particle(RP).StartSize
-                        Scale Object RP + ParticleBase,Scale#,Scale#,Scale#
-                    Endif
-                `Frame Styles
-                    If Particle(RP).FrameStyle = -1
-                        `Fade Object RP + ParticleBase,(1.0-Perc#)*100
-                        Set Alpha Mapping On RP + ParticleBase,50
-                    Endif
-                    If Particle(RP).FrameStyle = 0
-                        Set Alpha Mapping On RP + ParticleBase,(1.0-Perc#)*100
-                    Endif
-                    If Particle(RP).FrameStyle = 1
-                        Frame = Perc# * 16
-                        SetObjectSpriteFrame(RP + ParticleBase,Frame,4,4)
-                    Endif
-                    If Particle(RP).FrameStyle = 2
-                        Frame = Perc# * 30
-                        SetObjectSpriteFrame(RP + ParticleBase,Frame,6,5)
-                    Endif
-                `Add Age
-                    Particle(RP).Life = Particle(RP).Life - (tbm * 0.5)
-                `Add Velocitiy
-                    PartX# = object position x (RP + ParticleBase)
-                    PartY# = object position y (RP + ParticleBase)
-                    PartZ# = object position z (RP + ParticleBase)
-                    PartX# = PartX# + (tbm * 0.4 * Particle(RP).XVel)
-                    PartY# = PartY# + (tbm * 0.4 * Particle(RP).YVel)
-                    PartZ# = PartZ# + (tbm * 0.4 *Particle(RP).ZVel)
-                    Position Object RP + ParticleBase,PartX#,PartY#,PartZ#
-                    point Object RP + ParticleBase,camera position x (),camera position y (),camera position z ()
-            Else
-                Particle(RP).Alive = 0
-                Exclude Object On ParticleBase + RP
-                Hide Object       ParticleBase + RP
-            Endif
-        Endif
-    Next RP
+function Entity_SmokeParticle_Update(i):
     
-EndFunction
+    oldx#=Ent_GetFloat(i,"x")
+    oldy#=Ent_GetFloat(i,"y")
+    oldz#=Ent_GetFloat(i,"z")
+    camx#=camera position x()
+    camy#=camera position y()
+    camz#=camera position z()
+    if Ent_GetInt(i,"modelid")=0:
+        modelid = sp copy system(SmokeMasterSystem,oldx#,oldy#,oldz#) //load particle file
+        `zoneid = SP PLANE ZONE (oldx# , oldy# , oldz# , normx# , normy# , normz# )
+        `SP ADD OBSTACLE (GroupID , ZoneID, actionFlag , testType , bounce# , friction#)
+        EntAddAttribute(i,"modelid",str$(modelid))
+    endif
+    SP SET POSITION Ent_GetInt(i,"modelid"),oldx#,oldy#,oldz#
+
+ENDFUNCTION
+
+function Entity_SmokeParticle_Delete(i):
+    modelid = Ent_GetInt(i,"modelid")
+    sp delete system modelid
+endfunction
+
+function Entity_Particle_Terminate():
+    
+ENDFUNCTION
+
+
+Function Particle_GetDistance( obj1X# , obj1Y# , obj1Z#, obj2X# , obj2Y# , obj2Z# )
+xx# = obj1X# - obj2X#
+yy# = obj1Y# - obj2Y#
+zz# = obj1Z# - obj2Z#
+thisDistance2# = Sqrt((xx#*xx#)+(yy#*yy#)+(zz#*zz#))
+Endfunction thisDistance2#
+
+//////////////////////////////////////////////////////////////
+//  End of code
+//////////////////////////////////////////////////////////////

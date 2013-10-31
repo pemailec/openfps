@@ -92,15 +92,17 @@ function World_Editor_Display():
         removeitem EditorUI.Variable_window_list,0
     next i
     ref = EntGetReference("root")
-    additem EditorUI.Variable_window_list,"filename = " + entGetAttribute(ref,"filename")
-    additem EditorUI.Variable_window_list,"displayname = " + entGetAttribute(ref,"displayname")
-    additem EditorUI.Variable_window_list,"unique_id = " + entGetAttribute(ref,"unique_id")
-    additem EditorUI.Variable_window_list,"title_screen_enabled = " + entGetAttribute(ref,"title_screen_enabled")
-    additem EditorUI.Variable_window_list,"title_screen_line1 = " + entGetAttribute(ref,"title_screen_line1")
-    additem EditorUI.Variable_window_list,"title_screen_line2 = " + entGetAttribute(ref,"title_screen_line2")
-    additem EditorUI.Variable_window_list,"title_screen_line3 = " + entGetAttribute(ref,"title_screen_line3")
-    additem EditorUI.Variable_window_list,"sky_dynamic_enabled = " + entGetAttribute(ref,"sky_dynamic_enabled")
-    additem EditorUI.Variable_window_list,"sky_dynamic_timeofday = " + entGetAttribute(ref,"sky_dynamic_timeofday")
-    additem EditorUI.Variable_window_list,"water_enabled = " + entGetAttribute(ref,"water_enabled")
-    additem EditorUI.Variable_window_list,"water_height = " + entGetAttribute(ref,"water_height")
+     local dim tempattributes() as string
+     local dim tempvalues() as string
+     link array tempattributes(),Entities(refi).attributes.ptr
+     link array tempvalues(),Entities(ref).values.ptr
+     for ii = 0 to Entities(ref).attributes.arraysize-1:
+          if array index valid(tempattributes(ii)):
+            additem EditorUI.Variable_window_list,tempattributes(ii)+" = " + tempvalues(ii)
+          endif
+     next ii
+     unlink array tempattributes()
+     unlink array tempvalues()
+     undim tempattributes()
+     undim tempvalues()
 ENDFUNCTION
