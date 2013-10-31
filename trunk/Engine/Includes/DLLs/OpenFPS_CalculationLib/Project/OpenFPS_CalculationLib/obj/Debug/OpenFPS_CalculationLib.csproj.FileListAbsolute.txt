@@ -1,5 +1,0 @@
-C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\DLLs\OpenFPS_CalculationLib\Project\OpenFPS_CalculationLib\bin\Debug\OpenFPS_CalculationLib.dll
-C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\DLLs\OpenFPS_CalculationLib\Project\OpenFPS_CalculationLib\bin\Debug\OpenFPS_CalculationLib.pdb
-C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\DLLs\OpenFPS_CalculationLib\Project\OpenFPS_CalculationLib\obj\Debug\OpenFPS_CalculationLib.csprojResolveAssemblyReference.cache
-C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\DLLs\OpenFPS_CalculationLib\Project\OpenFPS_CalculationLib\obj\Debug\OpenFPS_CalculationLib.dll
-C:\Users\Chris\Desktop\Development\Game Dev\openfps\Engine\Includes\DLLs\OpenFPS_CalculationLib\Project\OpenFPS_CalculationLib\obj\Debug\OpenFPS_CalculationLib.pdb
