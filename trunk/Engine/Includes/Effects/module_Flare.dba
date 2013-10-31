@@ -8,7 +8,7 @@ function Entity_Flare_Init():
     global Flare_Image as integer
     //give it a high number so it renders
     Flare_Image = 8000
-    load image "Media\Materials\Engine\sunflare1.png",Flare_Image
+    load image "Media\Materials\Engine\sunflare2.png",Flare_Image
     global Flare_Effect as integer
     Flare_Effect = reserve free effect()
     load effect "Media\Shaders\BlendAdditiveComplex.fx",Flare_Effect,0
@@ -18,29 +18,34 @@ ENDFUNCTION
 function Entity_Flare_Add(x#,y#,z#):
     //add new entity
     i = 0
-    while ent_Getexists("ent_flare_"+str$(i))
+    while ent_Getexists("env_flare_"+str$(i))
         i = i + 1
     endwhile
-    entAdd("ent_flare_"+str$(i))
-    ref = entgetreference("ent_flare_"+str$(i))
-    entAddAttribute(ref,"name","ent_flare_"+str$(i))
-    entAddAttribute(ref,"type","ent_flare")
+    entAdd("env_flare_"+str$(i))
+    ref = entgetreference("env_flare_"+str$(i))
+    entAddAttribute(ref,"name","env_flare_"+str$(i))
+    entAddAttribute(ref,"type","env_flare")
     entAddAttribute(ref,"x",str$(x#))
     entAddAttribute(ref,"y",str$(y#))
     entAddAttribute(ref,"z",str$(z#))
+    entAddAttribute(ref,"enabled",str$(1))
+    entAddAttribute(ref,"texture","Media\Materials\Engine\sunflare2.png")
 ENDFUNCTION
 
 function Entity_Flare_Update(i):
     if Ent_GetInt(i,"modelid")=0:
     modelid = reserve free object()
+    textureid = reserve free image()
     EntAddAttribute(i,"modelid",str$(modelid))
+    EntAddAttribute(i,"textureid",str$(textureid))
     EntAddAttribute(i,"rr","0")
     EntAddAttribute(i,"fx",str$(reserve free effect()))
     EntAddAttribute(i,"alpha","1.0")
     endif
     if object exist(Ent_GetInt(i,"modelid"))=0:
         make object plain Ent_GetInt(i,"modelid"),4,4
-        texture object Ent_GetInt(i,"modelid"),Flare_Image
+        load image EntGetAttribute(i,"texture"),Ent_GetInt(i,"textureid")
+        texture object Ent_GetInt(i,"modelid"),Ent_GetInt(i,"textureid")
         load effect "Media\Shaders\BlendAdditiveComplex.fx",Ent_GetInt(i,"fx"),0
         set object effect Ent_GetInt(i,"modelid"),Ent_GetInt(i,"fx")
     endif
@@ -51,6 +56,7 @@ function Entity_Flare_Update(i):
     scale# = 100+(sin(rr_new#)*4)
     scale object Ent_GetInt(i,"modelid"),scale#,scale#,scale#
     
+    enabled = Ent_GetInt(i,"enabled")
     oldx#=Ent_GetFloat(i,"x")
     oldy#=Ent_GetFloat(i,"y")
     oldz#=Ent_GetFloat(i,"z")
@@ -70,17 +76,35 @@ function Entity_Flare_Update(i):
     normz#=SC_getCollisionNormalZ()
     alpha_target# = 0.0 
     else
-    alpha_target# = 1.0
+    alpha_target# = 0.0
+    if enabled = 1 then alpha_target# = 1.0
     endif
     alpha# = TBM_Curvevalue(alpha_target#,alpha#,15.0)
     EntSetAttribute(i,"alpha",str$(alpha#))
     set effect constant float Ent_GetInt(i,"fx"),"Alpha",alpha#
 ENDFUNCTION
 
-function Entity_Flare_Delete(i):
+function Entity_Flare_Reload(i):
     modelid = Ent_GetInt(i,"modelid")
+    textureid = Ent_GetInt(i,"textureid")
     fxid = Ent_GetInt(i,"fx")
     delete object modelid
+    delete image textureid
+    
+    make object plain modelid,4,4
+    load image EntGetAttribute(i,"texture"),textureid
+    texture object Ent_GetInt(i,"modelid"),textureid
+    load image EntGetAttribute(i,"texture"),textureid
+    texture object modelid,textureid
+    set object effect modelid,fxid
+endfunction
+
+function Entity_Flare_Delete(i):
+    modelid = Ent_GetInt(i,"modelid")
+    textureid = Ent_GetInt(i,"textureid")
+    fxid = Ent_GetInt(i,"fx")
+    delete object modelid
+    delete image textureid
     delete effect fxid
 endfunction
 

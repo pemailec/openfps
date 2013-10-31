@@ -1,0 +1,83 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - ENTITY SUBMODULE
+//  Concept and code by thenerd, Summer 2012!
+//////////////////////////////////////////////////////////////
+// This module serves as an interface between the core
+// Entity module and the rest of the entity modules.
+// When coding an entity type, remember to add it to
+// these functions or it won't work!
+//////////////////////////////////////////////////////////////
+// STEPS FOR ADDING AN ENTITY MODULE:
+// 1. Code your module with the following functions:
+// -Entity_<name>_Init() ... sets up global data
+// -Entity_<name>_Create() ... creation in editor
+// -Entity_<name>_Update() ... updates entity
+// -Entity_<name>_Delete() ... deletes entity
+// Talk to chris (thenerd) for more specifics.
+// 2. Add your module to the functions below.
+// 3. add any parameters you want saved to
+//    the EntityType_SaveParam() function
+//////////////////////////////////////////////////////////////
+// functions
+//////////////////////////////////////////////////////////////
+
+//global init
+function EntityType_Init():
+    Entity_Flare_Init()
+    Entity_Particle_Init()
+    Entity_Model_Init()
+ENDFUNCTION
+
+//add anything you don't want saved in here.
+function EntityType_SaveParam(name as string):
+    local saved as boolean
+    saved = 1
+    if name = "id" then saved = 0
+    if name = "modelid" then saved = 0
+    if name = "textureid" then saved = 0
+    if name = "fx" then saved = 0
+    if name = "alpha" then saved = 0
+    if name = "loaded" then saved = 0
+endfunction saved
+
+//this is only used in the editor
+function EntityType_Create(enttype as string, x as float,y as float, z as float):
+    if enttype = "env_flare" then Entity_Flare_Add(x,y,z)
+    if enttype = "env_smoke" then Entity_SmokeParticle_Add(x,y,z)
+    if enttype = "mdl_static" then Entity_Model_Add(x,y,z)
+    if enttype = "mdl_physics" then Entity_phymodel_Add(x,y,z)
+ENDFUNCTION
+
+function EntityType_Update(i):
+    type_attrib$="null"
+    type_attrib$=EntGetAttribute(i,"type")
+    if type_attrib$ = "env_flare" then Entity_Flare_Update(i)
+    if type_attrib$ = "env_smoke" then Entity_SmokeParticle_Update(i)
+    if type_attrib$ = "mdl_static" then Entity_Model_Update(i)
+    if type_attrib$ = "mdl_physics" then Entity_phymodel_Update(i)
+ENDFUNCTION
+
+function EntityType_RefreshEntity(i):
+    type_attrib$="null"
+    type_attrib$=EntGetAttribute(i,"type")
+    
+    if type_attrib$ = "env_flare" then Entity_Flare_Reload(i)
+    if type_attrib$ = "mdl_static" then Entity_Model_Reload(i)
+    if type_attrib$ = "mdl_physics" then Entity_phymodel_Reload(i)
+    `if type_attrib$ = "env_smoke" then Entity_SmokeParticle_Delete(i)
+endfunction
+
+function EntityType_Delete(i):
+    type_attrib$="null"
+    type_attrib$=EntGetAttribute(i,"type")
+    
+    if type_attrib$ = "env_flare" then Entity_Flare_Delete(i)
+    if type_attrib$ = "env_smoke" then Entity_SmokeParticle_Delete(i)
+    if type_attrib$ = "mdl_static" then Entity_Model_Delete(i)
+    if type_attrib$ = "mdl_physics" then Entity_phymodel_Delete(i)
+    
+ENDFUNCTION
+
+//////////////////////////////////////////////////////////////
+// End of code
+//////////////////////////////////////////////////////////////

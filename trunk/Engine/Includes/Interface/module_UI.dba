@@ -587,6 +587,7 @@ Function UI_Update()
 //*                                                                                     *
 //***************************************************************************************
 
+    UI_HandleMouse()
 	//update menu first
 	UI_Menu_Update()
 
@@ -632,7 +633,6 @@ If Temp_AlphaSlider>0 Then D3d_Box 0,0,Screen.Width,Screen.Height,D3d_Rgba(0,0,0
  `UI_HandleConsole()
 	UI_Console_Update()
 //-Handle all the mouse
-UI_HandleMouse()
 	
 	
 //-Do Debug
@@ -3480,7 +3480,12 @@ Function UI_StartDebugMode( param_logmode as Boolean )
 		var_time$="openfps_log.html"
   		If File Exist(var_time$) = UI_True Then Delete File var_time$
   		Open to Write UI_LogFileID,var_time$
-		Write String UI_LogfileID,"<html><body background="+chr$(34)+"media\images\interface\camo.jpg"+chr$(34)+">"
+  Write String UI_LogfileID,"<html>"
+    Write String UI_LogfileID,"<head>"
+    Write String UI_LogfileID,"<link rel="+chr$(34)+"stylesheet"+chr$(34)+" href="+chr$(34)+"Includes/HTML/common.css"+chr$(34)+">"
+    Write String UI_LogfileID,"<link rel="+chr$(34)+"stylesheet"+chr$(34)+" href="+chr$(34)+"Includes/HTML/03.css"+chr$(34)+">"
+    Write String UI_LogfileID,"</head>"
+		Write String UI_LogfileID,"<body>"
 		Write String UI_LogfileID,"<img src="+chr$(34)+"media\images\interface\logo.png"+chr$(34)+"alt="+chr$(34)+"OpenFPS"+chr$(34)+"><br><br>"
 		Write String UI_LogfileID,"<img src="+chr$(34)+"media\images\interface\email000.png"+chr$(34)+"alt="+chr$(34)+"Debug File"+chr$(34)+"><u> OpenFps Logfile</u><br>"
 		Write String UI_LogFileID,"<br>"

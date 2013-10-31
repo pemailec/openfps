@@ -159,6 +159,7 @@ CameraArray(Game.num_cameras).camera_image.width = width
 CameraArray(Game.num_cameras).camera_image.height = height
 CameraArray(Game.num_cameras).camera_fov.destination = 80
 set camera to image CameraArray(Game.num_cameras).camera_id,CameraArray(Game.num_cameras).camera_image.id,width,height
+set camera range CameraArray(Game.num_cameras).camera_id,0.1,1024
 Game.num_cameras = Game.num_cameras + 1
 Endfunction CurrentCamera
 
@@ -173,6 +174,7 @@ CameraArray(Game.num_cameras).camera_image.width = width
 CameraArray(Game.num_cameras).camera_image.height = height
 CameraArray(Game.num_cameras).camera_fov.destination = 80
 set camera to image CameraArray(Game.num_cameras).camera_id,CameraArray(Game.num_cameras).camera_image.id,width,height
+set camera range CameraArray(Game.num_cameras).camera_id,0.1,1024
 Game.num_cameras = Game.num_cameras + 1
 Endfunction CurrentCamera
 
@@ -257,7 +259,7 @@ Global SkyboxObject As Integer : SkyboxObject = Reserve Free Object()
 Global SkyboxImage As Integer  :    SkyboxImage  = Reserve Free Image()
 Global SkyboxShader As Integer : SkyboxShader = Reserve Free Effect()
 //object setup
-make object sphere SkyBoxObject,-2000,5,5
+make object sphere SkyBoxObject,-1024,5,5
 Load Image "Media\Materials\Cubemaps\Cube0.dds",SkyboxImage,2
 load effect "Media\Shaders\SkyBox.fx",SkyboxShader,0
 texture object SkyBoxObject,0,SkyboxImage
@@ -273,6 +275,7 @@ global skyboxsunalpha as float
 DSky_Init()
   exclude object on SkyboxObj
   exclude object on skyMesh
+  hide light 0
 Endfunction
 
 //Camera_Skybox_Load() - Loads a cubemap for the camera skybox.
@@ -289,6 +292,7 @@ endfunction
 
 //Camera_Skybox_Update() - Updates the skybox to surround the camera.
 Function Camera_Skybox_Update():
+if Game_Running:
 //get position
 Skybox_X# = Camera_GetPositionX(RootCamera)
 Skybox_Y# = Camera_GetPositionY(RootCamera)
@@ -296,9 +300,8 @@ Skybox_Z# = Camera_GetPositionZ(RootCamera)
 //set skybox to position
 Position Object SkyboxObject,Skybox_X#,Skybox_Y#,Skybox_Z#
 Position Object SkyboxSunObject,Skybox_X#,Skybox_Y#,Skybox_Z#
-Rotate Object SkyboxSunObject,328,346,0
+rotate Object SkyboxSunObject,Ent_GetFloat(EntGetReference("root"),"Sun_VectorX"),Ent_GetFloat(EntGetReference("root"),"Sun_VectorY"),0
 Move Object SkyboxSunObject,1000
-if Game_Running:
     if EntGetAttribute(EntGetReference("root"),"sky_dynamic_enabled")="1"
       exclude object on SkyboxObject
       exclude object off skyMesh

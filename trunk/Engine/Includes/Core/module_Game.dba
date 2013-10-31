@@ -20,13 +20,29 @@
 
 function Game_Init():
     global Game_Running as integer
+    global Game_Loading as integer
+    global Game_LoadFile as string
 ENDFUNCTION
 
 function Game_Update():
     if Game_Running = 1:
         //game modules updated here!
-        if game.state = GAME_SPECTATE then Camera_Spectator_Update()
+        Physics_Update()
+        if game.state = GAME_SPECTATE:
+            Camera_Spectator_Update()
+        endif
         Water_Update()
+    endif
+    if Game_Loading = 1:
+        //loading
+        if  UI_FadeManager.state=UI_NORMAL :
+            Game_Load_real(Game_LoadFile)
+            Game_Loading= 0
+            LoadingDisplayCompleted = 0
+            `UI_FadeManager.state=UI_FADEIN
+            `UI_FadeManager.target=M_ENGINE_DEFAULT
+            change mouse 2
+        endif
     endif
 ENDFUNCTION
 
@@ -34,12 +50,45 @@ function Game_Terminate():
 ENDFUNCTION
 
 function Game_Load(file$):
+    Game_LoadFile = file$
+    Game_Loading = 1
+    UI_FadeManager.state=UI_FADEIN
+    UI_FadeManager.target=M_ENGINE_LOADING
+ENDFUNCTION
+
+function Game_Load_real(file$):
+    
     //this module takes over the ui coding from here.
     if Game_Running = 1 then Game_End()
+    
+    //check if the file is valid
+    remstart
     local filename as string
-    filename = "Media\Levels\"+file$
-    UI_WriteLog(UI_GREEN,"* Loading level file "+file$)
-    EntLoad(filename)
+    filename = "Media\Levels\"+remove$(file$,".xlvl")
+    
+    UI_WriteLog(UI_GREEN,"* Loading level file "+filename+".xlvl")
+    
+    //open level file
+    rename file filename+".xlvl",filename+".zip"
+    OPEN FILE BLOCK filename+".zip",1
+    
+    ///////////////////////////////////////////
+    // ENGINE LOADING SYSTEM
+    // LOAD COMPILED ENTITY STRUCTURE
+    // includes compiled terrain
+    // -compiled lightmaps
+    // -compiled static meshes
+    ///////////////////////////////////////////
+    
+    UI_WriteLog(UI_GREEN,"*entities....")
+    if file exist("Media\Levels\entity_compiled.xnt") then delete file "Media\Levels\entity_compiled.xnt"
+    EXTRACT FILE FROM BLOCK 1,"entity_compiled.xnt","Media\Levels\"
+    EntLoad("Media\Levels\entity_compiled.xnt")
+    delete file "Media\Levels\entity_compiled.xnt"
+    
+    //we do not need to load the terrain
+    //in the compiled level system, the terrain
+    //is baked into the level static mesh
     lastslash = 0
     for i = 0 to len(filename):
         if mid$(filename,i)="\" then lastslash = i
@@ -47,19 +96,37 @@ function Game_Load(file$):
     terrain_filename$ = right$(filename,len(filename) - lastslash)
     terrain_filename$ = left$(terrain_filename$,len(terrain_filename$)-4)
     terrain_filename_new$ = "Media\Terrains\"+terrain_filename$
+    UI_WriteLog(UI_GREEN,"*terrain....")
     Terrain_Load(terrain_filename_new$)
+    
+    //set up world physics
+    Physics_Create()
+    
+    UI_WriteLog(UI_GREEN,"*other....")
+    //setup water
     Water_Init()
     Camera_Spectator_Generate()
+    time# = NDB_GetElapsedTimeInSec()
+    time# = NDB_GetElapsedTimeInSec()
     Game_Running = 1
     Game.state = GAME_SPECTATE
     UI_WriteLog(UI_GREEN,"* Loaded level file and started game.")
-    if Game_InitSound = 0:
-        global Game_InitSound as integer
-        Game_InitSound = Audio_Load("Media\Sounds\Game\game_join\join2.wav")
-    endif
-    ui_menu_Setmode(M_ENGINE_DEFAULT)
+    
+    `ui_menu_Setmode(M_ENGINE_DEFAULT)
     Audio_StopAll()
-    Audio_Play(Game_InitSound)
+    
+    //close level file
+    CLOSE FILE BLOCK 1
+    rename file filename+".zip",filename+".xlvl"
+    remend
+    
+    //raise an error since the level system isn't set up
+    UI_FadeManager.state=UI_FADEIN
+    UI_FadeManager.target=M_MENU_GENERICPROMPT
+    prompttextone$="An error has occurred!"
+    prompttexttwo$="the .xlvl file could not be opened."
+    prompttitle$="Level Error :: File Not Found"
+    
 ENDFUNCTION
 
 function Game_Join():
@@ -69,7 +136,8 @@ ENDFUNCTION
 function Game_End():
     if Game_Running = 1:
         Game_Running = 0
-        Terrain_Delete()
+        Physics_Destroy()
+       ` Terrain_Delete()
         DeleteAllEntities()
         Water_Terminate()
         Camera_Spectator_Clear()

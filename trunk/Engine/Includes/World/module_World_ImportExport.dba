@@ -1,0 +1,16 @@
+//////////////////////////////////////////////////////////////
+//   OpenFPS
+//   LEVEL EDITOR SOURCE
+//////////////////////////////////////////////////////////////
+// module_WORLD_IMPORTEXPORT
+
+function module_World_Open():
+    
+ENDFUNCTION
+
+function module_World_Save():
+    
+ENDFUNCTION
+
+function module_World_New():
+ENDFUNCTION

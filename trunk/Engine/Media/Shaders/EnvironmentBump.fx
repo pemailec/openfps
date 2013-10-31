@@ -21,6 +21,7 @@
    float3 Ambient={0.4f,0.4f,0.4f};
    float ReflectFactor=0.5f;
    float SunReflectFactor=1.0f;
+   //float4 FogColor={0.96f,0.678f,0.345f,1.0f};
    float4 FogColor={0.88f,0.90f,0.86f,1.0f};
    float FogRange=380.0f;
    float Alpha=1.0f;
@@ -113,7 +114,7 @@
   	float3 Cube=texCUBE(cubeMap,lookup);
 	float Light=saturate(dot(-Lightdir,IN.Normals));
 	float4 Final =float4(lerp(Texture,Cube,tex2D(Normal,IN.Tex).w*ReflectFactor)*((Light*LightColor)+Ambient),Texture.w *Alpha);
-	return Final;
+	return (Final*1.4)-0.1;
 
      }
 
@@ -127,7 +128,7 @@
  	pass p1
       {		
  	vertexShader = compile vs_3_0 VS(); 
- 	pixelShader  = compile ps_1_4 PS();
+ 	pixelShader  = compile ps_2_0 PS();
 	FOGCOLOR=(FogColor); 
 	FOGENABLE=TRUE;		
         AlphaBlendEnable = TRUE;

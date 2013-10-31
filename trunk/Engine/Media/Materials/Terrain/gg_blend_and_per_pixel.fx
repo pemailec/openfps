@@ -12,7 +12,7 @@ float4 eyePos : CameraPosition;
 //-----------------
 float4 lightDirection = {0.25, -0.5, -0.5, 1.0};    
 float4 lightColour = {1.0, 1.0, 1.0, 1.0};    
-float4 ambientColour = {0.25, 0.25, 0.25, 1.0};     
+float4 ambientColour = {0.22, 0.2, 0.2, 1.0};   
 float2 repeatScale1 = {16.0, 16.0};
 float2 repeatScale2 = {4.0, 4.0};
 float2 repeatScale3= {16.0, 16.0};

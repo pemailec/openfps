@@ -26,12 +26,29 @@
 // within the specified chunk. In the future, options will be
 // created allowing a function chunk to be run in multithreaded
 // or debug mode.
+// this will also provide opportunity to time the particular
+// parts of the engine to see which is slowest (for optimization)
+// August 2013 - Revamped to record performance stats
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+// UDTS
+//////////////////////////////////////////////////////////////
+
+type t_ChunkFunc
+    function_name as string
+    function_ptr as dword
+    function_latency as float
+endtype
+
+//////////////////////////////////////////////////////////////
+// SETUP
 //////////////////////////////////////////////////////////////
 
 //set up arrays to store chunks
-Dim Chunk_Init() As Dword
-Dim Chunk_Update() As Dword
-Dim Chunk_Terminate() As Dword
+Dim Chunk_Init() As t_ChunkFunc
+Dim Chunk_Update() As t_ChunkFunc
+Dim Chunk_Terminate() As t_ChunkFunc
 
 //store arrays in memory
 Global Chunk_Init_PTR As dword
@@ -53,6 +70,7 @@ Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Network_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Camera_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Game_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Terrain_Init")
+Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Physics_Init")
 
 //Update chunk
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"TBM_Update")
@@ -74,6 +92,7 @@ Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Terrain_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Game_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Camera_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Network_Terminate")
+Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Physics_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"UI_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"SYS_Terminate")
 
@@ -100,7 +119,14 @@ Endwhile
 //////////////////////////////////////////////////////////////
 
 //runs the terminate set of functions and then exits
-CORE_Chunk_Run(Chunk_Terminate_PTR) : End
+CORE_Chunk_Run(Chunk_Terminate_PTR)
+
+//dump some debug stats
+CORE_Dump_Performance("Performance_INIT",Chunk_Init_PTR)
+CORE_Dump_Performance("Performance_UPDATE",Chunk_Update_PTR)
+CORE_Dump_Performance("Performance_TERMINATE",Chunk_Terminate_PTR)
+
+End
 
 //////////////////////////////////////////////////////////////
 // CHUNK Functions
@@ -109,25 +135,67 @@ CORE_Chunk_Run(Chunk_Terminate_PTR) : End
 //CORE_Chunk_Add - Adds a function to the PTR chunk specified.
 Function CORE_Chunk_Add(chunkptr As dword,functionname as string):
     local newchunkptr as dword
-    local dim temp_chunk() as dword
+    local dim temp_chunk() as t_ChunkFunc
     Link Array temp_chunk(),chunkptr
     Array Insert At Bottom temp_chunk()
     newchunkptr = get arrayptr(temp_chunk())
-    temp_chunk()=Get Ptr To Function(functionname)
+    temp_chunk().function_name=functionname
+    temp_chunk().function_ptr=Get Ptr To Function(functionname)
     unlink array temp_chunk()
 Endfunction newchunkptr
-
+        
 //CORE_Chunk_Run - Executes the specified chunk of functions.
 Function CORE_Chunk_Run(chunkptr As dword):
-    Local Dim temp_chunk() As dword
+    Local Dim temp_chunk() As t_ChunkFunc
     Link Array temp_chunk(),chunkptr
     For func = 0 To Array Count(temp_chunk()):
         //execute function string for Chunk(func)
-        Call Function Ptr (temp_chunk(func))
+        oldtime = hitimer(100000)
+        Call Function Ptr (temp_chunk(func).function_ptr)
+        newtime = hitimer(100000)
+        newavg# = ((newtime-oldtime)/100.0)
+        temp_chunk(func).function_latency = newavg#
     Next func
     unlink array temp_chunk()
     Undim temp_chunk()
 endfunction
+
+//////////////////////////////////////////////////////////////
+// Chunk system debug
+//////////////////////////////////////////////////////////////
+
+//debug performance dump to html:
+function CORE_Dump_Performance(chartname$,chunkptr as dword):
+    Write String UI_LogfileID,"<script type="+chr$(34)+"text/javascript"+chr$(34)+" src="+chr$(34)+"https://www.google.com/jsapi"+chr$(34)+"></script>"
+    Write String UI_LogfileID,"<script type="+chr$(34)+"text/javascript"+chr$(34)+">"
+    Write String UI_LogfileID,"google.load("+chr$(34)+"visualization"+chr$(34)+", "+chr$(34)+"1"+chr$(34)+", {packages:["+chr$(34)+"corechart"+chr$(34)+"]});"
+    Write String UI_LogfileID,"google.setOnLoadCallback(drawChart);"
+    Write String UI_LogfileID,"function drawChart() {"
+    Write String UI_LogfileID,"var data = google.visualization.arrayToDataTable(["
+    
+    //this is where we generate data
+    Local Dim temp_chunk() As t_ChunkFunc
+    Link Array temp_chunk(),chunkptr
+    For func = 0 To Array Count(temp_chunk()):
+        insertname$ = temp_chunk(func).function_name
+        inserttime$ = str$(temp_chunk(func).function_latency)
+        insertstring$ = "['"+insertname$+" ("+inserttime$+" ms)', "+inserttime$+"],"
+        Write String UI_LogfileID,insertstring$
+    Next func
+    unlink array temp_chunk()
+    Undim temp_chunk()
+    Write String UI_LogfileID,"]);"
+    Write String UI_LogfileID,"var options = {"
+    Write String UI_LogfileID,"title: '"+chartname$+"',"
+    Write String UI_LogfileID,"backgroundColor: '#CDCDB4'"
+    Write String UI_LogfileID,"};"
+    Write String UI_LogfileID,"var chart = new google.visualization.PieChart(document.getElementById('"+chartname$+"'));"
+    Write String UI_LogfileID,"chart.draw(data, options);"
+    Write String UI_LogfileID,"}"
+    Write String UI_LogfileID,"</script>"
+    Write String UI_LogfileID,"<div id="+chr$(34)+chartname$+chr$(34)+" style="+chr$(34)+"width: 600px; height: 400px;"+chr$(34)+"></div>"
+    Write String UI_LogfileID,"</br>"
+ENDFUNCTION
 
 //////////////////////////////////////////////////////////////
 // End of code

@@ -57,13 +57,39 @@ Endfunction
 //UI_Console_RunCMD() - Runs an engine function from the console.
 Function UI_Console_RunCMD(commandstring As string):
 	If Len(commandstring)>3:
-	functionptr=Get Ptr To Function(commandstring)
-	if functionptr>0:
-		Call Function Ptr (functionptr)
-		UI_Console_AddLine("Engine",commandstring)
-	else
-		UI_Console_AddLine("ERR","Command does not exist.")
-	Endif
+	   select commandstring
+	       case "load"
+	           filenamenew$=openDialog("Load Level File","Level Files (*.xlvl)|*.xlvl",0,"Media\Levels\") 
+            lastslash = 0
+            for i = 0 to len(filenamenew$):
+                if mid$(filenamenew$,i)="\" then lastslash = i
+            next i
+            new_filename$ = right$(filenamenew$,len(filenamenew$) - lastslash)
+	           ui_writelog(UI_Blue,"Trying to load level file: "+new_filename$)
+            if len(new_filename$)>3:
+                Game.editor_flag = 1
+                Game_Load(new_filename$)
+            endif
+	       endcase
+	       case "limit_debug 30"
+            sync rate 30
+	       endcase
+        case "limit_debug 60"
+            sync rate 60
+        endcase
+        case "limit_debug 0"
+            sync rate 0
+        endcase
+	       case "quit"
+	           Game.Terminate= 1
+	       endcase
+	       case "terminate"
+           Game.Terminate= 1
+	       endcase
+	       case "exit"
+           Game.Terminate= 1
+	       endcase
+	    endselect
 	endif
 endfunction
 
