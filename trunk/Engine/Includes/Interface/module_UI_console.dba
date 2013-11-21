@@ -68,7 +68,7 @@ Function UI_Console_RunCMD(commandstring As string):
 	           ui_writelog(UI_Blue,"Trying to load level file: "+new_filename$)
             if len(new_filename$)>3:
                 Game.editor_flag = 1
-                Game_Load(new_filename$)
+                `Game_Load(new_filename$)
             endif
 	       endcase
 	       case "limit_debug 30"
@@ -89,7 +89,22 @@ Function UI_Console_RunCMD(commandstring As string):
 	       case "exit"
            Game.Terminate= 1
 	       endcase
+	       case "disconnect"
+            Trigger_Load("Network_Disconnect","")
+	       endcase
+	       case "cl_testconnect"
+            Trigger_Load("Network_Connect","OpenFPS_173.48.153.103_25565_TestServer")
+	       endcase
+	       case "cl_testmessage"
+	           Net_Client_Send_TCP_Message("cl_testmessage","null")
+	       endcase
+	       case "sv_testmessage"
+            Net_Server_Send_TCP_Message("sv_testmessage","~p HELLO WORLD!")
+	       endcase
 	    endselect
+	endif
+	if left$(commandstring,5) = "chat "
+    Net_Client_Send_TCP_Message("cl_chat","~b Client:~w "+right$(commandstring,len(commandstring)-5))
 	endif
 endfunction
 
@@ -122,7 +137,7 @@ Function UI_Console_Update():
 		If cursor_toggle=1 Then cursor$="_"
 		if cursor_toggle=0 then cursor$=" "
 		UI_AlphaText(1,4,-200+Console.height+9*16,"~rOPENFPS Console >>>~w "+ Input_Text_Grab()+cursor$,255)
-		if returnkey() then UI_Console_RunCMD(Input_Text_Grab()):Input_Text_Clear()
+		if returnkey() or asc(inkey$())=13 then UI_Console_RunCMD(Input_Text_Grab()):Input_Text_Clear()
 	else
 		Console.height=clamp(Console.height-(20*TBM),0,200)
 	Endif

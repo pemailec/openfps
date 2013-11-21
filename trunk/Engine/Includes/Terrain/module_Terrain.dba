@@ -29,6 +29,7 @@ type T_TerrainChunk
     Texture_6 as integer
     Mask_1 as integer
     Mask_2 as integer
+    Tex_Shadow as integer
     HighestPoint as float
     PhysicsBody as integer
 endtype
@@ -128,14 +129,17 @@ function Terrain_New():
             current_object = Terrain(TerrainX,TerrainZ).LOD_1
             Terrain(TerrainX,TerrainZ).Mask_1 = reserve free image()
             Terrain(TerrainX,TerrainZ).Mask_2 = reserve free image()
+            Terrain(TerrainX,TerrainZ).Tex_Shadow = reserve free image()
             Terrain(TerrainX,TerrainZ).Texture_1 = Terrain_TEX1
             Terrain(TerrainX,TerrainZ).Texture_2 = Terrain_TEX2
             Terrain(TerrainX,TerrainZ).Texture_3 = Terrain_TEX3
             Terrain(TerrainX,TerrainZ).Texture_4 = Terrain_TEX4
             Terrain(TerrainX,TerrainZ).Texture_5 = Terrain_TEX5
             Terrain(TerrainX,TerrainZ).Texture_6 = Terrain_TEX6
+            
             ik create render target Terrain(TerrainX,TerrainZ).Mask_1,32,32,rgb(0,0,255)
             ik create render target Terrain(TerrainX,TerrainZ).Mask_2,32,32,rgb(0,0,0)
+            ik create render target Terrain(TerrainX,TerrainZ).Tex_Shadow,32,32,rgb(255,255,255)
             GenShader:
             set object effect current_object,Terrain_SHADER
             texture object current_object,0,Terrain(TerrainX,TerrainZ).Mask_1
@@ -143,15 +147,54 @@ function Terrain_New():
             texture object current_object,2,Terrain(TerrainX,TerrainZ).Texture_1
             texture object current_object,3,Terrain(TerrainX,TerrainZ).Texture_2
             texture object current_object,4,Terrain(TerrainX,TerrainZ).Texture_3
-            texture object current_object,5,Terrain(TerrainX,TerrainZ).Texture_4
-            texture object current_object,6,Terrain(TerrainX,TerrainZ).Texture_5
-            texture object current_object,7,Terrain(TerrainX,TerrainZ).Texture_6
+            texture object current_object,5,Terrain(TerrainX,TerrainZ).Tex_Shadow
             `if current_object = Terrain(TerrainX,TerrainZ).LOD_1 then current_object = Terrain(TerrainX,TerrainZ).LOD_2 : goto GenShader
             `if current_object = Terrain(TerrainX,TerrainZ).LOD_2 then current_object = Terrain(TerrainX,TerrainZ).LOD_3 : goto GenShader
             Terrain(TerrainX,TerrainZ).LOD_OVERRIDE = 0
         Next TerrainZ
     next TerrainX
     TerrainExists = 1
+ENDFUNCTION
+
+function Terrain_BuildShadows():
+    remstart
+    wtrheight#=Ent_GetInt(EntGetReference("root"),"water_height")
+    for TerrainX = 0 to 15:
+    For TerrainZ = 0 to 15:
+        x2 = (TerrainX * 16)
+        z2 = (TerrainZ * 16)
+        for x = 0 to 31:
+            for z = 0 to 31:
+                real_world_x#=x2+(x/2)
+                real_world_y#=Heightfield(x2+(x/2),z2+(z/2))
+                real_world_z#=z2+(z/2)
+                ik dot Terrain(TerrainX,TerrainZ).Tex_Shadow,x,z,rgb(255,255,255)
+                ray = sc_raycast(0,real_world_x#-8,real_world_y#,real_world_z#-8,real_world_x#-8+sun_delta_x#,real_world_y#+sun_delta_y#,real_world_z#-8+sun_delta_z#,0)
+                if ray > 0:
+                    ik dot Terrain(TerrainX,TerrainZ).Tex_Shadow,x,31-z,rgb(80,80,80)
+                endif
+                if Heightfield(x2+(x/2),z2+(z/2)) < wtrheight#:
+                    ik dot Terrain(TerrainX,TerrainZ).Tex_Shadow,x,31-z,rgb(80,80,80)
+                endif
+            next z
+        next x
+        `ik blur image Terrain(TerrainX,TerrainZ).Tex_Shadow,2
+    Next TerrainZ
+    next TerrainX
+    remend
+    sun_delta_x#=object position x(SkyboxSunObject)-camera position x()
+    sun_delta_y#=object position y(SkyboxSunObject)-camera position y()
+    sun_delta_z#=object position z(SkyboxSunObject)-camera position z()
+    point object SkyboxSunObject, camera position x(),camera position y(),camera position z()
+    vx# = sun_delta_x#*-1
+    vy# = sun_delta_y#*-1
+    vz# = sun_delta_z#*-1
+    dirvec=find free vector()
+    null=make vector4(dirvec)
+    set vector4 dirvec,vx#,vy#,vz#,1.0
+    normalize vector4 dirvec,dirvec
+    set effect constant vector Terrain_SHADER,"lightDirection",dirvec
+    null=delete vector4(dirvec)
 ENDFUNCTION
 
 //load a 256x256 heightmap
@@ -349,10 +392,6 @@ function Terrain_Refresh_Chunk(x,z):
     sc_updateobject current_object
     sc_setupobject current_object,1,0
     if Terrain(x,z).PhysicsBody = 0 and InEditor = 0:
-        col = NDB_NewtonCreateConvexHull(current_object)
-        Terrain(x,z).PhysicsBody = NDB_NewtonCreateBody( col )
-        NDB_BuildMatrix 0,0,0,x*16,0,z*16
-        NDB_NewtonBodySetMatrix Terrain(x,z).PhysicsBody
     else
         //don't do anything
     endif
@@ -391,6 +430,11 @@ function Terrain_Load():
             LOAD IMAGE FROM BLOCK 1,"Terrain_"+str$(TerrainX)+"_"+str$(TerrainZ)+".bmp",Terrain(TerrainX,TerrainZ).Mask_1
             ik convert to render target Terrain(TerrainX,TerrainZ).Mask_1
             texture object Terrain(TerrainX,TerrainZ).LOD_1,0,Terrain(TerrainX,TerrainZ).Mask_1
+            //shadow map
+            if image exist(Terrain(TerrainX,TerrainZ).Tex_Shadow) then delete image Terrain(TerrainX,TerrainZ).Tex_Shadow
+            LOAD IMAGE FROM BLOCK 1,"TerrainShadow_"+str$(TerrainX)+"_"+str$(TerrainZ)+".bmp",Terrain(TerrainX,TerrainZ).Tex_Shadow
+            ik convert to render target Terrain(TerrainX,TerrainZ).Tex_Shadow
+            
         Next TerrainZ
     next TerrainX
     
@@ -421,6 +465,7 @@ function Terrain_Save():
     for TerrainX = 0 to 15:
         For TerrainZ = 0 to 15:
             ADD IMAGE TO BLOCK 1,Terrain(TerrainX,TerrainZ).Mask_1,"Terrain_"+str$(TerrainX)+"_"+str$(TerrainZ)+".bmp"
+            ADD IMAGE TO BLOCK 1,Terrain(TerrainX,TerrainZ).Tex_Shadow,"TerrainShadow_"+str$(TerrainX)+"_"+str$(TerrainZ)+".bmp"
         Next TerrainZ
     next TerrainX
     Water_SaveFoamMap()
@@ -437,6 +482,7 @@ function Terrain_Delete():
             `if object exist(Terrain(TerrainX,TerrainZ).LOD_3) then delete object Terrain(TerrainX,TerrainZ).LOD_3
             if image exist(Terrain(TerrainX,TerrainZ).Mask_1) then delete image Terrain(TerrainX,TerrainZ).Mask_1
             if image exist(Terrain(TerrainX,TerrainZ).Mask_2) then delete image Terrain(TerrainX,TerrainZ).Mask_2
+            if image exist(Terrain(TerrainX,TerrainZ).Tex_Shadow) then delete image Terrain(TerrainX,TerrainZ).Tex_Shadow
         Next TerrainZ
     next TerrainX
     TerrainExists = 0

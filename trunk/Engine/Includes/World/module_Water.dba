@@ -32,7 +32,6 @@ function Water_Init():
     Water_currenttex = Water_Normalmap_Anim_Start
     ik load effect "Media\Shaders\alpha.fx",Water_IK_Effect
     Load Effect "Media\Shaders\EnvironmentBump.fx",Water_FX_Main,0
-    
     Make Image Water_Normalmap_Base,256,256
     Load Image "Media\Materials\Engine\Water\test.png",Water_Normalmap_Base2
     For i = 0 To 15:
@@ -45,11 +44,16 @@ function Water_Init():
     Load Image "Media\Materials\Engine\Water\random.png",Water_RAND_Tex
     Load Image "Media\Materials\Engine\Water\oceantex.jpg",Water_Ocean_Tex
     
+    global WaterFoam_shadow_none : WaterFoam_shadow_none = reserve free image()
+    ik create image WaterFoam_Shadow_None,256,256,rgb(160,160,160)
+    
     global Water_Object : Water_Object = reserve free object()
     MAKE OBJECT PLANE Water_Object,256,256,8,8
     Texture Object Water_Object,0,Water_Ocean_Tex
     texture object Water_Object,1,Water_Normalmap_Base
     texture object Water_Object,2,SkyboxImage
+    texture object Water_Object,3,Water_shadow_none
+    
     scale object texture Water_Object,0,16,16
     scale object texture Water_Object,1,16,16
     Set Object Effect Water_Object,1
@@ -64,15 +68,17 @@ function Water_Init():
     global Water_Object7 : Water_Object7 = reserve free object()
     global Water_Object8 : Water_Object8 = reserve free object()
     global Water_Object9 : Water_Object9 = reserve free object()
-    instance object Water_Object2,Water_Object
-    instance object Water_Object3,Water_Object
-    instance object Water_Object4,Water_Object
-    instance object Water_Object5,Water_Object
-    instance object Water_Object6,Water_Object
-    instance object Water_Object7,Water_Object
-    instance object Water_Object8,Water_Object
-    instance object Water_Object9,Water_Object
     KD SetObjectAnisotropicFilteringOn Water_Object
+    texture object Water_Object,3,WaterFoam_IMG_SHADOW
+    clone object Water_Object2,Water_Object
+    clone object Water_Object3,Water_Object
+    clone object Water_Object4,Water_Object
+    clone object Water_Object5,Water_Object
+    clone object Water_Object6,Water_Object
+    clone object Water_Object7,Water_Object
+    clone object Water_Object8,Water_Object
+    clone object Water_Object9,Water_Object
+    texture object Water_Object,3,WaterFoam_IMG_SHADOW
     
     exclude object on Water_Object
     exclude object on Water_Object2
@@ -91,9 +97,11 @@ ENDFUNCTION
 function WaterInitVariables():
     global WaterFoam_IMG_BASE : WaterFoam_IMG_BASE = 10000 `reserve free image()
     global WaterFoam_IMG_RAND : WaterFoam_IMG_RAND = 10001 `reserve free image()
+    global WaterFoam_IMG_SHADOW : WaterFoam_IMG_SHADOW = 10002 `reserve free image()
     //create temporary images, these will be deleted later
     make image WaterFoam_IMG_BASE,256,256
     make image WaterFoam_IMG_RAND,256,256
+    ik create image WaterFoam_IMG_SHADOW,256,256,rgb(255,255,255)
     
     global WaterFoam_Obj : WaterFoam_Obj = reserve free object()
     global WaterFoam_FX : WaterFoam_FX = reserve free effect()
@@ -103,12 +111,14 @@ endfunction
 function Water_SaveFoamMap():
     ADD IMAGE TO BLOCK 1,WaterFoam_IMG_BASE,"TerrainWaterMask_HM.bmp"
     ADD IMAGE TO BLOCK 1,WaterFoam_IMG_RAND,"TerrainWaterMask_RAND.bmp"
+    ADD IMAGE TO BLOCK 1,WaterFoam_IMG_SHADOW,"TerrainWaterMask_SHADOW.bmp"
 endfunction
 
 function Water_LoadFoamMap():
     Water_DeleteFoamMap()
     LOAD IMAGE FROM BLOCK 1,"TerrainWaterMask_HM.bmp",WaterFoam_IMG_BASE
     LOAD IMAGE FROM BLOCK 1,"TerrainWaterMask_RAND.bmp",WaterFoam_IMG_RAND
+    LOAD IMAGE FROM BLOCK 1,"TerrainWaterMask_SHADOW.bmp",WaterFoam_IMG_SHADOW
     Water_CreateFoam()
 ENDFUNCTION
 
@@ -127,12 +137,14 @@ function Water_GenerateFoamMap():
             color_scaled# = ((wtrheight_scaled#-height#)/wtrheight_scaled#)*255.0
             color = 255.0 - color_scaled#
             ik dot WaterFoam_IMG_BASE,x,255-z,rgb(color,color,color)
-            randcolor = rnd(255)
+            randcolor = 160
             ik dot WaterFoam_IMG_RAND,x,255-z,rgb(randcolor,randcolor,randcolor)
         next z
     next x
     `endif
     Water_CreateFoam()
+    ik create image WaterFoam_IMG_SHADOW,256,256
+    `Editor_World_BuildShadows()
 ENDFUNCTION
 
 function Water_DeleteFoam():
@@ -144,6 +156,7 @@ ENDFUNCTION
 function Water_DeleteFoamMap():
     if image exist(WaterFoam_IMG_BASE) then delete image WaterFoam_IMG_BASE
     if image exist(WaterFoam_IMG_RAND) then delete image WaterFoam_IMG_RAND
+    if image exist(WaterFoam_IMG_SHADOW) then delete image WaterFoam_IMG_SHADOW
 ENDFUNCTION
 
 function Water_CreateFoam():
@@ -166,6 +179,15 @@ function Water_CreateFoam():
 ENDFUNCTION
 
 function Water_Update():
+    Texture Object Water_Object,3,WaterFoam_IMG_SHADOW
+    texture object Water_Object2,3,WaterFoam_Shadow_None
+    texture object Water_Object3,3,WaterFoam_Shadow_None
+    texture object Water_Object4,3,WaterFoam_Shadow_None
+    texture object Water_Object5,3,WaterFoam_Shadow_None
+    texture object Water_Object6,3,WaterFoam_Shadow_None
+    texture object Water_Object7,3,WaterFoam_Shadow_None
+    texture object Water_Object8,3,WaterFoam_Shadow_None
+    texture object Water_Object9,3,WaterFoam_Shadow_None
     exclude object on Water_Object
     exclude object on Water_Object2
     exclude object on Water_Object3
@@ -205,7 +227,8 @@ function Water_Update():
         If Water_currenttex > Water_Normalmap_Anim_Start + 15 Then Water_currenttex = Water_Normalmap_Anim_Start
     Endif
     if ticker(Water_Ticker2) then Ik Paste Image On Image Water_currenttex,Water_Normalmap_Base,0,0,Water_IK_Effect
-    scroll object texture Water_Object,0,0.001*TBM,0.001*TBM
+    delta_water# = 0.1
+    scroll object texture Water_Object,0,(0.001)*TBM,0.001*TBM
 ENDFUNCTION
 
 function Water_Terminate():
@@ -213,6 +236,7 @@ function Water_Terminate():
     delete effect Water_FX_Main
     delete image Water_Normalmap_Base
     delete image Water_Normalmap_Base2
+    delete image WaterFoam_Shadow_none
     delete ticker Water_Ticker1
     delete ticker Water_Ticker2
     delete ticker Water_Ticker3

@@ -381,7 +381,8 @@ Network_Connect("127.0.0.1",20188)
 remend
 `Server_Start("Media\Scripts\Server.training.cfg")
 `Client_Start("localhost",25565)
-Game_Load("Island.xnt")
+`Game_Load("Island.xlvl")
+Trigger_Load("Network_Host","Server.training")
 Endcase
 Case "button_reload"
 `GameManager_End()
@@ -391,15 +392,13 @@ case "button_chat"
     menu_chatenabled = 1 - menu_chatenabled
 endcase
 case "button_joingame"
-    Game_Join()
 endcase
 Case "button_credits"
 UI_FadeManager.state=UI_FADEIN
 UI_FadeManager.target=M_MENU_CREDITS
 Endcase
 Case "button_endgame"
-`Network_CloseConnections()
-Game_End()
+Trigger_Load("Network_Disconnect","")
 Endcase
 Case "button_returntogame"
 Game.paused = 0
@@ -1023,6 +1022,13 @@ Function UI_Render_U_ENGINE_LOADING():
 
 ik paste image MenuImageBlack,0,0,screen.width,screen.height
 UI_CenterText(3,Screen.Width/2,(Screen.Height/2)-40,LoadingString)
+
+if  UI_FadeManager.state=UI_NORMAL and LoadTargetFuncExecuted = 0:
+    //execute the function that was specified for the load
+    LoadTargetFuncExecuted = 1
+    call function ptr LoadTargetFunc,LoadTargetFuncArgs
+    change mouse 2
+endif
 remstart
 time = hitimer() - LoadingStartTime
 alpha = clamp((time/20.0),0,255)
@@ -1119,8 +1125,8 @@ UI_AddCenterGadgettoScreen("button_endgame",x,y,"UI_button")
 UI_AddMouseoverImageToGadget("button_endgame","UI_buttonhover")
 UI_AddtitleToGadget("button_endgame",3,x-8,y-14,"Quit")
 x=x+210
-UI_AddCenterGadgettoScreen("button_joingame",x,y,"UI_button")
-UI_AddMouseoverImageToGadget("button_joingame","UI_buttonhover")
+UI_AddCenterGadgettoScreen("button_joingame",x,y,"UI_buttongray")
+`UI_AddMouseoverImageToGadget("button_joingame","UI_buttonhover")
 UI_AddtitleToGadget("button_joingame",3,x-8,y-14,"Join Match")
 Endfunction
 
@@ -1138,7 +1144,7 @@ dxs update sprite MenuImage13
 DXS DRAW SPRITE MenuImage13,0,120
 dxs end sprite render MenuImage13
 
-D3d_Box 0,124,Screen.Width,240,d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,0),d3d_rgba(0,0,0,0)
+D3d_Box 0,124,Screen.Width,190,d3d_rgba(0,0,0,100),d3d_rgba(0,0,0,100),d3d_rgba(0,0,0,0),d3d_rgba(0,0,0,0)
 `ui_centertext(3,Screen.Width/2,160,EntGetAttribute(EntGetReference("root"),"displayname"))
 
 D3d_Box 0,Screen.Height-120,Screen.Width,Screen.Height,d3d_rgba(0,0,0,200),d3d_rgba(0,0,0,200),rgb(0,0,0),rgb(0,0,0)
@@ -1445,6 +1451,11 @@ ui_putwindow(UI_Display.Middlewidth-((UI_mywindow.xwidth*35)/2),UI_Display.Middl
 endfunction
 //Standard render backdrop
 Function ui_RenderBackdrop():
+    if Gameworld.enabled = 1:
+        //critical error
+        //deliver and error message
+        message "OpenFPS Engine","A level is still loaded, but the engine returned to the menu!"
+    ENDIF
     MenuBG_StandardSinR = MenuBG_StandardSinR + (0.6 * TBM)
     MenuBG_StandardSin = Sin(MenuBG_StandardSinR)
     paste image MenuImage4,MenuBG_StandardSin*20,0,0

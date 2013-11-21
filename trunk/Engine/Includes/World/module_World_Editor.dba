@@ -12,8 +12,7 @@ type t_EditorWorld
     title_screen_line1 as string
     title_screen_line2 as string
     title_screen_line3 as string
-    sky_dynamic_enabled as integer
-    sky_dynamic_timeofday as integer
+    sky_preset as integer
     water_enabled as integer
     water_height as integer
 endtype
@@ -35,8 +34,7 @@ function World_Editor_New():
     EntAddAttribute(ref,"title_screen_line1","")
     EntAddAttribute(ref,"title_screen_line2","")
     EntAddAttribute(ref,"title_screen_line3","")
-    EntAddAttribute(ref,"sky_dynamic_enabled","0")
-    EntAddAttribute(ref,"sky_dynamic_timeofday","0")
+    EntAddAttribute(ref,"sky_preset","0")
     EntAddAttribute(ref,"water_enabled","0")
     EntAddAttribute(ref,"water_height","0")
     World_Editor_Apply()
@@ -53,11 +51,70 @@ function World_Editor_Update():
     EntSetAttribute(ref,"title_screen_line1",getgadgettext(EditorUI.LevelTitleLine1))
     EntSetAttribute(ref,"title_screen_line2",getgadgettext(EditorUI.LevelTitleLine2))
     EntSetAttribute(ref,"title_screen_line3",getgadgettext(EditorUI.LevelTitleLine3))
-    EntSetAttribute(ref,"sky_dynamic_enabled",str$(getchecked(EditorUI.UseDynamicSky)))
-    EntSetAttribute(ref,"sky_dynamic_timeofday",str$(getTrackbarPosition(EditorUI.TimeOfDaySlider)))
+    EntSetAttribute(ref,"sky_preset",str$(selecteditem(EditorUI.SkyPreset)))
     EntSetAttribute(ref,"water_enabled",str$(getchecked(EditorUI.ShowWaterPlain)))
     EntSetAttribute(ref,"water_height",str$(getTrackbarPosition(EditorUI.WaterHeightSlider)))
     World_Editor_UpdateWorld()
+ENDFUNCTION
+
+function World_Editor_ApplyVisuals():  
+    ref = EntGetReference("root")
+    EntSetAttribute(ref,"sky_preset",str$(selecteditem(EditorUI.SkyPreset)))
+    if Ent_GetInt(ref,"sky_preset")=0:
+        Texture Object SkyboxObj,0,SkyboxImage
+        texture object Water_Object,2,SkyboxImage
+        texture object Water_Object2,2,SkyboxImage
+        texture object Water_Object3,2,SkyboxImage
+        texture object Water_Object4,2,SkyboxImage
+        texture object Water_Object5,2,SkyboxImage
+        texture object Water_Object6,2,SkyboxImage
+        texture object Water_Object7,2,SkyboxImage
+        texture object Water_Object8,2,SkyboxImage
+        texture object Water_Object9,2,SkyboxImage
+        vec=find free vector()
+        r=make vector4(vec)
+        set vector4 vec,0.88,0.90,0.86,1.0
+        set effect constant vector Water_FX_Main,"FogColor",vec
+        delete vector4 vec
+    endif
+    if Ent_GetInt(ref,"sky_preset")=1:
+        Texture Object SkyboxObj,0,SkyboxImage2
+        texture object Water_Object,2,SkyboxImage2
+        texture object Water_Object2,2,SkyboxImage2
+        texture object Water_Object3,2,SkyboxImage2
+        texture object Water_Object4,2,SkyboxImage2
+        texture object Water_Object5,2,SkyboxImage2
+        texture object Water_Object6,2,SkyboxImage2
+        texture object Water_Object7,2,SkyboxImage2
+        texture object Water_Object8,2,SkyboxImage2
+        texture object Water_Object9,2,SkyboxImage2
+        vec=find free vector()
+        r=make vector4(vec)
+        set vector4 vec,0.96,0.678,0.345,1.0
+        set effect constant vector Water_FX_Main,"FogColor",vec
+        delete vector4 vec
+    endif
+ENDFUNCTION
+
+function Editor_World_BuildShadows()
+    wtrheight#=Ent_GetInt(EntGetReference("root"),"water_height")
+    sun_delta_x#=object position x(SkyboxSunObject)-camera position x()
+    sun_delta_y#=object position y(SkyboxSunObject)-camera position y()
+    sun_delta_z#=object position z(SkyboxSunObject)-camera position z()
+    for x = 0 to 255:
+        for z = 0 to 255:
+            ik dot WaterFoam_IMG_SHADOW,x,z,rgb(160,160,160+rnd(15))
+            ray = sc_raycast(0,x-8,wtrheight#,z-8,x-8+sun_delta_x#,wtrheight#+sun_delta_y#,z-8+sun_delta_z#,0)
+            if ray > 0:
+                ik dot WaterFoam_IMG_SHADOW,x,z,rgb(80,80,80)
+            endif
+            if Heightfield(x,z) > wtrheight#:
+                ik dot WaterFoam_IMG_SHADOW,x,z,rgb(80,80,80)
+            endif
+        next z
+    next x
+    ik blur image WaterFoam_IMG_SHADOW,2
+    Terrain_BuildShadows()
 ENDFUNCTION
 
 function World_Editor_Apply():
@@ -67,22 +124,16 @@ function World_Editor_Apply():
     setgadgettext EditorUI.LevelTitleLine1,EntGetAttribute(ref,"title_screen_line1")
     setgadgettext EditorUI.LevelTitleLine2,EntGetAttribute(ref,"title_screen_line2")
     setgadgettext EditorUI.LevelTitleLine3,EntGetAttribute(ref,"title_screen_line3")
-    setchecked EditorUI.UseDynamicSky,Ent_GetInt(ref,"sky_dynamic_enabled")
-    settrackbarposition EditorUI.TimeOfDaySlider,Ent_GetInt(ref,"sky_dynamic_timeofday")
-    setGWTime( Ent_GetInt(ref,"sky_dynamic_timeofday") , 0 , 0 )
+    selectitem EditorUI.SkyPreset,Ent_GetInt(ref,"sky_preset")
     setchecked EditorUI.ShowWaterPlain,Ent_GetInt(ref,"water_enabled")
     settrackbarposition EditorUI.WaterHeightSlider,Ent_GetInt(ref,"water_height")
+    
 ENDFUNCTION
 
 function World_Editor_UpdateWorld():
-    setGWTime( Ent_GetInt(ref,"sky_dynamic_timeofday") , 0 , 0 )
-    if Ent_GetInt(ref,"sky_dynamic_enabled"):
-      exclude object on SkyboxObj
-      exclude object off skyMesh
-    else
+    
       exclude object off SkyboxObj
       exclude object on skyMesh
-    endif
     exclude object on WaterPlain
 ENDFUNCTION
 

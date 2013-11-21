@@ -1,0 +1,15 @@
+;Rainbow GUI Layout File
+;version 1.05
+window name="EntityEditWindow" x="1942" y="32" width="640" height="420" parent="" text="Edit Entity" enabled="1" visible="0" align="0" winborder="2"
+button name="EntityEditClose" x="465" y="340" width="150" height="35" parent="EntityEditWindow" text="Close" enabled="1" visible="1" align="0"
+panel name="EntityEditHeader" x="10" y="11" width="605" height="55" parent="EntityEditWindow" text="" enabled="1" visible="1" align="0" border="1"
+panel name="HeaderLabel" x="9" y="8" width="32" height="32" parent="EntityEditHeader" text="" enabled="1" visible="1" align="0" border="2"
+label name="HeaderText" x="49" y="10" width="280" height="33" parent="EntityEditHeader" text="Label" enabled="1" visible="1" align="0" border="0"
+label name="HeaderAttribCount" x="414" y="33" width="183" height="15" parent="EntityEditHeader" text="<> Attributes / <> Exported" enabled="1" visible="1" align="0" border="0"
+panel name="EntityEditMainPanel" x="10" y="65" width="605" height="270" parent="EntityEditWindow" text="" enabled="1" visible="1" align="0" border="1"
+panel name="AttributeHeaderPanel" x="9" y="9" width="175" height="20" parent="EntityEditMainPanel" text="Attribute" enabled="1" visible="1" align="0" border="2"
+panel name="TypeHeaderPanel" x="184" y="9" width="125" height="20" parent="EntityEditMainPanel" text="Type" enabled="1" visible="1" align="0" border="2"
+panel name="EditHeaderPanel" x="309" y="9" width="285" height="20" parent="EntityEditMainPanel" text="Edit" enabled="1" visible="1" align="0" border="2"
+panel name="EditBodyPanel" x="308" y="28" width="286" height="225" parent="EntityEditMainPanel" text="" enabled="1" visible="1" align="0" border="1"
+listbox name="AttributeListPanel" x="9" y="28" width="175" height="225" parent="EntityEditMainPanel" text="" enabled="1" visible="1" align="0" items=""
+listbox name="TypeListPanel" x="183" y="28" width="126" height="225" parent="EntityEditMainPanel" text="" enabled="1" visible="1" align="0" items=""

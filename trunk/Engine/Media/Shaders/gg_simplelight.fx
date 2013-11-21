@@ -70,6 +70,12 @@ PSOutput PS(VSOutput In, PSOutput Out)
 
 technique blendAndLight {
 	pass p0 {		
+		AlphaBlendEnable = TRUE;
+    		SrcBlend = SRCALPHA;
+    		DestBlend = INVSRCALPHA;   
+		ZEnable = true;
+		ZWriteEnable = true;
+		AlphaBlendEnable = true; 
 		vertexShader = compile vs_1_1 VS(); 
 		pixelShader  = compile ps_2_0 PS(); 
 	}

@@ -18,6 +18,9 @@
 // This is the main source file for the OpenFPS Project.
 //
 //////////////////////////////////////////////////////////////
+//  PROJECT SOURCE CODE LIST (11/19/13)
+//  *Internal modules not included on this list
+//  *IMPORTANT EDITABLE SOURCE FILES:*
 //
 //////////////////////////////////////////////////////////////
 // Setup program chunks
@@ -66,16 +69,15 @@ Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Input_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Ent_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Audio_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"UI_Init")
-Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Network_Init")
+Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Net_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Camera_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Game_Init")
 Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Terrain_Init")
-Chunk_Init_PTR=CORE_Chunk_Add(Chunk_Init_PTR,"Physics_Init")
 
 //Update chunk
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"TBM_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Input_Update")
-Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Network_Update")
+Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Net_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Game_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Camera_Update")
 Chunk_Update_PTR=CORE_Chunk_Add(Chunk_Update_PTR,"Terrain_Update")
@@ -91,8 +93,7 @@ Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Audio_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Terrain_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Game_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Camera_Terminate")
-Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Network_Terminate")
-Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Physics_Terminate")
+Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"Net_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"UI_Terminate")
 Chunk_Terminate_PTR=CORE_Chunk_Add(Chunk_Terminate_PTR,"SYS_Terminate")
 

@@ -26,6 +26,8 @@ Sync Rate 0
 Backdrop Off
 Disable Escapekey
 autocam off
+set camera range 0.1,1024
+lua make
 
 change mouse 2
 
@@ -43,7 +45,6 @@ DSky_Init()
 WaterInitVariables()
 Terrain_Init()
 World_Editor_Init()
-Particles_Init()
 
 SET AMBIENT LIGHT 90
 make light 1
@@ -70,12 +71,16 @@ exclude object on WaterPlain
 
 Editor_initGizmo()
 Water_Init()
+
+global InEditor as integer
+InEditor = 1
+
 //////////////////////////////////////////////////////////////
 // Main Loop
 //////////////////////////////////////////////////////////////
 
 Do
-POSITION LIGHT 1,camera position x(),camera position y(),camera position z()
+    POSITION LIGHT 1,camera position x(),camera position y(),camera position z()
     //update timer system
     TBM_Update()
     Ent_Update()
@@ -91,7 +96,6 @@ POSITION LIGHT 1,camera position x(),camera position y(),camera position z()
     UI_Editor_Update()
     World_Editor_Update()
     Terrain_Update()
-    Particles_Run()
     Camera_PostUIRenderEditor()
     
     //sync
@@ -109,10 +113,12 @@ end
 function Sky_Create():
     //unmanaged skybox setup
     Global SkyboxImage : SkyboxImage = Reserve Free Image()
+    Global SkyboxImage2 : SkyboxImage2 = Reserve Free Image()
     Global Skyboxfx : Skyboxfx = Reserve Free Effect()
     Global SkyboxObj : SkyboxObj = 8001
-    make object sphere SkyboxObj,-2000,5,5
+    make object sphere SkyboxObj,-1024,5,5
     Load Image "Media\Materials\Cubemaps\Cube0.dds",SkyboxImage,2
+    Load Image "Media\Materials\Cubemaps\Cube1.dds",SkyboxImage2,2
     Load Effect "media\Shaders\SkyBox.fx",SkyboxFx,0
     Set Object Effect SkyboxObj,SkyboxFx
     Texture Object SkyboxObj,0,SkyboxImage
@@ -130,11 +136,13 @@ ENDFUNCTION
 
 function Sky_Update():
     //update skybox
-    position object SkyboxObj,camera position x(),camera position y(),camera position z()
-    Position Object SkyboxSunObject,camera position x(),camera position y(),camera position z()
-    Rotate Object SkyboxSunObject,328,346,0
+    position object SkyboxSunObject,camera position x(),camera position y(),camera position z()
+    Position Object SkyboxObj,camera position x(),camera position y(),camera position z()
+    rotate Object SkyboxSunObject,Ent_GetFloat(EntGetReference("root"),"Sun_VectorX"),Ent_GetFloat(EntGetReference("root"),"Sun_VectorY"),0
     Move Object SkyboxSunObject,1000
 ENDFUNCTION
+
+
 Function Camera_PostUIRenderEditor():
 
 adx#=AngleDiff(object angle x(SkyboxSunObject),camera angle x())
@@ -145,11 +153,13 @@ ad#=30
 Endif
 add#=30 - ad#
 skyboxsunalpha = tbm_Curvevalue(add#,skyboxsunalpha,10)
-If Object In Screen(skyboxsunobject):
+minalpha#=0.2
+ray = sc_raycast(0,camera position x(),camera position y(),camera position z(),object position x(SkyboxSunObject),object position y(SkyboxSunObject),object position z(SkyboxSunObject),0)
+If Object In Screen(skyboxsunobject) and ray = 0:
 Ik Set Blend Mode 15
-ik set effect float 22,"Alpha",add#/50.0
+ik set effect float 22,"Alpha",clamp(add#/(50.0+rnd(10)),minalpha#,1.0)
 Ik Paste Image SkyboxSunFlare,object Screen x(SkyboxSunObject)-(Screen Width()/6),object screen y(SkyboxSunObject)-(Screen Width()/6),object Screen x(SkyboxSunObject)+(Screen Width()/6),object screen y(SkyboxSunObject)+(Screen Width()/6),22
-ik set effect float 22,"Alpha",add#/120.0
+ik set effect float 22,"Alpha",clamp(add#/(120.0+rnd(10)),minalpha#,1.0)
 Ik Paste Image SkyboxSunFlare,object Screen x(SkyboxSunObject)-(Screen Width()/2),object screen y(SkyboxSunObject)-(Screen Width()/2),object Screen x(SkyboxSunObject)+(Screen Width()/2),object screen y(SkyboxSunObject)+(Screen Width()/2),22
 `ik set effect float 22,"Alpha",0.5
 `Ik Paste Image SkyboxSunFlare,object Screen x(SkyboxSunObject)-256,object screen y(SkyboxSunObject)-256,object Screen x(SkyboxSunObject)+256,object screen y(SkyboxSunObject)+256,22
@@ -211,8 +221,40 @@ function Camera_Update():
     EditorUI.CameraRZ = camera angle z()
     endif
     if EditorUI.CameraMode = 1:
+        hide mouse
+        position mouse desktop width()/2,desktop height()/2
+        cr#=0:cf#=0
+        If Rightkey()=1 Or Keystate(32)=1 Then cr#=-0.05*TBM
+        If Leftkey()=1 Or Keystate(30)=1 Then cr#=0.05*TBM
+        If Upkey()=1 Or Keystate(17)=1 Then cf#=0.05*TBM
+        If Downkey()=1 Or Keystate(31)=1 Then cf#=-0.05*TBM
+        ncr#=tbm_curvevalue(cr#,ncr#,1)
+        ncf#=tbm_curvevalue(cf#,ncf#,1)
+        cx#=cx#+(EditorUI.mmy*0.2)
+        cy#=cy#+(EditorUI.mmx*0.2)
+        if cx#>80 then cx#=80
+        if cx#<-80  then cx#=-80
+        ncx#=tbm_curveangle(cx#,ncx#,1)
+        ncy#=tbm_curveangle(cy#,ncy#,1)
+        move camera ncf#
+        rotate camera 0,wrapvalue(ncy#-90),0
+        move camera ncr#
+        rotate camera 0,wrapvalue(ncy#+90),0
+        Rotate Camera ncx#,ncy#,0
+        EditorUI.CameraX = camera position x()
+        EditorUI.CameraZ = camera position z()
+        EditorUI.CameraRX = camera angle x()
+        EditorUI.CameraRY = camera angle y()
+        EditorUI.CameraRZ = camera angle z()
+        ray = sc_raycast(0,EditorUI.CameraX,1000,EditorUI.CameraZ,EditorUI.CameraX,-1000,EditorUI.CameraZ,0)
+        EditorUI.CameraY = SC_getStaticCollisionY ()+0.75
         position camera EditorUI.CameraX,EditorUI.CameraY,EditorUI.CameraZ
         rotate camera EditorUI.CameraRX,EditorUI.CameraRY,EditorUI.CameraRZ
+        if keystate(34):
+            show mouse
+            setchecked EditorUI.CameraModeLock,0
+            EditorUI.CameraMode = 0
+        endif
     endif
     if EditorUI.CameraMode = 2:
         Spectator_SetCamera()
