@@ -66,6 +66,8 @@ type t_EditorUI
     Menu_Help_Sub as integer
     Menu_Help_Gotoforums  as integer
     Menu_Help_About as integer
+    Menu_Level_SetSkyToDay as integer
+    Menu_Level_SetSkyToDusk as integer
     UI_Statusbar as integer
     UI_Statuspanel1 as integer
     UI_Statuspanel2 as integer
@@ -98,6 +100,7 @@ type t_EditorUI
     UseDynamicSky as integer
     WaterHeightSlider as integer
     WaterHeightLabel as integer
+    SkyPreset as integer
     ShowWaterPlain as integer
     LevelNameLabel as integer
     LevelNameTextbox as integer
@@ -237,7 +240,7 @@ function UI_Editor_Init():
     Setpanelimage EditorUI.About_Panel,"Media\Images\Interface\editor\about.bmp"
     bringtofront EditorUI.About_Button
     Setgadgetalpha EditorUI.About_Window,200
-    setgadgetvisible EditorUI.About_Window,0
+    setgadgetvisible EditorUI.About_Window,1,1
     applyFont EditorUI.About_Window,EditorUI.Font
     applyFont EditorUI.About_Button,EditorUI.Font
     
@@ -326,17 +329,12 @@ function UI_Editor_Init():
     applyFont EditorUI.SpectatorListrename,EditorUI.Font
     applyFont EditorUI.SpectatorListsetmain,EditorUI.Font
     applyFont EditorUI.Modegadget,EditorUI.Font
-
-    EditorUI.TimeOfDaySlider=createTrackBar(64,78,180,30,0,EditorUI.currentmodeframe)
-    EditorUI.TimeOfdayLabel=createLabel(9,78,55,29,"Time Of Day",EditorUI.currentmodeframe)
-    EditorUI.UseDynamicSky=createCheckBox(11,47,230,20,"Dynamic Sky",EditorUI.currentmodeframe)
-    setgadgetvisible EditorUI.TimeOfDaySlider,0
-    setgadgetvisible EditorUI.TimeOfdayLabel,0
-    setgadgetvisible EditorUI.UseDynamicSky,0
-    applyFont EditorUI.TimeOfDaySlider,EditorUI.Font
-    applyFont EditorUI.TimeOfdayLabel,EditorUI.Font
-    applyFont EditorUI.UseDynamicSky,EditorUI.Font
-    settrackbarrange EditorUI.TimeOfDaySlider,5,20
+    
+    EditorUI.SkyPreset=createComboBox(9,47,230,25,EditorUI.currentmodeframe)
+    additem EditorUI.SkyPreset,"daytime_1"
+    additem EditorUI.SkyPreset,"dusk_1"
+    setgadgetvisible EditorUI.SkyPreset,0
+    applyFont EditorUI.SkyPreset,EditorUI.Font
     
     EditorUI.WaterHeightSlider=createTrackBar(64,78+80,180,30,0,EditorUI.currentmodeframe)
     EditorUI.WaterHeightLabel=createLabel(9,78+80,55,29,"Water Height",EditorUI.currentmodeframe)
@@ -387,7 +385,7 @@ function UI_Editor_Init():
     EditorUI.BrushSpeedSlider=createTrackBar(59,121,185,33,0,EditorUI.currentmodeframe)
     EditorUI.BrushSpeedLabel=createLabel(9,119,50,35,"Brush Speed",EditorUI.currentmodeframe)
     EditorUI.ButtonMod2=createButton(174,214,80,45,"Smooth All",0,EditorUI.currentmodeframe)
-    EditorUI.ButtonMod3=createButton(174,259,80,45,"Mod 3",0,EditorUI.currentmodeframe)
+    EditorUI.ButtonMod3=createButton(174,259,80,45,"Build Shadows",0,EditorUI.currentmodeframe)
     EditorUI.ButtonMod1=createButton(174,169,80,45,"Refresh All",0,EditorUI.currentmodeframe)
     addItem EditorUI.BrushTextureCombobox,"Layer 1"
     addItem EditorUI.BrushTextureCombobox,"Layer 2"
@@ -683,11 +681,15 @@ function UI_Editor_Init():
     EditorUI.Menu_Level_Genwaterfoam = UI_Editor_GenID()
     EditorUI.Menu_Level_Genwaterfoammap = UI_Editor_GenID()
     EditorUI.Menu_Level_Setsunvectortocamera = UI_Editor_GenID()
+    EditorUI.Menu_Level_SetSkyToDay = UI_Editor_GenID()
+    EditorUI.Menu_Level_SetSkyToDusk = UI_Editor_GenID()
     Addmenuitem EditorUI.Menu_Level_Sub,"View Environment Variables",EditorUI.Menu_Level_Viewvars
     Addmenuitem EditorUI.Menu_Level_Sub,"Generate Water FoamMap",EditorUI.Menu_Level_Genwaterfoammap
     Addmenuitem EditorUI.Menu_Level_Sub,"Generate Water FoamObject",EditorUI.Menu_Level_Genwaterfoam
     addmenusplitter EditorUI.Menu_Level_Sub
     Addmenuitem EditorUI.Menu_Level_Sub,"Set Sun Vector (To Camera)",EditorUI.Menu_Level_Setsunvectortocamera
+    Addmenuitem EditorUI.Menu_Level_Sub,"Set Cubemap to Day",EditorUI.Menu_Level_SetSkyToDay
+    Addmenuitem EditorUI.Menu_Level_Sub,"Set Cubemap to Dusk",EditorUI.Menu_Level_SetSkyToDusk
     
     EditorUI.Menu_Terrain_Rebuild = UI_Editor_GenID()
     EditorUI.Menu_Terrain_LoadHeightmap = UI_Editor_GenID()
@@ -713,6 +715,7 @@ function UI_Editor_Init():
     Addmenuitem EditorUI.Menu_Help_Sub,"Go To Forum Thread",EditorUI.Menu_Help_Gotoforums
     addMenuSplitter EditorUI.Menu_Help_Sub
     Addmenuitem EditorUI.Menu_Help_Sub,"About...",EditorUI.Menu_Help_About
+    Setgadgetvisible EditorUI.About_Window,1,1
     
     EditorUI.EntityEditorDummyObject = reserve free object()
     EditorUI.EntityEditorIcon = reserve free image()
@@ -754,6 +757,7 @@ function UI_Editor_Update():
             if id = EditorUI.Menu_Level_Viewvars then setgadgetvisible EditorUI.Variable_window,1,1 : World_Editor_Display()
             if id = EditorUI.Menu_Level_Genwaterfoammap then Water_GenerateFoamMap()
             if id = EditorUI.Menu_Level_Genwaterfoam then Water_CreateFoam()
+
             if id = EditorUI.Menu_Terrain_Rebuild then Terrain_Refresh()
             if id = EditorUI.Menu_Terrain_LoadHeightmap:
                 filenamenew$=openDialog("Load Heightmap","Bitmap Files (*.bmp)|*.bmp|All Files (*.*)|*.*",0,"Media\Materials\Heightmaps") 
@@ -777,6 +781,7 @@ function UI_Editor_Update():
         endcase
         case 0x202
             id = Eventsource()
+            if id = EditorUI.ButtonMod3 then Editor_World_BuildShadows()
             if id = EditorUI.Variable_window_close then setgadgetvisible EditorUI.Variable_window,0,1
             if id = EditorUI.About_Button then Setgadgetvisible EditorUI.About_Window,0
             if id = EditorUI.DialogNewCreateBTN then UI_Editor_CheckNew()
@@ -797,6 +802,28 @@ function UI_Editor_Update():
                     setgadgetenabled EditorUI.SpectatorListSet,0
                 setgadgetenabled EditorUI.Spectatorlistdelete,0
                 setgadgetenabled EditorUI.Spectatorlistaddnew,0
+                endif
+            endif
+            if id = EditorUI.SkyPreset:
+                ref = EntGetReference("root")
+                EntSetAttribute(ref,"sky_preset",str$(selecteditem(EditorUI.SkyPreset)))
+                if Ent_GetInt(ref,"sky_preset")=0:
+                    Texture Object SkyboxObj,0,SkyboxImage
+                    texture object Water_Object,2,SkyboxImage
+                    vec=find free vector()
+                    r=make vector4(vec)
+                    set vector4 vec,0.88,0.90,0.86,1.0
+                    set effect constant vector Water_FX_Main,"FogColor",vec
+                    delete vector4 vec
+                endif
+                if Ent_GetInt(ref,"sky_preset")=1:
+                    Texture Object SkyboxObj,0,SkyboxImage2
+                    texture object Water_Object,2,SkyboxImage2
+                    vec=find free vector()
+                    r=make vector4(vec)
+                    set vector4 vec,0.96,0.678,0.345,1.0
+                    set effect constant vector Water_FX_Main,"FogColor",vec
+                    delete vector4 vec
                 endif
             endif
             if id = EditorUI.ButtonRaise then Editor_Terrain_SwitchMode(0)
@@ -914,9 +941,7 @@ function UI_Editor_Update():
             //level
             UI_Editor_AddToConsole("Level Tool Mode")
             UI_Editor_HideAll()
-            setgadgetvisible EditorUI.TimeOfDaySlider,1
-            setgadgetvisible EditorUI.TimeOfdayLabel,1
-            setgadgetvisible EditorUI.UseDynamicSky,1
+            setgadgetvisible EditorUI.SkyPreset,1
             setgadgetvisible EditorUI.WaterHeightSlider,1
             setgadgetvisible EditorUI.WaterHeightLabel,1
             setgadgetvisible EditorUI.ShowWaterPlain,1
@@ -1090,9 +1115,7 @@ function UI_Editor_HideAll():
         setgadgetvisible EditorUI.SpectatorListdelete,0
         setgadgetvisible EditorUI.SpectatorListrename,0
         setgadgetvisible EditorUI.SpectatorListsetmain,0
-        setgadgetvisible EditorUI.TimeOfDaySlider,0
-        setgadgetvisible EditorUI.TimeOfdayLabel,0
-        setgadgetvisible EditorUI.UseDynamicSky,0
+        setgadgetvisible EditorUI.SkyPreset,0
         setgadgetvisible EditorUI.WaterHeightSlider,0
         setgadgetvisible EditorUI.WaterHeightLabel,0
         setgadgetvisible EditorUI.ShowWaterPlain,0
@@ -1599,11 +1622,6 @@ function SaveLevel(filename as string):
         ref = EntGetReference("root")
         //this level cant be opened ingame until it's compiled!!!
         write string 1,"LevelCompiledFlag=0"
-        write string 1,"LevelNameDisplay="+ap$+EntGetAttribute(ref,"displayname")+ap$
-        write string 1,"LevelEntityFile="+ap$+"_entity.xnt"+ap$
-        write string 1,"LevelUseSplash="+EntGetAttribute(ref,"title_screen_enabled")
-        write string 1,"LevelUseMOTD=1"
-        write string 1,"LevelMOTDString="+ap$+"Welcome to OpenFPS"+ap$
         close file 1
         ADD FILE TO BLOCK 1,"_metadata.cfg"
         delete file "_metadata.cfg"
@@ -1663,6 +1681,7 @@ function UI_Editor_DoOpenPrompt():
         OpenLevel(filename)
     endif
     World_Editor_Apply()
+    World_Editor_ApplyVisuals()
 endfunction
 
 function UI_Editor_DoCloseFile():

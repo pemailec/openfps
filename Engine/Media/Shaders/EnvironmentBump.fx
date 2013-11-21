@@ -21,8 +21,8 @@
    float3 Ambient={0.4f,0.4f,0.4f};
    float ReflectFactor=0.5f;
    float SunReflectFactor=1.0f;
-   //float4 FogColor={0.96f,0.678f,0.345f,1.0f};
-   float4 FogColor={0.88f,0.90f,0.86f,1.0f};
+   float4 FogColor={0.96f,0.678f,0.345f,1.0f};
+   //float4 FogColor={0.88f,0.90f,0.86f,1.0f};
    float FogRange=380.0f;
    float Alpha=1.0f;
    float horizontal = 0.0;
@@ -30,8 +30,9 @@
    float invSize = 0.05;      // assumes object size is 100 (i.e. 1/100 = 0.01)
    float timeScale = 8.0;
    float objectScale = 100.0;  // set this to about 25% of object size
-   float seascale = 0.0f;
+   float seascale =0.1f;
    float actualtime = 0.0;
+   float texScroll = 0.01f;
 
 //--------------
 // Textures
@@ -51,6 +52,11 @@
       {
 	Texture = <cubeMapTX>;
       };
+   texture ShadowTX <string Name="";>;	
+   sampler2D Shadow = sampler_state 
+      {
+     	texture = <ShadowTX>;
+      };
 
 
 //--------------
@@ -68,6 +74,7 @@
        {
  	float4 OPos:POSITION; 
     	float2 Tex:TEXCOORD0; 
+	float2 TexShadow:TEXCOORD6;
     	float3 ViewPos:TEXCOORD1; 
   	float3 tbnRow1:TEXCOORD2; 
   	float3 tbnRow2:TEXCOORD3; 
@@ -84,7 +91,9 @@
     {
  	output OUT;
 	OUT.OPos=mul(IN.Pos,WorldVP); 
- 	OUT.Tex=IN.UV;
+ 	OUT.Tex=float2( IN.UV.x, IN.UV.y + seconds * texScroll );
+	OUT.TexShadow=float2( IN.UV.x / 16, IN.UV.y / -16);
+
 	float3 WPos=mul(IN.Pos,World);
 	float3 View=WPos-ViewInv[3].xyz;  
 	OUT.ViewPos=View;
@@ -104,6 +113,7 @@
     float4 PS(output IN)  : COLOR
      {		
   	float4 Texture=tex2D(Base,IN.Tex);
+  	float4 ShadowData=tex2D(Shadow,IN.TexShadow);
 	float NewFog=IN.Fog;
 	float3 NormalMap=tex2D(Normal,IN.Tex)*2-1;
     	float3 worldNorm;
@@ -114,7 +124,7 @@
   	float3 Cube=texCUBE(cubeMap,lookup);
 	float Light=saturate(dot(-Lightdir,IN.Normals));
 	float4 Final =float4(lerp(Texture,Cube,tex2D(Normal,IN.Tex).w*ReflectFactor)*((Light*LightColor)+Ambient),Texture.w *Alpha);
-	return (Final*1.4)-0.1;
+	return ((Final*1.4)-0.1)*ShadowData;
 
      }
 

@@ -15,135 +15,84 @@
 //////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////
-// Main Functions
+// General Functions
 //////////////////////////////////////////////////////////////
 
-function Game_Init():
-    global Game_Running as integer
-    global Game_Loading as integer
-    global Game_LoadFile as string
-ENDFUNCTION
+//triggered at start of the program
+function Game_Init()
+    global GameWorld as t_Gameworld
+endfunction
 
-function Game_Update():
-    if Game_Running = 1:
-        //game modules updated here!
-        Physics_Update()
-        if game.state = GAME_SPECTATE:
-            Camera_Spectator_Update()
-        endif
-        Water_Update()
+//triggered during update sequence
+function Game_Update()
+    if Gameworld.enabled = 1:
+        Game_World_Update()
+        if Network.Net_Server = 1 then Game_Server_Update()
+        if Network.Net_Client = 1 then Game_Client_Update()
     endif
-    if Game_Loading = 1:
-        //loading
-        if  UI_FadeManager.state=UI_NORMAL :
-            Game_Load_real(Game_LoadFile)
-            Game_Loading= 0
-            LoadingDisplayCompleted = 0
-            `UI_FadeManager.state=UI_FADEIN
-            `UI_FadeManager.target=M_ENGINE_DEFAULT
-            change mouse 2
-        endif
-    endif
-ENDFUNCTION
+endfunction
 
-function Game_Terminate():
-ENDFUNCTION
+//triggered at end of program
+function Game_Terminate()
 
-function Game_Load(file$):
-    Game_LoadFile = file$
-    Game_Loading = 1
+endfunction
+
+//debug function, triggers load sequence from menu or commmand
+function Trigger_Load(func as string,args as string)
+    global LoadTargetFunc as integer
+    LoadTargetFunc = get ptr to function (func)
+    global LoadTargetFuncArgs as string
+    LoadTargetFuncArgs = args
+    global LoadTargetFuncExecuted as integer
+    LoadTargetFuncExecuted = 0
     UI_FadeManager.state=UI_FADEIN
     UI_FadeManager.target=M_ENGINE_LOADING
-ENDFUNCTION
+endfunction
 
-function Game_Load_real(file$):
+//////////////////////////////////////////////////////////////
+// Engine Functions
+//////////////////////////////////////////////////////////////
+// The following functions handle the core game engine
+//////////////////////////////////////////////////////////////
+
+
+//triggered when the client recieves the sv_levelstart flag from server
+function Game_Client_Start()
+    //load the level if it hasn't already been loaded by the server
+    if Network.Net_Server = 0:
+        Game_World_Load(Client.level_file)
+    else
+        //dont load the level, it's already been loaded
+    endif
     
-    //this module takes over the ui coding from here.
-    if Game_Running = 1 then Game_End()
-    
-    //check if the file is valid
-    remstart
-    local filename as string
-    filename = "Media\Levels\"+remove$(file$,".xlvl")
-    
-    UI_WriteLog(UI_GREEN,"* Loading level file "+filename+".xlvl")
-    
-    //open level file
-    rename file filename+".xlvl",filename+".zip"
-    OPEN FILE BLOCK filename+".zip",1
-    
-    ///////////////////////////////////////////
-    // ENGINE LOADING SYSTEM
-    // LOAD COMPILED ENTITY STRUCTURE
-    // includes compiled terrain
-    // -compiled lightmaps
-    // -compiled static meshes
-    ///////////////////////////////////////////
-    
-    UI_WriteLog(UI_GREEN,"*entities....")
-    if file exist("Media\Levels\entity_compiled.xnt") then delete file "Media\Levels\entity_compiled.xnt"
-    EXTRACT FILE FROM BLOCK 1,"entity_compiled.xnt","Media\Levels\"
-    EntLoad("Media\Levels\entity_compiled.xnt")
-    delete file "Media\Levels\entity_compiled.xnt"
-    
-    //we do not need to load the terrain
-    //in the compiled level system, the terrain
-    //is baked into the level static mesh
-    lastslash = 0
-    for i = 0 to len(filename):
-        if mid$(filename,i)="\" then lastslash = i
-    next i
-    terrain_filename$ = right$(filename,len(filename) - lastslash)
-    terrain_filename$ = left$(terrain_filename$,len(terrain_filename$)-4)
-    terrain_filename_new$ = "Media\Terrains\"+terrain_filename$
-    UI_WriteLog(UI_GREEN,"*terrain....")
-    Terrain_Load(terrain_filename_new$)
-    
-    //set up world physics
-    Physics_Create()
-    
-    UI_WriteLog(UI_GREEN,"*other....")
-    //setup water
-    Water_Init()
-    Camera_Spectator_Generate()
-    time# = NDB_GetElapsedTimeInSec()
-    time# = NDB_GetElapsedTimeInSec()
-    Game_Running = 1
-    Game.state = GAME_SPECTATE
-    UI_WriteLog(UI_GREEN,"* Loaded level file and started game.")
-    
-    `ui_menu_Setmode(M_ENGINE_DEFAULT)
-    Audio_StopAll()
-    
-    //close level file
-    CLOSE FILE BLOCK 1
-    rename file filename+".zip",filename+".xlvl"
-    remend
-    
-    //raise an error since the level system isn't set up
+    //change the UI state to the default viewport
     UI_FadeManager.state=UI_FADEIN
-    UI_FadeManager.target=M_MENU_GENERICPROMPT
-    prompttextone$="An error has occurred!"
-    prompttexttwo$="the .xlvl file could not be opened."
-    prompttitle$="Level Error :: File Not Found"
+    UI_FadeManager.target=M_ENGINE_DEFAULT
     
 ENDFUNCTION
 
-function Game_Join():
-    Game.state = GAME_SPECTATE
+//triggered every loop during the game period.
+function Game_Client_Update()
+    if Gameworld.state = GAME_SPECTATE:
+        Camera_Spectator_Update()
+    endif
 ENDFUNCTION
 
-function Game_End():
-    if Game_Running = 1:
-        Game_Running = 0
-        Physics_Destroy()
-       ` Terrain_Delete()
-        DeleteAllEntities()
-        Water_Terminate()
-        Camera_Spectator_Clear()
-        UI_FadeManager.state=UI_FADEIN
-        UI_FadeManager.target=M_MENU_MAIN
-    ENDIF
+//triggered when the client is disconnected / quits.
+function Game_Client_End()
+    
+ENDFUNCTION
+
+function Game_Server_Start(config as string)
+    
+ENDFUNCTION
+
+function Game_Server_Update()
+    
+ENDFUNCTION
+
+function Game_Server_End()
+    
 ENDFUNCTION
 
 //////////////////////////////////////////////////////////////

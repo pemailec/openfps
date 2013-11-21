@@ -31,7 +31,7 @@ function Network_MasterServer_Connect():
     remstart
     global ClientMasterServer
     ClientMasterServer = Winsock Connect(Game.ServerIP,Game.serverport)
-    Network.MasterServerOnline = 1
+    Network.Net_MasterServer = 1
     if WINSOCK CHANNEL ERROR(ClientMasterServer):
         ui_writelog(UI_RED,winsock channel error msg$(ClientMasterServer))
         MasterserverOnline = 0
@@ -81,7 +81,7 @@ function Network_MasterServer_Disconnect():
     Winsock Add String "disconnect"
     Winsock Send Tcp Packet ClientMasterServer
     WINSOCK DISCONNECT ClientMasterServer
-    Network.MasterServerOnline = 0
+    Network.Net_MasterServer = 0
 endfunction
 
 function Network_SendMessage(message$):

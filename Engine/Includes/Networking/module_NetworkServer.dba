@@ -13,57 +13,18 @@
 //  UDTS
 //////////////////////////////////////////////////////////////
 
-type t_NetworkServer
-    listname as string
-    displayname as string
-    mapfile as string
-    ip as string
-    port as integer
-    maxplayers as integer
-    state as integer
-    listenchannel as integer
-    numclients as integer
-endtype
-
 //////////////////////////////////////////////////////////////
 //  MAIN FUNCTIONS
 //////////////////////////////////////////////////////////////
 
-function Server_Start(configfile_temp as string):
-    Lua Load File configfile_temp
-    Global Server as t_NetworkServer
-    Server.listname = lua string$("ServerListName")
-    Server.displayname = lua string$("ServerDisplayName")
-    Server.mapfile =lua string$("MapFile")
-    Server.ip = lua string$("ip")
-    Server.port = lua int("port")
-    Server.maxplayers = lua int("maxplayers")
-    Server.state = JOINING
-    Network.GameServer = 1
-    ui_Writelog(UI_Blue,"SERVER: Started "+Server.mapfile)
-ENDFUNCTION
+function Server_Start():
+    local SESSIONID as string
+ENDFUNCTION SESSIONID
 
 function Server_Update():
-    select Server.state
-        case JOINING
-            if MenuUI.mode=M_ENGINE_LOADING and UI_FadeManager.state=UI_NORMAL:
-                //trigger load
-                Game_Load(Server.mapfile)
-                ui_Writelog(UI_Blue,"SERVER: Loaded "+Server.mapfile)
-                Server.state = ACTIVE
-                //start up server
-                ui_Writelog(UI_Blue,"SERVER is active")
-            endif
-        endcase
-        case IDLE
-        endcase
-    endselect
 ENDFUNCTION
 
 function Server_Terminate():
-    Network.GameServer = 0
-    ui_Writelog(UI_Blue,"SERVER: Terminated")
-    Game_End()
 ENDFUNCTION
 
 //////////////////////////////////////////////////////////////

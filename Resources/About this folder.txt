@@ -1,5 +1,7 @@
-This folder ("Resources") is a place to store various prototyping projects we've worked on.
-Everything here is a past, present or future part of the engine, or a utility necessary for
-the engine to run. In addition, the "OpenFPS Images" folder contains useful resources such
-as logos. Also, the editor code / builds are stored here.
+This folder ("Resources") is a place to store various utilities including the level editor
+as well as any prototyping projects we've worked on. Everything here is a past, present or 
+future part of the engine, or a utility necessary for the engine to run. In addition, the 
+"OpenFPS Images" folder contains useful resources such as logos. As a coder or artist, feel
+free to add subfolders here if you have something you want to work on without including it
+in the main project.
 -Chris

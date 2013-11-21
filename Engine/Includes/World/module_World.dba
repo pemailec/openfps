@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////
-//  Game Engine Standard Modules - WORLD MODULE
+//  Game Engine Standard Modules - GAME WORLD MODULE
 //  Concept and code by thenerd, Summer 2012!
 //////////////////////////////////////////////////////////////
 
@@ -11,25 +11,139 @@
 //  UDTS
 //////////////////////////////////////////////////////////////
 
+type t_GameWorld
+    enabled as boolean
+    state as integer
+endtype
+
 //////////////////////////////////////////////////////////////
-//  FUNCTIONS
+//  MAIN FUNCTIONS
 //////////////////////////////////////////////////////////////
 
-Function World_Init():
+//loads the game world
+function Game_World_Load(file$)
+    change mouse 3
+    //if a game is running, end it!
+    // (later add something for position saving)
+    if Gameworld.enabled = 1 then Game_World_Destroy()
+    
+    //open dump file
+    open to write 2,"Media\Levels\dump.txt"
+    write string 2,"OpenFPS_Dump"
+    
+    // get file and load it
+    local filename as string
+    filename = "Media\Levels\"+remove$(file$,".xlvl")
+    write string 2,"OpenFPS_Dump - Trying to load level:"
+    write string 2,filename
+    rename file filename+".xlvl",filename+".zip"
+    OPEN FILE BLOCK filename+".zip",1
+    UI_WriteLog(UI_GREEN,"* Loading level file "+filename+".xlvl")
+        
+    //load metadata first to check if level is valid
+    EXTRACT FILE FROM BLOCK 1,"_metadata.cfg","Media\Levels"
+    lua load file "Media\Levels\_metadata.cfg"
+    delete file "Media\Levels\_metadata.cfg"
+    
+    EXTRACT FILE FROM BLOCK 1,"_entity.xnt","Media\Levels"
+    EntLoad("Media\Levels\_entity.xnt")
+    delete file "Media\Levels\_entity.xnt"
+    //load terrain data
+    Terrain_Load()
+    //apply camera settings
+    Camera_Spectator_Generate()
+    //setup water
+    Water_Init()
+    //apply the correct cubemaps
+    GameWorld_Apply_SkyCubemap()
+    //set gamemode
+    Gameworld.enabled = 1
+    Gameworld.state = GAME_SPECTATE
+    //do some other updates
+    //build the terrain light
+    //first update the camera sky once to get positions
+    Camera_Skybox_Update()
+    Terrain_BuildShadows()
+    //stop all audio
+    Audio_StopAll()
+    UI_WriteLog(UI_GREEN,"* Level file loaded successfully.")
+    
+    //close the level file.
+    CLOSE FILE BLOCK 1
+    rename file filename+".zip",filename+".xlvl"
+    write string 2,"OpenFPS_Dump - Level load successful."
+    delete file "Media\Levels\dump.txt"
+    change mouse 2
+ENDFUNCTION
+
+//update the game world
+//this does not include the player camera system
+Function Game_World_Update()
+    //game modules updated here!
+    Water_Update()
 Endfunction
 
-Function World_Update():
-Endfunction
-
-Function World_Destroy():
-Endfunction
-
-function Object_ScaleToReal(obj as integer,size as integer):
-	//will scale an object to a real size in units
-	dbpunits = Object Size Y(obj,1)
-	desired = size
-	scale object obj,(desired/dbpunits)*100,(desired/dbpunits)*100,(desired/dbpunits)*100
+//applies the cubemap to the water and sky
+function GameWorld_Apply_SkyCubemap()
+    //set the water and sky to match the environment setup
+    ref = EntGetReference("root")
+    if Ent_GetInt(ref,"sky_preset")=0:
+        Texture Object SkyboxObject,0,SkyboxImage
+        texture object Water_Object,2,SkyboxImage
+        texture object Water_Object2,2,SkyboxImage
+        texture object Water_Object3,2,SkyboxImage
+        texture object Water_Object4,2,SkyboxImage
+        texture object Water_Object5,2,SkyboxImage
+        texture object Water_Object6,2,SkyboxImage
+        texture object Water_Object7,2,SkyboxImage
+        texture object Water_Object8,2,SkyboxImage
+        texture object Water_Object9,2,SkyboxImage
+        vec=find free vector()
+        r=make vector4(vec)
+        set vector4 vec,0.88,0.90,0.86,1.0
+        set effect constant vector Water_FX_Main,"FogColor",vec
+        delete vector4 vec
+    endif
+    if Ent_GetInt(ref,"sky_preset")=1:
+        Texture Object SkyboxObject,0,SkyboxImage2
+        texture object Water_Object,2,SkyboxImage2
+        texture object Water_Object2,2,SkyboxImage2
+        texture object Water_Object3,2,SkyboxImage2
+        texture object Water_Object4,2,SkyboxImage2
+        texture object Water_Object5,2,SkyboxImage2
+        texture object Water_Object6,2,SkyboxImage2
+        texture object Water_Object7,2,SkyboxImage2
+        texture object Water_Object8,2,SkyboxImage2
+        texture object Water_Object9,2,SkyboxImage2
+        vec=find free vector()
+        r=make vector4(vec)
+        set vector4 vec,0.96,0.678,0.345,1.0
+        set effect constant vector Water_FX_Main,"FogColor",vec
+        delete vector4 vec
+    endif
 endfunction
+
+//unloads the game world
+Function Game_World_Destroy()
+    if Gameworld.enabled = 1:
+    Gameworld.enabled = 0
+    Terrain_Delete()
+    DeleteAllEntities()
+    Water_Terminate()
+    Camera_Spectator_Clear()
+    endif
+ENDFUNCTION
+
+//////////////////////////////////////////////////////////////
+//  UTILITY FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+function Object_ScaleToReal(obj as integer,size as integer)
+    //will scale an object to a real size in units
+    dbpunits = Object Size Y(obj,1)
+    desired = size
+    scale object obj,(desired/dbpunits)*100,(desired/dbpunits)*100,(desired/dbpunits)*100
+ENDFUNCTION
 
 //////////////////////////////////////////////////////////////
 //  End of code

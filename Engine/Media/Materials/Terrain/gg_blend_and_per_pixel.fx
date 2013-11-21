@@ -67,34 +67,14 @@ sampler2D detailSample3 = sampler_state
   addressV  = wrap;
 };
 
-texture detailMap4 <string ResourceName = "";>;
-sampler2D detailSample4 = sampler_state
-{ texture = (detailMap4);
+texture shadowMap <string ResourceName = "";>;
+sampler2D shadowSample = sampler_state
+{ texture = (shadowMap);
   minFilter = linear;
   magFilter = linear;
   mipFilter = linear;
-  addressU  = wrap;
-  addressV  = wrap;
-};
-
-texture detailMap5 <string ResourceName = "";>;
-sampler2D detailSample5 = sampler_state
-{ texture = (detailMap5);
-  minFilter = linear;
-  magFilter = linear;
-  mipFilter = linear;
-  addressU  = wrap;
-  addressV  = wrap;
-};
-
-texture detailMap6 <string ResourceName = "";>;
-sampler2D detailSample6 = sampler_state
-{ texture = (detailMap6);
-  minFilter = linear;
-  magFilter = linear;
-  mipFilter = linear;
-  addressU  = wrap;
-  addressV  = wrap;
+  addressU  = clamp;
+  addressV  = clamp;
 };
 
 //-----------------
@@ -131,6 +111,7 @@ VSOutput VS(VSInput In, VSOutput Out)
 //-----------------
 PSOutput PS(VSOutput In, PSOutput Out)
 { float4 rgbColours1 = tex2D(maskSample1, In.maskUV);
+  float4 ShadowColor = tex2D(shadowSample, In.maskUV);
   float4 baseColour;
   baseColour  = tex2D(detailSample1, In.UV* repeatScale1) * rgbColours1.r;
   baseColour += tex2D(detailSample2, In.UV* repeatScale2) * rgbColours1.g;

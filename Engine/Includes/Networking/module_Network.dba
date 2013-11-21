@@ -11,28 +11,142 @@
 //  UDTS
 //////////////////////////////////////////////////////////////
 
-type t_Networking
-    MyIP as string
-    MasterServerOnline as integer
-    GameServer as integer
-    GameClient as integer
+type t_Net_Data
+    Net_Server as boolean
+    Net_Client as boolean
+    Net_MyIP as string
+    Net_MasterServer as boolean
+endtype
+
+type t_Net_TCP_Cache
+    message_header as string
+    message_data as string
+endtype
+
+type t_Net_Client
+    net_ip as string
+    net_name as string
+    target_ip as string
+    target_port as integer
+    tcp_channel as integer
+    localhost as boolean
+    level_file as string
+endtype
+
+type t_Net_Server
+    net_enabled as boolean
+    net_ip as string
+    net_name as string
+    net_server_clients_count as integer
+    net_displayname as string
+    net_maxplayers as integer
+    tcp_listen_port as integer
+    tcp_listen_channel as integer
+    tcp_filter as string
+    server_level_file as string
+    server_latest_cache_header as string
+    server_latest_cache_value as string
+endtype
+
+type t_Net_Server_Client
+    active as boolean
+    name as string
+    ip as string
+    port as integer
+    tcp_channel as integer
+    tcp_data_waiting as integer
+    tcp_data_cache_header as integer
+    tcp_data_cache_data as integer
+    tcp_data_cache_size as integer
+endtype
+
+type t_Client_TCP_Packet
+    header as string
+    value as string
 endtype
 
 //////////////////////////////////////////////////////////////
 //  MAIN FUNCTIONS
 //////////////////////////////////////////////////////////////
 
-Function Network_Init(): 
-    UI_WriteLog(UI_Blue,"Network Module Started.")
-    global Network as t_Networking
+function Network_Host(config as string)
+    //check if another server is running
+    if file exist("Config\server.log")=0:
+    //load up the config file
+    local config_path as string
+    config_path = "Media\Scripts\"+config+".cfg"
+    lua load file config_path
+    //start up server
+    Net_Server_Init(Lua string$("ServerName"),Lua int("port"),lua string$("ip"))
+    //apply server configuration
+    Server.net_maxplayers = lua int("maxplayers")
+    Server.server_level_file = lua string$("LevelFile")
+    //load level file
+    Game_World_Load(Server.server_level_file)
+        
+    //connect client
+    local auth_local as string
+    auth_local = Network_Auth_Generate("127.0.0.1",lua int("port"),Lua string$("ServerName"))
+    Network_Connect(auth_local)
+    else
+        //show the error
+        UI_FadeManager.state=UI_FADEIN
+        UI_FadeManager.target=M_MENU_GENERICPROMPT
+        prompttextone$="Another instance of OpenFPS is running a server."
+        prompttexttwo$="You can only run one server per computer!"
+        prompttitle$="Could Not Start Server"
+    endif
+ENDFUNCTION
+
+function Network_Connect(authstring as string)
+    //start up the client
+    //split the auth string into its separate parts
+    split string authstring,"_"
+    UI_Console_AddLine("NET", "~w Connecting client to Server")
+    Net_Client_Init(split word$(2),val(split word$(3)))
+    UI_Console_AddLine("NET", "~w Client started.")
+ENDFUNCTION
+
+function Network_Disconnect()
+    //disconnect network client and server
+    Net_Disconnect()
+    //delete client and server data
+    if Network.Net_Client = 1 then Game_Client_End()
+    if Network.Net_Server = 1 then Game_Server_End()
+    //delete level
+    Game_World_Destroy()
+    //return to menu
+    UI_FadeManager.state=UI_FADEIN
+    UI_FadeManager.target=M_MENU_MAIN
+ENDFUNCTION
+
+//////////////////////////////////////////////////////////////
+// Authentication / data string format:
+// OpenFPS_<ip>_<port>_<server name>
+// Example:
+// OpenFPS_127.0.0.1_25565_Localhost
+// OpenFPS_173.48.153.103_25565_Miso
+//////////////////////////////////////////////////////////////
+
+function Network_Auth_Generate(ip as string, port as integer, servername as string)
+    local return_auth as string
+    return_auth = "OpenFPS_"+ip+"_"+str$(port)+"_"+servername
+ENDFUNCTION return_auth
+
+//////////////////////////////////////////////////////////////
+//  CORE FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+function Net_Init()
+    global Network as t_Net_Data
+    global Server as t_Net_Server
+    global Client as t_Net_Client
+    
     Game.ip = Network_GetIP()
-    Network.MyIP = Game.ip
+    Network.Net_MyIP = Game.ip
     Winsock Make
-    UI_WriteLog(UI_Blue,"Got Client IP:"+Game.ip)
     
-    `RUDP_Init()
     Network_MasterServer_Connect()
-    
     //call geolocation API to determine location
     Location_Grab()
     global Location_Name as string
@@ -40,29 +154,455 @@ Function Network_Init():
     Location_Name = Location_GetString()
     Location_Icon = Location_Icon_Load()
     
-Endfunction
-
-Function Network_Update():
-    WINSOCK REFRESH CHANNELS
-    
-    `RUDP_Update()
-    if Network.MasterServerOnline = 1 then Network_MasterServer_Update()
-    if Network.GameServer = 1 then Server_Update() //server
-    if Network.GameClient = 1 then Client_Update() //client
-    
-Endfunction
-
-function Network_CloseConnections():
-    if Network.GameClient = 1 then Client_Terminate() //client
-    if Network.GameServer = 1 then Server_Terminate() //server
+    UI_WriteLog(UI_Blue,"Network Module Started.")
 endfunction
 
-Function Network_Terminate():
-    if MasterserverOnline = 1 then Network_MasterServer_Disconnect()
-    Network_CloseConnections()
-    `RUDP_Terminate()
+
+function Net_Update()
+    WINSOCK REFRESH CHANNELS
+    if (winsock error())
+        UI_WriteLog(UI_RED,"Winsock Error: "+winsock error msg$())
+    endif
+    
+    if Network.Net_MasterServer = 1 then Network_MasterServer_Update()
+    if Network.Net_Server then Net_Server_Update()
+    if Network.Net_Client then Net_Client_Update()
+ENDFUNCTION
+
+function Net_Terminate()
+    Net_Disconnect()
+    if Network.Net_MasterServer = 1 then Network_MasterServer_Disconnect()
     winsock clean up
-Endfunction
+ENDFUNCTION
+
+
+function Net_Server_Init(name as string, port as integer, filter as string)
+    //if a server or client is already running, shut it down
+    Net_Disconnect()
+    
+    //open the debug console
+    Console.active=1
+    UI_Console_AddLine("NET", "~w Opened console for debugging.")
+    
+    UI_Console_AddLine("NET", "~w Starting server....")
+    
+    //open TCP listen channel for server input.
+    Network.Net_Server = 1
+    Server.net_ip = Game.ip
+    Server.net_name = name
+    Server.net_displayname = name
+    Server.net_maxplayers = 8
+    Server.tcp_listen_port = port
+    Server.tcp_listen_channel = Winsock Listen(Server.tcp_listen_port)
+    Server.tcp_filter = filter
+    //setup server client array
+    dim Net_Server_Clients() as t_Net_Server_Client
+    Server.net_server_clients_count = 0
+    
+    //make a file to show other instances a server is running
+    open to write 3,"Config\server.log"
+    write string 3,"OpenFPS_Server_Log"
+    write string 3,Network_Auth_Generate(Server.net_ip,Server.tcp_listen_port,Server.net_name)
+    close file 3
+    
+    UI_Console_AddLine("NET", "~w Server started")
+ENDFUNCTION
+
+function Net_Client_Init(ip as string, port as integer)
+    //check if a client is already running
+    if Network.Net_Client = 1 then Net_Client_Disconnect()
+    
+    //connect to the server
+    //check if server is running in same program
+    if Network.Net_Server = 1:
+        //it is, we must create a "fake" tcp connection
+        //we know there are no other clients connected so lets create a fake client @ id 0.
+        Array Insert At Bottom Net_Server_Clients()
+        Net_Server_Clients(0).active = 1
+        Net_Server_Clients(0).name = "localhost"
+        Net_Server_Clients(0).ip="127.0.0.1"
+        Net_Server_Clients(0).port=-1
+        Net_Server_Clients(0).tcp_channel=-1
+        Network_Cache_Create(0)
+        Server.net_server_clients_count = Server.net_server_clients_count + 1
+        Network.Net_Client = 1
+    else
+        //it isn't, we will connect via tcp first
+        Client.net_ip = Game.ip
+        Client.net_name = "Client"
+        Client.target_ip = ip
+        Client.target_port = port
+        Client.tcp_channel = Winsock Connect(Client.target_ip,Client.target_port)
+        Client.localhost = 0
+        Network.Net_Client = 1
+        
+        //check if we couldn't connect
+        if winsock channel error(Client.tcp_channel):
+            Network.Net_Client = 0
+            winsock delete channel Client.tcp_channel
+            //return to the menu and bring up connection error message
+            UI_FadeManager.state=UI_FADEIN
+            UI_FadeManager.target=M_MENU_GENERICPROMPT
+            prompttextone$="Could not connect to server!"
+            prompttexttwo$=""
+            prompttitle$="Connection Failed"
+            error = 1
+        endif
+    ENDIF
+    if error =0:
+        //do array setup
+        Client_Cache_Init()
+        if network.Net_Server = 1:
+        Net_Server_Send_Local_TCP_Message(0,"sv_levelstart",Server.server_level_file)
+        endif
+        
+        if Network.Net_Client = 1:
+        Net_Client_Send_TCP_Message("Connected","1")
+        endif
+    endif
+ENDFUNCTION
+
+function Net_Client_Send_TCP_Message(msg_header as string, msg_data as string):
+    if Network.Net_Client = 1:
+        if Network.Net_Server = 1:
+            //insert directly into the cache
+            Network_Cache_Add(CurrentClientID,msg_header, msg_data)
+        else
+            //send a simmple packet
+            Winsock Make Packet
+            Winsock Add String msg_header
+            winsock add string msg_data
+            Winsock Send Tcp Packet Client.tcp_channel
+        endif
+    endif
+endfunction
+
+function Net_Server_Send_Local_TCP_Message(clientid, msg_header as string, msg_data as string)
+    if Net_Server_clients(clientid).active = 1
+        if Net_Server_clients(clientid).tcp_channel > -1:
+            Winsock Make Packet
+            Winsock Add String msg_header
+            winsock add string msg_data
+            Winsock Send Tcp Packet Net_Server_clients(clientid).tcp_channel
+        else
+            Client_Cache_Add(msg_header,msg_data)
+        endif
+    endif
+endfunction 
+
+function Net_Server_Send_TCP_Message(msg_header as string, msg_data as string)
+    if Network.Net_Server = 1:
+    if Server.net_server_clients_count > 0:
+        for CurrentClientID = 0 to Server.net_server_clients_count - 1:
+            if Net_Server_clients(CurrentClientID).active = 1
+                if Net_Server_clients(CurrentClientID).tcp_channel > -1:
+                    Winsock Make Packet
+                    Winsock Add String msg_header
+                    winsock add string msg_data
+                    Winsock Send Tcp Packet Net_Server_clients(CurrentClientID).tcp_channel
+                else
+                    Client_Cache_Add(msg_header,msg_data)
+                endif
+            endif
+        next CurrentClientID
+    endif
+    endif
+endfunction 
+
+function Net_Client_Disconnect()
+    if Network.Net_Server = 0:
+        winsock disconnect Client.tcp_channel
+        winsock delete channel Client.tcp_channel
+    endif
+    Network.Net_Client = 0    
+ENDFUNCTION
+
+function Net_Server_Update()
+    //update the listen channel
+    If (winsock channel Data waiting(Server.tcp_listen_channel)):
+        //adding a new client
+        //check if any spots in the server array are free (dc'd clients)
+        local NewClientID as integer
+        local NewClientFound as integer
+        if Server.net_server_clients_count>0:
+            NewClientFound = 0 
+            for i = 0 to (Server.net_server_clients_count-1)
+                if Net_Server_Clients(i).active = 0 then NewClientID = i : NewClientFound = 1: exit
+            next i
+        else
+            NewClientFound = 0
+        endif
+        if NewClientFound = 0
+            Array Insert At Bottom Net_Server_Clients()
+            NewClientID = Server.net_server_clients_count
+            Server.net_server_clients_count = Server.net_server_clients_count + 1
+        endif
+        
+        Net_Server_Clients(NewClientID).active = 1
+        Net_Server_Clients(NewClientID).name = "Client_"+str$(NewClientID)
+        Net_Server_Clients(NewClientID).tcp_channel=winsock accept(Server.tcp_listen_channel)
+        Net_Server_Clients(NewClientID).ip = winsock remote host$(Net_Server_Clients(NewClientID).tcp_channel)
+        Net_Server_Clients(NewClientID).port = winsock remote port(Net_Server_Clients(NewClientID).tcp_channel)
+        
+        Network_Cache_Create(NewClientID)
+        
+        //send some data about the server
+        //WHY IS THIS CAUSING A CRASH
+        Net_Server_Send_Local_TCP_Message(NewClientID,"sv_levelstart",Server.server_level_file)
+
+        UI_Console_AddLine("NET", "~w A new client has connected. Client id = "+str$(NewClientID))
+    Endif
+    //loop through the existing connections to get the data
+    if Server.net_server_clients_count > 0:
+        for CurrentClientID = 0 to Server.net_server_clients_count - 1:
+            //check if channel is active
+            if Net_Server_Clients(CurrentClientID).active = 1:
+                //check if the tcp channel is localhost or remote host
+                if Net_Server_Clients(CurrentClientID).tcp_channel>-1:
+                    if winsock channel error(Net_Server_clients(CurrentClientID).tcp_channel):
+                        UI_WriteLog(UI_RED,"Channel error: "+winsock channel error msg$(Net_Server_clients(CurrentClientID).tcp_channel))
+                    endif
+                    while winsock channel data waiting(Net_Server_clients(CurrentClientID).tcp_channel):
+                        Winsock recv message Net_Server_clients(CurrentClientID).tcp_channel
+                        if WINSOCK CHANNEL DATA LEN(Net_Server_clients(CurrentClientID).tcp_channel)>0:
+                            //check the message
+                            Winsock Split Data Net_Server_clients(CurrentClientID).tcp_channel
+                            While Winsock Packet Count(Net_Server_clients(CurrentClientID).tcp_channel)>0:
+                                Winsock Fetch Packet Net_Server_clients(CurrentClientID).tcp_channel
+                                Local packet_header As String
+                                Local packet_data as string
+                                packet_header = Winsock Read String$()
+                                packet_data = Winsock Read String$()
+                                Network_Cache_Add(CurrentClientID,packet_header,packet_data)
+                                //send a response
+                                Net_Server_Send_Local_TCP_Message(CurrentClientID,"sv_packet_received",packet_header+";success")
+                            endwhile
+                        else
+                            //someone has disconnected
+                            `winsock disconnect Net_Server_clients(CurrentClientID).tcp_channel
+                            winsock delete channel Net_Server_clients(CurrentClientID).tcp_channel
+                            Net_Server_clients(CurrentClientID).tcp_channel=-1
+                            Net_Server_Clients(CurrentClientID).active = 0
+                            Network_Cache_Destroy(CurrentClientID)
+                            UI_Console_AddLine("NET", "~w Client id = "+str$(CurrentClientID)+"has disconnected.")
+                            exit
+                        endif
+                    endwhile
+                endif
+            endif
+        next CurrentClientID
+    endif
+    
+    //parse the recieved TCP data packets
+    if Server.net_server_clients_count > 0:
+        for CurrentClientID = 0 to Server.net_server_clients_count - 1:
+            if Net_Server_clients(CurrentClientID).active = 1
+                //loop through the data in the cache and use it
+                if Net_Server_Clients(CurrentClientID).tcp_data_cache_size > 0:
+                    local dim tempcache_header() as string
+                    local dim tempcache_data() as string
+                    link array tempcache_header(),Net_Server_Clients(CurrentClientID).tcp_data_cache_header
+                    link array tempcache_data(),Net_Server_Clients(CurrentClientID).tcp_data_cache_data
+                    for CurrentCache = 0 to Net_Server_Clients(CurrentClientID).tcp_data_cache_size - 1:
+                        local header as string
+                        local value as string
+                        header = tempcache_header(CurrentCache)
+                        value = tempcache_data(CurrentCache)
+                        select header
+                            case "cl_testmessage"
+                                message header,value
+                            endcase
+                            case "cl_chat"
+                                Net_Server_Send_TCP_Message("sv_chat",value)
+                            endcase
+                        endselect
+                    next CurrentCache
+                    clear array tempcache_header()
+                    clear array tempcache_data()
+                    Net_Server_Clients(CurrentClientID).tcp_data_cache_size = 0
+                    unlink array tempcache_header()
+                    unlink array tempcache_data()
+                    undim tempcache_header()
+                    undim tempcache_data()
+                endif
+            endif
+        next CurrentClientID
+    endif
+    
+ENDFUNCTION
+
+function Net_Client_Update()
+    if Network.Net_Server = 0:
+        //if client is remote, check channels    
+        while Winsock Channel Data Waiting(Client.tcp_channel):
+            //check incoming data from server (TCP)
+            Winsock recv message Client.tcp_channel
+            if WINSOCK CHANNEL DATA LEN(Client.tcp_channel)>0:
+            Winsock Split Data Client.tcp_channel
+            While Winsock Packet Count(Client.tcp_channel)>0:
+                Winsock Fetch Packet Client.tcp_channel
+                Local packet_header As String
+                Local packet_data as string
+                packet_header = Winsock Read String$()
+                packet_data = Winsock Read String$()
+                Client_Cache_Add(packet_header,packet_data)
+                if Network.Net_Client = 0 then exit
+            endwhile
+            else
+                //client has been disconnected from the server.
+                winsock delete channel Client.tcp_channel
+                Network.Net_Client = 0
+                UI_Console_AddLine("NET", "~w Your client has been disconnected.")
+                Network_Disconnect()
+                UI_FadeManager.state=UI_FADEIN
+                UI_FadeManager.target=M_MENU_GENERICPROMPT
+                prompttextone$="You have been disconnected from the server!"
+                prompttexttwo$=""
+                prompttitle$="Connection Lost"
+                exit 
+            endif
+            if Network.Net_Client = 0 then exit
+        endwhile
+    else
+        //if it's localhost, skip checking the TCP channel
+    endif
+    
+    //parse the resulting data
+    if Client_NumCacheEntries > 0:
+        local packet_header as string
+        local packet_value as string
+        for CurrentEntry = 0 to Client_NumCacheEntries - 1:
+            packet_header = ClientCache(CurrentEntry).header
+            packet_data = ClientCache(CurrentEntry).value
+            select packet_header
+                case "sv_packet_received"
+                    UI_Console_AddLine("NET", "~w Client got server response ("+packet_header+"), DATA = "+packet_data)
+                endcase
+                case "sv_testmessage"
+                    UI_Console_Addline("NET","Server: +"+packet_data)
+                endcase
+                case "sv_chat"
+                    UI_Console_Addline("CHAT",packet_data)
+                endcase
+                case "sv_levelstart"
+                    Client.level_file = packet_data
+                    local filename as string
+                    filename = "Media\Levels\"+Client.level_file
+                    if file exist(filename):
+                        Game_Client_Start()
+                    else
+                        //the level doesn't exist. disconnect with an error
+                        Network_Disconnect()
+                        UI_FadeManager.state=UI_FADEIN
+                        UI_FadeManager.target=M_MENU_GENERICPROMPT
+                        prompttextone$="The server level file was not found at the client:"
+                        prompttexttwo$=Client.level_file
+                        prompttitle$="Level File Error"
+                    endif
+                endcase
+                endselect
+        next CurrentEntry
+        clear array ClientCache()
+        Client_NumCacheEntries = 0
+    endif
+
+ENDFUNCTION
+
+function Net_Disconnect()
+    //disconnect client
+    Client_Cache_Destroy()
+    if Network.Net_Client = 1:
+        Net_Client_Disconnect()
+    endif
+    
+    //disconnect server
+    if Network.Net_Server = 1:
+        winsock disconnect Server.tcp_listen_channel
+        winsock delete channel Server.tcp_listen_channel
+        for CurrentClientID = 0 to Server.net_server_clients_count - 1:
+            if Net_Server_clients(CurrentClientID).active = 1
+                Network_Cache_Destroy(CurrentClientID)
+                if Net_Server_clients(CurrentClientID).tcp_channel > -1:
+                    winsock disconnect Net_Server_clients(CurrentClientID).tcp_channel
+                    winsock delete channel Net_Server_clients(CurrentClientID).tcp_channel
+                endif
+            endif
+        next CurrentClientID
+        Network.Net_Server = 0
+        delete file "Config\server.log"
+    endif
+    UI_Console_AddLine("NET", "~w Disconnected Server/Client. Winsock restarted.")
+ENDFUNCTION
+
+//////////////////////////////////////////////////////////////
+// CACHE FUNCTIONS
+//////////////////////////////////////////////////////////////
+
+function Client_Cache_Init():
+    global dim ClientCache(32) as t_Client_TCP_Packet
+    global Client_NumCacheEntries as integer
+    Client_NumCacheEntries = 0
+ENDFUNCTION
+
+function Client_Cache_Add(header as string,value as string):
+    ClientCache(Client_NumCacheEntries).header = header
+    ClientCache(Client_NumCacheEntries).value = value
+    Client_NumCacheEntries = Client_NumCacheEntries + 1
+ENDFUNCTION
+
+function Client_Cache_Destroy():
+    if array index valid(ClientCache(0))
+        undim ClientCache()
+        Client_NumCacheEntries = 0
+    endif
+ENDFUNCTION
+
+function Network_Cache_Create(id):
+    //create cache array
+    //limit of 32 tcp messages per loop!
+    local dim tempcache_header(32) as string
+    local dim tempcache_data(32) as string
+    Net_Server_Clients(id).tcp_data_cache_header = get arrayptr(tempcache_header())
+    Net_Server_Clients(id).tcp_data_cache_data = get arrayptr(tempcache_data())
+    Net_Server_Clients(id).tcp_data_cache_size = 0
+    unlink array tempcache_header()
+    unlink array tempcache_data()
+    undim tempcache_header()
+    undim tempcache_data()
+endfunction
+
+function Network_Cache_Destroy(id):
+    //delete cache array resource
+    local dim tempcache_header() as string
+    local dim tempcache_data() as string
+    link array tempcache_header(),Net_Server_Clients(id).tcp_data_cache_header
+    link array tempcache_data(),Net_Server_Clients(id).tcp_data_cache_data
+    undim tempcache_header()
+    undim tempcache_data()
+    Net_Server_Clients(id).tcp_data_cache_header = 0
+    Net_Server_Clients(id).tcp_data_cache_data = 0
+    Net_Server_Clients(id).tcp_data_cache_size = 0
+ENDFUNCTION
+
+function Network_Cache_Add(id,header as string,value as string):
+    //add a value to the cache
+    if Net_Server_Clients(id).tcp_data_cache_size < 32:
+        local dim tempcache_header() as string
+        local dim tempcache_data() as string
+        link array tempcache_header(),Net_Server_Clients(id).tcp_data_cache_header
+        link array tempcache_data(),Net_Server_Clients(id).tcp_data_cache_data
+        tempcache_header(Net_Server_Clients(id).tcp_data_cache_size) = header
+        tempcache_data(Net_Server_Clients(id).tcp_data_cache_size) = value
+        Net_Server_Clients(id).tcp_data_cache_size = Net_Server_Clients(id).tcp_data_cache_size + 1
+        unlink array tempcache_header()
+        unlink array tempcache_data()
+        undim tempcache_header()
+        undim tempcache_data()
+    else
+        //show a debug message so we know we've exceeded the cache
+        message "Number of recieved packets exceeded 32! Dropping some packets..."
+    endif
+endfunction
 
 //////////////////////////////////////////////////////////////
 
@@ -81,4 +621,3 @@ Endfunction ip$
 //////////////////////////////////////////////////////////////
 //  End of code.
 //////////////////////////////////////////////////////////////
-

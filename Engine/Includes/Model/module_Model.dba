@@ -86,8 +86,10 @@ function Entity_Model_Update(i)
             load image "Media\Models\data\"+texture_file$,textureid
             texture object modelid,textureid
             set object effect modelid,ModelShader
-            sc_setupobject modelid,1,0
-            sc_updateobject modelid
+            set object transparency modelid,6
+            set object cull modelid,0
+            ` sc_setupobject modelid,1,0
+            `sc_updateobject modelid
            
             //delete temp files
             
@@ -99,8 +101,8 @@ function Entity_Model_Update(i)
         position object mdlid,Ent_GetFloat(i,"x"),Ent_GetFloat(i,"y"),Ent_GetFloat(i,"z")
         rotate object mdlid,Ent_GetFloat(i,"rx"),Ent_GetFloat(i,"ry"),Ent_GetFloat(i,"rz")
         scale object mdlid,Ent_GetFloat(i,"scale"),Ent_GetFloat(i,"scale"),Ent_GetFloat(i,"scale")
-        sc_updateobject mdlid
-        sc_updateobject mdlid
+        `sc_updateobject mdlid
+        `sc_updateobject mdlid
         endif
     endif
 endfunction
@@ -109,7 +111,7 @@ function Entity_Model_Reload(i):
     mdlid=Ent_GetInt(i,"modelid")
     if mdlid > 0:
         delete object mdlid
-        sc_removeobject mdlid
+        `sc_removeobject mdlid
         entSetAttribute(i,"modelid",str$(-1))
     ENDIF
     EntSetAttribute(i,"loaded",str$(-1))
@@ -118,7 +120,7 @@ endfunction
 function Entity_Model_Delete(i)
     modelid = Ent_GetInt(i,"modelid")
     delete object modelid
-    sc_removeobject modelid
+    `sc_removeobject modelid
 ENDFUNCTION
 
 
@@ -198,17 +200,7 @@ function Entity_phymodel_Update(i)
                 position object modelid,Ent_GetFloat(i,"x"),Ent_GetFloat(i,"y"),Ent_GetFloat(i,"z")
                 rotate object modelid,Ent_GetFloat(i,"rx"),Ent_GetFloat(i,"ry"),Ent_GetFloat(i,"rz")
                 scale object modelid,Ent_GetFloat(i,"scale"),Ent_GetFloat(i,"scale"),Ent_GetFloat(i,"scale")
-                NDB_SetVector Ent_GetFloat(i,"scale"),Ent_GetFloat(i,"scale"),Ent_GetFloat(i,"scale")
-                Col = NDB_NewtonCreateConvexHullWithScale(modelid)
-                Body = NDB_NewtonCreateBody(Col)
-                NDB_BuildMatrix Ent_GetFloat(i,"rx"),Ent_GetFloat(i,"ry"),Ent_GetFloat(i,"rz"),Ent_GetFloat(i,"x"),Ent_GetFloat(i,"y"),Ent_GetFloat(i,"z")
-                NDB_NewtonBodySetMatrix Body
-                NDB_CalculateMISphereSolid 5, 1
-                NDB_NewtonBodySetMassMatrix Body, 10.0, 1.0, 1.0, 1.0
-                NDB_NewtonReleaseCollision Col
-                NDB_BodySetDBProData Body, modelid
-                NDB_NewtonBodySetDestructorCallback Body
-                NDB_BodySetGravity Body, 1
+
             endif
            
             //delete temp files

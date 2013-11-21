@@ -257,10 +257,12 @@ Function Camera_Skybox_Setup():
 //variable setup
 Global SkyboxObject As Integer : SkyboxObject = Reserve Free Object()
 Global SkyboxImage As Integer  :    SkyboxImage  = Reserve Free Image()
+Global SkyboxImage2 : SkyboxImage2 = Reserve Free Image()
 Global SkyboxShader As Integer : SkyboxShader = Reserve Free Effect()
 //object setup
 make object sphere SkyBoxObject,-1024,5,5
 Load Image "Media\Materials\Cubemaps\Cube0.dds",SkyboxImage,2
+Load Image "Media\Materials\Cubemaps\Cube1.dds",SkyboxImage2,2
 load effect "Media\Shaders\SkyBox.fx",SkyboxShader,0
 texture object SkyBoxObject,0,SkyboxImage
 Set Object Effect SkyboxObject,SkyboxShader
@@ -292,7 +294,7 @@ endfunction
 
 //Camera_Skybox_Update() - Updates the skybox to surround the camera.
 Function Camera_Skybox_Update():
-if Game_Running:
+if Gameworld.enabled = 1:
 //get position
 Skybox_X# = Camera_GetPositionX(RootCamera)
 Skybox_Y# = Camera_GetPositionY(RootCamera)
@@ -330,7 +332,7 @@ add#=50 - ad#
 skyboxsunalpha = tbm_Curvevalue(add#,skyboxsunalpha,10)
 If Object In Screen(skyboxsunobject):
 Ik Set Blend Mode 15
-ik set effect float 22,"Alpha",add#/50.0
+ik set effect float 22,"Alpha",((add#*0.8)+(rnd(100)*0.1))/50.0
 Ik Paste Image SkyboxSunFlare,object Screen x(SkyboxSunObject)-(Screen.Width/6),object screen y(SkyboxSunObject)-(Screen.Width/6),object Screen x(SkyboxSunObject)+(Screen.Width/6),object screen y(SkyboxSunObject)+(Screen.Width/6),22
 ik set effect float 22,"Alpha",add#/120.0
 Ik Paste Image SkyboxSunFlare,object Screen x(SkyboxSunObject)-(Screen.Width/2),object screen y(SkyboxSunObject)-(Screen.Width/2),object Screen x(SkyboxSunObject)+(Screen.Width/2),object screen y(SkyboxSunObject)+(Screen.Width/2),22

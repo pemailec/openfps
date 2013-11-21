@@ -17,45 +17,10 @@ ENDFUNCTION
 
 //called at start of level
 function Physics_Create()
-    //create the world
-    Ndb_Newtoncreate
-    
-    //set the gravity to a decent value
-    NDB_SetVector 0.0, -1.0, 0.0
-    Ndb_Setstandardgravity
-    
-    //set the world size to be the size of the map
-    Ndb_Setvector 1, -8.0, -128.0, -8.0
-    Ndb_Setvector 2, 248.0, 128.0, 248.0
-    Ndb_Newtonsetworldsize
-    
-    //debug
-    Physics_DebugObject = NDB_DebugMakeNewtonObject()
-    Physics_Running = 1
 endfunction
 
 //update
 function Physics_Update()
-    time# = NDB_GetElapsedTimeInSec()
-    if Physics_Running = 1:
-        inc Physics_TimeBank,time#
-        if Physics_TimeBank > 0.01:
-            repeat
-                Physics_HandleObjects()
-                NDB_NewtonUpdate 0.01
-                dec Physics_TimeBank, 0.01
-            until Physics_TimeBank < 0.01
-        endif
-        
-        //debug object
-        if object exist(Physics_DebugObject)
-            delete object Physics_DebugObject
-        endif
-        if controlkey()
-            Physics_DebugObject = NDB_DebugMakeNewtonObject()
-            set object light Physics_DebugObject, 0
-        endif
-    endif
 endfunction
 
 //handles objects
@@ -64,7 +29,6 @@ endfunction
 
 //called at end of level
 function Physics_Destroy()
-    ndb_NewtonDestroy
     Physics_Running = 0
 ENDFUNCTION
 
