@@ -44,6 +44,9 @@ Function SYS_Init():
         close file 1
     Endif
     
+    //init uskin plugin
+    Skin Start "Media\Skins\Black.msstyles"
+    
     //Creat Screen and Game objects
     Global Screen As t_Screen
     Global Game As t_Game
@@ -198,6 +201,8 @@ Endfunction
 
 //SYS_Terminate() - Terminates the system module
 Function SYS_Terminate():
+    //remove skin
+    skin end
     //close the main database
     null = SQLITE CLOSE DATABASE(Game.Database)
 Endfunction

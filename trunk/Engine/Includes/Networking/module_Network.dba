@@ -31,6 +31,12 @@ type t_Net_Client
     tcp_channel as integer
     localhost as boolean
     level_file as string
+    server_auth as string
+    udp_channel as integer
+    udp_sending_channel as integer
+    udp_client_port as integer
+    udp_client_id as integer
+    data_lag as integer
 endtype
 
 type t_Net_Server
@@ -46,6 +52,9 @@ type t_Net_Server
     server_level_file as string
     server_latest_cache_header as string
     server_latest_cache_value as string
+    server_motd as string
+    udp_channel as integer
+    udp_free_port as integer
 endtype
 
 type t_Net_Server_Client
@@ -54,10 +63,12 @@ type t_Net_Server_Client
     ip as string
     port as integer
     tcp_channel as integer
+    udp_channel as integer
     tcp_data_waiting as integer
     tcp_data_cache_header as integer
     tcp_data_cache_data as integer
     tcp_data_cache_size as integer
+    udp_data_port as integer
 endtype
 
 type t_Client_TCP_Packet
@@ -81,9 +92,11 @@ function Network_Host(config as string)
     //apply server configuration
     Server.net_maxplayers = lua int("maxplayers")
     Server.server_level_file = lua string$("LevelFile")
+    Server.server_motd = lua string$("motd")
     //load level file
     Game_World_Load(Server.server_level_file)
-        
+    //start server game
+    Game_Server_Start()
     //connect client
     local auth_local as string
     auth_local = Network_Auth_Generate("127.0.0.1",lua int("port"),Lua string$("ServerName"))
@@ -101,9 +114,9 @@ ENDFUNCTION
 function Network_Connect(authstring as string)
     //start up the client
     //split the auth string into its separate parts
-    split string authstring,"_"
     UI_Console_AddLine("NET", "~w Connecting client to Server")
-    Net_Client_Init(split word$(2),val(split word$(3)))
+    Net_Client_Init(authstring)
+    UI_Chat_ClearText()
     UI_Console_AddLine("NET", "~w Client started.")
 ENDFUNCTION
 
@@ -181,7 +194,7 @@ function Net_Server_Init(name as string, port as integer, filter as string)
     Net_Disconnect()
     
     //open the debug console
-    Console.active=1
+    //Console.active=1
     UI_Console_AddLine("NET", "~w Opened console for debugging.")
     
     UI_Console_AddLine("NET", "~w Starting server....")
@@ -199,6 +212,17 @@ function Net_Server_Init(name as string, port as integer, filter as string)
     dim Net_Server_Clients() as t_Net_Server_Client
     Server.net_server_clients_count = 0
     
+    
+     //start server UDP port
+     //create a server udp channel that can recieve packets
+     //use matrix1
+     Server.udp_channel = NEW UDP SOCKET()
+     //bind socket to listening port
+     Status=BIND SOCKET(Server.udp_channel, Server.tcp_listen_port)
+     
+    //client ports start at this value
+    Server.udp_free_port = 6000
+    
     //make a file to show other instances a server is running
     open to write 3,"Config\server.log"
     write string 3,"OpenFPS_Server_Log"
@@ -208,12 +232,25 @@ function Net_Server_Init(name as string, port as integer, filter as string)
     UI_Console_AddLine("NET", "~w Server started")
 ENDFUNCTION
 
-function Net_Client_Init(ip as string, port as integer)
+function Net_Client_Init(auth as string)
     //check if a client is already running
     if Network.Net_Client = 1 then Net_Client_Disconnect()
     
+    local ip as string
+    local port as integer
+    split string auth,"_"
+    ip = split word$(2)
+    port = val(split word$(3))
     //connect to the server
     //check if server is running in same program
+    Client.server_auth = auth
+    Client.level_file = "null"
+    Client.net_ip = Game.ip
+    Client.net_name = "Client"
+    Client.target_ip = ip
+    Client.target_port = port
+    
+    
     if Network.Net_Server = 1:
         //it is, we must create a "fake" tcp connection
         //we know there are no other clients connected so lets create a fake client @ id 0.
@@ -223,15 +260,18 @@ function Net_Client_Init(ip as string, port as integer)
         Net_Server_Clients(0).ip="127.0.0.1"
         Net_Server_Clients(0).port=-1
         Net_Server_Clients(0).tcp_channel=-1
+        
+        //NEW UDP SOCKET()
+        //BIND SOCKET(Server.udp_channel, Server.tcp_listen_port)
+        //create a udp channel pointing to the client
+         Net_Server_Clients(0).udp_channel = NEW UDP SOCKET()
+         Net_Server_Clients(0).udp_data_port = -1
+        
         Network_Cache_Create(0)
         Server.net_server_clients_count = Server.net_server_clients_count + 1
         Network.Net_Client = 1
     else
         //it isn't, we will connect via tcp first
-        Client.net_ip = Game.ip
-        Client.net_name = "Client"
-        Client.target_ip = ip
-        Client.target_port = port
         Client.tcp_channel = Winsock Connect(Client.target_ip,Client.target_port)
         Client.localhost = 0
         Network.Net_Client = 1
@@ -253,15 +293,65 @@ function Net_Client_Init(ip as string, port as integer)
         //do array setup
         Client_Cache_Init()
         if network.Net_Server = 1:
-        Net_Server_Send_Local_TCP_Message(0,"sv_levelstart",Server.server_level_file)
+            Net_Server_Send_Local_TCP_Message(0,"sv_levelstart",Server.server_level_file)
+            Net_Server_Send_Local_TCP_Message(0,"sv_assignclientid",str$(0))
+            Net_Server_Send_Local_TCP_Message(0,"sv_chat",Server.server_motd)
         endif
         
         if Network.Net_Client = 1:
         Net_Client_Send_TCP_Message("Connected","1")
         endif
+        
+        //do udp setup
+        //create a client udp channel that can send / receive
+         Client.udp_channel = NEW UDP SOCKET()
+         Client.udp_sending_channel = NEW UDP SOCKET()
+        //if Network.Net_Server = 1:
+        //    Client.udp_client_port = 20187 //use port 20187
+        //else
+             //find another port to use!
+             //start at 20188 and go from there
+             //use windows utility PortQryV2 to check if ports are open!
+             //let's check for ports 20187 - 20199 //12 possible ports!
+             //for now 
+            //Client.udp_client_port = -1
+        //endif
+        //CAN ONLY SEND MESSAGES FOR NOW! 
+        Status=CONNECT SOCKET(Client.udp_sending_channel,HOSTNAME TO IP(Client.target_ip),Client.target_port)
+         //winsock bind channel Client.udp_channel, "0.0.0.0", Client.udp_client_port
+         //client id is -1 until the server sends the correct information
+         Client.udp_client_id = -1
+         Client.udp_client_port = -1
+         //request data for a udp port stream
+        Net_Client_Send_TCP_Message("cl_request_udp_init","1")
+        
+        //winsock set channel target channel, winsock remote host$(channel), winsock remote port(channel)
     endif
 ENDFUNCTION
 
+function Net_Client_Allocate_UDP_Port()
+    //this function will get a free UDP port to give to a client
+    //this wiwll 
+ENDFUNCTION
+
+//allocated 25 bytes for header, 225 bytes for packet data
+function Net_Client_Send_UDP_Message(msg_header as string, msg_data as string):
+    if Network.Net_Client = 1:
+//         if Client.udp_client_id > -1:
+//         if Client.udp_client_port > -1:
+//             //send a simmple packet
+//             Winsock Make Packet
+//             winsock add int Client.udp_client_id
+//             Winsock Add String left$(msg_header,25)
+//             winsock add string left$(msg_data,225)
+//             Winsock Send udp Packet Client.udp_channel
+//             UI_Console_AddLine("NET", "~w Client sent UDP packet '"+msg_header+"'")
+//         endif
+//         endif
+    endif
+endfunction
+
+//allocated 25 bytes for header, 225 bytes for packet data
 function Net_Client_Send_TCP_Message(msg_header as string, msg_data as string):
     if Network.Net_Client = 1:
         if Network.Net_Server = 1:
@@ -270,19 +360,20 @@ function Net_Client_Send_TCP_Message(msg_header as string, msg_data as string):
         else
             //send a simmple packet
             Winsock Make Packet
-            Winsock Add String msg_header
-            winsock add string msg_data
+            Winsock Add String left$(msg_header,25)
+            winsock add string left$(msg_data,225)
             Winsock Send Tcp Packet Client.tcp_channel
         endif
     endif
 endfunction
 
+//allocated 25 bytes for header, 225 bytes for packet data
 function Net_Server_Send_Local_TCP_Message(clientid, msg_header as string, msg_data as string)
     if Net_Server_clients(clientid).active = 1
         if Net_Server_clients(clientid).tcp_channel > -1:
             Winsock Make Packet
-            Winsock Add String msg_header
-            winsock add string msg_data
+            Winsock Add String left$(msg_header,25)
+            winsock add string left$(msg_data,225)
             Winsock Send Tcp Packet Net_Server_clients(clientid).tcp_channel
         else
             Client_Cache_Add(msg_header,msg_data)
@@ -307,21 +398,49 @@ function Net_Server_Send_TCP_Message(msg_header as string, msg_data as string)
         next CurrentClientID
     endif
     endif
+endfunction
+
+//Server UDP commands
+//allocated 25 bytes for header, 225 bytes for packet data
+function Net_Server_Send_Local_UDP_Message(clientid, msg_header as string, msg_data as string)
+    if Net_Server_clients(clientid).active = 1
+//         if Net_Server_clients(clientid).udp_data_port > -1:
+//             Winsock Make Packet
+//             Winsock Add String left$(msg_header,25)
+//             winsock add string left$(msg_data,225)
+//             Winsock Send udp Packet Net_Server_clients(clientid).udp_channel
+//         else
+//             Client_Cache_Add(msg_header,msg_data)
+//         endif
+    endif
 endfunction 
 
-function Net_Client_Disconnect()
-    if Network.Net_Server = 0:
-        winsock disconnect Client.tcp_channel
-        winsock delete channel Client.tcp_channel
+function Net_Server_Send_UDP_Message(msg_header as string, msg_data as string)
+    if Network.Net_Server = 1:
+    if Server.net_server_clients_count > 0:
+//         for CurrentClientID = 0 to Server.net_server_clients_count - 1:
+//             if Net_Server_clients(CurrentClientID).active = 1
+//                 if Net_Server_clients(CurrentClientID).udp_data_port > -1:
+//                     Winsock Make Packet
+//                     Winsock Add String msg_header
+//                     winsock add string msg_data
+//                     Winsock Send udp Packet Net_Server_clients(CurrentClientID).udp_channel
+//                 else
+//                     Client_Cache_Add(msg_header,msg_data)
+//                 endif
+//             endif
+//         next CurrentClientID
     endif
-    Network.Net_Client = 0    
-ENDFUNCTION
+    endif
+endfunction
+
 
 function Net_Server_Update()
     //update the listen channel
     If (winsock channel Data waiting(Server.tcp_listen_channel)):
         //adding a new client
         //check if any spots in the server array are free (dc'd clients)
+        Net_Server_Send_TCP_Message("sv_chat","~y A new client has connected!")
         local NewClientID as integer
         local NewClientFound as integer
         if Server.net_server_clients_count>0:
@@ -344,11 +463,15 @@ function Net_Server_Update()
         Net_Server_Clients(NewClientID).ip = winsock remote host$(Net_Server_Clients(NewClientID).tcp_channel)
         Net_Server_Clients(NewClientID).port = winsock remote port(Net_Server_Clients(NewClientID).tcp_channel)
         
+        Net_Server_Clients(NewClientID).udp_channel = NEW UDP SOCKET()
+        Net_Server_Clients(NewClientID).udp_data_port = -1
+         
         Network_Cache_Create(NewClientID)
         
         //send some data about the server
-        //WHY IS THIS CAUSING A CRASH
         Net_Server_Send_Local_TCP_Message(NewClientID,"sv_levelstart",Server.server_level_file)
+        Net_Server_Send_Local_TCP_Message(NewClientID,"sv_assignclientid",str$(NewClientID))
+        Net_Server_Send_Local_TCP_Message(NewClientID,"sv_chat",Server.server_motd)
 
         UI_Console_AddLine("NET", "~w A new client has connected. Client id = "+str$(NewClientID))
     Endif
@@ -380,10 +503,16 @@ function Net_Server_Update()
                         else
                             //someone has disconnected
                             `winsock disconnect Net_Server_clients(CurrentClientID).tcp_channel
+                            
+                            //disconnect tcp
                             winsock delete channel Net_Server_clients(CurrentClientID).tcp_channel
+                            //disconnect udp
+                            delete socket Net_Server_clients(CurrentClientID).udp_channel
+                            
                             Net_Server_clients(CurrentClientID).tcp_channel=-1
                             Net_Server_Clients(CurrentClientID).active = 0
                             Network_Cache_Destroy(CurrentClientID)
+                            Net_Server_Send_TCP_Message("sv_chat","~y A client has disconnected!")
                             UI_Console_AddLine("NET", "~w Client id = "+str$(CurrentClientID)+"has disconnected.")
                             exit
                         endif
@@ -415,6 +544,16 @@ function Net_Server_Update()
                             case "cl_chat"
                                 Net_Server_Send_TCP_Message("sv_chat",value)
                             endcase
+                            case "cl_request_udp_init"
+                                 Net_Server_Clients(CurrentClientID).udp_data_port = Server.udp_free_port
+                                 Status=CONNECT SOCKET(Net_Server_Clients(CurrentClientID).udp_channel,HOSTNAME TO IP(Net_Server_Clients(CurrentClientID).ip),Server.udp_free_port)
+                                 Net_Server_Send_TCP_Message("sv_udp_init",str$(Server.udp_free_port))
+                                 Server.udp_free_port = Server.udp_free_port + 1
+                            endcase
+                            case "cl_request_spawn"
+                                spawn_new$ = Server_Entity_Find_Spawnpoint()
+                                Net_Server_Send_TCP_Message("sv_provide_spawn",spawn_new$)
+                            endcase
                         endselect
                     next CurrentCache
                     clear array tempcache_header()
@@ -429,6 +568,45 @@ function Net_Server_Update()
         next CurrentClientID
     endif
     
+    //get UDP packets recieved
+//     while winsock channel data waiting(Server.udp_channel):
+//         Winsock recv udp message Server.udp_channel
+//         if WINSOCK CHANNEL DATA LEN(Server.udp_channel)>0:
+//             //check the message
+//             Winsock Split Data Server.udp_channel
+//             While Winsock Packet Count(Server.udp_channel)>0:
+//                 Winsock Fetch Packet Server.udp_channel
+//                 Local packet_header As String
+//                 Local packet_data As String
+//                 local packet_client_id as integer
+//                 packet_client_id = Winsock Read int()
+//                 packet_header = Winsock Read String$()
+//                 packet_data = Winsock Read String$()
+//                 select packet_header
+//                     case "cl_ping"
+//                         UI_Console_AddLine("NET", "~w Got ping from Client "+str$(packet_client_id))
+//                         //return a ping message
+//                         Net_Server_Send_Local_UDP_Message(packet_client_id,"sv_ping","1")
+//                     endcase
+//                 endselect
+//             endwhile
+//         endif
+//     endwhile
+//     
+ENDFUNCTION
+
+function Network_Client_DisplayDebugUI()
+    //display a fullscreen debug ui for the client
+    d3d_box 0,0,Screen.Width,Screen.Height,d3d_rgba(0,0,0,100)
+    //display statistics
+    x=20 : y=200
+    UI_ScaledText(3,x,y,"OpenFPS Client - Debug statistics",60,255) : y = y + 24
+    UI_ScaledText(3,x,y,"Server auth key: "+Client.server_auth,60,255) : y = y + 24
+    if Network.Net_Client then UI_ScaledText(3,x,y,"*Client is currently running!",60,255) : y = y + 24
+    if Network.Net_Server then UI_ScaledText(3,x,y,"*Server is currently running!",60,255) : y = y + 24
+    UI_ScaledText(3,x,y,"Level file: "+Client.level_file,60,255) : y = y + 24
+    UI_ScaledText(3,x,y,"----------------------------------",60,255) : y = y + 24
+
 ENDFUNCTION
 
 function Net_Client_Update()
@@ -451,6 +629,9 @@ function Net_Client_Update()
             else
                 //client has been disconnected from the server.
                 winsock delete channel Client.tcp_channel
+                delete socket Client.tcp_channel
+                delete socket Client.tcp_sending_channel
+                
                 Network.Net_Client = 0
                 UI_Console_AddLine("NET", "~w Your client has been disconnected.")
                 Network_Disconnect()
@@ -483,6 +664,15 @@ function Net_Client_Update()
                 endcase
                 case "sv_chat"
                     UI_Console_Addline("CHAT",packet_data)
+                    UI_Chat_AddText("Chat",packet_data)
+                endcase
+                case "sv_assignclientid"
+                    Client.udp_client_id = val(packet_data)
+                endcase
+                case "sv_udp_init"
+                    //bind the client-side udp channel
+                    Client.udp_client_port = val(packet_data)
+                    Status = BIND SOCKET(Client.udp_channel, Client.udp_client_port)
                 endcase
                 case "sv_levelstart"
                     Client.level_file = packet_data
@@ -500,15 +690,70 @@ function Net_Client_Update()
                         prompttitle$="Level File Error"
                     endif
                 endcase
+                case "sv_provide_spawn"
+                    new_spawn$ = packet_data
+                    if new_spawn$ = "none"
+                        //display an error and return to menu mode
+                        message "Error: Could not get a valid spawn from server!"
+                        ui_Menu_Setmode(M_ENGINE_DEFAULT)
+                        Menu_Engine_UI_State = 0
+                    else
+                        //TO BE CODED HERE
+                        //SPAWNING CODE FOR CLIENT GOES HERE
+                    endif
+                endcase
                 endselect
         next CurrentEntry
         clear array ClientCache()
         Client_NumCacheEntries = 0
     endif
+    
+//     
+//     //get UDP packets recieved
+//     while winsock channel data waiting(Client.udp_channel):
+//         Winsock recv udp message Client.udp_channel
+//         if WINSOCK CHANNEL DATA LEN(Client.udp_channel)>0:
+//             //check the message
+//             Winsock Split Data Client.udp_channel
+//             While Winsock Packet Count(Client.udp_channel)>0:
+//                 Winsock Fetch Packet Client.udp_channel
+//                 Local packet_header As String
+//                 Local packet_data As String
+//                 packet_header = Winsock Read String$()
+//                 packet_data = Winsock Read String$()
+//                 select packet_header
+//                     case "sv_ping"
+//                         //display data
+//                         lagtime = hitimer() - Client.data_lag
+//                         UI_Console_AddLine("NET", "~w Got ping from Server.. calculated lag is "+str$(lagtime)+" ms")
+//                     endcase
+//                 endselect
+//             endwhile
+//         endif
+//     endwhile
 
 ENDFUNCTION
 
+function Net_Client_Disconnect()
+    if Network.Net_Server = 0:
+        //delete tcp
+        winsock disconnect Client.tcp_channel
+        //give the system time to acknowledge the disconnect
+        for i = 0 to 100
+            wait 1
+            winsock refresh channel Client.tcp_channel
+        next i
+        winsock delete channel Client.tcp_channel
+    endif
+    //delete udp
+    DELETE SOCKET Client.udp_channel
+    DELETE SOCKET Client.udp_sending_channel
+    
+    Network.Net_Client = 0
+ENDFUNCTION
+
 function Net_Disconnect()
+    
     //disconnect client
     Client_Cache_Destroy()
     if Network.Net_Client = 1:
@@ -519,6 +764,10 @@ function Net_Disconnect()
     if Network.Net_Server = 1:
         winsock disconnect Server.tcp_listen_channel
         winsock delete channel Server.tcp_listen_channel
+        
+        //shutdown server udp socket
+        DELETE SOCKET Server.udp_channel
+        
         for CurrentClientID = 0 to Server.net_server_clients_count - 1:
             if Net_Server_clients(CurrentClientID).active = 1
                 Network_Cache_Destroy(CurrentClientID)
@@ -526,11 +775,21 @@ function Net_Disconnect()
                     winsock disconnect Net_Server_clients(CurrentClientID).tcp_channel
                     winsock delete channel Net_Server_clients(CurrentClientID).tcp_channel
                 endif
+                DELETE SOCKET Net_Server_clients(CurrentClientID).udp_channel
+                Net_Server_clients(CurrentClientID).udp_data_port=-1
             endif
         next CurrentClientID
+        
+        Server.udp_channel = -1
+        clear array Net_Server_Clients()
+        undim Net_Server_Clients()
         Network.Net_Server = 0
         delete file "Config\server.log"
     endif
+    
+    //restart winsock
+    winsock make
+    
     UI_Console_AddLine("NET", "~w Disconnected Server/Client. Winsock restarted.")
 ENDFUNCTION
 
@@ -610,7 +869,7 @@ Function Network_GetIP():
 	ip$="error"
 	port=443 : access=0x00800000
 	http connect "www.fpscreator.com",port
-	action$="" : return$=HTTP REQUEST DATA("POST", "gamehost/whatismyip.php",action$,access)
+	action$="Connection: close" : return$=HTTP REQUEST DATA("POST", "gamehost/whatismyip.php",action$,access)
 	If return$ <> "":
 		ip$=return$
 	endif

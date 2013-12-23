@@ -301,6 +301,7 @@ function Ent_Update():
 	y=60 : x= 10
 	 `UI_Text(1,x,y,"OpenFPS Entities - "+str$(NumEntities)+" Current") : y=y+12
 	`EntListDebug()
+	remstart
     for i = 0 to NumEntities-1:
     Entityname$=Entities(i).name
     Entityptr$=str$(Entities(i).attributes.ptr)
@@ -321,9 +322,11 @@ function Ent_Update():
 		 unlink array tempvalues()
 		 undim tempattributes()
 		 undim tempvalues()  
+		 
     endif
 	 `UI_Text(1,x,y,str$(i)+") "+Entityname$+", values "+entitytext$) : y=y+12
     next i
+    remend
 ENDFUNCTION
 
 function EntListDebug():

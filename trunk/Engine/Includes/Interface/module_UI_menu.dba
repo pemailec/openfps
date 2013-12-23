@@ -62,6 +62,7 @@ function UI_Menu_Init():
 UI_WriteLog(UI_Green,"// MENU MODULE //: Starting to init menu module.")
 Global MenuUI As MenuUIType
 UI_Menu_SetVariables()
+UI_Chat_Init()
 UI_Menu_Regenerate()
 UI_Menu_SetMode(M_MENU_SPLASH)
 MenuUI.initialized = 1
@@ -232,6 +233,9 @@ Global MenuImageBlack : MenuImageBlack = Reserve Free Image()
 global DebugIcon : DebugIcon = reserve free image()
 Global CrosshairIMG : CrosshairIMG = Reserve Free Image()
 
+global Menu_Engine_UI_State as integer
+Menu_Engine_UI_State = 0
+
 global MapPlaceHolderImg : MapPlaceHolderImg = Reserve Free Image()
 global FirstTimeTraining as boolean : FirstTimeTraining= 1
 global ButtonSinCurve as float 		: ButtonSinCurve = 0
@@ -392,13 +396,17 @@ case "button_chat"
     menu_chatenabled = 1 - menu_chatenabled
 endcase
 case "button_joingame"
+    Net_Client_Send_TCP_Message("cl_request_spawn","1")
+    UI_DeleteGadget("button_endgame")
+    UI_DeleteGadget("button_joingame")
+    Menu_Engine_UI_State = 1
 endcase
 Case "button_credits"
 UI_FadeManager.state=UI_FADEIN
 UI_FadeManager.target=M_MENU_CREDITS
 Endcase
 Case "button_endgame"
-Trigger_Load("Network_Disconnect","")
+Trigger_Load("Game_End","")
 Endcase
 Case "button_returntogame"
 Game.paused = 0
@@ -1125,13 +1133,16 @@ UI_AddCenterGadgettoScreen("button_endgame",x,y,"UI_button")
 UI_AddMouseoverImageToGadget("button_endgame","UI_buttonhover")
 UI_AddtitleToGadget("button_endgame",3,x-8,y-14,"Quit")
 x=x+210
-UI_AddCenterGadgettoScreen("button_joingame",x,y,"UI_buttongray")
-`UI_AddMouseoverImageToGadget("button_joingame","UI_buttonhover")
+UI_AddCenterGadgettoScreen("button_joingame",x,y,"UI_button")
+UI_AddMouseoverImageToGadget("button_joingame","UI_buttonhover")
 UI_AddtitleToGadget("button_joingame",3,x-8,y-14,"Join Match")
+chatMode = -1
 Endfunction
+
 
 Function UI_Render_U_ENGINE_DEFAULT():
 //paste game view
+    
 Ik Paste Image Camera_GetRenderImage(RootCamera),0,0,Screen.Width,Screen.Height`,Cam_Shader_Default
 Camera_PostUIRender() //render 2d elements of the game
 Ik Paste Image MenuImage1,0,0,Screen.Width,Screen.Height
@@ -1158,7 +1169,23 @@ dxs end sprite render MenuImage13
 if GetEntExist("root")
     UI_CenterText(3,Screen.Width/2,48,EntGetAttribute(EntGetReference("root"),"displayname"))
 endif
-    ui_showmouse()
+ui_showmouse()
+UI_Chat_Update()
+
+select Menu_Engine_UI_State
+    case 0
+        //waiting to join the game as a player
+    endcase
+    case 1
+        //waiting for response from server
+        ui_centertext(3,Screen.Width/2,Screen.Height-85,chr$(136)+" Waiting to spawn...")
+    endcase
+    case 2
+    endcase
+    case 3
+    endcase
+endselect
+
 `endif
 `if Game.state = GAME_WAIT_FOR_SERVER:
 `    ui_hidemouse()
