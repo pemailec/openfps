@@ -32,6 +32,16 @@ function Game_Update()
     endif
 endfunction
 
+//triggered at the end of the game level
+function Game_End()
+    Game_Client_End()
+    Game_Server_End()
+    Game_World_Destroy()
+    Net_Disconnect()
+    UI_FadeManager.state=UI_FADEIN
+    UI_FadeManager.target=M_MENU_MAIN
+endfunction
+
 //triggered at end of program
 function Game_Terminate()
 
@@ -65,9 +75,19 @@ function Game_Client_Start()
         //dont load the level, it's already been loaded
     endif
     
+    //set up some game variables
+    global Client_Test_Value as integer
+    
     //change the UI state to the default viewport
     UI_FadeManager.state=UI_FADEIN
     UI_FadeManager.target=M_ENGINE_DEFAULT
+    //change ui state modifier to default interface
+    Menu_Engine_UI_State = 0
+    
+    global Client_Ticker as integer
+    Client_Ticker = find free ticker()
+    //make ticker for game updates
+    make ticker Client_Ticker,1000/2
     
 ENDFUNCTION
 
@@ -76,19 +96,31 @@ function Game_Client_Update()
     if Gameworld.state = GAME_SPECTATE:
         Camera_Spectator_Update()
     endif
+    
+    if ticker(Client_Ticker):
+        Net_Client_Send_UDP_Message("cl_ping",str$(Client.udp_client_id))
+        Client.data_lag = hitimer()
+    ENDIF
+    
 ENDFUNCTION
 
 //triggered when the client is disconnected / quits.
 function Game_Client_End()
-    
 ENDFUNCTION
 
-function Game_Server_Start(config as string)
-    
+function Game_Server_Start()
+    global Server_Ticker as integer
+    global Server_Test_Value as integer
+    Server_Test_Value = 0
+    Server_Ticker = find free ticker()
+    //make ticker for game updates
+    make ticker Server_Ticker,1000/2
 ENDFUNCTION
 
 function Game_Server_Update()
-    
+    if ticker(Server_Ticker):
+        //do game updates
+    endif
 ENDFUNCTION
 
 function Game_Server_End()

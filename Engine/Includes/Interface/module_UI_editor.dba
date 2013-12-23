@@ -481,6 +481,7 @@ function UI_Editor_Init():
 
     addItem EditorUI.EntityTypeCombobox,"env_flare"
     addItem EditorUI.EntityTypeCombobox,"env_smoke"
+    addItem EditorUI.EntityTypeCombobox,"env_spawn"
     addItem EditorUI.EntityTypeCombobox,"mdl_static"
     addItem EditorUI.EntityTypeCombobox,"mdl_physics"
     selectitem EditorUI.EntityTypeCombobox,0

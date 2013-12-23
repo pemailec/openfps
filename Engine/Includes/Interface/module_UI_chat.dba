@@ -8,9 +8,9 @@
 //////////////////////////////////////////////////////////////
 
 Type t_ChatElement
-   strng As String
-	title as string
-   age as integer
+    strng As String
+    title as string
+    age as integer
 endtype
 
 //////////////////////////////////////////////////////////////
@@ -23,89 +23,137 @@ endtype
 
 Function UI_Chat_Init():
     global chatInited as integer : chatInited =1
-    dim Chat_display_text() as t_ChatElement
+    global chatMode as integer: chatMode = -2
+    global dim Chat_display_text() as t_ChatElement
     global numDisplaylines as integer
     global MessageBoxWidth as integer
     MessageBoxWidth=Screen.Width - (80+(Ui_mywindow.yrow*4))
     global MessageBoxHeight as integer
     MessageBoxHeight=((7)*20)+20
     global DisplaylinesOffset as float
-    for i = 1 to 10: UI_Chat_AddText("  ","  ") : next i
     Global MAX_STRING_LEN As Integer : MAX_STRING_LEN = 8192
+    global chat_transition_x as float
+    global chat_transition_y as float
+    global NewMessageFlag as integer
+    global NewMessageEffectTimer as float
+    global NewMessageEffectValue as float
+    global MaxCharacters as integer
+    MaxCharacters = (Screen.Width-50)/(32*0.6)
+    ui_writelog(UI_yellow,"MAX CHARACTERS: "+str$(MaxCharacters))
+    chat_transition_x = 15+MessageBoxWidth
+    chat_transition_y = (Screen.Height-MessageBoxHeight-20)+(-120)
+    UI_Chat_ClearText()
 endfunction
 
+function UI_Chat_ClearText():
+    for i = 1 to 10
+            array insert at bottom Chat_display_text(0)
+            Chat_display_text(numDisplaylines).strng=" "
+            Chat_display_text(numDisplaylines).age=timer()
+            Inc numDisplaylines,1
+    next i
+ENDFUNCTION
+
 Function UI_Chat_AddText(titlestring$,msgstring$):
-if chatInited:
-tempstring$=""
-numlines=1
-for i=1 to len(msgstring$)
-    tempstring$=tempstring$+mid$(msgstring$,i)
-    if 32*0.6*len(titlestring$+": "+tempstring$)>(ScreenWidth-25):
+    if chatInited:
+        compound_string$ = msgstring$
+        //add extracted_string$ as a line
+        // code to add a line to the front of the stack
         array insert at bottom Chat_display_text(0)
-        Chat_display_text(numDisplaylines).strng=tempstring$
-        If numlines=1:
-				Chat_display_text(numDisplaylines).title=titlestring$
-			else:
-				temptitle$=""
-				For i=0 To Len(titlestring$)+2:
-				temptitle$=temptitle$+" "
-				next i
-				Chat_display_text(numDisplaylines).title=temptitle$
-			endif
+        modifier$=" "
+        if len(compound_string$)>MaxCharacters then modifier$="..."
+        Chat_display_text(numDisplaylines).strng=left$(compound_string$,MaxCharacters)+modifier$
         Chat_display_text(numDisplaylines).age=timer()
-        tempstring$=""
-        inc numlines,1
-        inc numDisplaylines,1
-    Endif
-	 stringexists=1
-next i
-if len(tempstring$)>0:
-    array insert at bottom Chat_display_text(0)
-    Chat_display_text(numDisplaylines).strng=tempstring$        
-	 If numlines=1:
-				Chat_display_text(numDisplaylines).title=titlestring$
-			else:
-				temptitle$=""
-				For i=0 To Len(titlestring$)+2:
-				temptitle$=temptitle$+" "
-				next i
-				Chat_display_text(numDisplaylines).title=temptitle$
-			endif
-    Chat_display_text(numDisplaylines).age=timer()
-    tempstring$=""
-    inc numlines,1
-    Inc numDisplaylines,1
-	 stringexists=1
-Endif
-If stringexists:
-	DisplaylinesOffset=20*(numlines)
-endif
-endif
+        Inc numDisplaylines,1
+        stringexists=1
+        
+        If stringexists:
+            DisplaylinesOffset=20
+            NewMessageFlag = 1
+        endif
+    endif
 Endfunction
 
 Function UI_Chat_Update():
-D3d_Box (40+(Ui_mywindow.yrow*2)),(Screen.Height-MessageBoxHeight-20)+(-120),(40+(Ui_mywindow.yrow*2))+MessageBoxWidth,(Screen.Height-20)+(-120),d3d_rgba(0,0,0,120)
-d3d_line (40+(Ui_mywindow.yrow*2)),(Screen.Height-20)+(-120),(40+(Ui_mywindow.yrow*2))+MessageBoxWidth-1,(Screen.Height-20)+(-120),d3d_rgba(0,0,0,255)
-d3d_line (40+(Ui_mywindow.yrow*2))+1,(Screen.Height-20)+1+(-120),(40+(Ui_mywindow.yrow*2))+MessageBoxWidth,(Screen.Height-20)+1+(-120),d3d_rgba(180,180,180,255)
+if chatmode > 0:
+    //check keystates
+    if keystate(15)=1 and chatMode = 2 then chatMode = -1
+    if keystate(15)=0 then chatMode = 2
+    NewMessageFlag = 0
+    //do box
+    UI_Text(1,20,chat_transition_y - 14,"<Tab> to close chat")
+    D3d_Box (15),chat_transition_y,chat_transition_x,(Screen.Height-20)+(-120),d3d_rgba(0,0,0,120)
+    d3d_line (15),(Screen.Height-20)+(-120),chat_transition_x-1,(Screen.Height-20)+(-120),d3d_rgba(0,0,0,255)
+    d3d_line (15)+1,(Screen.Height-20)+1+(-120),chat_transition_x,(Screen.Height-20)+1+(-120),d3d_rgba(180,180,180,255)
 
-If DisplaylinesOffset>0 Then Dec DisplaylinesOffset,2*TBM
+    chat_transition_x = TBM_Curvevalue(Screen.Width,chat_transition_x,5.0)
+    chat_transition_y = TBM_Curvevalue((Screen.Height-MessageBoxHeight-20)+(-120),chat_transition_y,5.0)
+    //do offset effect
+    If DisplaylinesOffset>0 Then Dec DisplaylinesOffset,2*TBM
+    
+    //draw text
+    if numDisplaylines>0:
+        If numDisplaylines>6:
+            //delete old lines
+            while numDisplaylines>6:
+                ARRAY DELETE ELEMENT Chat_display_text(0),0
+                numDisplaylines=numDisplaylines-1
+            endwhile
+        endif
+        For i = 0 To numDisplaylines-1:
+            age_alpha=clamp( ( 255-((timer()-Chat_display_text(i).age)/4))+8000,100,255)
+            
+            textpos=(Screen.Height/2)+((i)*20)+DisplaylinesOffset
+            textmaxpos=(Screen.Height/2)+((6)*20)
+            if textpos>textmaxpos then age_alpha=0
+            UI_ScaledText(3,15+1,(Screen.Height-MessageBoxHeight-10)+((i)*20)+DisplaylinesOffset+(-120),Chat_display_text(i).strng,60,age_alpha)
+        Next i
+    Endif
+    
+    //draw user chat prompt
+    local chat_new_string as string
+    local entry_string as string
+    entry_string = left$(entry$(1),MaxCharacters)
+        modifier$=" "
+        if len(entry_string)>MaxCharacters then modifier$="..."
+    //work on removing enter keys and crap
+    chat_new_string = "Chat: "+entry_string
+    UI_ScaledText(3,15+1,(Screen.Height-MessageBoxHeight-10)+((6)*20)+(-120),chat_new_string + modifier$,60,255)
+    if Console.active = 0 and returnkey()=1 and len(entry_string)>2:
+        Net_Client_Send_TCP_Message("cl_chat","~b Chat:~w  "+entry_string)
+        clear entry buffer
+    endif
+    
+    
+else
+//transition to hiding chat...
+if KEYSTATE(15)=1 and chatMode = -2 then chatMode = 1:clear entry buffer
+if KEYSTATE(15)=0 then chatMode = -2
+D3d_Box NewMessageEffectValue+(15),(Screen.Height-20)+(-120),NewMessageEffectValue+chat_transition_x,chat_transition_y,d3d_rgba(0,0,0,120)
+d3d_line NewMessageEffectValue+(15),(Screen.Height-20)+(-120),NewMessageEffectValue+chat_transition_x-1,(Screen.Height-20)+(-120),d3d_rgba(0,0,0,255)
+chat_transition_x = TBM_Curvevalue(24+180,chat_transition_x,5.0)
+chat_transition_y = TBM_Curvevalue((Screen.Height-20)+(-120)-42,chat_transition_y,5.0)
+if chatmode = -2:
+    if mouseclick() and mousex()>NewMessageEffectValue+(15) and mousex()<NewMessageEffectValue+24+180 and mousey()>(Screen.Height-20)+(-120)-42 and mousey()<(Screen.Height-20)+(-120) :
+        chatMode = 1
+        clear entry buffer
+    endif
+endif
+//if NewMessageFlag =1 then do a "bounce" visual effect
+if NewMessageFlag =1:
+    NewMessageEffectTimer = NewMessageEffectTimer + 5 * TBM
+    if NewMessageEffectTimer > (360.0 * 10) then NewMessageEffectTimer = 0.0
+    NewMessageEffectValue = 0 + (30.0 * Abs(Sin(NewMessageEffectTimer)*0.1*(10.0-clamp(NewMessageEffectTimer/(360.0)*2.0,1,10)) ))
+else
+    NewMessageEffectValue = 0
+endif    
+UI_ScaledText(3,NewMessageEffectValue+15+1,(Screen.Height-MessageBoxHeight-10)+((6)*20)+(-120),"<Tab> to open chat",60,255)
+//fix the offset
+DisplaylinesOffset=0
+endif
 
-if numDisplaylines>0:
-   If numDisplaylines>6:
-		while numDisplaylines>6:
-			ARRAY DELETE ELEMENT Chat_display_text(0),0
-			numDisplaylines=numDisplaylines-1
-		endwhile
-	endif
-	For i = 0 To numDisplaylines-1:
-		age_alpha=clamp( ( 255-((timer()-Chat_display_text(i).age)/4))+8000,100,255)
-		
-		textpos=(Screen.Height/2)+((i)*20)+DisplaylinesOffset
-		textmaxpos=(Screen.Height/2)+((6)*20)
-		if textpos>textmaxpos then age_alpha=0
-		UI_ScaledText(3,(40+(Ui_mywindow.yrow*2))+1,(Screen.Height-MessageBoxHeight-10)+((i)*20)+DisplaylinesOffset+(-120),Chat_display_text(i).title+": "+Chat_display_text(i).strng,60,age_alpha)
-	Next i
-Endif
+
+
 endfunction
 
 //////////////////////////////////////////////////////////////

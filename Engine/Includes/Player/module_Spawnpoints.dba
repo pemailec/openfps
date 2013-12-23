@@ -1,0 +1,87 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - SPAWNPOINT MODE
+//  Concept and code by thenerd, Summer 2013!
+//  Subsection of Module_Entity
+//////////////////////////////////////////////////////////////
+
+function Entity_Spawnpoint_Init():
+    //spawn points don't need any media
+ENDFUNCTION
+
+function Entity_Spawnpoint_Add(x#,y#,z#):
+    //add new entity
+    //convert y# to actual terrain coordinates
+    //test code for now
+    ray = sc_raycast(0,x#,1000,z#,x#,-1000,z#,0)
+    y# = SC_getStaticCollisionY()
+    i = 0
+    while ent_Getexists("env_spawn_"+str$(i))
+        i = i + 1
+    endwhile
+    entAdd("env_spawn_"+str$(i))
+    ref = entgetreference("env_spawn_"+str$(i))
+    entAddAttribute(ref,"name","env_spawn_"+str$(i))
+    entAddAttribute(ref,"type","env_spawn")
+    entAddAttribute(ref,"x",str$(x#))
+    entAddAttribute(ref,"y",str$(y#))
+    entAddAttribute(ref,"z",str$(z#))
+    entAddAttribute(ref,"enabled",str$(1))
+    entAddAttribute(ref,"free",str$(1))
+ENDFUNCTION
+
+function Entity_Spawnpoint_Update(i):
+    //manage the spawnpoint
+    //doesn't do much for now!
+    //later will do more advanced things
+    //(set mode to enabled / disabled based on game balance)
+        //check if the spawnpoint is free from obstruction! 
+        //only do this once in a while
+        enabled = Ent_GetInt(i,"enabled")
+        spawn_free = Ent_GetInt(i,"free")
+        x#=Ent_GetFloat(i,"x")
+        y#=Ent_GetFloat(i,"y")
+        z#=Ent_GetFloat(i,"z")
+    if InEditor = 1:
+        //if we're in editor, display debug information on screen
+        //since player camera height is 0.75, display an icon that high
+        d3d_line3d x#,y#,z#,x#,y#+0.75,z#,rgb(0,0,255),1
+        d3d_circle3d 0.125, x#,y#+0.25,z#,0,1,0,rgb(0,0,255),1
+        d3d_circle3d 0.125, x#,y#+0.5,z#,0,1,0,rgb(0,0,255),1
+        d3d_circle3d 0.125, x#,y#+0.75,z#,0,1,0,rgb(0,0,255),1
+endif
+ENDFUNCTION
+
+function Entity_Spawnpoint_Reload(i):
+    //do nothing
+endfunction
+
+function Entity_Spawnpoint_Delete(i):
+    //do nothing
+endfunction
+
+function Entity_Spawnpoint_Terminate():
+    //do nothing
+ENDFUNCTION
+
+//////////////////////////////////////////////////////////////
+// Client and Server functions
+//////////////////////////////////////////////////////////////
+
+function Server_Entity_Find_Spawnpoint():
+    //loop through the entities and find the first spawn that is free
+    //return that name which will be sent as a TCP packet
+    local spawn_found as string
+    spawn_found="none"
+    for i = 0 to NumEntities-1:
+        type_attrib$=EntGetAttribute(i,"type")
+        if type_attrib$ = "env_spawn"
+            if Ent_GetInt(i,"free")=1:
+                spawn_found = Entities(i).name
+            endif
+        endif
+    next i
+ENDFUNCTION spawn_found
+
+//////////////////////////////////////////////////////////////
+// End of code
+//////////////////////////////////////////////////////////////

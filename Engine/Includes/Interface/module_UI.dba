@@ -1181,12 +1181,20 @@ Local UI_Charpos as Integer:` character position recount if inline colors are us
 				case "p" `pink
 					DXS SET SPRITE DIFFUSE UI_stringmap(ID,258).bitmapID,255,0,255
 				endcase
+    case "y" `yellow
+        DXS SET SPRITE DIFFUSE UI_stringmap(ID,258).bitmapID,255,201,14
+    endcase
 			endselect
 			xx=xx+2
 			UI_charpos=UI_charpos-1
 		endif
-		  		``````````````
-		  		
+    ``````````````
+    if asc(Mid$(sstring$,xx))<32:
+        //skip this character
+        xx=xx+1
+        UI_charpos=UI_charpos-1
+    endif
+    
 		DXS DRAW SPRITE TILE UI_stringmap(ID,258).bitmapID,UI_stringmap(ID,UI_chain(xx).character).bitmapID,x+((UI_charpos-1)*(UI_stringmap(ID,258).ascii)*(_scale/100.0)),y
 	Next xx
 	DXS END SPRITE RENDER UI_stringmap(ID,258).bitmapID

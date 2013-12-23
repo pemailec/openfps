@@ -174,7 +174,6 @@ function Water_CreateFoam():
         texture object WaterFoam_Obj, 0, WaterFoam_IMG_RAND
         texture object WaterFoam_Obj, 1, WaterFoam_BreakerImg
         texture object WaterFoam_Obj, 2, WaterFoam_IMG_BASE 
-        paste image WaterFoam_IMG_BASE,0,0
     endif
 ENDFUNCTION
 

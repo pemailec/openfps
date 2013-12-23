@@ -1,0 +1,1 @@
+portqry -n 173.48.153.103 -p udp -r 20187:20199 -l OpenFPS_Ports.cfg -y -nr

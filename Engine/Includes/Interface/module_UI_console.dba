@@ -90,7 +90,7 @@ Function UI_Console_RunCMD(commandstring As string):
            Game.Terminate= 1
 	       endcase
 	       case "disconnect"
-            Trigger_Load("Network_Disconnect","")
+            Trigger_Load("Game_End","")
 	       endcase
 	       case "cl_testconnect"
             Trigger_Load("Network_Connect","OpenFPS_173.48.153.103_25565_TestServer")
@@ -100,6 +100,9 @@ Function UI_Console_RunCMD(commandstring As string):
 	       endcase
 	       case "sv_testmessage"
             Net_Server_Send_TCP_Message("sv_testmessage","~p HELLO WORLD!")
+	       endcase
+	       case "ui_smallwindow"
+	           set window size Screen.Width/2,Screen.Height/2
 	       endcase
 	    endselect
 	endif
@@ -124,10 +127,10 @@ Function UI_Console_Update():
 		endif
 	endif
 	If Keystate(Game_Input.KEY_CONSOLE)=0 Then input_toggler=0
-	
 	ui_putwindow(0-ui_mywindow.xwidth,0-(ui_mywindow.yrow*3),(Screen.Width/ui_mywindow.xwidth)+1,(Console.height/Ui_mywindow.yrow)+1)
 	If Console.active=1:
 		
+    if Network.Net_client = 1 then Network_Client_DisplayDebugUI()
 		Console.height=clamp(Console.height+(20*TBM),0,200)
 		UI_AlphaText(1,4,-200+Console.height+16,"~r[ ~b OPENFPS ENGINE revision "+Game.revision+" ~r Frametime: "+str$(Game.frametimeavg)+" ms ]",250)
 		For i = 2 To 8:
