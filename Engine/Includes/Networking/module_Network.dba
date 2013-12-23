@@ -261,8 +261,6 @@ function Net_Client_Init(auth as string)
         Net_Server_Clients(0).port=-1
         Net_Server_Clients(0).tcp_channel=-1
         
-        //NEW UDP SOCKET()
-        //BIND SOCKET(Server.udp_channel, Server.tcp_listen_port)
         //create a udp channel pointing to the client
          Net_Server_Clients(0).udp_channel = NEW UDP SOCKET()
          Net_Server_Clients(0).udp_data_port = -1
@@ -337,17 +335,28 @@ ENDFUNCTION
 //allocated 25 bytes for header, 225 bytes for packet data
 function Net_Client_Send_UDP_Message(msg_header as string, msg_data as string):
     if Network.Net_Client = 1:
-//         if Client.udp_client_id > -1:
-//         if Client.udp_client_port > -1:
-//             //send a simmple packet
-//             Winsock Make Packet
-//             winsock add int Client.udp_client_id
-//             Winsock Add String left$(msg_header,25)
-//             winsock add string left$(msg_data,225)
-//             Winsock Send udp Packet Client.udp_channel
-//             UI_Console_AddLine("NET", "~w Client sent UDP packet '"+msg_header+"'")
-//         endif
-//         endif
+         if Client.udp_client_id > -1:
+         if Client.udp_client_port > -1:
+             //send a simmple packet
+             local BufferTest as dword
+             local BufferSize as dword
+             local BufferTemp as dword
+             
+             BufferSize = (8)+2+len(msg_header)+len(msg_data)
+             BufferTemp = find free memblock()
+             make memblock BufferTemp,BufferSize
+             pos = 0
+             WRITE MEMBLOCK DWORD BufferTemp, pos, BufferSize : pos = pos + 4
+             WRITE MEMBLOCK DWORD BufferTemp, pos, Client.udp_client_id : pos = pos + 4
+             WRITE MEMBLOCK STRING BufferTemp, pos, msg_header : pos = pos + (len(msg_header)+1)
+             WRITE MEMBLOCK STRING BufferTemp, pos, msg_data : pos = pos + (len(msg_data)+1)
+             
+             BytesWritten = SEND SOCKET(Client.udp_sending_channel,GET MEMBLOCK PTR(BufferTemp), BufferSize)
+             delete memblock BufferTemp
+             UI_Console_AddLine("NET", "~w Client sent UDP packet '"+msg_header+"' with size ~r "+str$(BytesWritten)+" bytes")
+             
+         endif
+         endif
     endif
 endfunction
 
@@ -404,32 +413,51 @@ endfunction
 //allocated 25 bytes for header, 225 bytes for packet data
 function Net_Server_Send_Local_UDP_Message(clientid, msg_header as string, msg_data as string)
     if Net_Server_clients(clientid).active = 1
-//         if Net_Server_clients(clientid).udp_data_port > -1:
-//             Winsock Make Packet
-//             Winsock Add String left$(msg_header,25)
-//             winsock add string left$(msg_data,225)
-//             Winsock Send udp Packet Net_Server_clients(clientid).udp_channel
-//         else
-//             Client_Cache_Add(msg_header,msg_data)
-//         endif
+         if Net_Server_clients(clientid).udp_data_port > -1:
+             local BufferTest as dword
+             local BufferSize as dword
+             local BufferTemp as dword
+             BufferSize = (4)+2+len(msg_header)+len(msg_data)
+             BufferTemp = find free memblock()
+             make memblock BufferTemp,BufferSize
+             pos = 0
+             WRITE MEMBLOCK DWORD BufferTemp, pos, BufferSize : pos = pos + 4
+             WRITE MEMBLOCK STRING BufferTemp, pos, msg_header : pos = pos + (len(msg_header)+1)
+             WRITE MEMBLOCK STRING BufferTemp, pos, msg_data : pos = pos + (len(msg_data)+1)
+             
+             BytesWritten = SEND SOCKET(Net_Server_clients(clientid).udp_channel,GET MEMBLOCK PTR(BufferTemp), BufferSize)
+             delete memblock BufferTemp
+             
+         else
+             Client_Cache_Add(msg_header,msg_data)
+         endif
     endif
 endfunction 
 
 function Net_Server_Send_UDP_Message(msg_header as string, msg_data as string)
     if Network.Net_Server = 1:
     if Server.net_server_clients_count > 0:
-//         for CurrentClientID = 0 to Server.net_server_clients_count - 1:
-//             if Net_Server_clients(CurrentClientID).active = 1
-//                 if Net_Server_clients(CurrentClientID).udp_data_port > -1:
-//                     Winsock Make Packet
-//                     Winsock Add String msg_header
-//                     winsock add string msg_data
-//                     Winsock Send udp Packet Net_Server_clients(CurrentClientID).udp_channel
-//                 else
-//                     Client_Cache_Add(msg_header,msg_data)
-//                 endif
-//             endif
-//         next CurrentClientID
+         for CurrentClientID = 0 to Server.net_server_clients_count - 1:
+             if Net_Server_clients(CurrentClientID).active = 1
+                 if Net_Server_clients(CurrentClientID).udp_data_port > -1:        
+                     local BufferTest as dword
+                     local BufferSize as dword
+                     local BufferTemp as dword
+                     BufferSize = (4)+2+len(msg_header)+len(msg_data)
+                     BufferTemp = find free memblock()
+                     make memblock BufferTemp,BufferSize
+                     pos = 0
+                     WRITE MEMBLOCK DWORD BufferTemp, pos, BufferSize : pos = pos + 4
+                     WRITE MEMBLOCK STRING BufferTemp, pos, msg_header : pos = pos + (len(msg_header)+1)
+                     WRITE MEMBLOCK STRING BufferTemp, pos, msg_data : pos = pos + (len(msg_data)+1)
+                     
+                     BytesWritten = SEND SOCKET(Net_Server_clients(clientid).udp_channel,GET MEMBLOCK PTR(BufferTemp), BufferSize)
+                     delete memblock BufferTemp
+                else
+                    Client_Cache_Add(msg_header,msg_data)
+                endif
+            endif
+        next CurrentClientID
     endif
     endif
 endfunction
@@ -567,32 +595,69 @@ function Net_Server_Update()
             endif
         next CurrentClientID
     endif
+   
+    remstart
+    BufferSize = (4)+2+len(msg_header)+len(msg_data)
+    BufferTemp = find free memblock()
+    make memblock BufferTemp,BufferSize
+    pos = 0
+    WRITE MEMBLOCK DWORD BufferTemp, pos, BufferSize : pos = pos + 4
+    WRITE MEMBLOCK STRING BufferTemp, pos, msg_header : pos = pos + (len(msg_header)+1)
+    WRITE MEMBLOCK STRING BufferTemp, pos, msg_data : pos = pos + (len(msg_data)+1)
     
-    //get UDP packets recieved
-//     while winsock channel data waiting(Server.udp_channel):
-//         Winsock recv udp message Server.udp_channel
-//         if WINSOCK CHANNEL DATA LEN(Server.udp_channel)>0:
-//             //check the message
-//             Winsock Split Data Server.udp_channel
-//             While Winsock Packet Count(Server.udp_channel)>0:
-//                 Winsock Fetch Packet Server.udp_channel
-//                 Local packet_header As String
-//                 Local packet_data As String
-//                 local packet_client_id as integer
-//                 packet_client_id = Winsock Read int()
-//                 packet_header = Winsock Read String$()
-//                 packet_data = Winsock Read String$()
-//                 select packet_header
-//                     case "cl_ping"
-//                         UI_Console_AddLine("NET", "~w Got ping from Client "+str$(packet_client_id))
-//                         //return a ping message
-//                         Net_Server_Send_Local_UDP_Message(packet_client_id,"sv_ping","1")
-//                     endcase
-//                 endselect
-//             endwhile
-//         endif
-//     endwhile
-//     
+    BytesWritten = SEND SOCKET(Net_Server_clients(clientid).udp_sending_channel,GET MEMBLOCK PTR(BufferTemp), BufferSize)
+    delete memblock BufferTemp
+    
+    Status = SOCKET POLL READ( Handle) 
+    BytesRead = RECV FROM SOCKET( Handle, BufferAddress, BufferSize )
+    SOCKET BYTES AVAILABLE()
+    SOCKET REMOTE IP ( Handle )
+    SOCKET REMOTE PORT ( Handle )
+    
+    SOCKET BYTES AVAILABLE(Server.udp_channel)
+    ui_writelog(UI_Green,"Socket poll result = "+str$(SOCKET POLL READ(Server.udp_channel)))
+    ui_writelog(UI_Green,"Socket bytes available = "+str$(SOCKET BYTES AVAILABLE(Server.udp_channel)))
+    
+    remend
+    
+    local iteration as integer
+    iteration = 0
+    while SOCKET BYTES AVAILABLE(Server.udp_channel)>0: //SOCKET POLL READ(Server.udp_channel)=1:
+        //receive the first 4 bytes of a packet (tells how long the rest of the packet is)
+        `ui_writelog(UI_Green,"Socket iteration = "+str$(iteration)):iteration=iteration+1
+        
+        local BufferSize as dword
+        local BufferTemp as dword
+        //receive the rest of a packet from the cache
+        BufferTemp = find free memblock()
+        make memblock BufferTemp,255
+        BytesRead = RECV FROM SOCKET(Server.udp_channel,GET MEMBLOCK PTR(BufferTemp),255)
+        pos = 0
+        BufferSize = MEMBLOCK DWORD(BufferTemp, pos) : pos = pos + 4
+        `ui_writelog(UI_Green,"Got packet from socket, total size  = "+str$(BufferSize))
+        BufferSize = BufferSize - 4
+        
+        `ui_writelog(UI_Green,"Reading packet data...")
+        //read data
+        Local packet_header As String
+        Local packet_data As String
+        local packet_client_id as dword
+        packet_client_id = MEMBLOCK DWORD(BufferTemp, pos) : pos = pos + 4
+        packet_header = memblock string$(BufferTemp, pos) : pos = pos + (len(packet_header)+1)
+        packet_data = memblock string$(BufferTemp, pos) : pos = pos + (len(packet_data)+1)
+        `ui_writelog(UI_Green,"packet type = " + packet_header)
+        `ui_writelog(UI_Green,"packet data = " + packet_data)
+        select packet_header
+            case "cl_ping"
+                UI_Console_AddLine("NET", "~w Got ping from Client "+str$(packet_client_id))
+                //return a ping message
+                Net_Server_Send_Local_UDP_Message(packet_client_id,"sv_ping","1")
+            endcase
+        endselect
+        
+        //delete memblock
+        delete memblock BufferTemp
+    endwhile
 ENDFUNCTION
 
 function Network_Client_DisplayDebugUI()
@@ -629,8 +694,8 @@ function Net_Client_Update()
             else
                 //client has been disconnected from the server.
                 winsock delete channel Client.tcp_channel
-                delete socket Client.tcp_channel
-                delete socket Client.tcp_sending_channel
+                delete socket Client.udp_channel
+                delete socket Client.udp_sending_channel
                 
                 Network.Net_Client = 0
                 UI_Console_AddLine("NET", "~w Your client has been disconnected.")
@@ -708,30 +773,42 @@ function Net_Client_Update()
         Client_NumCacheEntries = 0
     endif
     
-//     
-//     //get UDP packets recieved
-//     while winsock channel data waiting(Client.udp_channel):
-//         Winsock recv udp message Client.udp_channel
-//         if WINSOCK CHANNEL DATA LEN(Client.udp_channel)>0:
-//             //check the message
-//             Winsock Split Data Client.udp_channel
-//             While Winsock Packet Count(Client.udp_channel)>0:
-//                 Winsock Fetch Packet Client.udp_channel
-//                 Local packet_header As String
-//                 Local packet_data As String
-//                 packet_header = Winsock Read String$()
-//                 packet_data = Winsock Read String$()
-//                 select packet_header
-//                     case "sv_ping"
-//                         //display data
-//                         lagtime = hitimer() - Client.data_lag
-//                         UI_Console_AddLine("NET", "~w Got ping from Server.. calculated lag is "+str$(lagtime)+" ms")
-//                     endcase
-//                 endselect
-//             endwhile
-//         endif
-//     endwhile
+    
+    local iteration as integer
+    iteration = 0
+    while SOCKET BYTES AVAILABLE(Client.udp_channel)>0:
+        
+        local BufferSize as dword
+        local BufferTemp as dword
+        //receive the rest of a packet from the cache
+        BufferTemp = find free memblock()
+        make memblock BufferTemp,255
+        BytesRead = RECV FROM SOCKET(Client.udp_channel,GET MEMBLOCK PTR(BufferTemp),255)
+        pos = 0
+        BufferSize = MEMBLOCK DWORD(BufferTemp, pos) : pos = pos + 4
+        `ui_writelog(UI_Green,"Got packet from socket, total size  = "+str$(BufferSize))
+        BufferSize = BufferSize - 4
+        
+        `ui_writelog(UI_Green,"Reading packet data...")
+        //read data
+        Local packet_header As String
+        Local packet_data As String
+        packet_header = memblock string$(BufferTemp, pos) : pos = pos + (len(packet_header)+1)
+        packet_data = memblock string$(BufferTemp, pos) : pos = pos + (len(packet_data)+1)
+        select packet_header
+            case "sv_ping"
+                //display data
+                lagtime = hitimer() - Client.data_lag
+                UI_Console_AddLine("NET", "~w Got ping from Server.. calculated lag is "+str$(lagtime)+" ms")
+            endcase
+        endselect
+        
+        //delete memblock
+        delete memblock BufferTemp
+    endwhile
+    
 
+    
 ENDFUNCTION
 
 function Net_Client_Disconnect()
