@@ -1,0 +1,278 @@
+//////////////////////////////////////////////////////////////
+//  Game Engine Standard Modules - GRASS MODULE
+//  Concept and code by thenerd, Winter 2013!
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+// Constants
+//////////////////////////////////////////////////////////////
+
+type t_GrassArrayElement
+    visible as integer
+    grasstype as integer
+    density as float
+    object as integer
+    w_pos_x as float
+    w_pos_y as float
+    w_pos_z as float
+endtype
+
+//////////////////////////////////////////////////////////////
+// UDTS
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+// Terrain Save/Load functions
+// handles grass map array
+//////////////////////////////////////////////////////////////
+
+function Terrain_Grass_LoadMap()
+    //load array from file
+    EXTRACT FILE FROM BLOCK 1,"grass_data.cfg","Media\Levels"
+    read_file = reserve free file()
+    open to read read_file,"Media\Levels\grass_data.cfg"
+    header$ = "" : read string read_file, header$
+    if header$="OpenFPS_Statics"
+        for GrassX = 0 to 63:
+            For GrassZ = 0 to 63:
+                read float read_file,GrassField(GrassX,GrassZ)
+            Next GrassZ
+        next GrassX
+    endif
+    close file read_file
+    delete file "Media\Levels\grass_data.cfg"
+    Grass_Populate()
+ENDFUNCTION
+
+function Terrain_Grass_Setup()
+    //make new array
+    dim GrassField(64,64) as float
+ENDFUNCTION
+
+function Terrain_Grass_NewMap()
+    //reset array
+    for GrassX = 0 to 63:
+        For GrassZ = 0 to 63:
+            GrassField(GrassX,GrassZ)=0.0
+        Next TerrainZ
+    next TerrainX
+    Grass_Populate()
+ENDFUNCTION
+
+function Terrain_Grass_SaveMap()    
+    file_temp$="grass_data.cfg"
+    save_file = reserve free file()
+    open to write save_file,file_temp$
+    write string save_file,"OpenFPS_Statics"
+        for GrassX = 0 to 63:
+            For GrassZ = 0 to 63:
+                write float save_file,GrassField(GrassX,GrassZ)
+            Next TerrainZ
+        next TerrainX
+    write string save_file,"OpenFPS_Statics_End"
+    close file save_file
+    ADD FILE TO BLOCK 1,file_temp$
+    delete file file_temp$
+ENDFUNCTION
+
+function Terrain_Grass_Paint(x as float,y as float,z as float,radius as float)
+    _x = (x+8)/4
+    _z = (z+8)/4
+    for x_delta = 0 to (radius*2)
+        for z_delta = 0 to (radius*2)
+            x2=x_delta-radius
+            z2=z_delta-radius
+            if (_x+x2)>0 and (_x+x2)<64 and (_z+z2)>0 and (_z+z2)<64:
+            GrassField(_x+x2,_z+z2)=1.0
+            endif
+        next z_delta
+    next x_delta
+    Grass_Populate()
+ENDFUNCTION
+
+function Terrain_Grass_Erase(x as float,y as float,z as float,radius as float)
+    _x = (x+8)/4
+    _z = (z+8)/4
+    for x_delta = 0 to (radius*2)
+        for z_delta = 0 to (radius*2)
+            x2=x_delta-radius
+            z2=z_delta-radius
+            if (_x+x2)>0 and (_x+x2)<64 and (_z+z2)>0 and (_z+z2)<64:
+            GrassField(_x+x2,_z+z2)=0.0
+            endif
+        next z_delta
+    next x_delta
+    Grass_Populate()
+ENDFUNCTION
+
+//////////////////////////////////////////////////////////////
+// Main Grass System Functions
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+// Init
+//////////////////////////////////////////////////////////////
+
+function Grass_Init()
+   //called at start of program (during terrain)
+   global GrassMasterObject as integer
+   GrassMasterObject = reserve free object()
+   global GrassMasterTexture as integer
+   GrassMasterTexture = reserve free image()
+   global GrassMasterShader as integer
+   GrassMasterShader = reserve free effect()
+   load effect "Media\Shaders\palmtree.fx",GrassMasterShader,0
+   load object "Media\Models\Engine\palm_lowpoly.x",GrassMasterObject
+   //load image "Media\Models\Engine\palm_lowpoly.png",GrassMasterTexture
+   //texture object GrassMasterObject,GrassMasterTexture
+   set object effect GrassMasterObject,GrassMasterShader
+   loop object GrassMasterObject
+   
+   //set object transparency GrassMasterObject,6
+   set object light GrassMasterObject,0
+   set object cull GrassMasterObject,0
+   exclude object on GrassMasterObject
+   global GrassTicker as integer
+   GrassTicker = find free ticker()
+   make ticker GrassTicker,500
+   dim GrassObjectsArray(64,64) as t_GrassArrayElement
+ENDFUNCTION
+
+//////////////////////////////////////////////////////////////
+// Main
+//////////////////////////////////////////////////////////////
+
+function Grass_Populate()
+   //called after a reload of the world
+   //refreshes data for grass segments
+   //actual rendering refresh is done in Grass_Update()
+   
+   for x = 0 to 63
+       for z = 0 to 63
+            //check data
+            //get worldpos
+            GrassObjectsArray(x,z).w_pos_x = (x * 4) - 8
+            GrassObjectsArray(x,z).w_pos_z = (z * 4) - 8
+            GrassObjectsArray(x,z).w_pos_y = Heightfield((x*4),(z*4))
+            GrassObjectsArray(x,z).visible = 0
+            
+            //update density based on how many surrounding nodes are visible
+            GrassObjectsArray(x,z).density = 0.0
+            if (x-1)>0 and (z-1)>0:
+                if GrassField((x-1),(z-1))>0.0 then inc GrassObjectsArray(x,z).density, 0.1
+            endif
+            if (z-1)>0:
+                if GrassField((x),(z-1))>0.0 then inc GrassObjectsArray(x,z).density, 0.1
+            endif
+            if (x+1)<64 and (z-1)>0:
+                if GrassField((x+1),(z-1))>0.0 then inc GrassObjectsArray(x,z).density, 0.1
+            endif
+            if (x-1)>0:
+                if GrassField((x-1),(z))>0.0 then inc GrassObjectsArray(x,z).density, 0.1
+            endif
+            if GrassField(x,z)>0.0 then inc GrassObjectsArray(x,z).density, 0.1
+            if (x+1)<64:
+                if GrassField((x+1),(z))>0.0 then inc GrassObjectsArray(x,z).density, 0.1
+            endif
+            if (x-1)>0 and (z+1)<64:
+                if GrassField((x-1),(z+1))>0.0 then inc GrassObjectsArray(x,z).density, 0.1
+            endif
+            if (z+1)<64:
+                if GrassField((x),(z+1))>0.0 then inc GrassObjectsArray(x,z).density, 0.1
+            endif
+            if (x+1)<64 and (z+1)<64:
+                if GrassField((x+1),(z+1))>0.0 then inc GrassObjectsArray(x,z).density, 0.1
+            endif            
+            waterheight = 0
+            if Ent_GetExists("root"):
+                if Ent_GetInt(EntGetReference("root"),"water_enabled") then waterheight= Ent_GetInt(EntGetReference("root"),"water_height")
+            endif
+            if GrassObjectsArray(x,z).density > 0.0 and GrassObjectsArray(x,z).w_pos_y > waterheight:
+                GrassObjectsArray(x,z).visible = 1
+            endif
+            
+            //handle object
+            if GrassObjectsArray(x,z).visible = 1
+                if GrassObjectsArray(x,z).object = 0:
+                    GrassObjectsArray(x,z).object  = reserve free object()
+                endif
+                if object exist(GrassObjectsArray(x,z).object)=0:
+                    instance object GrassObjectsArray(x,z).object,GrassMasterObject
+                endif
+                //position object with some random variations
+                //in the future these need to be saved in order for levels to be synced!
+                position object GrassObjectsArray(x,z).object,GrassObjectsArray(x,z).w_pos_x+(rnd(10)/5.0),GrassObjectsArray(x,z).w_pos_y,GrassObjectsArray(x,z).w_pos_z+(rnd(10)/5.0)
+                rotate object GrassObjectsArray(x,z).object,rnd(20),rnd(360),rnd(20)
+                rnd_scale=rnd(40)+100
+                scale object GrassObjectsArray(x,z).object,rnd_scale,rnd_scale,rnd_scale
+            else
+                if GrassObjectsArray(x,z).object > 0:
+                    if object exist(GrassObjectsArray(x,z).object):
+                        delete object GrassObjectsArray(x,z).object
+                    endif
+                endif
+            endif
+            
+       next z
+   next x
+   
+ENDFUNCTION
+
+function Grass_Depopulate()
+    //deletes grass objects
+   for x = 0 to 63
+       for z = 0 to 63
+           if GrassObjectsArray(x,z).object = 0:
+           else:
+               if object exist(GrassObjectsArray(x,z).object)=1:
+                    delete object GrassObjectsArray(x,z).object
+               endif
+           endif
+       next z
+   next x
+endfunction
+
+function BuildGrassLighting(vec_x as float,vec_y as float, vec_z as float)
+       //update lighting
+       r=make vector4(1)
+       set vector4 1,vec_x,vec_y,vec_z,1.0
+       set effect constant vector GrassMasterShader,"lightDirection",1
+       set vector4 1,0.8,0.8,0.8,1.0
+       set effect constant vector GrassMasterShader,"lightColour",1
+       set vector4 1,0.4,0.4,0.4,1.0
+       set effect constant vector GrassMasterShader,"ambientColour",1
+       r=delete vector4(1)
+ENDFUNCTION
+
+function Grass_Update()
+    //called from within terrain update
+    if ticker(GrassTicker)
+       camx#=camera position x()
+       camy#=camera position y()
+       camz#=camera position z()
+        for x = 0 to 63
+           for z = 0 to 63
+               if GrassObjectsArray(x,z).visible = 1:
+                   wposx#=GrassObjectsArray(x,z).w_pos_x
+                   wposy#=GrassObjectsArray(x,z).w_pos_y
+                   wposz#=GrassObjectsArray(x,z).w_pos_z
+                   dist# = Terrain_GetDistance( wposx# , wposy# , wposz#, camx# , camy# , camz# )
+                   //LOD distance check goes here
+               endif
+           next z
+       next x
+   endif
+ENDFUNCTION
+
+//////////////////////////////////////////////////////////////
+// Terminate
+//////////////////////////////////////////////////////////////
+
+function Grass_Terminate()
+    //called from within terrain terminate
+    undim GrassObjectsArray()
+ENDFUNCTION
+
+//////////////////////////////////////////////////////////////
+// End of code
+//////////////////////////////////////////////////////////////

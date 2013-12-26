@@ -45,6 +45,9 @@ endtype
 //////////////////////////////////////////////////////////////
 
 function Terrain_Init():
+    Grass_Init()
+    global TERRAIN_OBJ_START as integer
+    TERRAIN_OBJ_START = 5000
     global Terrain_Internal_LOD_1 as integer : Terrain_Internal_LOD_1 = reserve free object()
     global Terrain_Internal_LOD_2 as integer : Terrain_Internal_LOD_2 = reserve free object()
     global Terrain_Internal_LOD_3 as integer : Terrain_Internal_LOD_3 = reserve free object()
@@ -81,6 +84,7 @@ function Terrain_Init():
     global Terrain_TEX_MASK_R as integer : Terrain_TEX_MASK_R = reserve free image()
     global Terrain_TEX_MASK_G as integer : Terrain_TEX_MASK_G = reserve free image()
     global Terrain_TEX_MASK_B as integer : Terrain_TEX_MASK_B = reserve free image()
+    global Terrain_TEX_MASK_BL as integer : Terrain_TEX_MASK_BL = reserve free image()
     load image "Media\Materials\Terrain\grass.jpg",Terrain_TEX1
     load image "Media\Materials\Terrain\dirt.jpg",Terrain_TEX2
     load image "Media\Materials\Terrain\sand.jpg",Terrain_TEX3
@@ -90,6 +94,7 @@ function Terrain_Init():
     load image "Media\Materials\Terrain\mask_r.png",Terrain_TEX_MASK_R
     load image "Media\Materials\Terrain\mask_g.png",Terrain_TEX_MASK_G
     load image "Media\Materials\Terrain\mask_b.png",Terrain_TEX_MASK_B
+    load image "Media\Materials\Terrain\mask_bl.png",Terrain_TEX_MASK_BL
     global Terrain_SHADER as integer : Terrain_SHADER = reserve free effect()
     load effect "Media\Materials\Terrain\gg_blend_and_per_pixel.fx",Terrain_SHADER,0
     
@@ -105,7 +110,8 @@ function Terrain_Init():
     make ticker Terrain_Lod_Ticker,500
     
     WaterInitVariables()
-    
+    Terrain_Grass_Setup()
+    Grass_Populate()
 ENDFUNCTION
 
 //creates a default terrain
@@ -113,7 +119,7 @@ function Terrain_New():
     if TerrainExists = 1 then Terrain_Delete()
     for TerrainX = 0 to 15:
         For TerrainZ = 0 to 15:
-            Terrain(TerrainX,TerrainZ).LOD_1 = reserve free object()
+            Terrain(TerrainX,TerrainZ).LOD_1 = find free object(TERRAIN_OBJ_START,1000)
             `Terrain(TerrainX,TerrainZ).LOD_2 = reserve free object()
             `Terrain(TerrainX,TerrainZ).LOD_3 = reserve free object()
             clone object Terrain(TerrainX,TerrainZ).LOD_1,Terrain_Internal_LOD_2
@@ -154,6 +160,8 @@ function Terrain_New():
         Next TerrainZ
     next TerrainX
     TerrainExists = 1
+    Terrain_Grass_NewMap()
+    Grass_Populate()
 ENDFUNCTION
 
 function Terrain_BuildShadows():
@@ -193,7 +201,8 @@ function Terrain_BuildShadows():
     null=make vector4(dirvec)
     set vector4 dirvec,vx#,vy#,vz#,1.0
     normalize vector4 dirvec,dirvec
-    set effect constant vector Terrain_SHADER,"lightDirection",dirvec
+    //set effect constant vector Terrain_SHADER,"lightDirection",dirvec
+    BuildGrassLighting(vx#,vy#,vz#)
     null=delete vector4(dirvec)
 ENDFUNCTION
 
@@ -440,12 +449,13 @@ function Terrain_Load():
     
     //load water
     Water_LoadFoamMap()
-    
+    Terrain_Grass_LoadMap()
+    Grass_Populate()
     `CLOSE FILE BLOCK 1
     `rename file file$+".zip",file$+".terr"
     Terrain_Refresh()
 ENDFUNCTION
-
+    
 function Terrain_Save():
     `if file exist(file$+".terr") then delete file file$+".terr"
     `CREATE FILE BLOCK 1,file$+".zip"
@@ -469,6 +479,8 @@ function Terrain_Save():
         Next TerrainZ
     next TerrainX
     Water_SaveFoamMap()
+    Terrain_Grass_SaveMap()
+    
     `CLOSE FILE BLOCK 1
     `rename file file$+".zip",file$+".terr"
     
@@ -487,6 +499,7 @@ function Terrain_Delete():
     next TerrainX
     TerrainExists = 0
     clear array Heightfield()
+    Grass_Depopulate()
 endfunction
 
 function Terrain_Update():
@@ -494,9 +507,14 @@ function Terrain_Update():
     CamY = camera position y()
     CamZ = camera position z()
     TickLoop = ticker(Terrain_Lod_Ticker)
+    Grass_Update()
     if TerrainExists = 1:
     for TerrainX = 0 to 15:
         For TerrainZ = 0 to 15:
+            
+        //DO GRASS RENDERING 
+        //WIP
+    
         //refresh LOD if Terrain_Lod_Ticker is active
         if TickLoop  = 1:
         distance# = Terrain_GetDistance(CamX,CamY,CamZ,TerrainX*16,0,TerrainZ*16)
@@ -507,6 +525,7 @@ function Terrain_Update():
         else
             exclude object off Terrain(TerrainX,TerrainZ).LOD_1
         endif
+        
         remstart
         if Terrain(TerrainX,TerrainZ).LOD_OVERRIDE = 0:
         exclude object on Terrain(TerrainX,TerrainZ).LOD_1
@@ -544,6 +563,7 @@ function Terrain_Terminate():
     delete object Terrain_Internal_LOD_1
     delete object Terrain_Internal_LOD_2
     delete object Terrain_Internal_LOD_3
+    Grass_Terminate()
 ENDFUNCTION
 
 Function Terrain_GetDistance( obj1X# , obj1Y# , obj1Z#, obj2X# , obj2Y# , obj2Z# )

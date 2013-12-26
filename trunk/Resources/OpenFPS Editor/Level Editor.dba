@@ -21,6 +21,8 @@ endtype
 
 Set Message Callback "WndProc"
 
+`Skin Start "Media\Black.msstyles"
+
 Sync on
 Sync Rate 0
 Backdrop Off
@@ -102,8 +104,8 @@ Do
     sync
     if EditorUI.QuitFlag = 1 then exit
 Loop
-
 UI_Editor_Terminate()
+`skin end
 end
 
 //////////////////////////////////////////////////////////////

@@ -12,7 +12,7 @@ float4 eyePos : CameraPosition;
 //-----------------
 float4 lightDirection = {0.25, -0.5, -0.5, 1.0};    
 float4 lightColour = {1.0, 1.0, 1.0, 1.0};    
-float4 ambientColour = {0.22, 0.2, 0.2, 1.0};   
+float4 ambientColour = {0.42, 0.4, 0.4, 1.0};   
 float2 repeatScale1 = {16.0, 16.0};
 float2 repeatScale2 = {4.0, 4.0};
 float2 repeatScale3= {16.0, 16.0};
@@ -91,6 +91,8 @@ struct VSOutput
   float2 maskUV : texcoord0; 
   float2 UV : texcoord1;
   float3 normal : texcoord2;
+  float3 wNormal : texcoord3;
+  float4 wPos : texcoord4;
 };
 
 struct PSOutput { float4 colour : color; };
@@ -103,6 +105,11 @@ VSOutput VS(VSInput In, VSOutput Out)
   Out.maskUV = In.UV;
   Out.UV = In.UV;
   Out.normal = normalize(mul(In.normal, (float3x3) mW));
+  float4 wPos = mul( In.pos, mW );
+  float3 wNormal = mul( In.normal, (float3x3)mW );
+  Out.wNormal = normalize(wNormal);
+  Out.wPos = wPos;
+
   return Out;
 }
 
@@ -117,9 +124,17 @@ PSOutput PS(VSOutput In, PSOutput Out)
   baseColour += tex2D(detailSample2, In.UV* repeatScale2) * rgbColours1.g;
   baseColour += tex2D(detailSample3, In.UV* repeatScale3) * rgbColours1.b;
 
+  //adding some rim lighting - reverse fresnel
+  float3 viewDir = normalize(eyePos - In.wPos);
+  float angle = saturate( dot( In.wNormal, viewDir ) );
+  angle = smoothstep( 0.3, 0.8, angle );
+  float4 RimColor = lerp( float4( 0.8,0.8,0.8,0), float4(0.2,0.2,0.2,0), angle );
+
   float4 diffuse = saturate(dot(normalize(In.normal), -lightDirection));
   float4 lighting = diffuse * lightColour + ambientColour;
-  Out.colour = baseColour * lighting;
+  float4 color = baseColour * lighting;
+
+  Out.colour = color;
 
   return Out;
 }

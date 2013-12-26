@@ -20,11 +20,60 @@
 function Entity_Particle_Init():
     if ParticlesInited = 0
         sp init
+        //smoke system
         global SmokeMasterSystem as integer
         SmokeMasterSystem = sp load system ("Media\Particles\SmokeSparks.xml",PARTICLE_TEX_START)
+        
+        //birds system
+        global BirdsMasterSystem as integer
+        global BirdsMasterGroup as integer
+        global BirdsMasterZone as integer
+        global BirdsTilesetTex as integer
+        global BirdsEmitter as integer
+        global BirdsRenderer as integer
+        global BirdsTextureInterp as integer
+        global BirdsColorInterp as integer
+        BirdsTilesetTex = reserve free image()
+        load image "media\materials\engine\bird\seagulls_tileset.png" ,BirdsTilesetTex
+        
+        // create  system
+        BirdsMasterSystem = sp create system (1,0,0,0)
+        BirdsMasterGroup = sp add group (BirdsMasterSystem , 40 , 0,0,0)
+        sp set group lifetime BirdsMasterGroup , 64,64
+        BirdsMasterZone = SP BOX ZONE (0,0,0,100,20,100)
+        BirdsEmitter = SP ADD STATIC EMITTER (BirdsMasterGroup ,20,-1 , BirdsMasterZone)
+        BirdsRenderer = sp set quad renderer (BirdsMasterGroup , BirdsTilesetTex ,100,100,3,3,1)
+        BirdsTextureInterp = sp add interpolator (BirdsMasterGroup , 3)
+        n = 0
+        for i = 0 to (16*20)
+        SP ADD PARAM GRAPH ENTRY BirdsTextureInterp, (1/(16.0*20))*i , n
+        n = n+1
+        next i
+        BirdsColorInterp = sp add rgba interpolator (BirdsMasterGroup)
+        sp add rgba graph entry BirdsColorInterp , 0 , rgb(0,0,0)
+        sp add rgba graph entry BirdsColorInterp , 0.2, rgb(255,255,255)
+        sp add rgba graph entry BirdsColorInterp , 0.8, rgb(255,255,255)
+        sp add rgba graph entry BirdsColorInterp , 1.0, rgb(0,0,0)
+        SP ENABLE SORTING BirdsMasterGroup , 1
+        BirdsVortex1 = SP ADD VORTEX MODIFIER (BirdsMasterGroup, 128,128,128,0,1,0,5,0.0)
+        
         global ParticlesInited
         ParticlesInited = 1
     endif
+ENDFUNCTION
+
+function Entity_BirdsParticle_Reload(i):
+    modelid = Ent_GetInt(i,"modelid")
+    sp delete system modelid
+    EntSetAttribute(i,"modelid","0")
+endfunction
+
+function Entity_SmokeParticle_Reload(i):
+    modelid = Ent_GetInt(i,"modelid")
+    sp delete system modelid
+    EntSetAttribute(i,"modelid","0")
+    sp delete system SmokeMasterSystem
+    SmokeMasterSystem = sp load system ("Media\Particles\SmokeSparks.xml",PARTICLE_TEX_START)
 ENDFUNCTION
 
 function Entity_SmokeParticle_Add(x#,y#,z#):
@@ -59,8 +108,47 @@ function Entity_SmokeParticle_Update(i):
     SP SET POSITION Ent_GetInt(i,"modelid"),oldx#,oldy#,oldz#
 
 ENDFUNCTION
-
+    
 function Entity_SmokeParticle_Delete(i):
+    modelid = Ent_GetInt(i,"modelid")
+    sp delete system modelid
+endfunction
+
+
+function Entity_BirdsParticle_Add(x#,y#,z#):
+    //add new entity
+    i = 0
+    while ent_Getexists("env_birds1_"+str$(i))
+        i = i + 1
+    endwhile
+    entAdd("env_birds1_"+str$(i))
+    ref = entgetreference("env_birds1_"+str$(i))
+    entAddAttribute(ref,"name","env_birds1_"+str$(i))
+    entAddAttribute(ref,"type","env_birds1")
+    entAddAttribute(ref,"x",str$(x#))
+    entAddAttribute(ref,"y",str$(y#))
+    entAddAttribute(ref,"z",str$(z#))
+ENDFUNCTION
+
+function Entity_BirdsParticle_Update(i):
+    
+    oldx#=Ent_GetFloat(i,"x")
+    oldy#=Ent_GetFloat(i,"y")
+    oldz#=Ent_GetFloat(i,"z")
+    camx#=camera position x()
+    camy#=camera position y()
+    camz#=camera position z()
+    if Ent_GetInt(i,"modelid")=0:
+        modelid = sp copy system(BirdsMasterSystem,oldx#,oldy#,oldz#) //load particle file
+        `zoneid = SP PLANE ZONE (oldx# , oldy# , oldz# , normx# , normy# , normz# )
+        `SP ADD OBSTACLE (GroupID , ZoneID, actionFlag , testType , bounce# , friction#)
+        EntAddAttribute(i,"modelid",str$(modelid))
+    endif
+    SP SET POSITION Ent_GetInt(i,"modelid"),oldx#,oldy#,oldz#
+
+ENDFUNCTION
+
+function Entity_BirdsParticle_Delete(i):
     modelid = Ent_GetInt(i,"modelid")
     sp delete system modelid
 endfunction

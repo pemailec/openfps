@@ -184,6 +184,17 @@ type t_EditorUI
     EditHeaderPanel as integer
     EditBodyPanel as integer
     AttributeListPanel as integer
+    StaticsEditLabel as integer
+    StaticsEditToolLabel as integer
+    PaintGrassRadio as integer
+    EraseGrassRadio as integer
+    MeshPaintRadio as integer
+    BrushRadiusStaticsTrackbar as integer
+    BrushRadiusStaticsLabel as integer
+    MeshPaintSettingsFrame as integer
+    GrassImageCanvas as integer
+    MeshPaintSettingsLabel1 as integer
+    MeshPaintSettingsLabel2 as integer
     TypeListPanel as integer
     HeaderText as integer
     HeaderAttribCount as integer
@@ -288,6 +299,8 @@ function UI_Editor_Init():
     addItem EditorUI.Modegadget,"Entity Edit"
     addItem EditorUI.Modegadget,"Terrain Edit"
     addItem EditorUI.Modegadget,"Level Attribute Edit"
+    addItem EditorUI.Modegadget,"Level Brush Edit"
+    addItem EditorUI.Modegadget,"Grass/Details Edit"
     EditorUI.currentmodeframe = createFrame(10,170,260,400,"Mode View",EditorUI.panel_right_main) 
     selectitem EditorUI.Modegadget,0
     applyFont EditorUI.Modegadget,EditorUI.Font
@@ -481,10 +494,46 @@ function UI_Editor_Init():
 
     addItem EditorUI.EntityTypeCombobox,"env_flare"
     addItem EditorUI.EntityTypeCombobox,"env_smoke"
+    addItem EditorUI.EntityTypeCombobox,"env_birds1"
     addItem EditorUI.EntityTypeCombobox,"env_spawn"
     addItem EditorUI.EntityTypeCombobox,"mdl_static"
     addItem EditorUI.EntityTypeCombobox,"mdl_physics"
     selectitem EditorUI.EntityTypeCombobox,0
+    
+    EditorUI.StaticsEditLabel=createLabel(7,37,195,20,"Statics Edit - Grass enabled",EditorUI.currentmodeframe)
+    EditorUI.StaticsEditToolLabel=createLabel(7,57,185,20,"Tool Mode:",EditorUI.currentmodeframe)
+    EditorUI.PaintGrassRadio=createRadioButton(17,77,115,20,"Paint Grass Layer",EditorUI.currentmodeframe)
+    EditorUI.EraseGrassRadio=createRadioButton(17,97,150,20,"Erase Grass Layer",EditorUI.currentmodeframe)
+    EditorUI.MeshPaintRadio=createRadioButton(17,117,155,20,"Mesh Paint",EditorUI.currentmodeframe)
+    EditorUI.BrushRadiusStaticsTrackbar=createTrackBar(57,157,155,30,0,EditorUI.currentmodeframe)
+    EditorUI.BrushRadiusStaticsLabel=createLabel(17,157,50,35,"Brush Radius",EditorUI.currentmodeframe)
+    EditorUI.MeshPaintSettingsFrame=createFrame(17,202,185,160,"",EditorUI.currentmodeframe)
+    EditorUI.GrassImageCanvas=createCanvas(17,376,128,128,EditorUI.currentmodeframe)
+    EditorUI.MeshPaintSettingsLabel1=createLabel(9,9,130,20,"Mesh Paint Settings:",EditorUI.MeshPaintSettingsFrame)
+    EditorUI.MeshPaintSettingsLabel2=createLabel(9,29,140,20,"*tool disabled*",EditorUI.MeshPaintSettingsFrame)
+    settrackbarrange EditorUI.BrushRadiusStaticsTrackbar,1,4
+    settrackbarposition EditorUI.BrushRadiusStaticsTrackbar,1
+    
+    setgadgetvisible EditorUI.StaticsEditLabel,0
+    setgadgetvisible EditorUI.StaticsEditToolLabel,0
+    setgadgetvisible EditorUI.PaintGrassRadio,0
+    setgadgetvisible EditorUI.EraseGrassRadio,0
+    setgadgetvisible EditorUI.MeshPaintRadio,0
+    setgadgetvisible EditorUI.BrushRadiusStaticsTrackbar,0
+    setgadgetvisible EditorUI.BrushRadiusStaticsLabel,0
+    setgadgetvisible EditorUI.MeshPaintSettingsFrame,0
+    setgadgetvisible EditorUI.GrassImageCanvas,0
+    setgadgetvisible EditorUI.MeshPaintSettingsLabel1,0
+    setgadgetvisible EditorUI.MeshPaintSettingsLabel2,0
+    applyFont EditorUI.StaticsEditLabel,EditorUI.Font
+    applyFont EditorUI.StaticsEditToolLabel,EditorUI.Font
+    applyFont EditorUI.PaintGrassRadio,EditorUI.Font
+    applyFont EditorUI.EraseGrassRadio,EditorUI.Font
+    applyFont EditorUI.MeshPaintRadio,EditorUI.Font
+    applyFont EditorUI.BrushRadiusStaticsLabel,EditorUI.Font
+    applyFont EditorUI.MeshPaintSettingsLabel1,EditorUI.Font
+    applyFont EditorUI.MeshPaintSettingsLabel2,EditorUI.Font
+    
     
 
     EditorUI.EntityEditWindow=createWindow(1942,32,640,420,"Edit Entity",WINDOW_NORMAL,WINDOW_TOOLWINDOW,0,0)
@@ -955,6 +1004,30 @@ function UI_Editor_Update():
             UI_Editor_SetStatusText("Ready - Level Edit Mode")
             EditorUI.CameraMode = 0
         endcase
+        case 4
+        //BrushEdit
+            UI_Editor_HideAll()
+            UI_Editor_AddToConsole("Brush Edit Mode")
+            UI_Editor_SetStatusText("Ready - Brush Edit Mode")
+            EditorUI.CameraMode = 0
+        endcase
+        case 5
+        //GrassEdit
+            UI_Editor_HideAll()
+            UI_Editor_AddToConsole("Grass Edit Mode")
+            setgadgetvisible EditorUI.StaticsEditLabel,1
+            setgadgetvisible EditorUI.StaticsEditToolLabel,1
+            setgadgetvisible EditorUI.PaintGrassRadio,1
+            setgadgetvisible EditorUI.EraseGrassRadio,1
+            setgadgetvisible EditorUI.MeshPaintRadio,1
+            setgadgetvisible EditorUI.BrushRadiusStaticsTrackbar,1
+            setgadgetvisible EditorUI.BrushRadiusStaticsLabel,1
+            setgadgetvisible EditorUI.MeshPaintSettingsFrame,1
+            setgadgetvisible EditorUI.MeshPaintSettingsLabel1,1
+            setgadgetvisible EditorUI.MeshPaintSettingsLabel2,1
+            UI_Editor_SetStatusText("Ready - Grass Edit Mode")
+            EditorUI.CameraMode = 0
+        endcase
     endselect
     editorUI.CurrentToolOld = editorUI.CurrentTool
     endif
@@ -1011,7 +1084,7 @@ function UI_Editor_Update():
             Editor_Render_Entities()
             if EditorUI.EntityPlaceMode = 1:
             position object EditorUI.EntityPlaceModeDummy,0,-10000,0
-            pick = pick object(mousex(),mousey(),1,2000)
+            pick = pick object(mousex(),mousey(),TERRAIN_OBJ_START,TERRAIN_OBJ_START+1000)
             if pick > 0:
                 pick_x# = get pick vector x()+camera position x()
                 pick_y# = get pick vector y()+camera position y()
@@ -1043,7 +1116,7 @@ function UI_Editor_Update():
             EditorUI.BrushSpeed = getTrackbarPosition(EditorUI.BrushSpeedSlider)/10.0
             EditorUI.BrushRadius = getTrackbarPosition(EditorUI.BrushRadiusSlider)
             //terrain
-            pick = pick object(mousex(),mousey(),1,2000)
+            pick = pick object(mousex(),mousey(),TERRAIN_OBJ_START,TERRAIN_OBJ_START+1000)
             if pick:
                 pick_x# = get pick vector x()+camera position x()
                 pick_y# = get pick vector y()+camera position y()
@@ -1092,6 +1165,43 @@ function UI_Editor_Update():
             `EditorUI.CameraMode = 1
             if KEYSTATE(46) and keystate(56) then selectitem EditorUI.Modegadget,0
             //level
+        endcase
+        case 4
+        endcase
+        case 5
+            //grass edit
+            
+            pick = pick object(mousex(),mousey(),TERRAIN_OBJ_START,TERRAIN_OBJ_START+1000)
+            if pick:
+                pick_x# = get pick vector x()+camera position x()
+                pick_y# = get pick vector y()+camera position y()
+                pick_z# = get pick vector z()+camera position z()
+                tempradius = getTrackbarposition(EditorUI.BrushRadiusStaticsTrackbar)
+                D3D_POLYGON3D 0,tempradius,tempradius,pick_x#,pick_y#,pick_z#,0,1,0,4,rgb(0,255,0),0
+                if mouseclick()=1 and mousePosX(EditorUI.panel_right_main)=-1:
+                    //Paint
+                    mode = 0
+                    if getChecked(EditorUI.PaintGrassRadio) then mode = 0
+                    if getChecked(EditorUI.EraseGrassRadio) then mode = 1
+                    if getChecked(EditorUI.MeshPaintRadio) then mode = 2
+                    if mouseclick()=1:
+                        //Terrain_Paint(pick_x#,pick_y#,pick_z#,paintlayer,EditorUI.BrushRadius,0.5)
+                        select mode
+                            case 0
+                                Terrain_Grass_Paint(pick_x#,pick_y#,pick_z#,tempradius/2)
+                            endcase
+                            case 1
+                                Terrain_Grass_Erase(pick_x#,pick_y#,pick_z#,tempradius/2)
+                            endcase
+                            case 2
+                                //ill code this later....
+                            endcase
+                        endselect
+                        //drawImage EditorUI.GrassImageCanvas,0,0,Grass_IMG_Map
+                        //paintGadget EditorUI.GrassImageCanvas
+                    endif
+                endif
+            endif
         endcase
     endselect
     //update camera view
@@ -1147,6 +1257,17 @@ function UI_Editor_HideAll():
         setgadgetvisible EditorUI.EntityEditorLevelTreeRefresh,0
         setgadgetvisible EditorUI.EntityEditPanel,0
         setgadgetvisible EditorUI.EntityPropertiesPanel,0
+        setgadgetvisible EditorUI.StaticsEditLabel,0
+        setgadgetvisible EditorUI.StaticsEditToolLabel,0
+        setgadgetvisible EditorUI.PaintGrassRadio,0
+        setgadgetvisible EditorUI.EraseGrassRadio,0
+        setgadgetvisible EditorUI.MeshPaintRadio,0
+        setgadgetvisible EditorUI.BrushRadiusStaticsTrackbar,0
+        setgadgetvisible EditorUI.BrushRadiusStaticsLabel,0
+        setgadgetvisible EditorUI.MeshPaintSettingsFrame,0
+        setgadgetvisible EditorUI.GrassImageCanvas,0
+        setgadgetvisible EditorUI.MeshPaintSettingsLabel1,0
+        setgadgetvisible EditorUI.MeshPaintSettingsLabel2,0
 endfunction
 
 function Select_Entity_Mode(i):
