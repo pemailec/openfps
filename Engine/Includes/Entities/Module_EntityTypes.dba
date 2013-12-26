@@ -44,6 +44,7 @@ endfunction saved
 //this is only used in the editor
 function EntityType_Create(enttype as string, x as float,y as float, z as float):
     if enttype = "env_flare" then Entity_Flare_Add(x,y,z)
+    if enttype = "env_birds1" then Entity_BirdsParticle_Add(x,y,z)
     if enttype = "env_smoke" then Entity_SmokeParticle_Add(x,y,z)
     if enttype = "env_spawn" then Entity_Spawnpoint_Add(x,y,z)
     if enttype = "mdl_static" then Entity_Model_Add(x,y,z)
@@ -55,6 +56,7 @@ function EntityType_Update(i):
     type_attrib$=EntGetAttribute(i,"type")
     if type_attrib$ = "env_flare" then Entity_Flare_Update(i)
     if type_attrib$ = "env_smoke" then Entity_SmokeParticle_Update(i)
+    if type_attrib$ = "env_birds1" then Entity_BirdsParticle_Update(i)
     if type_attrib$ = "env_spawn" then Entity_Spawnpoint_Update(i)
     if type_attrib$ = "mdl_static" then Entity_Model_Update(i)
     if type_attrib$ = "mdl_physics" then Entity_phymodel_Update(i)
@@ -68,7 +70,8 @@ function EntityType_RefreshEntity(i):
     if type_attrib$ = "env_spawn" then Entity_Spawnpoint_Reload(i)
     if type_attrib$ = "mdl_static" then Entity_Model_Reload(i)
     if type_attrib$ = "mdl_physics" then Entity_phymodel_Reload(i)
-    `if type_attrib$ = "env_smoke" then Entity_SmokeParticle_Delete(i)
+    if type_attrib$ = "env_smoke" then Entity_SmokeParticle_Reload(i)
+    if type_attrib$ = "env_birds1" then Entity_BirdsParticle_Reload(i)
 endfunction
 
 function EntityType_Delete(i):
@@ -77,6 +80,7 @@ function EntityType_Delete(i):
     
     if type_attrib$ = "env_flare" then Entity_Flare_Delete(i)
     if type_attrib$ = "env_smoke" then Entity_SmokeParticle_Delete(i)
+    if type_attrib$ = "env_birds1" then Entity_BirdsParticle_Delete(i)
     if type_attrib$ = "env_spawn" then Entity_Spawnpoint_Delete(i)
     if type_attrib$ = "mdl_static" then Entity_Model_Delete(i)
     if type_attrib$ = "mdl_physics" then Entity_phymodel_Delete(i)

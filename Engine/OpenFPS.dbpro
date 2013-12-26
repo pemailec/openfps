@@ -5,7 +5,7 @@ project name=OpenFPS
 
 ; **** source file information ****
 main=Includes\Core\module_Core.dba
-LineMain=25
+LineMain=11
 include1=Includes\System\module_System.dba
 LineInclude1=191
 include2=Includes\Timer\module_Timer.dba
@@ -19,7 +19,7 @@ LineInclude5=511
 include6=Includes\Core\module_Datatypes.dba
 LineInclude6=0
 include7=Includes\Core\module_Game.dba
-LineInclude7=22
+LineInclude7=98
 include8=Includes\Core\module_Camera.dba
 LineInclude8=316
 include9=Includes\Entities\Module_Entity.dba
@@ -27,7 +27,7 @@ LineInclude9=186
 include10=Includes\Audio\module_Audio.dba
 LineInclude10=0
 include11=Includes\Networking\module_Network.dba
-LineInclude11=632
+LineInclude11=623
 include12=Includes\Terrain\module_Terrain.dba
 LineInclude12=441
 include13=Includes\Effects\module_DynamicSky.dba
@@ -41,7 +41,7 @@ LineInclude16=15
 include17=Includes\Networking\module_NetworkMasterServer.dba
 LineInclude17=177
 include18=Includes\Interface\module_UI_console.dba
-LineInclude18=88
+LineInclude18=31
 include19=Includes\World\module_Water.dba
 LineInclude19=175
 include20=Includes\Terrain\module_Grass.dba
@@ -60,6 +60,8 @@ include26=Includes\Interface\module_UI_chat.dba
 LineInclude26=74
 include27=Includes\Player\module_Spawnpoints.dba
 LineInclude27=79
+include28=Includes\World\module_Grass.dba
+LineInclude28=187
 
 ; **** Executable Information  ***
 ; build types: exe, media, installer, alone
@@ -105,8 +107,8 @@ pointer3=Media\Images\Interface\waitcursor_anim.ani
 
 ; **** Version Info ****
 VerComments=
-VerCompany=
-VerFileDesc=
+VerCompany=OpenFPS
+VerFileDesc=OpenFPS
 VerFileNumber=v1.0
 VerInternal=v1.0
 VerCopyright=

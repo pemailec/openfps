@@ -1,0 +1,13 @@
+;Rainbow GUI Layout File
+;version 1.05
+panel name="Gadget1" x="85" y="30" width="225" height="355" parent="" text="" enabled="1" visible="1" align="0" border="2"
+label name="StaticsEditLabel" x="7" y="17" width="195" height="20" parent="Gadget1" text="Statics Edit - Grass enabled on this map" enabled="1" visible="1" align="0" border="0"
+label name="StaticsEditToolLabel" x="7" y="37" width="185" height="20" parent="Gadget1" text="Tool Mode:" enabled="1" visible="1" align="0" border="0"
+radiobutton name="PaintGrassRadio" x="17" y="57" width="115" height="20" parent="Gadget1" text="Paint Grass Layer" enabled="1" visible="1" align="0"
+radiobutton name="EraseGrassRadio" x="17" y="77" width="150" height="20" parent="Gadget1" text="Erase Grass Layer" enabled="1" visible="1" align="0"
+radiobutton name="MeshPaintRadio" x="17" y="97" width="155" height="20" parent="Gadget1" text="Mesh Paint" enabled="1" visible="1" align="0"
+trackbar name="BrushRadiusStaticsTrackbar" x="57" y="127" width="155" height="30" parent="Gadget1" text="" enabled="1" visible="1" align="0" style="0"
+label name="BrushRadiusStaticsLabel" x="17" y="127" width="50" height="35" parent="Gadget1" text="Brush Radius" enabled="1" visible="1" align="0" border="0"
+frame name="MeshPaintSettingsFrame" x="17" y="172" width="185" height="160" parent="Gadget1" text="" enabled="1" visible="1" align="0"
+label name="MeshPaintSettingsLabel1" x="9" y="9" width="130" height="20" parent="MeshPaintSettingsFrame" text="Mesh Paint Settings:" enabled="1" visible="1" align="0" border="0"
+label name="MeshPaintSettingsLabel2" x="9" y="29" width="140" height="20" parent="MeshPaintSettingsFrame" text="*tool disabled*" enabled="1" visible="1" align="0" border="0"
